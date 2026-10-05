@@ -757,6 +757,8 @@ final class VideoListenModeTests: XCTestCase {
         defer { player.stop() }
         player.play()
         XCTAssertTrue(player.wantsAutoplay)
+        let explicitPlayCallCount = engine.playCallCount
+        XCTAssertGreaterThan(explicitPlayCallCount, 0, "Audio-only playback must start without a video surface")
 
         NotificationCenter.default.post(
             name: AVAudioSession.interruptionNotification,
@@ -780,7 +782,7 @@ final class VideoListenModeTests: XCTestCase {
         await settleNotificationDelivery()
 
         XCTAssertFalse(player.wantsAutoplay)
-        XCTAssertEqual(engine.playCallCount, 0)
+        XCTAssertEqual(engine.playCallCount, explicitPlayCallCount, "Ending the interruption must not undo the user's pause")
     }
 
     @MainActor
