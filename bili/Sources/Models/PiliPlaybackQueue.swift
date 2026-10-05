@@ -4,6 +4,7 @@ import Foundation
 nonisolated struct PiliPlaybackQueue: Hashable, Sendable {
     enum Source: Hashable, Sendable {
         case watchLater
+        case watchLaterFiltered(PiliWatchLaterFilter)
         case favoriteFolder(Int)
         case ugcSeason(id: Int, title: String)
         case collection(owner: VideoOwner, kind: UploaderSeasonSeriesKind, ascending: Bool, title: String)
@@ -17,7 +18,7 @@ nonisolated struct PiliPlaybackQueue: Hashable, Sendable {
 
     var title: String {
         switch source {
-        case .watchLater: "稍后再看"
+        case .watchLater, .watchLaterFiltered: "稍后再看"
         case .favoriteFolder: "收藏夹"
         case let .ugcSeason(_, title), let .collection(_, _, _, title): title
         }

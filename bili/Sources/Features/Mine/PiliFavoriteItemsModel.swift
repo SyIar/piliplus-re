@@ -17,6 +17,8 @@ final class PiliFavoriteItemsModel: ObservableObject {
     let credentialVersion: Int
     private var page = 0
     private var generation = UUID()
+    private var appliedKeyword = ""
+    private var appliedOrder = PiliFavoriteOrder.favoriteTime
     init(api: BiliAPIClient, folder: FavoriteFolder) {
         self.api = api; self.folder = folder
         credentialVersion = api.requestSnapshot(purpose: .interaction).playbackCredentialVersion
@@ -29,12 +31,14 @@ final class PiliFavoriteItemsModel: ObservableObject {
         guard reset || (!isLoading && hasMore) else { return }
         if reset {
             generation = UUID(); page = 0; items = []; selected = []; hasMore = true
+            appliedKeyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+            appliedOrder = order
         }
         let token = generation, version = credentialVersion, next = page + 1
         isLoading = true; errorMessage = nil
         defer { if generation == token { isLoading = false } }
         do {
-            let result = try await api.fetchPiliFavoriteItems(folderID: folder.id, page: next, keyword: keyword, order: order)
+            let result = try await api.fetchPiliFavoriteItems(folderID: folder.id, page: next, keyword: appliedKeyword, order: appliedOrder)
             guard !Task.isCancelled, generation == token,
                   api.requestSnapshot(purpose: .interaction).playbackCredentialVersion == version else { return }
             var seen = Set(items.map(\.bvid))

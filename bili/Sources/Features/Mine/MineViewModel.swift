@@ -9,6 +9,13 @@ final class MineViewModel: ObservableObject {
     @Published var historyState: LoadingState = .idle
     @Published var favoriteState: LoadingState = .idle
     @Published var watchLaterState: LoadingState = .idle
+    @Published var watchLaterFilter = PiliWatchLaterFilter()
+    @Published private(set) var watchLaterHasMore = false
+    @Published private(set) var watchLaterLoadMoreState: LoadingState = .idle
+    private var watchLaterPage = 1
+    @Published private(set) var watchLaterGeneration = UUID()
+    private var appliedWatchLaterFilter = PiliWatchLaterFilter()
+    private var watchLaterRequestCredentialVersion: Int?
     @Published private(set) var isMutatingWatchLater = false
     @Published private(set) var historyLoadMoreState: LoadingState = .idle {
         didSet { accountLibraryRevision &+= 1 }
@@ -114,31 +121,74 @@ final class MineViewModel: ObservableObject {
         }
     }
 
-    func refreshWatchLater() async {
+    func refreshWatchLater(applyingFilter: Bool = true) async {
         guard sessionStore.isLoggedIn else { return }
+        watchLaterGeneration = UUID(); let token = watchLaterGeneration
         let credentialVersion = sessionStore.historyAccountCredentialVersion
-        watchLaterState = .loading
+        let requestVersion = api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion
+        if applyingFilter {
+            appliedWatchLaterFilter = watchLaterFilter
+            appliedWatchLaterFilter.keyword = appliedWatchLaterFilter.keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        watchLaterState = .loading; watchLaterLoadMoreState = .idle
+        watchLaterPage = 1; watchLaterHasMore = false; accountWatchLater = []
         do {
-            let entries = try await api.fetchAccountWatchLater()
-            guard !Task.isCancelled, sessionStore.historyAccountCredentialVersion == credentialVersion else { return }
-            accountWatchLater = Self.uniqued(entries)
+            let result = try await api.fetchPiliWatchLaterPage(page: 1, filter: appliedWatchLaterFilter)
+            guard !Task.isCancelled, watchLaterGeneration == token,
+                  sessionStore.historyAccountCredentialVersion == credentialVersion else { return }
+            accountWatchLater = Self.uniqued(result.entries)
             watchLaterCredentialVersion = credentialVersion
-            watchLaterState = .loaded
+            watchLaterRequestCredentialVersion = requestVersion
+            watchLaterHasMore = result.hasMore; watchLaterState = .loaded
         } catch {
-            guard !Task.isCancelled, sessionStore.historyAccountCredentialVersion == credentialVersion else { return }
+            guard !Task.isCancelled, watchLaterGeneration == token,
+                  sessionStore.historyAccountCredentialVersion == credentialVersion else { return }
             watchLaterState = .failed(error.localizedDescription)
         }
     }
 
-    func removeWatchLater(_ entry: AccountVideoEntry) async throws {
-        guard !isMutatingWatchLater else { throw CancellationError() }
-        guard let aid = entry.aid, aid > 0 else { throw BiliAPIError.missingPayload }
+    func loadMoreWatchLater() async {
+        guard watchLaterHasMore, !watchLaterState.isLoading, !watchLaterLoadMoreState.isLoading else { return }
+        let token = watchLaterGeneration, page = watchLaterPage + 1
+        let credentialVersion = sessionStore.historyAccountCredentialVersion
+        guard watchLaterCredentialVersion == credentialVersion else { return }
+        watchLaterLoadMoreState = .loading
+        do {
+            let result = try await api.fetchPiliWatchLaterPage(page: page, filter: appliedWatchLaterFilter)
+            guard !Task.isCancelled, watchLaterGeneration == token,
+                  sessionStore.historyAccountCredentialVersion == credentialVersion else { return }
+            accountWatchLater = Self.appendingUnique(result.entries, to: accountWatchLater)
+            watchLaterPage = page; watchLaterHasMore = result.hasMore; watchLaterLoadMoreState = .loaded
+        } catch {
+            guard !Task.isCancelled, watchLaterGeneration == token,
+                  sessionStore.historyAccountCredentialVersion == credentialVersion else { return }
+            watchLaterLoadMoreState = .failed(error.localizedDescription)
+        }
+    }
+
+    func watchLaterDestinationFolders() async throws -> [FavoriteFolder] {
+        let token = watchLaterGeneration
+        let result = try await api.fetchPiliFavoriteDestinations(purpose: .historyRead)
+        guard token == watchLaterGeneration, watchLaterCredentialVersion == sessionStore.historyAccountCredentialVersion else { throw CancellationError() }
+        return result
+    }
+
+    func batchWatchLater(aids: [Int], targetFolder: Int? = nil, move: Bool = false) async throws {
+        guard !isMutatingWatchLater, !watchLaterState.isLoading,
+              watchLaterCredentialVersion == sessionStore.historyAccountCredentialVersion,
+              let requestVersion = watchLaterRequestCredentialVersion else {
+            throw PiliOfflineError.message("列表正在更新或账号已切换，请重新加载")
+        }
         isMutatingWatchLater = true
         defer { isMutatingWatchLater = false }
-        let identity = await api.interactionRequestContext(purpose: .historyRead).cookieHeader
-        try await api.removeFromWatchLater(aids: [aid])
-        guard await api.interactionRequestContext(purpose: .historyRead).cookieHeader == identity else { return }
-        accountWatchLater.removeAll { $0.aid == aid }
+        try await api.mutatePiliWatchLater(aids: aids, targetFolder: targetFolder, move: move, credentialVersion: requestVersion)
+        guard api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion == requestVersion else { throw CancellationError() }
+        await refreshWatchLater(applyingFilter: false)
+    }
+
+    func removeWatchLater(_ entry: AccountVideoEntry) async throws {
+        guard let aid = entry.aid, aid > 0 else { throw BiliAPIError.missingPayload }
+        try await batchWatchLater(aids: [aid])
     }
 
     func playbackQueue(for folder: FavoriteFolder) -> PiliPlaybackQueue? {
@@ -155,22 +205,26 @@ final class MineViewModel: ObservableObject {
     var watchLaterPlaybackQueue: PiliPlaybackQueue? {
         guard watchLaterCredentialVersion == sessionStore.historyAccountCredentialVersion else { return nil }
         return PiliPlaybackQueue(
-            source: .watchLater,
+            source: .watchLaterFiltered(appliedWatchLaterFilter),
             credentialVersion: sessionStore.historyAccountCredentialVersion,
             bvids: accountWatchLater.map(\.bvid),
-            nextPage: nil,
+            nextPage: watchLaterHasMore ? watchLaterPage + 1 : nil,
             titles: Dictionary(accountWatchLater.map { ($0.bvid, $0.videoItem.title) }, uniquingKeysWith: { first, _ in first })
         )
     }
 
     func cleanWatchLater(_ mode: WatchLaterCleanup) async throws {
-        guard !isMutatingWatchLater else { throw CancellationError() }
+        guard !isMutatingWatchLater, !watchLaterState.isLoading,
+              watchLaterCredentialVersion == sessionStore.historyAccountCredentialVersion,
+              watchLaterRequestCredentialVersion == api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion else {
+            throw PiliOfflineError.message("列表正在更新或账号已切换，请重新加载")
+        }
         isMutatingWatchLater = true
         defer { isMutatingWatchLater = false }
-        let identity = await api.interactionRequestContext(purpose: .historyRead).cookieHeader
-        try await api.cleanWatchLater(mode)
-        guard await api.interactionRequestContext(purpose: .historyRead).cookieHeader == identity else { return }
-        await refreshWatchLater()
+        let version = watchLaterRequestCredentialVersion
+        try await api.cleanWatchLater(mode, credentialVersion: version)
+        guard api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion == version else { throw CancellationError() }
+        await refreshWatchLater(applyingFilter: false)
     }
 
     func refreshFavoriteFolder(_ folder: FavoriteFolder) async {
@@ -276,21 +330,7 @@ final class MineViewModel: ObservableObject {
         cancelQRCodeLogin()
         try? sessionStore.logout()
         BiliWebCookieStore.clearLoginCookies()
-        accountHistory = []
-        accountFavorites = []
-        accountWatchLater = []
-        favoriteFolders = []
-        favoriteFolderEntries = [:]
-        favoriteFolderEntryStates = [:]
-        historyLoadMoreState = .idle
-        historyHasMore = false
-        historyCursor = nil
-        favoriteFolderLoadMoreStates = [:]
-        favoriteFolderHasMore = [:]
-        favoriteFolderPages = [:]
-        historyState = .idle
-        favoriteState = .idle
-        watchLaterState = .idle
+        resetAccountLibraryState()
         loginMessage = ""
         qrLoginState = .idle
     }
@@ -465,7 +505,9 @@ final class MineViewModel: ObservableObject {
         favoriteFolderPages = [:]
         historyState = .idle
         favoriteState = .idle
-        watchLaterState = .idle
+        watchLaterState = .idle; watchLaterLoadMoreState = .idle; watchLaterHasMore = false
+        watchLaterGeneration = UUID(); watchLaterCredentialVersion = nil; watchLaterRequestCredentialVersion = nil
+        watchLaterPage = 1; watchLaterFilter = PiliWatchLaterFilter(); appliedWatchLaterFilter = PiliWatchLaterFilter()
     }
 
     private nonisolated static func uniqued(_ entries: [AccountVideoEntry]) -> [AccountVideoEntry] {

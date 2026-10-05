@@ -3829,6 +3829,95 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testWatchLaterPaginationKeepsAppliedFilterAndQueueUntilSearchIsSubmitted() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
+            }
+            let page = Self.queryValues(for: request)["pn"] ?? "1"
+            return Self.response(for: request, body: "{\"code\":0,\"data\":{\"count\":40,\"list\":[{\"bvid\":\"BVpage\(page)\",\"aid\":\(page),\"title\":\"视频\(page)\"}]}}")
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=watch-session; DedeUserID=1001; bili_jct=watch-csrf")
+        let model = MineViewModel(api: api, sessionStore: api.sessionStore)
+        model.watchLaterFilter = PiliWatchLaterFilter(unfinished: true, ascending: true, keyword: "旧关键词")
+        await model.refreshWatchLater()
+        XCTAssertTrue(model.watchLaterHasMore)
+        model.watchLaterFilter.keyword = "尚未提交"
+        await model.loadMoreWatchLater()
+        XCTAssertFalse(model.watchLaterHasMore)
+        XCTAssertEqual(model.accountWatchLater.map(\.bvid), ["BVpage1", "BVpage2"])
+        let requests = recorder.requests.filter { $0.url?.path == "/x/v2/history/toview/web" }
+        XCTAssertEqual(requests.count, 2)
+        XCTAssertEqual(requests.map { Self.queryValues(for: $0)["pn"] }, ["1", "2"])
+        for request in requests {
+            let query = Self.queryValues(for: request)
+            XCTAssertEqual(query["key"], "旧关键词")
+            XCTAssertEqual(query["viewed"], "2")
+            XCTAssertEqual(query["asc"], "true")
+            XCTAssertEqual(query["need_split"], "true")
+            XCTAssertNotNil(query["w_rid"])
+        }
+        let queue = try XCTUnwrap(model.watchLaterPlaybackQueue)
+        guard case let .watchLaterFiltered(filter) = queue.source else { return XCTFail("Missing filtered queue") }
+        XCTAssertEqual(filter.keyword, "旧关键词")
+        XCTAssertEqual(queue.bvids, ["BVpage1", "BVpage2"])
+        await model.refreshWatchLater()
+        XCTAssertEqual(Self.queryValues(for: try XCTUnwrap(recorder.requests.last))["key"], "尚未提交")
+    }
+
+    @MainActor
+    func testWatchLaterCopyMoveAndRemovalUseTheHistoryAccountAndCorrectResourceTypes() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"id":7,"title":"目标"}]}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=main-session; DedeUserID=1001; bili_jct=main-csrf", configure: { session, library in
+            _ = try session.saveAdditionalAccount([
+                Self.makeCookie(name: "DedeUserID", value: "2002"),
+                Self.makeCookie(name: "SESSDATA", value: "history-session"),
+                Self.makeCookie(name: "bili_jct", value: "history-csrf")
+            ])
+            try session.selectPlaybackAccount(mid: 2002)
+            try session.setHistoryAccountPolicy(.playback)
+            library.setMultiAccountExperimentEnabled(true)
+        })
+        let version = api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion
+        let folders = try await api.fetchPiliFavoriteDestinations(purpose: .historyRead)
+        XCTAssertEqual(folders.first?.id, 7)
+        try await api.mutatePiliWatchLater(aids: [12, 11, 12], targetFolder: 7, credentialVersion: version)
+        try await api.mutatePiliWatchLater(aids: [11], targetFolder: 7, move: true, credentialVersion: version)
+        try await api.mutatePiliWatchLater(aids: [11, 12], credentialVersion: version)
+        XCTAssertEqual(recorder.requests.map { $0.url?.path }, ["/x/v3/fav/folder/created/list-all", "/x/v2/history/toview/copy", "/x/v2/history/toview/move", "/x/v2/history/toview/v2/dels"])
+        XCTAssertEqual(Self.queryValues(for: recorder.requests[0])["up_mid"], "2002")
+        XCTAssertEqual(formValues(in: recorder.requests[1])["resources"], "11,12")
+        XCTAssertEqual(formValues(in: recorder.requests[1])["mid"], "2002")
+        XCTAssertEqual(formValues(in: recorder.requests[2])["resources"], "11")
+        XCTAssertEqual(formValues(in: recorder.requests[2])["tar_media_id"], "7")
+        XCTAssertEqual(formValues(in: recorder.requests[3])["resources"], "11,12")
+        for request in recorder.requests {
+            XCTAssertEqual(cookieValues(in: request.value(forHTTPHeaderField: "Cookie"))["SESSDATA"], "history-session")
+            if request.httpMethod == "POST" { XCTAssertEqual(formValues(in: request)["csrf"], "history-csrf") }
+        }
+        try api.sessionStore.setHistoryAccountPolicy(.main)
+        do {
+            try await api.mutatePiliWatchLater(aids: [11], credentialVersion: version)
+            XCTFail("Reject stale history account")
+        } catch { XCTAssertEqual(recorder.requests.count, 4) }
+        do {
+            try await api.cleanWatchLater(.all, credentialVersion: version)
+            XCTFail("Cleanup must not affect the newly selected account")
+        } catch { XCTAssertEqual(recorder.requests.count, 4) }
+        RequestContractURLProtocol.install { request in recorder.record(request); throw URLError(.networkConnectionLost) }
+        do {
+            try await api.mutatePiliWatchLater(aids: [11], targetFolder: 7, credentialVersion: api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion)
+            XCTFail("Expected network failure")
+        } catch { XCTAssertEqual(recorder.requests.count, 5, "Do not repeat an ambiguous write") }
+    }
+
+    @MainActor
     func testNoteSaveUsesOneAccountAndEncodesTextWithoutPublishingComments() async throws {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in

@@ -118,6 +118,10 @@ extension VideoDetailViewModel {
             guard let page = queue.nextPage else { break }
             guard isPiliQueueAccountCurrent(queue) else { throw PiliOfflineError.message("账号已切换，请重新打开播放列表") }
             switch queue.source {
+            case let .watchLaterFiltered(filter):
+                let result = try await api.fetchPiliWatchLaterPage(page: page, filter: filter)
+                queue.append(videos: result.entries.map(\.videoItem))
+                queue.nextPage = result.hasMore ? page + 1 : nil
             case let .favoriteFolder(folderID):
                 let result = try await api.fetchFavoriteFolderVideoPage(folderID: folderID, page: page, pageSize: 20)
                 queue.append(result.entries.map(\.bvid))
@@ -141,7 +145,7 @@ extension VideoDetailViewModel {
 
     private func isPiliQueueAccountCurrent(_ queue: PiliPlaybackQueue) -> Bool {
         switch queue.source {
-        case .watchLater: sessionStore.historyAccountCredentialVersion == queue.credentialVersion
+        case .watchLater, .watchLaterFiltered: sessionStore.historyAccountCredentialVersion == queue.credentialVersion
         case .favoriteFolder: sessionStore.interactionAccountCredentialVersion == queue.credentialVersion
         case .ugcSeason, .collection: true
         }

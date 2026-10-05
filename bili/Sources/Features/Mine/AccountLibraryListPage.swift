@@ -9,6 +9,18 @@ struct AccountLibraryListPage: View {
 
     var body: some View {
         List {
+            if kind == .watchLater, sessionStore.isLoggedIn {
+                Section {
+                    Picker("查看范围", selection: $viewModel.watchLaterFilter.unfinished) {
+                        Text("全部").tag(false); Text("未看完").tag(true)
+                    }.pickerStyle(.segmented)
+                    Picker("添加时间", selection: $viewModel.watchLaterFilter.ascending) {
+                        Text("最近添加").tag(false); Text("最早添加").tag(true)
+                    }
+                    TextField("搜索稍后再看", text: $viewModel.watchLaterFilter.keyword)
+                        .submitLabel(.search).onSubmit { Task { await viewModel.refreshWatchLater() } }
+                }
+            }
             Section {
                 content
             }
@@ -28,7 +40,7 @@ struct AccountLibraryListPage: View {
             if kind == .watchLater, sessionStore.isLoggedIn {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("管理") {
-                        AppHelper.shared.presentSheet(.half) { PiliWatchLaterToolsView(viewModel: viewModel) }
+                        AppHelper.shared.presentSheet(.sheet) { PiliWatchLaterToolsView(viewModel: viewModel) }
                     }
                 }
             }
@@ -41,9 +53,11 @@ struct AccountLibraryListPage: View {
                 .disabled(!sessionStore.isLoggedIn || state.isLoading)
             }
         }
-        .task {
-            await loadIfNeeded()
+        .task(id: kind == .watchLater ? sessionStore.historyAccountCredentialVersion : sessionStore.interactionAccountCredentialVersion) {
+            if kind == .watchLater { await reload() } else { await loadIfNeeded() }
         }
+        .onChange(of: viewModel.watchLaterFilter.unfinished) { _, _ in if kind == .watchLater { Task { await reload() } } }
+        .onChange(of: viewModel.watchLaterFilter.ascending) { _, _ in if kind == .watchLater { Task { await reload() } } }
         .refreshable {
             await reload()
         }
@@ -152,8 +166,8 @@ struct AccountLibraryListPage: View {
         switch kind {
         case .history:
             return viewModel.historyLoadMoreState
-        case .favorites, .watchLater:
-            return .idle
+        case .favorites: return .idle
+        case .watchLater: return viewModel.watchLaterLoadMoreState
         }
     }
 
@@ -161,8 +175,8 @@ struct AccountLibraryListPage: View {
         switch kind {
         case .history:
             return viewModel.historyHasMore
-        case .favorites, .watchLater:
-            return false
+        case .favorites: return false
+        case .watchLater: return viewModel.watchLaterHasMore
         }
     }
 
@@ -186,8 +200,9 @@ struct AccountLibraryListPage: View {
         switch kind {
         case .history:
             await viewModel.loadMoreHistoryIfNeeded(current: item)
-        case .favorites, .watchLater:
-            break
+        case .watchLater:
+            if viewModel.accountWatchLater.last?.id == item.id { await viewModel.loadMoreWatchLater() }
+        case .favorites: break
         }
     }
 
@@ -195,8 +210,8 @@ struct AccountLibraryListPage: View {
         switch kind {
         case .history:
             await viewModel.loadMoreHistory()
-        case .favorites, .watchLater:
-            break
+        case .watchLater: await viewModel.loadMoreWatchLater()
+        case .favorites: break
         }
     }
 }

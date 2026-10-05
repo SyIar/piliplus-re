@@ -19,20 +19,23 @@ extension BiliAPIClient {
         )
     }
 
-    func cleanWatchLater(_ mode: WatchLaterCleanup) async throws {
+    func cleanWatchLater(_ mode: WatchLaterCleanup, credentialVersion: Int? = nil) async throws {
         let values: [String: String]
         switch mode {
         case .invalid: values = ["clean_type": "1"]
         case .viewed: values = ["clean_type": "2"]
         case .all: values = [:]
         }
-        try await mutateWatchLater(path: "/x/v2/history/toview/clear", values: values)
+        try await mutateWatchLater(path: "/x/v2/history/toview/clear", values: values, credentialVersion: credentialVersion)
     }
 
-    private func mutateWatchLater(path: String, values: [String: String]) async throws {
+    private func mutateWatchLater(path: String, values: [String: String], credentialVersion: Int? = nil) async throws {
         // Use the same account purpose as fetchAccountWatchLater; never mix
         // one account's CSRF token with another account's Cookie header.
-        let context = await interactionRequestContext(purpose: .historyRead)
+        let context = await requestSnapshot(purpose: .historyRead)
+        if let credentialVersion, credentialVersion != context.playbackCredentialVersion {
+            throw PiliOfflineError.message("账号已切换，请重新打开稍后再看")
+        }
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }
         var body = values
