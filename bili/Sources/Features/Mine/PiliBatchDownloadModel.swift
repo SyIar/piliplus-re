@@ -70,7 +70,7 @@ final class PiliBatchDownloadModel: ObservableObject {
         task = Task { [weak self] in
             guard let self else { return }
             defer { self.isRunning = false; self.hasFinished = true; self.task = nil }
-            func check() throws {
+            @MainActor func check() throws {
                 try Task.checkCancellation()
                 guard self.api.requestSnapshot(purpose: self.request.purpose).playbackCredentialVersion == self.request.credentialVersion,
                       self.api.requestSnapshot(purpose: .playback).playbackCredentialVersion == playbackVersion,
@@ -141,7 +141,7 @@ final class PiliBatchDownloadModel: ObservableObject {
     func cancel() { task?.cancel() }
     func waitUntilFinished() async { await task?.value }
 
-    private func loadVideos(check: () throws -> Void) async throws -> [VideoItem] {
+    private func loadVideos(check: @MainActor () throws -> Void) async throws -> [VideoItem] {
         if case let .selected(videos) = request.source {
             var seen = Set<String>()
             return videos.filter { !$0.bvid.isEmpty && seen.insert($0.bvid).inserted }
