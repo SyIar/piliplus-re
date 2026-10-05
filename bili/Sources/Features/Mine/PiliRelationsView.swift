@@ -85,7 +85,7 @@ struct PiliRelationsView: View {
                 }
                 Picker("排序", selection: $model.frequent) { Text("最近关注").tag(false); Text("最常访问").tag(true) }
             }
-            if model.isOwn { Text("当前主账号 UID \(model.identity.mid)").ccText(font: .cc.xs, color: .cc.mutedForeground) }
+            if model.isOwn { Text("当前主账号 UID \(model.identity.mid)").ccText(font: .cc.sm, color: .cc.mutedForeground) }
             if model.mutating { ProgressView("正在保存") }
         }.disabled(model.mutating || !model.isCurrent)
     }
@@ -97,7 +97,7 @@ struct PiliRelationsView: View {
                         .frame(width: 46, height: 46).clipShape(Circle())
                     VStack(alignment: .leading, spacing: 4) {
                         Text(user.name).ccText(font: .cc.base, color: .cc.foreground)
-                        Text(user.sign.isEmpty ? "UID \(user.id)" : user.sign).ccText(font: .cc.xs, color: .cc.mutedForeground).lineLimit(2)
+                        Text(user.sign.isEmpty ? "UID \(user.id)" : user.sign).ccText(font: .cc.sm, color: .cc.mutedForeground).lineLimit(2)
                     }
                     Spacer(minLength: 0)
                 }.contentShape(Rectangle())
