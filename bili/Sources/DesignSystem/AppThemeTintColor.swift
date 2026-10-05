@@ -2,12 +2,13 @@ import SwiftUI
 import UIKit
 
 enum AppThemeTintColor {
-    nonisolated static let defaultHex = "#56B47B"
+    nonisolated static let defaultHex = "#3264F0"
+    nonisolated static let previousGreenDefaultHex = "#56B47B"
     nonisolated static let previousDefaultHex = "#EE719E"
     nonisolated static let legacyDefaultHexes = ["#007AFF", "#FF2D55"]
     nonisolated static let toneHexes = [
-        "#56B47B", "#FB7299", "#AF52DE", "#5856D6",
-        "#007AFF", "#5AC8FA", "#34C759", "#FF9500"
+        defaultHex, "#FB7299", "#AF52DE", "#5856D6",
+        "#007AFF", "#5AC8FA", previousGreenDefaultHex, "#FF9500"
     ]
 
     static func normalizedHex(_ rawValue: String?) -> String? {

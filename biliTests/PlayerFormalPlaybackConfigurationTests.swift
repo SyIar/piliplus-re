@@ -347,11 +347,11 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
     }
 
     @MainActor
-    func testLibraryStoreDefaultsThemeTintToPiliPlusGreen() {
+    func testLibraryStoreDefaultsThemeTintToReferenceBlue() {
         let store = LibraryStore(userDefaults: makeUserDefaults())
 
-        XCTAssertEqual(store.appTintColorHex, "#56B47B")
-        XCTAssertEqual(LibraryStore.defaultAppTintColorHex, "#56B47B")
+        XCTAssertEqual(store.appTintColorHex, "#3264F0")
+        XCTAssertEqual(LibraryStore.defaultAppTintColorHex, "#3264F0")
     }
 
     @MainActor
@@ -361,8 +361,25 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
 
         let store = LibraryStore(userDefaults: defaults)
 
-        XCTAssertEqual(store.appTintColorHex, "#56B47B")
-        XCTAssertEqual(defaults.string(forKey: "cc.bili.appearance.tintColorHex.v1"), "#56B47B")
+        XCTAssertEqual(store.appTintColorHex, "#3264F0")
+        XCTAssertEqual(defaults.string(forKey: "cc.bili.appearance.tintColorHex.v1"), "#3264F0")
+    }
+
+    @MainActor
+    func testLibraryStoreMigratesGreenOnceAndPreservesLaterChoices() {
+        let defaults = makeUserDefaults()
+        defaults.set("#56B47B", forKey: "cc.bili.appearance.tintColorHex.v1")
+        defaults.set(true, forKey: "cc.bili.appearance.tintColorPreviousDefaultMigration.v3")
+        let store = LibraryStore(userDefaults: defaults)
+        XCTAssertEqual(store.appTintColorHex, "#3264F0")
+        XCTAssertEqual(defaults.string(forKey: "cc.bili.appearance.tintColorHex.v1"), "#3264F0")
+
+        XCTAssertTrue(store.setAppTintColorHex("#56B47B"))
+        XCTAssertEqual(LibraryStore(userDefaults: defaults).appTintColorHex, "#56B47B")
+
+        let customDefaults = makeUserDefaults()
+        customDefaults.set("#123456", forKey: "cc.bili.appearance.tintColorHex.v1")
+        XCTAssertEqual(LibraryStore(userDefaults: customDefaults).appTintColorHex, "#123456")
     }
 
     @MainActor

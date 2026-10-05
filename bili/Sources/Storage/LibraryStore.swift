@@ -173,6 +173,8 @@ final class LibraryStore: ObservableObject {
     private static let appTintColorDefaultToneMigrationKey = "cc.bili.appearance.tintColorDefaultToneMigration.v2"
     private static let appTintColorPreviousDefaultMigrationKey =
         "cc.bili.appearance.tintColorPreviousDefaultMigration.v3"
+    private static let appTintColorBlueDefaultMigrationKey =
+        "cc.bili.appearance.tintColorBlueDefaultMigration.v4"
     private static let defaultPlaybackRateKey = "cc.bili.playback.defaultPlaybackRate.v1"
     private static let playbackHistorySyncThresholdSecondsKey = "cc.bili.playback.historySyncThresholdSeconds.v1"
     private static let preferredVideoQualityKey = "cc.bili.playback.preferredVideoQuality.v1"
@@ -466,6 +468,9 @@ final class LibraryStore: ObservableObject {
         let hasMigratedPreviousAppTintDefault = userDefaults.bool(
             forKey: Self.appTintColorPreviousDefaultMigrationKey
         )
+        let hasMigratedBlueAppTintDefault = userDefaults.bool(
+            forKey: Self.appTintColorBlueDefaultMigrationKey
+        )
         if let storedAppTintColorHex,
             !hasMigratedLegacyAppTintDefaults,
             AppThemeTintColor.legacyDefaultHexes.contains(storedAppTintColorHex)
@@ -478,11 +483,18 @@ final class LibraryStore: ObservableObject {
         {
             self.appTintColorHex = Self.defaultAppTintColorHex
             userDefaults.set(Self.defaultAppTintColorHex, forKey: Self.appTintColorHexKey)
+        } else if let storedAppTintColorHex,
+            !hasMigratedBlueAppTintDefault,
+            storedAppTintColorHex == AppThemeTintColor.previousGreenDefaultHex
+        {
+            self.appTintColorHex = Self.defaultAppTintColorHex
+            userDefaults.set(Self.defaultAppTintColorHex, forKey: Self.appTintColorHexKey)
         } else {
             self.appTintColorHex = storedAppTintColorHex ?? Self.defaultAppTintColorHex
         }
         userDefaults.set(true, forKey: Self.appTintColorDefaultToneMigrationKey)
         userDefaults.set(true, forKey: Self.appTintColorPreviousDefaultMigrationKey)
+        userDefaults.set(true, forKey: Self.appTintColorBlueDefaultMigrationKey)
         userDefaults.set(true, forKey: Self.appTintColorDefaultMigrationKey)
         self.defaultPlaybackRate = Self.normalizedPlaybackRate(
             userDefaults.object(forKey: Self.defaultPlaybackRateKey) as? Double ?? 1.0)
