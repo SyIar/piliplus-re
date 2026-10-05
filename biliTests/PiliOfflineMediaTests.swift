@@ -56,7 +56,14 @@ final class PiliOfflineMediaTests: H264PlaybackTestCase {
         XCTAssertEqual(try PiliOfflineStorage.playbackURL(item), output)
         let model = PiliOfflinePlaybackModel(item: item, url: output)
         XCTAssertEqual(model.player.playbackContentMode, .audioOnly)
-        model.player.stop()
+        defer { model.player.stop() }
+        model.player.play()
+        let deadline = Date().addingTimeInterval(8)
+        while model.player.playbackClock.currentTime < 0.05, model.player.errorMessage == nil, Date() < deadline {
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        XCTAssertNil(model.player.errorMessage)
+        XCTAssertGreaterThan(model.player.playbackClock.currentTime, 0.05, "Exported audio must advance the production player's clock offline")
     }
 
     func testCorruptMediaIsNeverAcceptedAsCompletedExport() async throws {

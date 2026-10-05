@@ -249,9 +249,8 @@ extension BiliAPIClient {
             priority: URLSessionTask.defaultPriority
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
-        guard await commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
         let page = response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
-        return await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil)
+        return try await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil, revision: revision)
     }
 
     private static func commentPaginationString(offset: String) throws -> String {
@@ -305,9 +304,8 @@ extension BiliAPIClient {
             priority: URLSessionTask.lowPriority
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
-        guard await commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
         let page = response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
-        return await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil)
+        return try await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil, revision: revision)
     }
 
     func fetchCommentDialog(
@@ -353,9 +351,8 @@ extension BiliAPIClient {
             priority: URLSessionTask.lowPriority
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
-        guard await commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
         let page = response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
-        return await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil)
+        return try await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil, revision: revision)
     }
 
     private func resolvedCommentCookieHeader(_ cookieHeader: String?) async -> String {

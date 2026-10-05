@@ -14,7 +14,7 @@ public struct SettingsArchive: Codable, Sendable {
         let forbidden = ["password", "cookie", "sessdata", "csrf", "token", "credential", "keychain", "fallback", "session", "accesskey"]
         guard !forbidden.contains(where: lower.contains) else { return false }
         if key.hasPrefix("piliplus.subtitle.") { return true }
-        if ["piliplus.playbackOrder", "piliplus.offline.cellular"].contains(key) { return true }
+        if ["piliplus.playbackOrder", "piliplus.offline.cellular", "piliplus.player.lockOrientation", "piliplus.audio.quality", "piliplus.audio.cellularQuality"].contains(key) { return true }
         let prefixes = ["cc.bili.appearance.", "cc.bili.playback.", "cc.bili.content.", "cc.bili.videoDetail.",
                         "cc.bili.privacy.", "cc.bili.home.", "cc.bili.display.", "cc.bili.image.", "cc.bili.search.",
                         "cc.bili.experimental.", "cc.bili.danmaku.", "cc.bili.sponsorBlock."]

@@ -15,7 +15,7 @@ struct PiliOfflinePlayerScreen: View {
     var body: some View {
         VStack(spacing: 16) {
             if model.item.effectiveMediaKind == .audio {
-                PiliOfflineAudioControls(player: model.player, title: model.item.title, author: model.item.author)
+                PiliOfflineAudioControls(player: model.player, title: model.item.title, author: model.item.author).id(model.item.id)
                 PiliSubtitleOverlay(controller: subtitles, clock: model.player.playbackClock)
                     .frame(height: 110)
             } else {
@@ -63,11 +63,18 @@ struct PiliOfflinePlayerScreen: View {
 
 private struct PiliOfflineAudioControls: View {
     @ObservedObject var player: PlayerStateViewModel
+    @ObservedObject var clock: PlayerPlaybackClock
     let title: String
     let author: String
     @State private var isScrubbing = false
     @State private var scrubTime = 0.0
-    private var duration: Double { max(1, player.duration ?? 0) }
+    init(player: PlayerStateViewModel, title: String, author: String) {
+        self.player = player; self.clock = player.playbackClock; self.title = title; self.author = author
+    }
+    private var duration: Double {
+        let value = clock.duration ?? 0
+        return value.isFinite && value > 0 ? value : 1
+    }
     var body: some View {
         VStack(spacing: 24) {
             Image(systemName: "music.note")
@@ -78,13 +85,14 @@ private struct PiliOfflineAudioControls: View {
             Text(author).font(.subheadline).foregroundStyle(.secondary)
             if let error = player.errorMessage { Text(error).font(.footnote).foregroundStyle(.secondary) }
             VStack {
-                Slider(value: Binding(get: { isScrubbing ? scrubTime : min(duration, max(0, player.currentTime)) },
+                Slider(value: Binding(get: { isScrubbing ? scrubTime : min(duration, max(0, clock.currentTime)) },
                                       set: { scrubTime = $0 }), in: 0...duration) { editing in
+                    if editing { scrubTime = min(duration, max(0, clock.currentTime)) }
                     isScrubbing = editing
-                    if !editing { player.seek(by: scrubTime - player.currentTime) }
+                    if !editing { player.seek(to: scrubTime) }
                 }.accessibilityLabel("音频播放进度")
                 HStack {
-                    Text(time(isScrubbing ? scrubTime : player.currentTime))
+                    Text(time(isScrubbing ? scrubTime : clock.currentTime))
                     Spacer()
                     Text(time(duration))
                 }.font(.caption.monospacedDigit()).foregroundStyle(.secondary)

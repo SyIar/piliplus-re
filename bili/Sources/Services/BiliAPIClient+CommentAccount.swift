@@ -2,7 +2,8 @@ import Combine
 import Foundation
 
 extension BiliAPIClient {
-    @MainActor func commentPageForCurrentWriter(_ page: CommentPage, usesDefaultReader: Bool) -> CommentPage {
+    @MainActor func commentPageForCurrentWriter(_ page: CommentPage, usesDefaultReader: Bool, revision: Int) throws -> CommentPage {
+        guard commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
         guard usesDefaultReader,
               requestSnapshot(purpose: .commentRead).currentUserMID != requestSnapshot(purpose: .interaction).currentUserMID else { return page }
         return CommentPage(replies: page.replies?.map { $0.removingReaderReactions() },
