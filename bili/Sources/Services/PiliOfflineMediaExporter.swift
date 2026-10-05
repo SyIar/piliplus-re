@@ -5,6 +5,7 @@ import PiliPlaybackCore
 @MainActor
 enum PiliOfflineMediaExporter {
     static func finalize(_ item: OfflineDownloadItem) async throws -> URL {
+        if item.effectiveMediaKind == .audio { return try await finalizeAudio(item) }
         let videoURL = try PiliOfflineStorage.part(item.id, .video)
         let videoAsset = AVURLAsset(url: videoURL)
         guard try await videoAsset.load(.isPlayable) else { throw PiliOfflineError.message("下载的视频格式无法由 AVPlayer 播放") }
@@ -36,11 +37,58 @@ enum PiliOfflineMediaExporter {
         do {
             try await exporter.export(to: output, as: fileType)
             try Task.checkCancellation()
-            guard PiliOfflineStorage.size(output) > 0 else { throw PiliOfflineError.message("合并后的文件为空") }
+            try await validateOutput(output, expectsVideo: true, expectsAudio: item.requiresAudio || !audioTracks.isEmpty)
             return output
         } catch {
             try? FileManager.default.removeItem(at: output)
             throw error
+        }
+    }
+
+    private static func finalizeAudio(_ item: OfflineDownloadItem) async throws -> URL {
+        let source = AVURLAsset(url: try PiliOfflineStorage.part(item.id, .audio))
+        let duration = try await source.load(.duration)
+        let tracks = try await source.loadTracks(withMediaType: .audio)
+        guard duration.isNumeric, duration.seconds > 0, !tracks.isEmpty else {
+            throw PiliOfflineError.message("下载文件没有有效的音频轨道")
+        }
+        let composition = AVMutableComposition()
+        for track in tracks {
+            guard let destination = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
+                throw PiliOfflineError.message("无法创建音频轨道")
+            }
+            try destination.insertTimeRange(CMTimeRange(start: .zero, duration: duration), of: track, at: .zero)
+        }
+        guard let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetPassthrough) else {
+            throw PiliOfflineError.message("无法创建音频导出任务")
+        }
+        let type: AVFileType = exporter.supportedFileTypes.contains(.m4a) ? .m4a : .mov
+        guard exporter.supportedFileTypes.contains(type) else { throw PiliOfflineError.message("此音频格式暂不支持无损封装") }
+        let output = try PiliOfflineStorage.directory(item.id).appendingPathComponent(type == .m4a ? "media.m4a" : "media.mov")
+        try? FileManager.default.removeItem(at: output)
+        do {
+            try await exporter.export(to: output, as: type)
+            try Task.checkCancellation()
+            try await validateOutput(output, expectsVideo: false, expectsAudio: true)
+            return output
+        } catch {
+            try? FileManager.default.removeItem(at: output)
+            throw error
+        }
+    }
+
+    private static func validateOutput(_ url: URL, expectsVideo: Bool, expectsAudio: Bool) async throws {
+        guard PiliOfflineStorage.size(url) > 0 else { throw PiliOfflineError.message("导出的文件为空") }
+        let asset = AVURLAsset(url: url)
+        let duration = try await asset.load(.duration)
+        guard try await asset.load(.isPlayable), duration.isNumeric, duration.seconds > 0 else {
+            throw PiliOfflineError.message("导出的文件无法完整播放")
+        }
+        if expectsVideo, try await asset.loadTracks(withMediaType: .video).isEmpty {
+            throw PiliOfflineError.message("导出的文件缺少视频轨道")
+        }
+        if expectsAudio, try await asset.loadTracks(withMediaType: .audio).isEmpty {
+            throw PiliOfflineError.message("导出的文件缺少音频轨道")
         }
     }
 }

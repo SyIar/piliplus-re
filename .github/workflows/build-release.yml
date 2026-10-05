@@ -6,6 +6,11 @@ on:
     tags: ['v*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      simulator_only:
+        description: Run simulator tests and previews without packaging an IPA
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -73,7 +78,7 @@ jobs:
           if-no-files-found: ignore
 
   build:
-    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
+    if: (github.event_name != 'pull_request' || github.actor != 'dependabot[bot]') && (github.event_name != 'workflow_dispatch' || !inputs.simulator_only)
     runs-on: macos-26
     timeout-minutes: 40
     steps:

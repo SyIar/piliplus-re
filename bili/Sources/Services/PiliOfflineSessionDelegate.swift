@@ -13,12 +13,16 @@ nonisolated final class PiliOfflineSessionDelegate: NSObject, URLSessionDownload
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let identity = OfflineTaskIdentity(taskDescription: downloadTask.taskDescription) else { return }
         do {
-            guard let response = downloadTask.response as? HTTPURLResponse,
-                  (200...299).contains(response.statusCode) else {
-                let code = (downloadTask.response as? HTTPURLResponse)?.statusCode ?? 0
-                throw PiliOfflineError.message("下载服务器返回 HTTP \(code)，请重试以刷新地址")
+            guard let response = downloadTask.response as? HTTPURLResponse else {
+                throw OfflineDownloadValidation.Failure.response(0)
             }
-            guard PiliOfflineStorage.size(location) > 0 else { throw PiliOfflineError.message("服务器返回了空文件") }
+            try OfflineDownloadValidation.validate(
+                status: response.statusCode, mimeType: response.mimeType,
+                contentLength: response.expectedContentLength,
+                contentRange: response.value(forHTTPHeaderField: "Content-Range"),
+                contentEncoding: response.value(forHTTPHeaderField: "Content-Encoding"),
+                fileSize: PiliOfflineStorage.size(location)
+            )
             // Move synchronously: URLSession removes its temporary file after this callback returns.
             let staging = try PiliOfflineStorage.staging(identity)
             try? FileManager.default.removeItem(at: staging)

@@ -19,7 +19,7 @@ struct PiliOfflineLibraryView: View {
             if store.items.isEmpty {
                 VStack(spacing: 16) {
                     PikaIcon(PikaIcon.Name.save, size: 44)
-                    Text("暂无离线视频").ccText(font: .cc.baseBold, color: .cc.foreground)
+                    Text("暂无离线内容").ccText(font: .cc.baseBold, color: .cc.foreground)
                     Text("在视频播放页选择“离线下载”").ccText(font: .cc.sm, color: .cc.mutedForeground)
                 }.frame(maxWidth: .infinity).padding(.vertical, 36)
             } else {
@@ -85,11 +85,11 @@ struct PiliOfflineLibraryView: View {
             case .completed:
                 if let url = try? PiliOfflineStorage.playbackURL(item) {
                     ShareLink(item: url) {
-                        Label { Text("导出视频") } icon: { PikaIcon(PikaIcon.Name.file) }
+                        Label { Text(item.effectiveMediaKind == .audio ? "导出音频" : "导出视频") } icon: { PikaIcon(PikaIcon.Name.file) }
                     }.buttonStyle(.glass)
                 }
-                if !item.hasDanmaku || item.hasSubtitles != true {
-                    CCNeoButton("下载弹幕与字幕", variant: .ghost) { store.cacheDanmaku(item.id) }
+                if (item.effectiveMediaKind == .video && !item.hasDanmaku) || item.hasSubtitles != true {
+                    CCNeoButton(item.effectiveMediaKind == .audio ? "下载字幕" : "下载弹幕与字幕", variant: .ghost) { store.cacheDanmaku(item.id) }
                 }
             }
             Spacer(minLength: 0)
@@ -99,7 +99,7 @@ struct PiliOfflineLibraryView: View {
     }
 
     private func confirmDelete(_ ids: Set<UUID>) {
-        CCAlertCenter.shared.present(title: "删除 \(ids.count) 个下载？", message: "视频文件和对应离线数据将从本机移除。", actions: [
+        CCAlertCenter.shared.present(title: "删除 \(ids.count) 个下载？", message: "媒体文件和对应离线数据将从本机移除。", actions: [
             CCAlertAction(title: "取消", role: .secondary),
             CCAlertAction(title: "删除", role: .destructive) {
                 ids.forEach(store.remove)
@@ -116,7 +116,7 @@ extension OfflineDownloadState {
         case .preparing: "获取下载地址"
         case .downloading: "下载中"
         case .paused: "已暂停"
-        case .finalizing: "合并音视频"
+        case .finalizing: "整理媒体文件"
         case .completed: "已完成"
         case .failed: "下载失败"
         }

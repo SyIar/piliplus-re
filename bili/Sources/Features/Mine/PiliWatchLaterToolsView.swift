@@ -6,6 +6,7 @@ struct PiliWatchLaterToolsView: View {
     @State private var selected = Set<Int>()
     @State private var folders: [FavoriteFolder] = []
     @State private var targetMode: TargetMode?
+    @State private var downloadRequest: PiliBatchDownloadRequest?
     @State private var loadingTargets = false
     @State private var confirmRemove = false
     @State private var confirmCleanup = false
@@ -65,6 +66,9 @@ struct PiliWatchLaterToolsView: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
+                        Button("缓存所选视频") { showDownload(all: false) }.disabled(selected.isEmpty)
+                        Button("缓存全部筛选结果") { showDownload(all: true) }
+                        Divider()
                         Button("复制到收藏夹") { showTargets(.copy) }.disabled(selected.isEmpty)
                         Button("移入收藏夹") { showTargets(.move) }.disabled(selected.isEmpty)
                         Button("移除所选视频", role: .destructive) { confirmRemove = true }.disabled(selected.isEmpty)
@@ -79,6 +83,7 @@ struct PiliWatchLaterToolsView: View {
             .safeAreaInset(edge: .bottom) {
                 if !selected.isEmpty {
                     HStack {
+                        Button("缓存") { showDownload(all: false) }
                         Button("复制") { showTargets(.copy) }
                         Button("移入收藏夹") { showTargets(.move) }
                         Spacer()
@@ -88,7 +93,7 @@ struct PiliWatchLaterToolsView: View {
             }
             .refreshable { await viewModel.refreshWatchLater(applyingFilter: false) }
             .onChange(of: viewModel.watchLaterGeneration) { _, _ in
-                selected = []; folders = []; targetMode = nil; confirmRemove = false; confirmCleanup = false
+                selected = []; folders = []; targetMode = nil; downloadRequest = nil; confirmRemove = false; confirmCleanup = false
             }
             .alert("移除所选的 \(selected.count) 个视频？", isPresented: $confirmRemove) {
                 Button("取消", role: .cancel) {}
@@ -119,6 +124,9 @@ struct PiliWatchLaterToolsView: View {
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button("取消") { targetMode = nil } } }
                 }
             }
+            .sheet(item: $downloadRequest) { request in
+                PiliBatchDownloadSheet(api: viewModel.offlineDownloadAPI, request: request)
+            }
         }
     }
     private var cleanupTitle: String {
@@ -134,6 +142,10 @@ struct PiliWatchLaterToolsView: View {
         else { errorMessage = "每批最多选择 100 个视频" }
     }
     private func showCleanup(_ mode: WatchLaterCleanup) { cleanup = mode; confirmCleanup = true }
+    private func showDownload(all: Bool) {
+        do { downloadRequest = try viewModel.watchLaterDownloadRequest(selected: all ? nil : selected) }
+        catch { errorMessage = error.localizedDescription }
+    }
     private func showTargets(_ mode: TargetMode) {
         guard !busy, !selected.isEmpty else { return }
         loadingTargets = true; errorMessage = nil

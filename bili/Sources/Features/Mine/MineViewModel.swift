@@ -51,6 +51,19 @@ final class MineViewModel: ObservableObject {
     @Published private(set) var favoriteFolderRevision = 0
 
     private let api: BiliAPIClient
+    var offlineDownloadAPI: BiliAPIClient { api }
+
+    func watchLaterDownloadRequest(selected: Set<Int>?) throws -> PiliBatchDownloadRequest {
+        guard let version = watchLaterRequestCredentialVersion,
+              api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion == version else {
+            throw PiliOfflineError.message("账号已切换，请重新加载稍后再看")
+        }
+        let source: PiliBatchDownloadSource
+        if let selected {
+            source = .selected(accountWatchLater.filter { $0.aid.map(selected.contains) ?? false }.map(\.videoItem))
+        } else { source = .watchLater(appliedWatchLaterFilter) }
+        return PiliBatchDownloadRequest(source: source, title: "稍后再看", purpose: .historyRead, credentialVersion: version)
+    }
     private let sessionStore: SessionStore
     private var qrLoginTask: Task<Void, Never>?
     private let accountLibraryPageSize = 20

@@ -1,10 +1,13 @@
 import ChunUI
+import PiliPlaybackCore
 import SwiftUI
 
 struct PiliDownloadSheet: View {
     @ObservedObject var viewModel: VideoDetailViewModel
     @State private var selectedCIDs: Set<Int>
     @State private var variantID: String
+    @State private var mediaKind = OfflineMediaKind.video
+    @State private var audioID = ""
     @AppStorage("piliplus.offline.cellular") private var allowsCellular = false
 
     init(viewModel: VideoDetailViewModel) {
@@ -13,6 +16,7 @@ struct PiliDownloadSheet: View {
         _variantID = State(initialValue: viewModel.selectedPlayVariant?.id ?? "")
     }
     private var variants: [PlayVariant] { viewModel.playVariants.filter(\.isPlayable) }
+    private var audios: [VideoListenAudioVariant] { viewModel.videoListenAudioVariants }
     private var pages: [VideoPage] {
         if let pages = viewModel.detail.pages, !pages.isEmpty { return pages }
         guard let cid = viewModel.selectedCID else { return [] }
@@ -23,8 +27,20 @@ struct PiliDownloadSheet: View {
             List {
                 Section {
                     Text(viewModel.detail.title).ccText(font: .cc.baseBold, color: .cc.foreground)
-                    Picker("下载画质", selection: $variantID) {
-                        ForEach(variants) { variant in Text(variant.title).tag(variant.id) }
+                    Picker("下载内容", selection: $mediaKind) {
+                        Text("视频与音频").tag(OfflineMediaKind.video)
+                        Text("仅音频").tag(OfflineMediaKind.audio)
+                    }.accessibilityIdentifier("download.mediaKind")
+                    if mediaKind == .video {
+                        Picker("下载画质", selection: $variantID) {
+                            ForEach(variants) { variant in Text(variant.title).tag(variant.id) }
+                        }
+                    } else {
+                        Picker("下载音质", selection: $audioID) {
+                            ForEach(audios) { audio in Text(audio.title).tag(audio.id) }
+                        }
+                        Text(audios.isEmpty ? "当前视频没有可独立下载的音频流" : "只下载音频轨，离线打开后进入音频播放器")
+                            .font(.footnote).foregroundStyle(.secondary)
                     }
                     Toggle("允许使用蜂窝网络下载", isOn: $allowsCellular)
                 }
@@ -43,16 +59,22 @@ struct PiliDownloadSheet: View {
                 }
                 Section {
                     CCNeoButton("加入下载队列", variant: .primary, icon: PikaIcon.Name.save, fullWidth: true,
-                                disabled: selectedCIDs.isEmpty || variants.isEmpty) {
-                        guard let variant = variants.first(where: { $0.id == variantID }) ?? variants.first else { return }
+                                disabled: selectedCIDs.isEmpty || (mediaKind == .audio ? audios.isEmpty : variants.isEmpty)) {
                         do {
-                            let count = try PiliOfflineStore.shared.enqueue(video: viewModel.detail,
-                                                                           pages: pages.filter { selectedCIDs.contains($0.cid) }, variant: variant)
+                            let count: Int
+                            let selectedPages = pages.filter { selectedCIDs.contains($0.cid) }
+                            if mediaKind == .audio {
+                                guard let audio = audios.first(where: { $0.id == audioID }) ?? audios.first else { return }
+                                count = try PiliOfflineStore.shared.enqueueAudio(video: viewModel.detail, pages: selectedPages, audio: audio)
+                            } else {
+                                guard let variant = variants.first(where: { $0.id == variantID }) ?? variants.first else { return }
+                                count = try PiliOfflineStore.shared.enqueue(video: viewModel.detail, pages: selectedPages, variant: variant)
+                            }
                             CCToastCenter.shared.show(.success, count > 0 ? "已加入 \(count) 个下载任务" : "所选视频已在下载列表中")
                             AppHelper.shared.dismissSheet()
                         } catch { CCToastCenter.shared.show(.error, error.localizedDescription) }
                     }
-                    Text("下载保留所选画质。可在“我的 → 离线下载”查看进度、暂停或继续。")
+                    Text("下载保留所选画质或音质。可在“我的 → 离线下载”查看进度、暂停或继续。")
                         .ccText(font: .cc.sm, color: .cc.mutedForeground)
                 }
             }
@@ -65,6 +87,9 @@ struct PiliDownloadSheet: View {
                 }
             }
         }
-        .onAppear { if variantID.isEmpty { variantID = variants.first?.id ?? "" } }
+        .onAppear {
+            if variantID.isEmpty { variantID = variants.first?.id ?? "" }
+            if audioID.isEmpty { audioID = audios.first?.id ?? "" }
+        }
     }
 }

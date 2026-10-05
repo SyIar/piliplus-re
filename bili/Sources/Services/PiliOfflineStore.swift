@@ -81,7 +81,8 @@ final class PiliOfflineStore: ObservableObject {
         var updated = items
         var added = 0
         for page in pages where page.cid > 0 {
-            guard !updated.contains(where: { $0.bvid == video.bvid && $0.cid == page.cid && $0.quality == variant.quality }) else { continue }
+            guard !updated.contains(where: { $0.bvid == video.bvid && $0.cid == page.cid
+                && $0.effectiveMediaKind == .video && $0.quality == variant.quality }) else { continue }
             let title = pages.count > 1 || (video.pages?.count ?? 0) > 1
                 ? "\(video.title) · \(page.part ?? "P\(page.page ?? 1)")" : video.title
             let item = OfflineDownloadItem(
@@ -90,6 +91,32 @@ final class PiliOfflineStore: ObservableObject {
                 quality: variant.quality, qualityTitle: variant.title, codec: variant.codec,
                 seasonID: video.pgcSeasonID, episodeID: video.pgcEpisodeID
             )
+            updated.append(item)
+            added += 1
+        }
+        try PiliOfflineStorage.save(updated)
+        items = updated
+        pump()
+        return added
+    }
+
+    func enqueueAudio(video: VideoItem, pages: [VideoPage], audio: VideoListenAudioVariant) throws -> Int {
+        guard !indexLoadFailed else { throw PiliOfflineError.message(storageError ?? "下载索引无法读取") }
+        var updated = items
+        var added = 0
+        for page in pages where page.cid > 0 {
+            guard !updated.contains(where: { $0.bvid == video.bvid && $0.cid == page.cid
+                && $0.effectiveMediaKind == .audio && $0.audioQualityID == audio.stream.id }) else { continue }
+            var item = OfflineDownloadItem(
+                bvid: video.bvid, cid: page.cid,
+                title: (video.pages?.count ?? pages.count) > 1 ? "\(video.title) · \(page.part ?? "P\(page.page ?? 1)")" : video.title,
+                author: video.owner?.name ?? "", coverURL: video.pic,
+                duration: Double(page.duration ?? video.duration ?? 0), quality: 0,
+                qualityTitle: "仅音频 · \(audio.title)", codec: audio.stream.codecs,
+                seasonID: video.pgcSeasonID, episodeID: video.pgcEpisodeID
+            )
+            item.mediaKind = .audio
+            item.audioQualityID = audio.stream.id
             updated.append(item)
             added += 1
         }
@@ -221,31 +248,31 @@ final class PiliOfflineStore: ObservableObject {
                 self.completeBackgroundEventsIfReady()
             }
             do {
+                let requestVersion = client.requestSnapshot(purpose: .playback).playbackCredentialVersion
                 let data: PlayURLData
                 if next.episodeID != nil || next.seasonID != nil {
                     data = try await client.fetchPgcPlayURL(bvid: next.bvid, cid: next.cid, seasonID: next.seasonID,
-                                                            epID: next.episodeID, preferredQuality: next.quality)
+                                                            epID: next.episodeID, preferredQuality: next.effectiveMediaKind == .audio ? 64 : next.quality)
                 } else {
-                    data = try await client.fetchPlayURLUncached(bvid: next.bvid, cid: next.cid, preferredQuality: next.quality)
+                    data = try await client.fetchPlayURLUncached(bvid: next.bvid, cid: next.cid,
+                                                                preferredQuality: next.effectiveMediaKind == .audio ? 64 : next.quality)
                 }
-                let variants = data.playVariants.filter { $0.isPlayable && $0.quality == next.quality }
-                guard let variant = variants.first(where: { $0.codec == next.codec }) ?? variants.first,
-                      let videoURL = variant.videoURL else {
-                    throw PiliOfflineError.message("当前账号无法取得所选画质，请重新选择可用画质")
-                }
+                let selection = try PiliOfflineMediaSelection.resolve(item: next, data: data)
                 let context = await client.playbackAPIRequestContext()
+                guard client.requestSnapshot(purpose: .playback).playbackCredentialVersion == requestVersion else {
+                    throw PiliOfflineError.message("取流账号已切换，请重新确认下载")
+                }
                 guard !Task.isCancelled, let index = self.index(next.id),
                       self.items[index].generation == generation, self.items[index].state == .preparing else { return }
-                self.items[index].requiresAudio = variant.audioURL != nil
-                self.items[index].codec = variant.codec
-                self.items[index].dynamicRange = variant.dynamicRange.rawValue
+                self.items[index].requiresAudio = selection.urls[.audio] != nil
+                self.items[index].codec = selection.codec
+                self.items[index].dynamicRange = selection.dynamicRange
                 self.items[index].state = .downloading
                 self.persist()
                 let referer = next.episodeID.map { "https://www.bilibili.com/bangumi/play/ep\($0)" }
                     ?? "https://www.bilibili.com/video/\(next.bvid)"
                 let headers = BiliHLSManifestBuilder.httpHeaders(referer: referer, cookieHeader: context.cookieHeader)
-                let urls: [OfflineDownloadPart: URL] = variant.audioURL.map { [.video: videoURL, .audio: $0] } ?? [.video: videoURL]
-                for (part, url) in urls where !self.items[index].completedParts.contains(part) {
+                for (part, url) in selection.urls where !self.items[index].completedParts.contains(part) {
                     guard ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { throw PiliOfflineError.message("下载地址无效") }
                     let identity = OfflineTaskIdentity(itemID: next.id, generation: generation, part: part)
                     let resumeURL = try PiliOfflineStorage.resumeFile(next.id, part)
@@ -353,7 +380,8 @@ final class PiliOfflineStore: ObservableObject {
     }
 
     func cacheDanmaku(_ id: UUID) {
-        guard let item = items.first(where: { $0.id == id }), (!item.hasDanmaku || item.hasSubtitles != true), extras[id] == nil else { return }
+        guard let item = items.first(where: { $0.id == id }),
+              ((item.effectiveMediaKind == .video && !item.hasDanmaku) || item.hasSubtitles != true), extras[id] == nil else { return }
         let client = resolvedAPI()
         let token = UUID()
         extraTokens[id] = token
@@ -361,7 +389,7 @@ final class PiliOfflineStore: ObservableObject {
             guard let self else { return }
             defer { if self.extraTokens[id] == token { self.extras[id] = nil; self.extraTokens[id] = nil } }
             do {
-                if !item.hasDanmaku {
+                if !item.hasDanmaku && item.effectiveMediaKind == .video {
                     let count = max(1, Int(ceil(item.duration / 360)))
                     var records: [PiliOfflineDanmaku] = []
                     var seen = Set<String>()

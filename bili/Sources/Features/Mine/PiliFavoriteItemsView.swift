@@ -9,6 +9,7 @@ struct PiliFavoriteItemsView: View {
     @State private var confirmClean = false
     @State private var targetMode: TargetMode?
     @State private var sortTarget: SortTarget?
+    @State private var downloadRequest: PiliBatchDownloadRequest?
     private enum TargetMode: String, Identifiable { case copy, move; var id: String { rawValue } }
     private struct SortTarget: Identifiable {
         let id = UUID()
@@ -62,6 +63,9 @@ struct PiliFavoriteItemsView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("完成") { AppHelper.shared.dismissSheet() }.disabled(model.isMutating) }
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
+                        Button("缓存所选视频") { showDownload(all: false) }.disabled(model.selected.isEmpty)
+                        Button("缓存全部搜索结果") { showDownload(all: true) }
+                        Divider()
                         Button("复制至其他收藏夹") { showTargets(.copy) }.disabled(model.selected.isEmpty)
                         Button("移动至其他收藏夹") { showTargets(.move) }.disabled(model.selected.isEmpty)
                         Button("移除所选视频", role: .destructive) { confirmRemove = true }.disabled(model.selected.isEmpty)
@@ -77,6 +81,7 @@ struct PiliFavoriteItemsView: View {
             .safeAreaInset(edge: .bottom) {
                 if !model.selected.isEmpty {
                     HStack {
+                        Button("缓存") { showDownload(all: false) }
                         Button("复制") { showTargets(.copy) }
                         Button("移动") { showTargets(.move) }
                         Spacer()
@@ -87,7 +92,7 @@ struct PiliFavoriteItemsView: View {
                 }
             }
             .task(id: session.interactionAccountCredentialVersion) {
-                targetMode = nil; sortTarget = nil; confirmRemove = false; confirmClean = false
+                targetMode = nil; sortTarget = nil; downloadRequest = nil; confirmRemove = false; confirmClean = false
                 await model.load(reset: true)
             }
             .refreshable { await model.load(reset: true) }
@@ -122,10 +127,15 @@ struct PiliFavoriteItemsView: View {
                     }
                 }
             }
+            .sheet(item: $downloadRequest) { request in PiliBatchDownloadSheet(api: model.api, request: request) }
         }
     }
     private func showTargets(_ mode: TargetMode) {
         Task { await model.loadTargets(); targetMode = mode }
+    }
+    private func showDownload(all: Bool) {
+        do { downloadRequest = try model.downloadRequest(all: all) }
+        catch { model.errorMessage = error.localizedDescription }
     }
 }
 

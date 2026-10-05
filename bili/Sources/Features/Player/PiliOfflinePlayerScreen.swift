@@ -14,6 +14,11 @@ struct PiliOfflinePlayerScreen: View {
     }
     var body: some View {
         VStack(spacing: 16) {
+            if model.item.effectiveMediaKind == .audio {
+                PiliOfflineAudioControls(player: model.player, title: model.item.title, author: model.item.author)
+                PiliSubtitleOverlay(controller: subtitles, clock: model.player.playbackClock)
+                    .frame(height: 110)
+            } else {
             BiliPlayerView(viewModel: model.player, duration: model.item.duration,
                            surfaceOverlay: AnyView(ZStack {
                                PiliOfflineDanmakuOverlay(player: model.player, items: danmaku,
@@ -25,6 +30,7 @@ struct PiliOfflinePlayerScreen: View {
                 .id(model.item.id)
             CCNeoButton("投屏", variant: .ghost, icon: "screen-check") {
                 AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .offline(model) }) }
+            }
             }
             CCNeoButton("字幕", variant: .ghost, icon: PikaIcon.Name.fileText) {
                 PiliSubtitleSettingsView.present(controller: subtitles) { seconds in model.player.seek(by: seconds - model.player.currentTime) }
@@ -41,7 +47,9 @@ struct PiliOfflinePlayerScreen: View {
         .toolbar(.hidden, for: .tabBar)
         .task(id: model.item.id) {
             let id = model.item.id
-            let values = await Task.detached(priority: .utility) { PiliOfflineDanmaku.load(id) }.value
+            let isAudio = model.item.effectiveMediaKind == .audio
+            if isAudio { model.player.play() }
+            let values = await Task.detached(priority: .utility) { isAudio ? [] : PiliOfflineDanmaku.load(id) }.value
             guard !Task.isCancelled, model.item.id == id else { return }
             danmaku = values
             let cached = await Task.detached(priority: .utility) { PiliCachedSubtitle.load(id) }.value
@@ -50,6 +58,51 @@ struct PiliOfflinePlayerScreen: View {
         }
         .onAppear { PiliSleepTimer.shared.resumeManually() }
         .onDisappear { model.leave() }
+    }
+}
+
+private struct PiliOfflineAudioControls: View {
+    @ObservedObject var player: PlayerStateViewModel
+    let title: String
+    let author: String
+    @State private var isScrubbing = false
+    @State private var scrubTime = 0.0
+    private var duration: Double { max(1, player.duration ?? 0) }
+    var body: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "music.note")
+                .font(.system(size: 68, weight: .light)).foregroundStyle(.tint)
+                .frame(width: 180, height: 180).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 36))
+                .accessibilityHidden(true)
+            Text(title).font(.title3.bold()).multilineTextAlignment(.center)
+            Text(author).font(.subheadline).foregroundStyle(.secondary)
+            if let error = player.errorMessage { Text(error).font(.footnote).foregroundStyle(.secondary) }
+            VStack {
+                Slider(value: Binding(get: { isScrubbing ? scrubTime : min(duration, max(0, player.currentTime)) },
+                                      set: { scrubTime = $0 }), in: 0...duration) { editing in
+                    isScrubbing = editing
+                    if !editing { player.seek(by: scrubTime - player.currentTime) }
+                }.accessibilityLabel("音频播放进度")
+                HStack {
+                    Text(time(isScrubbing ? scrubTime : player.currentTime))
+                    Spacer()
+                    Text(time(duration))
+                }.font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+            }
+            HStack(spacing: 32) {
+                Button { player.seek(by: -10) } label: { Image(systemName: "gobackward.10") }
+                    .accessibilityLabel("后退十秒")
+                Button { player.isPlaying ? player.pause() : player.play() } label: {
+                    Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").frame(width: 48, height: 48)
+                }.buttonStyle(.glassProminent).accessibilityLabel(player.isPlaying ? "暂停音频" : "播放音频")
+                Button { player.seek(by: 10) } label: { Image(systemName: "goforward.10") }
+                    .accessibilityLabel("前进十秒")
+            }.font(.title2)
+        }.padding(24)
+    }
+    private func time(_ seconds: Double) -> String {
+        let value = Int(max(0, seconds.isFinite ? seconds : 0))
+        return String(format: "%d:%02d", value / 60, value % 60)
     }
 }
 

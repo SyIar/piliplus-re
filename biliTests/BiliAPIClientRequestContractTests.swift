@@ -4277,6 +4277,78 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testBatchAudioDownloadReadsAllFavoritePagesAndDeduplicatesWithoutMediaTransfers() async throws {
+        await BiliAPIResponseMemoryCache.shared.clear()
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            let path = request.url?.path ?? ""
+            let query = Self.queryValues(for: request)
+            if path == "/x/v3/fav/resource/list" {
+                let body = query["pn"] == "1"
+                    ? #"{"code":0,"data":{"has_more":true,"medias":[{"bvid":"BVbatchone","aid":1,"title":"one"}]}}"#
+                    : #"{"code":0,"data":{"has_more":false,"medias":[{"bvid":"BVbatchone","aid":1,"title":"one"},{"bvid":"BVbatchtwo","aid":2,"title":"two"}]}}"#
+                return Self.response(for: request, body: body)
+            }
+            if path == "/x/web-interface/view" {
+                let bvid = query["bvid"] ?? ""
+                let cid = bvid == "BVbatchone" ? 11 : 22
+                return Self.response(for: request, body: "{\"code\":0,\"data\":{\"bvid\":\"\(bvid)\",\"title\":\"batch\",\"cid\":\(cid),\"pages\":[{\"cid\":\(cid),\"page\":1}]}}")
+            }
+            if path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
+            }
+            if path.contains("playurl") {
+                return Self.response(for: request, body: #"{"code":0,"data":{"quality":64,"accept_quality":[64],"dash":{"duration":10,"video":[{"id":64,"baseUrl":"https://example.com/video.m4s","codecs":"avc1.640028","codecid":7,"mimeType":"video/mp4"}],"audio":[{"id":30280,"baseUrl":"https://example.com/audio.m4s","codecs":"mp4a.40.2","mimeType":"audio/mp4","bandwidth":192000}]}}}"#)
+            }
+            throw URLError(.badServerResponse)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=batch-session; DedeUserID=1001")
+        let request = PiliBatchDownloadRequest(source: .favorite(id: 7, keyword: "A+B", order: .favoriteTime),
+            title: "收藏夹", purpose: .interaction, credentialVersion: api.requestSnapshot(purpose: .interaction).playbackCredentialVersion)
+        let sink = BatchDownloadTestSink()
+        let model = PiliBatchDownloadModel(api: api, request: request, downloads: sink)
+        model.mediaKind = .audio
+        model.start()
+        await model.waitUntilFinished()
+        XCTAssertEqual(model.addedCount, 2, model.status + model.failures.joined())
+        XCTAssertTrue(model.failures.isEmpty, model.failures.joined())
+        XCTAssertEqual(sink.audioCIDs, [11, 22])
+        XCTAssertEqual(sink.videoCount, 0)
+        let pages = recorder.requests.filter { $0.url?.path == "/x/v3/fav/resource/list" }
+        XCTAssertEqual(pages.map { Self.queryValues(for: $0)["pn"] }, ["1", "2"])
+        XCTAssertTrue(pages.allSatisfy { Self.queryValues(for: $0)["keyword"] == "A+B" })
+        XCTAssertFalse(recorder.requests.contains { $0.url?.host == "example.com" })
+    }
+
+    @MainActor
+    func testBatchDownloadRejectsStaleAccountAndImmediateCancellationBeforeEnqueue() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            throw URLError(.badServerResponse)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=batch-session; DedeUserID=1001")
+        let version = api.requestSnapshot(purpose: .interaction).playbackCredentialVersion
+        let sink = BatchDownloadTestSink()
+        let stale = PiliBatchDownloadRequest(source: .favorite(id: 7, keyword: "", order: .favoriteTime),
+                                             title: "收藏", purpose: .interaction, credentialVersion: version + 1)
+        let model = PiliBatchDownloadModel(api: api, request: stale, downloads: sink)
+        model.start()
+        await model.waitUntilFinished()
+        XCTAssertTrue(model.status.contains("账号已切换"))
+        XCTAssertTrue(recorder.requests.isEmpty)
+        let current = PiliBatchDownloadRequest(source: .favorite(id: 7, keyword: "", order: .favoriteTime),
+                                               title: "收藏", purpose: .interaction, credentialVersion: version)
+        let cancelled = PiliBatchDownloadModel(api: api, request: current, downloads: sink)
+        cancelled.start(); cancelled.cancel()
+        await cancelled.waitUntilFinished()
+        XCTAssertTrue(cancelled.status.contains("已停止"))
+        XCTAssertTrue(recorder.requests.isEmpty)
+        XCTAssertTrue(sink.audioCIDs.isEmpty)
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,
@@ -4555,6 +4627,20 @@ private actor RequestContractCompletionFlag {
 
     func markCompleted() {
         didComplete = true
+    }
+}
+
+@MainActor
+private final class BatchDownloadTestSink: PiliOfflineEnqueuing {
+    var audioCIDs: [Int] = []
+    var videoCount = 0
+    func enqueue(video: VideoItem, pages: [VideoPage], variant: PlayVariant) throws -> Int {
+        videoCount += pages.count
+        return pages.count
+    }
+    func enqueueAudio(video: VideoItem, pages: [VideoPage], audio: VideoListenAudioVariant) throws -> Int {
+        audioCIDs.append(contentsOf: pages.map(\.cid))
+        return pages.count
     }
 }
 

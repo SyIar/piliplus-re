@@ -1,6 +1,7 @@
 import Foundation
 
 public enum OfflineDownloadPart: String, Codable, CaseIterable, Sendable { case video, audio }
+public enum OfflineMediaKind: String, Codable, CaseIterable, Sendable { case video, audio }
 public enum OfflineDownloadState: String, Codable, Sendable {
     case queued, preparing, downloading, paused, finalizing, completed, failed
 }
@@ -53,6 +54,9 @@ public struct OfflineDownloadItem: Identifiable, Codable, Hashable, Sendable {
     public var hasDanmaku = false
     public var hasSubtitles: Bool?
     public var extrasError: String?
+    // Optional stored fields keep indexes written before audio-only downloads readable.
+    public var mediaKind: OfflineMediaKind?
+    public var audioQualityID: Int?
 
     public init(id: UUID = UUID(), bvid: String, cid: Int, title: String, author: String,
                 coverURL: String?, duration: Double, quality: Int, qualityTitle: String,
@@ -62,7 +66,10 @@ public struct OfflineDownloadItem: Identifiable, Codable, Hashable, Sendable {
         self.qualityTitle = qualityTitle; self.codec = codec; self.seasonID = seasonID
         self.episodeID = episodeID; self.createdAt = createdAt
     }
-    public var requiredParts: Set<OfflineDownloadPart> { requiresAudio ? [.video, .audio] : [.video] }
+    public var effectiveMediaKind: OfflineMediaKind { mediaKind ?? .video }
+    public var requiredParts: Set<OfflineDownloadPart> {
+        effectiveMediaKind == .audio ? [.audio] : (requiresAudio ? [.video, .audio] : [.video])
+    }
     public var isReadyToFinalize: Bool { requiredParts.isSubset(of: completedParts) }
     public var progress: Double? {
         if state == .completed { return 1 }

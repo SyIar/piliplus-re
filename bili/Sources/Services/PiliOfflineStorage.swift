@@ -46,8 +46,8 @@ nonisolated enum PiliOfflineStorage {
     }
     static func playbackURL(_ item: OfflineDownloadItem) throws -> URL {
         guard item.state == .completed, let name = item.outputFileName,
-              ["media.mp4", "media.mov"].contains(name) else {
-            throw PiliOfflineError.message("视频尚未下载完成")
+              ["media.mp4", "media.mov", "media.m4a"].contains(name) else {
+            throw PiliOfflineError.message("媒体尚未下载完成")
         }
         let url = try directory(item.id).appendingPathComponent(name)
         guard FileManager.default.fileExists(atPath: url.path) else {
