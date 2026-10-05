@@ -1,7 +1,9 @@
 import XCTest
 
 final class PiliLiquidGlassUITests: XCTestCase {
+    @MainActor
     func testFullscreenGlassControlsLockAndSeek() {
+        continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-fixture", "glassPlayer"]
         app.launch()

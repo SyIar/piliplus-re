@@ -4,7 +4,7 @@ struct PiliChatSettingsView: View {
     let api: BiliAPIClient
     let talkerID: Int
     @ObservedObject private var sessionStore: SessionStore
-    private let identity: PiliAccountIdentity
+    @State private var identity: PiliAccountIdentity
     @State private var settings: PiliChatSettings?
     @State private var loading = false
     @State private var saving = false
@@ -14,7 +14,8 @@ struct PiliChatSettingsView: View {
     init(api: BiliAPIClient, talkerID: Int) {
         self.api = api; self.talkerID = talkerID
         _sessionStore = ObservedObject(wrappedValue: api.sessionStore)
-        identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
+        // Keep the account that opened this screen even if its parent rebuilds.
+        _identity = State(initialValue: PiliAccountIdentity(api.requestSnapshot(purpose: .main)))
     }
 
     private var isCurrent: Bool { identity.matches(api.requestSnapshot(purpose: .main)) }
