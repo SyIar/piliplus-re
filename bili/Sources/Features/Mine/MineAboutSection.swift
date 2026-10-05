@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import ChunUI
 
 struct MineAboutSection: View {
     @Environment(\.openURL) private var openURL
@@ -25,6 +26,9 @@ struct MineAboutSection: View {
                     copyProjectAddress()
                 }
             Link("GPL-3.0 与开源来源", destination: Self.projectURL.appending(path: "blob/main/THIRD_PARTY_NOTICES.md"))
+            Button("查看开源许可证") {
+                AppHelper.shared.presentSheet(.half) { PiliLicensesView() }
+            }
         }
     }
 
@@ -60,5 +64,35 @@ struct MineAboutSection: View {
     private func copyProjectAddress() {
         UIPasteboard.general.string = Self.projectURL.absoluteString
         UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+}
+
+private struct PiliLicensesView: View {
+    private var notices: String {
+        guard let url = Bundle.main.url(forResource: "ThirdPartyLicenses", withExtension: "txt"),
+              let text = try? String(contentsOf: url, encoding: .utf8)
+        else { return "许可证见仓库中的 LICENSE 和 THIRD_PARTY_NOTICES.md。" }
+        return text
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack {
+                    Text("开源许可证").ccText(font: .cc.lgBold, color: .cc.foreground)
+                    Spacer()
+                    Button { AppHelper.shared.dismissSheet() } label: {
+                        PikaIcon(PikaIcon.Name.close).frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.glass)
+                    .accessibilityLabel("关闭")
+                }
+                Text(notices)
+                    .ccText(font: .cc.sm, color: .cc.foreground)
+                    .textSelection(.enabled)
+            }
+            .padding(24)
+        }
+        .background(Color.cc.background)
     }
 }

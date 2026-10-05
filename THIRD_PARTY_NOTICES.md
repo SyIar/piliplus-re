@@ -24,7 +24,8 @@ PiliPlus Swift 是独立的 Swift 原生迁移项目，不是 PiliPlus、cilicil
 - 锁定源码：`b240cbbdb9c6d7afc9f02d9ce4ddff5a25ce73bb`。
 - Copyright (c) 2026 liseami，MIT，见 `Licenses/ChunUI-LICENSE`。
 - 通过 Swift Package Manager 引入；使用语义颜色、13/17/24 字号层级、PikaIcon、CCNeoButton、原生 sheet 和 toast。
-- ChunUI 的传递依赖 Pow 保留其 MIT 许可；具体版本以构建输出的 SwiftPM 锁文件为准。
+- ChunUI 的传递依赖 Pow 保留其 MIT 许可，见 `Licenses/Pow-LICENSE`；具体版本以构建输出的 SwiftPM 锁文件为准。
+- 应用内“关于 → 查看开源许可证”提供随包许可证，离线可读。
 
 ## Apple 系统框架
 
