@@ -1,0 +1,86 @@
+name: Build, test and publish IPA
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: piliplus-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Select Xcode
+        run: bash Scripts/select-xcode.sh
+      - name: Test playback policy
+        run: swift test --package-path Packages/PiliPlaybackCore
+      - name: Validate repository
+        run: python3 Scripts/validate-project.py
+      - name: Run iOS tests
+        run: bash Scripts/test-ios.sh
+      - name: Build unsigned IPA
+        run: bash Scripts/build-ipa.sh
+      - name: Include license and source provenance
+        run: |
+          cp LICENSE THIRD_PARTY_NOTICES.md dist/
+          cp -R Licenses dist/
+          find build -path '*/swiftpm/Package.resolved' -exec cp '{}' dist/Package.resolved \; -quit
+          if [ -f bili.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved ]; then
+            cp bili.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved dist/Package.resolved
+          fi
+          git rev-parse HEAD > dist/SOURCE_COMMIT.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: PiliPlusSwift-unsigned-${{ github.run_number }}
+          path: dist/
+          if-no-files-found: error
+      - name: Upload failed test results
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: iOS-test-results
+          path: build/tests/PiliPlusSwift.xcresult
+          if-no-files-found: ignore
+
+  release:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: PiliPlusSwift-unsigned-${{ github.run_number }}
+          path: dist
+      - name: Publish tested build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          tag="build-${GITHUB_RUN_NUMBER}-${GITHUB_SHA:0:7}"
+          if [ "$REF_TYPE" = tag ]; then tag="$REF_NAME"; fi
+          git archive --format=tar.gz --output=dist/PiliPlusSwift-source.tar.gz "$GITHUB_SHA"
+          tar -czf dist/ThirdParty-Licenses.tar.gz -C dist Licenses
+          rm -r dist/Licenses
+          cat > release-notes.txt <<'NOTES'
+          Swift / AVPlayer 原生迁移构建，仍在迁移与验证中。
+          功能进度见仓库 docs/FEATURE_PARITY.md；不代表已完整替代 PiliPlus。
+          IPA 未签名，需要自行签名安装；不需要在构建中提供个人证书。
+          附带对应源代码、GPL-3.0 许可证和 SHA-256 校验值。
+          NOTES
+          gh release create "$tag" dist/* --target "$GITHUB_SHA" \
+            --title "PiliPlus Swift ${tag}" --notes-file release-notes.txt --prerelease
