@@ -735,6 +735,12 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                     )
                     .allowsHitTesting(false)
                     .zIndex(2.5)
+                    PiliOnlineSubtitleLayer(controller: detailViewModel.piliSubtitles, api: detailViewModel.api,
+                                            video: detailViewModel.detail, cid: detailViewModel.selectedCID,
+                                            clock: viewModel.playbackClock, landscape: configuration.isFullscreenActive)
+                        .zIndex(2.6)
+                    PiliInteractiveOverlay(controller: detailViewModel.piliInteractive, viewModel: detailViewModel)
+                        .zIndex(3.5)
                 }
             }
         }

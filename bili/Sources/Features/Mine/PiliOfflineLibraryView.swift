@@ -88,8 +88,8 @@ struct PiliOfflineLibraryView: View {
                         Label { Text("导出视频") } icon: { PikaIcon(PikaIcon.Name.file) }
                     }.buttonStyle(.glass)
                 }
-                if !item.hasDanmaku {
-                    CCNeoButton("下载弹幕", variant: .ghost) { store.cacheDanmaku(item.id) }
+                if !item.hasDanmaku || item.hasSubtitles != true {
+                    CCNeoButton("下载弹幕与字幕", variant: .ghost) { store.cacheDanmaku(item.id) }
                 }
             }
             Spacer(minLength: 0)

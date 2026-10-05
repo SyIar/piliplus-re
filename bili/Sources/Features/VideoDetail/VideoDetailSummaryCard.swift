@@ -62,6 +62,30 @@ struct VideoDetailSummaryCard: View {
                 AppHelper.shared.presentSheet(.sheet) { PiliDownloadSheet(viewModel: viewModel) }
             }
 
+            CCNeoButton("字幕", variant: .ghost, icon: PikaIcon.Name.fileText) {
+                PiliSubtitleSettingsView.present(controller: viewModel.piliSubtitles) { viewModel.stablePlayerViewModel?.seek(to: $0) }
+            }
+
+            CCNeoButton("互动分支", variant: .ghost, icon: PikaIcon.Name.folder) {
+                AppHelper.shared.presentSheet(.sheet) { PiliInteractiveHistoryView(controller: viewModel.piliInteractive) }
+            }
+
+            if let aid = viewModel.detail.aid {
+                HStack {
+                    CCNeoButton("记笔记", variant: .ghost, icon: PikaIcon.Name.edit) {
+                        AppHelper.shared.presentSheet(.sheet) {
+                            NavigationStack {
+                                PiliNoteEditorView(api: viewModel.api, aid: aid, initialTitle: viewModel.detail.title,
+                                                   noteID: nil, initialText: "", time: viewModel.stablePlayerViewModel?.currentTime)
+                            }
+                        }
+                    }
+                    CCNeoButton("视频笔记", variant: .ghost, icon: PikaIcon.Name.note) {
+                        AppHelper.shared.presentSheet(.sheet) { PiliNotesLibraryView(api: viewModel.api, video: viewModel.detail) }
+                    }
+                }
+            }
+
             VideoDetailInteractionNotice(store: renderPack.interactionStore)
             VideoDetailPlayURLNotice(
                 placeholderStore: renderPack.placeholderStore,

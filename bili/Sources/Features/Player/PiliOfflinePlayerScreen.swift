@@ -5,6 +5,7 @@ import SwiftUI
 struct PiliOfflinePlayerScreen: View {
     @StateObject private var model: PiliOfflinePlaybackModel
     @EnvironmentObject private var libraryStore: LibraryStore
+    @StateObject private var subtitles = PiliSubtitleController()
     @State private var danmaku: [DanmakuItem] = []
     @State private var showsDanmaku = true
 
@@ -14,11 +15,17 @@ struct PiliOfflinePlayerScreen: View {
     var body: some View {
         VStack(spacing: 16) {
             BiliPlayerView(viewModel: model.player, duration: model.item.duration,
-                           surfaceOverlay: AnyView(PiliOfflineDanmakuOverlay(player: model.player, items: danmaku,
-                                                                            isEnabled: showsDanmaku, settings: libraryStore.danmakuSettings)),
+                           surfaceOverlay: AnyView(ZStack {
+                               PiliOfflineDanmakuOverlay(player: model.player, items: danmaku,
+                                                         isEnabled: showsDanmaku, settings: libraryStore.danmakuSettings)
+                               PiliSubtitleOverlay(controller: subtitles, clock: model.player.playbackClock)
+                           }),
                            isDanmakuEnabled: showsDanmaku,
                            onToggleDanmaku: { showsDanmaku.toggle() })
                 .id(model.item.id)
+            CCNeoButton("字幕", variant: .ghost, icon: PikaIcon.Name.fileText) {
+                PiliSubtitleSettingsView.present(controller: subtitles) { model.player.seek(to: $0) }
+            }
             if let message = model.message { Text(message).ccText(font: .cc.sm, color: .cc.mutedForeground) }
             HStack {
                 CCNeoButton("上一条", variant: .ghost, icon: PikaIcon.Name.arrowLeft) { model.navigate(-1) }
@@ -34,6 +41,9 @@ struct PiliOfflinePlayerScreen: View {
             let values = await Task.detached(priority: .utility) { PiliOfflineDanmaku.load(id) }.value
             guard !Task.isCancelled, model.item.id == id else { return }
             danmaku = values
+            let cached = await Task.detached(priority: .utility) { PiliCachedSubtitle.load(id) }.value
+            guard !Task.isCancelled, model.item.id == id else { return }
+            subtitles.loadOffline(cached)
         }
         .onAppear { PiliSleepTimer.shared.resumeManually() }
         .onDisappear { model.leave() }

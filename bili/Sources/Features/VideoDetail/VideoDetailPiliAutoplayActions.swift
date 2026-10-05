@@ -9,6 +9,10 @@ extension VideoDetailViewModel {
             stablePlayerViewModel?.pause()
             return
         }
+        if piliInteractive.handlePlaybackEnded() {
+            stablePlayerViewModel?.pause()
+            return
+        }
         if playbackContentMode == .audioOnly {
             handleVideoListenPlaybackEnded()
             return

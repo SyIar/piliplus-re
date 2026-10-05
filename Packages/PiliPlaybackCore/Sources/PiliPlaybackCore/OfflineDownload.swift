@@ -51,6 +51,7 @@ public struct OfflineDownloadItem: Identifiable, Codable, Hashable, Sendable {
     public var errorMessage: String?
     public var lastPlaybackTime: Double = 0
     public var hasDanmaku = false
+    public var hasSubtitles: Bool?
     public var extrasError: String?
 
     public init(id: UUID = UUID(), bvid: String, cid: Int, title: String, author: String,

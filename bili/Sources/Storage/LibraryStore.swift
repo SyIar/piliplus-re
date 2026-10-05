@@ -1631,3 +1631,75 @@ enum HomeFeedLayout: String, CaseIterable, Identifiable {
         }
     }
 }
+
+// Reload the same validated defaults used on launch after a user-confirmed settings restore.
+extension LibraryStore {
+    func reloadPiliSettings() {
+        let restored = LibraryStore(userDefaults: userDefaults)
+        appearanceMode = restored.appearanceMode
+        appIconPreference = restored.appIconPreference
+        appTintColorHex = restored.appTintColorHex
+        followsSystemFontSize = restored.followsSystemFontSize
+        manualFontSize = restored.manualFontSize
+        defaultPlaybackRate = restored.defaultPlaybackRate
+        playbackHistorySyncThresholdSeconds = restored.playbackHistorySyncThresholdSeconds
+        preferredVideoQuality = restored.preferredVideoQuality
+        cellularPreferredVideoQuality = restored.cellularPreferredVideoQuality
+        playbackAutoOptimizationMode = restored.playbackAutoOptimizationMode
+        playbackStreamSourcePreference = restored.playbackStreamSourcePreference
+        videoCodecPreference = restored.videoCodecPreference
+        forceHardwareDecodeEnabled = restored.forceHardwareDecodeEnabled
+        dolbyVisionRenderingPolicy = restored.dolbyVisionRenderingPolicy
+        playbackCDNPreference = restored.playbackCDNPreference
+        playbackCustomCDNHost = restored.playbackCustomCDNHost
+        playbackCDNProbeRefreshPolicy = restored.playbackCDNProbeRefreshPolicy
+        playbackCDNProbeRefreshIntervalMinutes = restored.playbackCDNProbeRefreshIntervalMinutes
+        playbackNetworkAddressFamilyPreference = restored.playbackNetworkAddressFamilyPreference
+        prefersBackupAudioURL = restored.prefersBackupAudioURL
+        playbackCDNProbeSnapshot = restored.playbackCDNProbeSnapshot
+        blocksAdDynamics = restored.blocksAdDynamics
+        blocksGoodsDynamics = restored.blocksGoodsDynamics
+        blocksGoodsComments = restored.blocksGoodsComments
+        blockedDynamicKeywords = restored.blockedDynamicKeywords
+        recommendMinimumDurationSeconds = restored.recommendMinimumDurationSeconds
+        recommendMinimumViewCount = restored.recommendMinimumViewCount
+        recommendMinimumLikeRatioPercent = restored.recommendMinimumLikeRatioPercent
+        blockedRecommendKeywords = restored.blockedRecommendKeywords
+        appliesRecommendFiltersToRelatedVideos = restored.appliesRecommendFiltersToRelatedVideos
+        danmakuEnabled = restored.danmakuEnabled
+        danmakuSettings = restored.danmakuSettings
+        sponsorBlockEnabled = restored.sponsorBlockEnabled
+        pictureInPictureEnabled = restored.pictureInPictureEnabled
+        playerPerformanceOverlayEnabled = restored.playerPerformanceOverlayEnabled
+        resourceLoadingResumePacketWarmupEnabled = restored.resourceLoadingResumePacketWarmupEnabled
+        playbackPlayableFallbackDeadlineExperimentEnabled = restored.playbackPlayableFallbackDeadlineExperimentEnabled
+        videoRotationFrameReportOverlayEnabled = restored.videoRotationFrameReportOverlayEnabled
+        videoDetailNavigationLatencyDiagnosticsEnabled = restored.videoDetailNavigationLatencyDiagnosticsEnabled
+        playerControlEdgeScrimEnabled = restored.playerControlEdgeScrimEnabled
+        showsVideoDetailNetworkDiagnosticsButton = restored.showsVideoDetailNetworkDiagnosticsButton
+        showsVideoDetailPinnedProgressBar = restored.showsVideoDetailPinnedProgressBar
+        videoDetailAutoplayEnabled = restored.videoDetailAutoplayEnabled
+        videoListenPlaybackOrder = restored.videoListenPlaybackOrder
+        videoListenPlaylistSortOrder = restored.videoListenPlaylistSortOrder
+        cellularBiliTrafficCompatibilityExperimentEnabled = restored.cellularBiliTrafficCompatibilityExperimentEnabled
+        incognitoModeEnabled = restored.incognitoModeEnabled
+        guestModeEnabled = restored.guestModeEnabled
+        multiAccountExperimentEnabled = restored.multiAccountExperimentEnabled
+        dynamicCommentHitAreaVisualizationExperimentEnabled = restored.dynamicCommentHitAreaVisualizationExperimentEnabled
+        nativePullRefreshEnabled = restored.nativePullRefreshEnabled
+        minimizesTabBarOnScroll = restored.minimizesTabBarOnScroll
+        videoDetailSegmentedPickerGlassStyle = restored.videoDetailSegmentedPickerGlassStyle
+        liquidGlassStylePreference = restored.liquidGlassStylePreference
+        remoteImageQualityPreference = restored.remoteImageQualityPreference
+        videoCoverBadgeShadowOpacity = restored.videoCoverBadgeShadowOpacity
+        videoCoverBottomScrimEnabled = restored.videoCoverBottomScrimEnabled
+        showsVideoCoverDurationBadges = restored.showsVideoCoverDurationBadges
+        remoteImageDiagnosticsEnabled = restored.remoteImageDiagnosticsEnabled
+        force120HzScrollingEnabled = restored.force120HzScrollingEnabled
+        visibleRootTabs = restored.visibleRootTabs
+        homeRefreshTriggerDistance = restored.homeRefreshTriggerDistance
+        homeFeedLayout = restored.homeFeedLayout
+        homeRecommendFeedSourcePreference = restored.homeRecommendFeedSourcePreference
+        showsHotSearches = restored.showsHotSearches
+    }
+}

@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+import PiliPlaybackCore
 
 @testable import bili
 
@@ -3665,6 +3666,114 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         } catch {
             XCTAssertEqual(recorder.requests.count, 1)
         }
+    }
+
+    @MainActor
+    func testSubtitleMetadataUsesWBIAndPlaybackAccountAndCDNDoesNotReceiveCookies() async throws {
+        await BiliAPIResponseMemoryCache.shared.clear()
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            switch request.url?.path {
+            case "/x/web-interface/nav":
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
+            case "/x/player/wbi/v2":
+                return Self.response(for: request, body: #"{"code":0,"data":{"subtitle":{"subtitles":[{"lan":"zh-CN","lan_doc":"中文","subtitle_url":"//aisubtitle.hdslb.com/test.json","type":0}]},"interaction":{"graph_version":12}}}"#)
+            case "/test.json":
+                return Self.response(for: request, body: #"{"body":[{"from":1,"to":3,"content":"字幕"},{"from":5,"to":4,"content":"invalid"}]}"#)
+            default: return Self.response(for: request, body: #"{"code":-404}"#)
+            }
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=subtitle-session; DedeUserID=1001")
+        let metadata = try await api.fetchPiliPlayerMetadata(bvid: "BV1test", cid: 123)
+        let track = try XCTUnwrap(metadata.subtitle?.subtitles?.first)
+        let cues = try await api.fetchPiliSubtitles(track)
+        XCTAssertEqual(cues.count, 1)
+        XCTAssertEqual(metadata.interaction?.graphVersion, 12)
+        let metadataRequest = try XCTUnwrap(recorder.requests.first { $0.url?.path == "/x/player/wbi/v2" })
+        let query = URLComponents(url: try XCTUnwrap(metadataRequest.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertTrue(query.contains { $0.name == "w_rid" })
+        XCTAssertTrue(query.contains { $0.name == "cid" && $0.value == "123" })
+        XCTAssertTrue(metadataRequest.value(forHTTPHeaderField: "Cookie")?.contains("subtitle-session") == true)
+        let cdn = try XCTUnwrap(recorder.requests.first { $0.url?.path == "/test.json" })
+        XCTAssertNil(cdn.value(forHTTPHeaderField: "Cookie"))
+        XCTAssertFalse(cdn.httpShouldHandleCookies)
+    }
+
+    @MainActor
+    func testInteractiveBranchRequestKeepsGraphAndDecodesDestinationCID() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{"edge_id":9,"title":"开始","edges":{"questions":[{"choices":[{"id":10,"cid":987,"option":"向左"}]}]}}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=branch-session")
+        let edge = try await api.fetchPiliInteractiveEdge(bvid: "BV1test", graphVersion: 321, edgeID: 9)
+        XCTAssertEqual(edge.choices.first?.cid, 987)
+        XCTAssertEqual(edge.choices.first?.id, 10)
+        let request = try XCTUnwrap(recorder.request)
+        XCTAssertEqual(request.url?.path, "/x/stein/edgeinfo_v2")
+        let query = URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertTrue(query.contains { $0.name == "graph_version" && $0.value == "321" })
+        XCTAssertTrue(query.contains { $0.name == "edge_id" && $0.value == "9" })
+    }
+
+    @MainActor
+    func testWebDAVUsesDepthZeroAndCreatesCollectionBeforeUploadingAndRestoring() async throws {
+        let recorder = RequestContractRecorder()
+        let archive = try SettingsArchive.capture(["piliplus.subtitle.bold": true])
+        let data = try JSONEncoder().encode(archive)
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            let status: Int
+            switch request.httpMethod {
+            case "PROPFIND": status = 207
+            case "MKCOL": status = 405 // An existing collection is not deleted or recreated.
+            case "PUT": status = 204
+            default: status = 200
+            }
+            return Self.response(for: request, statusCode: status, data: request.httpMethod == "GET" ? data : Data())
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=must-not-be-used")
+        let client = try PiliWebDAVClient(address: "https://dav.example.com/user/", username: "alice", password: "example", session: api.session)
+        try await client.testConnection()
+        try await client.backup(archive)
+        let restored = try await client.restore()
+        XCTAssertEqual(restored.values.count, 1)
+        XCTAssertEqual(recorder.requests.map(\.httpMethod), ["PROPFIND", "MKCOL", "PUT", "GET"])
+        XCTAssertEqual(recorder.requests.first?.value(forHTTPHeaderField: "Depth"), "0")
+        XCTAssertEqual(recorder.requests.first?.url?.absoluteString, "https://dav.example.com/user/")
+        XCTAssertEqual(recorder.requests.last?.url?.path, "/user/PiliPlusSwift/settings.json")
+        for request in recorder.requests {
+            XCTAssertNil(request.value(forHTTPHeaderField: "Cookie"))
+            XCTAssertFalse(request.httpShouldHandleCookies)
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Basic " + Data("alice:example".utf8).base64EncodedString())
+        }
+    }
+
+    @MainActor
+    func testNoteSaveUsesOneAccountAndEncodesTextWithoutPublishingComments() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{"note_id":123456789}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=note-session; DedeUserID=1001; bili_jct=note-csrf")
+        let version = api.requestSnapshot(purpose: .main).playbackCredentialVersion
+        let result = try await api.savePiliNote(aid: 123, noteID: nil, title: "标题", text: "第一行\nA&B", published: false, credentialVersion: version)
+        XCTAssertEqual(result, "123456789")
+        let request = try XCTUnwrap(recorder.request)
+        XCTAssertEqual(request.url?.path, "/x/note/add")
+        let body = formValues(in: request)
+        XCTAssertEqual(body["csrf"], "note-csrf")
+        XCTAssertEqual(body["publish"], "0")
+        XCTAssertEqual(body["auto_comment"], "0")
+        let operations = try JSONDecoder().decode([[String: String]].self, from: Data(try XCTUnwrap(body["content"]).utf8))
+        XCTAssertEqual(operations.first?["insert"], "第一行\nA&B\n")
+        do {
+            _ = try await api.savePiliNote(aid: 123, noteID: nil, title: "标题", text: "内容", published: true, credentialVersion: version - 1)
+            XCTFail("Stale account must be rejected")
+        } catch { XCTAssertEqual(recorder.requests.count, 1) }
     }
 
     @MainActor

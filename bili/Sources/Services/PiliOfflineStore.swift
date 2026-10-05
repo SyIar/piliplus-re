@@ -353,7 +353,7 @@ final class PiliOfflineStore: ObservableObject {
     }
 
     func cacheDanmaku(_ id: UUID) {
-        guard let item = items.first(where: { $0.id == id }), !item.hasDanmaku, extras[id] == nil else { return }
+        guard let item = items.first(where: { $0.id == id }), (!item.hasDanmaku || item.hasSubtitles != true), extras[id] == nil else { return }
         let client = resolvedAPI()
         let token = UUID()
         extraTokens[id] = token
@@ -361,24 +361,42 @@ final class PiliOfflineStore: ObservableObject {
             guard let self else { return }
             defer { if self.extraTokens[id] == token { self.extras[id] = nil; self.extraTokens[id] = nil } }
             do {
-                let count = max(1, Int(ceil(item.duration / 360)))
-                var records: [PiliOfflineDanmaku] = []
-                var seen = Set<String>()
-                for segment in 1...count {
+                if !item.hasDanmaku {
+                    let count = max(1, Int(ceil(item.duration / 360)))
+                    var records: [PiliOfflineDanmaku] = []
+                    var seen = Set<String>()
+                    for segment in 1...count {
+                        try Task.checkCancellation()
+                        let values = try await client.fetchDanmakuSegment(cid: item.cid, segmentIndex: segment)
+                        records.append(contentsOf: values.filter { seen.insert($0.id).inserted }.map(PiliOfflineDanmaku.init))
+                    }
                     try Task.checkCancellation()
-                    let values = try await client.fetchDanmakuSegment(cid: item.cid, segmentIndex: segment)
-                    records.append(contentsOf: values.filter { seen.insert($0.id).inserted }.map(PiliOfflineDanmaku.init))
+                    guard let index = self.index(id), self.extraTokens[id] == token else { return }
+                    let url = try PiliOfflineStorage.directory(id).appendingPathComponent("danmaku.json")
+                    try JSONEncoder().encode(records).write(to: url, options: .atomic)
+                    self.items[index].hasDanmaku = true
+                    self.persist()
                 }
-                try Task.checkCancellation()
+                if item.hasSubtitles != true {
+                    let metadata = try await client.fetchPiliPlayerMetadata(bvid: item.bvid, cid: item.cid,
+                                                                           seasonID: item.seasonID, episodeID: item.episodeID)
+                    var subtitles: [PiliCachedSubtitle] = []
+                    for track in metadata.subtitle?.subtitles ?? [] {
+                        try Task.checkCancellation()
+                        subtitles.append(PiliCachedSubtitle(track: track, cues: try await client.fetchPiliSubtitles(track)))
+                    }
+                    try Task.checkCancellation()
+                    guard let index = self.index(id), self.extraTokens[id] == token else { return }
+                    let url = try PiliOfflineStorage.directory(id).appendingPathComponent("subtitles.json")
+                    try JSONEncoder().encode(subtitles).write(to: url, options: .atomic)
+                    self.items[index].hasSubtitles = true
+                }
                 guard let index = self.index(id), self.extraTokens[id] == token else { return }
-                let url = try PiliOfflineStorage.directory(id).appendingPathComponent("danmaku.json")
-                try JSONEncoder().encode(records).write(to: url, options: .atomic)
-                self.items[index].hasDanmaku = true
                 self.items[index].extrasError = nil
                 self.persist()
             } catch {
                 guard !Task.isCancelled, let index = self.index(id), self.extraTokens[id] == token else { return }
-                self.items[index].extrasError = "弹幕尚未保存：\(error.localizedDescription)"
+                self.items[index].extrasError = "弹幕或字幕尚未完整保存：\(error.localizedDescription)"
                 self.persist()
             }
         }

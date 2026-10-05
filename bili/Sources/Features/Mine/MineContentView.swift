@@ -49,6 +49,17 @@ struct MineContentView: View {
                     PiliPlaybackToolsView.present()
                 }
             }
+            Section("数据") {
+                Button {
+                    AppHelper.shared.presentSheet(.sheet) { PiliNotesLibraryView(api: dependencies.api) }
+                } label: { Label { Text("我的笔记") } icon: { PikaIcon(PikaIcon.Name.note) } }
+
+                Button {
+                    AppHelper.shared.presentSheet(.sheet) { PiliBackupSettingsView(libraryStore: libraryStore) }
+                } label: {
+                    Label { Text("设置备份与 WebDAV") } icon: { PikaIcon(PikaIcon.Name.folder) }
+                }
+            }
             MineAboutSection()
         }
         .tint(libraryStore.appTintColor)
