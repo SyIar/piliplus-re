@@ -1,5 +1,7 @@
 # PiliPlus 原版功能逐项盘点
 
+> 后续独立开发：`feat/native-near-term-features` 已实现近期八项增强，具体范围、入口、验证进度及真机边界见 [近期实现记录](NEAR_TERM_IMPLEMENTATION.md)。本文件保留原基线审计，不能用其中的“待迁移”覆盖该分支的新状态。
+
 基线：PiliPlus 2.1.5；本轮核对 2026-10-05 上游 `7a4f442f450ff0698d0fbe5cecb9666cd1c12e3f`。本轮源码证据与缺口见 [对比记录](UPSTREAM_AUDIT_2026-10-05.md)。
 
 此表保留原版 README 的功能项，状态均需由原生实现与验收证据更新；上游的勾选不代表本仓库完成。

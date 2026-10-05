@@ -8,6 +8,7 @@ nonisolated struct VideoDetailCommentDeepLinkLoadResult: Equatable {
 extension VideoDetailViewModel {
     func loadCommentRoot(for anchor: VideoCommentAnchor) async -> VideoDetailCommentDeepLinkLoadResult? {
         guard let target = commentTarget else { return nil }
+        let readerRevision = api.commentReadRevision
 
         do {
             let page = try await api.fetchCommentReplies(
@@ -17,7 +18,7 @@ extension VideoDetailViewModel {
                 page: 1,
                 sort: .time
             )
-            guard !Task.isCancelled,
+            guard !Task.isCancelled, api.commentReadRevision == readerRevision,
                   isCurrentCommentTarget(target)
             else {
                 return nil
@@ -57,7 +58,7 @@ extension VideoDetailViewModel {
                         page: pageNumber,
                         sort: .time
                     )
-                    guard !Task.isCancelled,
+                    guard !Task.isCancelled, api.commentReadRevision == readerRevision,
                           isCurrentCommentTarget(target)
                     else {
                         return nil
@@ -76,6 +77,7 @@ extension VideoDetailViewModel {
                 }
             }
 
+            guard api.commentReadRevision == readerRevision else { return nil }
             cacheDeepLinkedReplyThread(
                 rootComment: rootComment,
                 replies: replies,

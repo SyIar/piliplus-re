@@ -250,7 +250,8 @@ extension BiliAPIClient {
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
         guard await commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
-        return response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
+        let page = response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
+        return await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil)
     }
 
     private static func commentPaginationString(offset: String) throws -> String {
@@ -305,7 +306,8 @@ extension BiliAPIClient {
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
         guard await commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
-        return response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
+        let page = response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
+        return await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil)
     }
 
     func fetchCommentDialog(
@@ -352,7 +354,8 @@ extension BiliAPIClient {
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
         guard await commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
-        return response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
+        let page = response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
+        return await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil)
     }
 
     private func resolvedCommentCookieHeader(_ cookieHeader: String?) async -> String {

@@ -3101,12 +3101,19 @@ nonisolated struct Comment: Identifiable, Decodable, Hashable, Sendable {
     let content: CommentContent?
     let like: Int?
     let ctime: Int?
-    let replies: [Comment]?
+    private(set) var replies: [Comment]?
     let replyCount: Int?
-    let likeState: Int?
+    private(set) var likeState: Int?
     let isPinnedByOwner: Bool
 
     var id: Int { rpid }
+
+    func removingReaderReactions() -> Comment {
+        var copy = self
+        copy.likeState = nil
+        copy.replies = replies?.map { $0.removingReaderReactions() }
+        return copy
+    }
 
     var containsGoodsPromotion: Bool {
         content?.containsGoodsPromotion == true

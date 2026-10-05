@@ -4353,7 +4353,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
             recorder.record(request)
-            return Self.response(for: request, body: #"{"code":0,"data":{"replies":[]}}"#)
+            return Self.response(for: request, body: #"{"code":0,"data":{"replies":[{"rpid":9,"action":1,"like":10}]}}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=main; DedeUserID=1001; bili_jct=main-csrf", configure: { store, library in
             library.setMultiAccountExperimentEnabled(true)
@@ -4362,7 +4362,9 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             try store.selectInteractionAccount(mid: 1001)
             try store.setCommentReadPolicy(.account, mid: 2002)
         })
-        _ = try await api.fetchComments(aid: 7)
+        let page = try await api.fetchComments(aid: 7)
+        XCTAssertNil(page.replies?.first?.likeState)
+        XCTAssertEqual(page.replies?.first?.like, 10)
         XCTAssertTrue(recorder.request?.value(forHTTPHeaderField: "Cookie")?.contains("SESSDATA=reader") == true)
         try api.sessionStore.setCommentReadPolicy(.anonymous)
         _ = try await api.fetchComments(aid: 7)
@@ -4410,6 +4412,26 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         XCTAssertFalse(model.isRunning)
         XCTAssertEqual(model.completed, 0)
         XCTAssertTrue(model.message?.contains("已取消") == true)
+    }
+
+    @MainActor
+    func testCommentResponseIsDiscardedWhenReaderChangesInFlight() async throws {
+        let api = try makeAPI(cookieHeader: "SESSDATA=main; DedeUserID=1001", configure: { _, library in
+            library.setMultiAccountExperimentEnabled(true)
+        })
+        RequestContractURLProtocol.install { request in
+            let changed = DispatchSemaphore(value: 0)
+            Task { @MainActor in
+                try? api.sessionStore.setCommentReadPolicy(.anonymous)
+                changed.signal()
+            }
+            guard changed.wait(timeout: .now() + 3) == .success else { throw URLError(.timedOut) }
+            return Self.response(for: request, body: #"{"code":0,"data":{"replies":[]}}"#)
+        }
+        do {
+            _ = try await api.fetchComments(aid: 7)
+            XCTFail("Old reader response must not reach the comment list")
+        } catch { XCTAssertTrue(error is CancellationError, "\(error)") }
     }
 
     @MainActor

@@ -206,7 +206,8 @@ final class DynamicCommentReplyStore: ObservableObject {
         generation: Int,
         cookieHeader: String? = nil
     ) async -> DynamicCommentRefreshOutcome {
-        guard generation == replyLoadGenerations[comment.id] else { return .superseded }
+        let readerRevision = api.commentReadRevision
+        guard generation == replyLoadGenerations[comment.id], api.commentReadRevision == readerRevision else { return .superseded }
         guard let oid = commentOID, let type = commentType else {
             updateSnapshot { $0.replyStates[comment.id] = .failed("这条动态没有返回评论入口") }
             return .failed
@@ -215,22 +216,16 @@ final class DynamicCommentReplyStore: ObservableObject {
         updateSnapshot { $0.replyStates[comment.id] = .loading }
         do {
             let nextPage = reset ? 1 : (snapshot.replyPages[comment.id] ?? 1) + 1
-            let resolvedCookieHeader: String
-            if let cookieHeader {
-                resolvedCookieHeader = cookieHeader
-            } else {
-                resolvedCookieHeader = await api.interactionRequestContext(purpose: .commentRead).cookieHeader
-            }
-            guard generation == replyLoadGenerations[comment.id] else { return .superseded }
+            guard generation == replyLoadGenerations[comment.id], api.commentReadRevision == readerRevision else { return .superseded }
             let page = try await api.fetchCommentReplies(
                 oid: oid,
                 type: type,
                 root: comment.rpid,
                 page: nextPage,
                 sort: sort,
-                cookieHeader: resolvedCookieHeader
+                cookieHeader: cookieHeader
             )
-            guard generation == replyLoadGenerations[comment.id] else { return .superseded }
+            guard generation == replyLoadGenerations[comment.id], api.commentReadRevision == readerRevision else { return .superseded }
             let fetchedReplies = filteredComments(page.replies ?? [])
             let existingReplies = reset
                 ? filteredComments(comment.replies ?? [])
@@ -245,7 +240,7 @@ final class DynamicCommentReplyStore: ObservableObject {
             }
             return .refreshed
         } catch {
-            guard generation == replyLoadGenerations[comment.id] else { return .superseded }
+            guard generation == replyLoadGenerations[comment.id], api.commentReadRevision == readerRevision else { return .superseded }
             updateSnapshot {
                 if reset {
                     let fallbackReplies = filteredComments(comment.replies ?? [])
@@ -267,7 +262,8 @@ final class DynamicCommentReplyStore: ObservableObject {
 
     private func loadDialogPage(for root: Comment, reply: Comment, generation: Int) async {
         let key = dialogKey(root: root, reply: reply)
-        guard generation == dialogLoadGenerations[key] else { return }
+        let readerRevision = api.commentReadRevision
+        guard generation == dialogLoadGenerations[key], api.commentReadRevision == readerRevision else { return }
         guard let oid = commentOID, let type = commentType else {
             updateSnapshot { $0.dialogStates[key] = .failed("这条动态没有返回评论入口") }
             return
@@ -285,23 +281,21 @@ final class DynamicCommentReplyStore: ObservableObject {
 
         updateSnapshot { $0.dialogStates[key] = .loading }
         do {
-            let context = await api.interactionRequestContext(purpose: .commentRead)
-            guard generation == dialogLoadGenerations[key] else { return }
+            guard generation == dialogLoadGenerations[key], api.commentReadRevision == readerRevision else { return }
             let page = try await api.fetchCommentDialog(
                 oid: oid,
                 type: type,
                 root: root.rpid,
-                dialog: dialogID,
-                cookieHeader: context.cookieHeader
+                dialog: dialogID
             )
-            guard generation == dialogLoadGenerations[key] else { return }
+            guard generation == dialogLoadGenerations[key], api.commentReadRevision == readerRevision else { return }
             let replies = uniqueComments(filteredComments(page.replies ?? []) + fallbackReplies)
             updateSnapshot {
                 $0.dialogThreads[key] = replies.isEmpty ? fallbackReplies : replies
                 $0.dialogStates[key] = .loaded
             }
         } catch {
-            guard generation == dialogLoadGenerations[key] else { return }
+            guard generation == dialogLoadGenerations[key], api.commentReadRevision == readerRevision else { return }
             updateSnapshot {
                 $0.dialogThreads[key] = fallbackReplies
                 $0.dialogStates[key] = .failed(error.localizedDescription)

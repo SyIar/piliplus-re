@@ -8,6 +8,7 @@ extension VideoDetailViewModel {
             }
             return
         }
+        let readerRevision = api.commentReadRevision
         let sort = selectedCommentSort
         let generation = advanceCommentPageLoadGeneration()
         let isInitialPage = comments.isEmpty && commentCursor.isEmpty
@@ -22,14 +23,14 @@ extension VideoDetailViewModel {
             }
         }
         while true {
-            guard isCurrentCommentPageLoad(target: target, sort: sort, generation: generation) else {
+            guard api.commentReadRevision == readerRevision, isCurrentCommentPageLoad(target: target, sort: sort, generation: generation) else {
                 return
             }
             let previousCount = comments.count
             let previousCursor = commentCursor
             do {
                 let page = try await fetchCommentsWithTimeout(target: target, cursor: commentCursor, sort: sort)
-                guard isCurrentCommentPageLoad(target: target, sort: sort, generation: generation) else {
+                guard api.commentReadRevision == readerRevision, isCurrentCommentPageLoad(target: target, sort: sort, generation: generation) else {
                     return
                 }
                 guard !Task.isCancelled else {
@@ -54,14 +55,14 @@ extension VideoDetailViewModel {
                 remainingEmptyPageSkips -= 1
                 continueCommentPageLoadAfterEmptySkip(isLoadingMore: isLoadingMore)
             } catch is CancellationError {
-                guard isCurrentCommentPageLoad(target: target, sort: sort, generation: generation) else {
+                guard api.commentReadRevision == readerRevision, isCurrentCommentPageLoad(target: target, sort: sort, generation: generation) else {
                     return
                 }
                 didResolveLoadingState = true
                 resetCommentStateAfterCancellation(isInitialPage: isInitialPage, wasLoadingMore: isLoadingMore)
                 return
             } catch {
-                guard isCurrentCommentPageLoad(target: target, sort: sort, generation: generation) else {
+                guard api.commentReadRevision == readerRevision, isCurrentCommentPageLoad(target: target, sort: sort, generation: generation) else {
                     return
                 }
                 guard !Task.isCancelled else {

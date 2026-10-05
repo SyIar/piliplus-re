@@ -1,5 +1,7 @@
 # 默认蓝色、迁移缺口与上游开放事项评估
 
+> 后续独立开发：`feat/native-near-term-features` 已实现近期八项增强，具体范围、入口、验证进度及真机边界见 [近期实现记录](NEAR_TERM_IMPLEMENTATION.md)。本文件保留原基线审计，不能用其中的“待迁移”覆盖该分支的新状态。
+
 评估日期：2026-10-05。原生代码基线为 [`4cabbcc9`](https://github.com/SyIar/piliplus-re/commit/4cabbcc9e97b5dde79c4013932b3a5db55623971)，上游 main 为 [`7a4f442f`](https://github.com/bggRGjQaUbCoE/PiliPlus/commit/7a4f442f450ff0698d0fbe5cecb9666cd1c12e3f)。本次产品改动是主题色；下文的候选功能是评估结果，并未在本次全部实现。
 
 通过 GitHub REST API 分页获取当时全部 **32 个 open PR、268 个 open issue**；issue 统计排除了 PR。读取事项正文、32 个 PR 的变更文件列表，并重点复核候选补丁、相关讨论和本仓库实现。此文是迁移/排期初筛，不是对所有 PR 的完整安全审计或真机验收。关闭但未合并的 PR 不属于本次“当前未合并 PR”的统计口径。

@@ -123,7 +123,8 @@ final class DynamicCommentsViewModel: ObservableObject {
         cookieHeader: String? = nil,
         replacesExistingComments: Bool
     ) async -> DynamicCommentRefreshOutcome {
-        guard generation == loadGeneration else { return .superseded }
+        let readerRevision = api.commentReadRevision
+        guard generation == loadGeneration, api.commentReadRevision == readerRevision else { return .superseded }
         guard let oid = commentOID, let type = commentType else {
             state = .failed("这条动态没有返回评论入口")
             commentsEnd = true
@@ -149,7 +150,7 @@ final class DynamicCommentsViewModel: ObservableObject {
                     sort: selectedSort,
                     cookieHeader: cookieHeader
                 )
-                guard generation == loadGeneration else { return .superseded }
+                guard generation == loadGeneration, api.commentReadRevision == readerRevision else { return .superseded }
                 let pageComments = isInitialPage
                     ? (page.topReplies ?? []) + (page.replies ?? [])
                     : (page.replies ?? [])
@@ -187,7 +188,7 @@ final class DynamicCommentsViewModel: ObservableObject {
                     loadMoreState = .loading
                 }
             } catch is CancellationError {
-                guard generation == loadGeneration else { return .superseded }
+                guard generation == loadGeneration, api.commentReadRevision == readerRevision else { return .superseded }
                 if isInitialPage, comments.isEmpty {
                     state = .idle
                 } else {
@@ -197,7 +198,7 @@ final class DynamicCommentsViewModel: ObservableObject {
                 loadMoreState = .idle
                 return .failed
             } catch {
-                guard generation == loadGeneration else { return .superseded }
+                guard generation == loadGeneration, api.commentReadRevision == readerRevision else { return .superseded }
                 if comments.isEmpty {
                     state = .failed(error.localizedDescription)
                     loadMoreState = .idle

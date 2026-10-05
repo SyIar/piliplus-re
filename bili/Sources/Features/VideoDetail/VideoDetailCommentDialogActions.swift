@@ -29,6 +29,7 @@ extension VideoDetailViewModel {
         }
 
         let key = dialogKey(root: root, reply: reply)
+        let readerRevision = api.commentReadRevision
         let token = beginDialogThreadLoad(for: key)
         defer {
             clearDialogThreadLoadIfCurrent(key: key, token: token)
@@ -36,7 +37,7 @@ extension VideoDetailViewModel {
         let fallbackReplies = filteredComments(localDialogReplies(root: root, reply: reply))
 
         guard let dialogID = reply.dialogID, dialogID > 0 else {
-            guard isCurrentDialogThreadLoad(key: key, rootID: root.id, token: token, target: target) else {
+            guard api.commentReadRevision == readerRevision, isCurrentDialogThreadLoad(key: key, rootID: root.id, token: token, target: target) else {
                 return
             }
             dialogThreads[key] = fallbackReplies
@@ -52,14 +53,14 @@ extension VideoDetailViewModel {
                 root: root.rpid,
                 dialog: dialogID
             )
-            guard isCurrentDialogThreadLoad(key: key, rootID: root.id, token: token, target: target) else {
+            guard api.commentReadRevision == readerRevision, isCurrentDialogThreadLoad(key: key, rootID: root.id, token: token, target: target) else {
                 return
             }
             let replies = uniqueComments(filteredComments(page.replies ?? []) + fallbackReplies)
             dialogThreads[key] = replies.isEmpty ? fallbackReplies : replies
             dialogThreadStates[key] = .loaded
         } catch {
-            guard isCurrentDialogThreadLoad(key: key, rootID: root.id, token: token, target: target) else {
+            guard api.commentReadRevision == readerRevision, isCurrentDialogThreadLoad(key: key, rootID: root.id, token: token, target: target) else {
                 return
             }
             dialogThreads[key] = fallbackReplies

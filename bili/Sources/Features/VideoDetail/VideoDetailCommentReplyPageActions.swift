@@ -6,6 +6,7 @@ extension VideoDetailViewModel {
             replyThreadStates[comment.id] = .failed("没有找到评论对象，无法加载回复")
             return
         }
+        let readerRevision = api.commentReadRevision
         let token = beginReplyThreadLoad(for: comment.id)
         defer {
             clearReplyThreadLoadIfCurrent(commentID: comment.id, token: token)
@@ -19,7 +20,7 @@ extension VideoDetailViewModel {
                 root: comment.rpid,
                 page: nextPage
             )
-            guard isCurrentReplyThreadLoad(commentID: comment.id, token: token, target: target) else {
+            guard api.commentReadRevision == readerRevision, isCurrentReplyThreadLoad(commentID: comment.id, token: token, target: target) else {
                 return
             }
             let fetchedReplies = filteredComments(page.replies ?? [])
@@ -33,7 +34,7 @@ extension VideoDetailViewModel {
             replyThreadHasMore[comment.id] = !fetchedReplies.isEmpty && replies.count < totalCount
             replyThreadStates[comment.id] = .loaded
         } catch {
-            guard isCurrentReplyThreadLoad(commentID: comment.id, token: token, target: target) else {
+            guard api.commentReadRevision == readerRevision, isCurrentReplyThreadLoad(commentID: comment.id, token: token, target: target) else {
                 return
             }
             if reset {
