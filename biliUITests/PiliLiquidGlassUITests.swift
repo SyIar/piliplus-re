@@ -5,10 +5,12 @@ final class PiliLiquidGlassUITests: XCTestCase {
     func testFullscreenGlassControlsLockAndSeek() {
         continueAfterFailure = false
         let app = XCUIApplication()
+        defer { XCUIDevice.shared.orientation = .portrait }
         app.launchArguments = ["--ui-test-fixture", "glassPlayer"]
         app.launch()
         let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in app.frame.width > app.frame.height }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 10), .completed)
+        XCUIDevice.shared.orientation = .landscapeRight
         let play = app.buttons["ui.player.glass.play"]
         XCTAssertTrue(play.waitForExistence(timeout: 15))
         XCTAssertTrue(app.buttons["ui.player.glass.lock"].isHittable)
@@ -23,6 +25,11 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         XCTAssertTrue(app.frame.width > app.frame.height, "Lock must prevent device rotation from leaving fullscreen")
         unlock.tap()
+        let portrait = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in app.frame.height > app.frame.width }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [portrait], timeout: 8), .completed)
+        XCUIDevice.shared.orientation = .landscapeRight
+        let landscapeAgain = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in app.frame.width > app.frame.height }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [landscapeAgain], timeout: 8), .completed)
         XCTAssertTrue(play.waitForExistence(timeout: 3))
         let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         screenshot.name = "Liquid Glass fullscreen controls"

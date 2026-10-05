@@ -4383,7 +4383,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
-    func testLiveProbeFollowsHLSMediaCapsTrafficAndDoesNotForwardCredentials() async throws {
+    func testLiveProbeFollowsHLSMediaCapsSampleBytesAndDoesNotForwardCredentials() async throws {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
             recorder.record(request)

@@ -233,7 +233,12 @@ extension VideoDetailViewModel {
 
         let resumeTime = currentPlaybackResumeTime()
         let playbackRate = stablePlayerViewModel?.playbackRate ?? .x10
-        selectedVideoListenAudioPreferenceKey = fallbackVariant.preferenceKey
+        if selectedVideoListenAudioPreferenceKey == nil {
+            // A temporary fallback must not turn Automatic into a persisted manual choice.
+            automaticVideoListenAudioVariantID = fallbackVariant.id
+        } else {
+            selectedVideoListenAudioPreferenceKey = fallbackVariant.preferenceKey
+        }
         persistVideoListenPlaybackSession(wantsPlayback: true)
         isSwitchingVideoListenMode = true
         let failureDetail = message?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""

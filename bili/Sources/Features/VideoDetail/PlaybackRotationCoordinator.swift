@@ -171,6 +171,7 @@ final class PlaybackRotationCoordinator: ObservableObject {
     func setControlsLocked(_ locked: Bool, locksOrientation: Bool = true,
                            orientation: UIInterfaceOrientation? = nil, in scene: UIWindowScene? = nil) {
         guard isViewActive else { lockedOrientation = nil; return }
+        let wasLocked = lockedOrientation != nil
         if locked && locksOrientation {
             let current = orientation ?? AppOrientationLock.currentOrientation(in: scene)
             switch current {
@@ -185,6 +186,19 @@ final class PlaybackRotationCoordinator: ObservableObject {
             lockedOrientation = nil
         }
         AppOrientationLock.update(to: lockedOrientation ?? unlockedOrientations, in: scene)
+        if wasLocked, lockedOrientation == nil {
+            let target: UIInterfaceOrientationMask?
+            switch UIDevice.current.orientation {
+            case .portrait: target = .portrait
+            case .portraitUpsideDown: target = .portraitUpsideDown
+            case .landscapeLeft: target = .landscapeRight
+            case .landscapeRight: target = .landscapeLeft
+            default: target = nil
+            }
+            if let target, !target.intersection(unlockedOrientations).isEmpty {
+                requestGeometryUpdate(to: target, in: scene)
+            }
+        }
     }
 
     func restorePortrait(in scene: UIWindowScene?) {

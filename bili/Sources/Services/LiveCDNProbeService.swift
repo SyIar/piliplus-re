@@ -23,6 +23,7 @@ nonisolated final class LiveCDNProbeService: Sendable {
         }
     }
 
+    @concurrent
     func probe(url: URL, headers: [String: String],
                progress: @Sendable (LiveCDNProbeProgress) async -> Void) async throws -> LiveCDNProbeProgress {
         var target = url
