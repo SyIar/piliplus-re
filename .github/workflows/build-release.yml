@@ -15,7 +15,34 @@ concurrency:
   cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
+  prioritize-main:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Release runners occupied by superseded dependency builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_ids="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?event=pull_request&per_page=100" --jq '
+            .workflow_runs[]
+            | select(.name == "Build, test and publish IPA")
+            | select(.actor.login == "dependabot[bot]")
+            | select(.head_branch | startswith("dependabot/github_actions/"))
+            | select(.status == "in_progress" or .status == "queued" or .status == "pending")
+            | .id')"
+          for run_id in $run_ids; do
+            if ! gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel"; then
+              echo "::warning::Could not cancel dependency run ${run_id}; it may already have finished."
+            fi
+          done
+
   test:
+    # Dependency-only bot PRs can be tested with a manual run; main/tag builds always run the full gate.
+    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
     runs-on: macos-26
     timeout-minutes: 55
     steps:
@@ -46,6 +73,7 @@ jobs:
           if-no-files-found: ignore
 
   build:
+    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
     runs-on: macos-26
     timeout-minutes: 40
     steps:
@@ -72,7 +100,7 @@ jobs:
           if-no-files-found: error
   release:
     needs: [test, build]
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     permissions:
       contents: write

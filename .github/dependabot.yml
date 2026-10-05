@@ -4,3 +4,6 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Keep the initial native migration from repeatedly rebasing dependency PRs.
+    open-pull-requests-limit: 0
+    rebase-strategy: disabled

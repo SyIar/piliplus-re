@@ -19,7 +19,7 @@ nonisolated struct PiliPlaybackQueue: Hashable, Sendable {
 }
 
 extension VideoItem {
-    func withPiliPlaybackQueue(_ queue: PiliPlaybackQueue?) -> VideoItem {
+    nonisolated func withPiliPlaybackQueue(_ queue: PiliPlaybackQueue?) -> VideoItem {
         var video = self
         video.piliPlaybackQueue = queue
         return video
