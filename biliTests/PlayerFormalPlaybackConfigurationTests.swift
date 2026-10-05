@@ -347,11 +347,11 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
     }
 
     @MainActor
-    func testLibraryStoreDefaultsThemeTintToBilibiliPink() {
+    func testLibraryStoreDefaultsThemeTintToPiliPlusGreen() {
         let store = LibraryStore(userDefaults: makeUserDefaults())
 
-        XCTAssertEqual(store.appTintColorHex, "#FB7299")
-        XCTAssertEqual(LibraryStore.defaultAppTintColorHex, "#FB7299")
+        XCTAssertEqual(store.appTintColorHex, "#56B47B")
+        XCTAssertEqual(LibraryStore.defaultAppTintColorHex, "#56B47B")
     }
 
     @MainActor
@@ -361,8 +361,8 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
 
         let store = LibraryStore(userDefaults: defaults)
 
-        XCTAssertEqual(store.appTintColorHex, "#FB7299")
-        XCTAssertEqual(defaults.string(forKey: "cc.bili.appearance.tintColorHex.v1"), "#FB7299")
+        XCTAssertEqual(store.appTintColorHex, "#56B47B")
+        XCTAssertEqual(defaults.string(forKey: "cc.bili.appearance.tintColorHex.v1"), "#56B47B")
     }
 
     @MainActor

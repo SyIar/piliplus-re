@@ -29,7 +29,7 @@
 | 视频截图、动图、Live Photo、超分 | 待迁移/技术评估 | AVPlayer 不直接提供原版 mpv 滤镜；需另行实现导出与图像处理 |
 | AI 翻译、高级弹幕、特殊音频效果 | 待迁移/技术评估 | 不能将更换播放器当成功能自动保留 |
 | ChunUI 与 Liquid Glass | 部分迁移 | 已接入主题、字号层级、底栏图标、播放设置与玻璃控件；历史页面仍需逐页统一 |
-| GitHub Actions / IPA Release | 基础 Release 已成功，尚未发布 | `af744bb`（离线下载首轮）设备 Release 与模拟器测试包编译通过，iOS 测试运行仍待结果；本次字幕/互动/笔记/WebDAV 增量继续由 CI 验证。签名版本尚未配置 |
+| GitHub Actions / IPA Release | 基础 Release 已成功，尚未发布 | `af744bb`（离线下载首轮）设备 Release 与模拟器测试包编译通过，iOS 已运行 692 项用例，仅 2 项主题测试的 4 处旧粉色预期失败（本次已更新为 PiliPlus 绿色）；本次字幕/互动/笔记/WebDAV 增量继续由 CI 验证。签名版本尚未配置 |
 
 ## 重点播放验收
 
@@ -56,3 +56,5 @@
 - iOS 请求契约用例补充字幕 WBI 与无凭据 CDN、互动分支图/CID、WebDAV 方法顺序；待云端运行。
 - 主分支的新推送排队等待已有完整测试结束，避免长测试因持续迁移被反复取消；PR 仍取消旧运行。
 - 协议核对：原版 `lib/pages/video/controller.dart`、`lib/http/fav.dart`、`lib/pages/webdav/webdav.dart`；笔记信息/保存字段另核对 [bpi-rs 源码](https://docs.rs/bpi-rs/latest/src/bpi_rs/note/info.rs.html)，未引入其代码或依赖。WebDAV 方法遵循 [RFC 4918](https://www.rfc-editor.org/rfc/rfc4918.html)。
+
+- `af744bb` 云端实测：692 项 iOS 用例完整执行，失败仅限两个主题迁移用例的旧预期；所有其余用例通过。基础设备 Release 和离线下载代码均编译通过。更新测试预期后需再次完整运行，不能据此宣称当前主分支已全绿。
