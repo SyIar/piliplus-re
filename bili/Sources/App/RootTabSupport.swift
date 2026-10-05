@@ -50,6 +50,7 @@ extension View {
 }
 
 struct RootTabBarAppearanceInstaller: UIViewControllerRepresentable {
+    @Environment(\.colorScheme) private var colorScheme
     let tintColorHex: String
     let glassStyle: VideoDetailSegmentedPickerGlassStyle
 
@@ -61,6 +62,7 @@ struct RootTabBarAppearanceInstaller: UIViewControllerRepresentable {
         controller.tintColorHex = tintColorHex
         controller.selectedColor = AppThemeTintColor.uiColor(for: tintColorHex)
         controller.glassStyle = glassStyle
+        controller.interfaceStyle = colorScheme == .dark ? .dark : .light
         controller.applySoon()
     }
 
@@ -68,6 +70,7 @@ struct RootTabBarAppearanceInstaller: UIViewControllerRepresentable {
         var selectedColor = AppThemeTintColor.uiColor(for: AppThemeTintColor.defaultHex)
         var tintColorHex = AppThemeTintColor.defaultHex
         var glassStyle: VideoDetailSegmentedPickerGlassStyle = .clear
+        var interfaceStyle: UIUserInterfaceStyle = .unspecified
         private weak var appliedTabBar: UITabBar?
         private var appliedTintColorHex: String?
         private var appliedGlassStyle: VideoDetailSegmentedPickerGlassStyle?
@@ -91,7 +94,12 @@ struct RootTabBarAppearanceInstaller: UIViewControllerRepresentable {
 
         private func applyAppearance(force: Bool = false) {
             guard let tabBar = tabBarController?.tabBar ?? enclosingTabBarController()?.tabBar else { return }
-            let interfaceStyle = tabBar.traitCollection.userInterfaceStyle
+            // The separated search tab can retain UIKit's previous traits after
+            // SwiftUI changes its color scheme. Update the bar, not its parent,
+            // so system appearance changes still reach this representable.
+            if tabBar.overrideUserInterfaceStyle != interfaceStyle {
+                tabBar.overrideUserInterfaceStyle = interfaceStyle
+            }
             guard force
                 || appliedTabBar !== tabBar
                 || appliedTintColorHex != tintColorHex

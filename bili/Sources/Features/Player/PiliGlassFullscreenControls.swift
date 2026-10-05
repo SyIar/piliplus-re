@@ -38,32 +38,35 @@ struct PiliGlassFullscreenControls: View {
                     LinearGradient(colors: [.black.opacity(0.48), .clear, .black.opacity(0.48)],
                                    startPoint: .top, endPoint: .bottom)
                         .allowsHitTesting(false)
+                }
+                ZStack {
+                    if !isLocked {
+                        VStack(spacing: 0) {
+                            header
+                            Spacer(minLength: 12)
+                            footer
+                        }
 
-                    VStack(spacing: 0) {
-                        header
-                        Spacer(minLength: 12)
-                        footer
-                    }
-
-                    transport
-                        .offset(y: -8)
-                } else {
-                    VStack {
-                        Spacer()
-                        HStack {
+                        transport
+                            .offset(y: -8)
+                    } else {
+                        VStack {
                             Spacer()
-                            PiliGlassPlayerButton(symbol: "lock.open", title: "解锁播放控件") {
-                                isLocked = false
-                                actions.interaction()
+                            HStack {
+                                Spacer()
+                                PiliGlassPlayerButton(symbol: "lock.open", title: "解锁播放控件") {
+                                    isLocked = false
+                                    actions.interaction()
+                                }
+                                .accessibilityIdentifier("ui.player.glass.unlock")
                             }
-                            .accessibilityIdentifier("ui.player.glass.unlock")
                         }
                     }
                 }
+                .padding(.horizontal, max(20, max(max(geometry.safeAreaInsets.leading, geometry.safeAreaInsets.trailing), max(windowInsets.left, windowInsets.right))))
+                .padding(.top, max(16, geometry.safeAreaInsets.top))
+                .padding(.bottom, max(14, geometry.safeAreaInsets.bottom))
             }
-            .padding(.horizontal, max(20, max(max(geometry.safeAreaInsets.leading, geometry.safeAreaInsets.trailing), max(windowInsets.left, windowInsets.right))))
-            .padding(.top, max(16, geometry.safeAreaInsets.top))
-            .padding(.bottom, max(14, geometry.safeAreaInsets.bottom))
         }
         .foregroundStyle(.white)
         .environment(\.colorScheme, .dark)

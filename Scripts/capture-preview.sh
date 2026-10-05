@@ -27,3 +27,12 @@ xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-dark.png"
 xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassPlayer
 sleep 4
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-player-glass.png"
+# simctl exports the physical display buffer in portrait orientation even when
+# UIKit is in landscape. Normalize this landscape-only artifact for viewing.
+player_preview="$project_root/dist/preview-player-glass.png"
+player_dimensions="$(sips -g pixelWidth -g pixelHeight "$player_preview")"
+player_width="$(awk '/pixelWidth:/ { print $2 }' <<< "$player_dimensions")"
+player_height="$(awk '/pixelHeight:/ { print $2 }' <<< "$player_dimensions")"
+if (( player_width < player_height )); then
+  sips -r 270 "$player_preview" > /dev/null
+fi
