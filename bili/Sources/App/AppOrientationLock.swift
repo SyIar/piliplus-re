@@ -102,6 +102,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         PlayerSystemMediaControls.clear()
     }
 
+    func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String,
+                     completionHandler: @escaping () -> Void) {
+        guard identifier == PiliOfflineStore.sessionIdentifier else { completionHandler(); return }
+        PiliOfflineStore.shared.handleBackgroundEvents(completion: completionHandler)
+    }
+
     func applicationDidEnterBackground(_ application: UIApplication) {
         ActivePlaybackCoordinator.shared.pauseActivePlaybackForAppBackground()
     }

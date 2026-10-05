@@ -1,6 +1,8 @@
 import SwiftUI
+import ChunUI
 
 struct MineContentView: View {
+    @EnvironmentObject private var dependencies: AppDependencies
     @ObservedObject var viewModel: MineViewModel
     @ObservedObject var accountMessageViewModel: AccountMessageCenterViewModel
     @ObservedObject var sessionStore: SessionStore
@@ -34,6 +36,15 @@ struct MineContentView: View {
                 onOpenRoute: onOpenRoute
             )
             Section("播放方式") {
+                Button {
+                    AppHelper.shared.presentSheet(.sheet) {
+                        NavigationStack { PiliOfflineLibraryView() }
+                            .environmentObject(dependencies)
+                            .environmentObject(libraryStore)
+                    }
+                } label: {
+                    Label { Text("离线下载") } icon: { PikaIcon(PikaIcon.Name.save) }
+                }
                 Button("自动连播与定时停止") {
                     PiliPlaybackToolsView.present()
                 }

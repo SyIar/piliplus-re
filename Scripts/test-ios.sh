@@ -34,7 +34,9 @@ if [ "$test_action" != build-for-testing ]; then
 import subprocess,sys
 device=sys.argv[1]
 subprocess.run(["xcrun", "simctl", "boot", device], check=False, timeout=60)
-subprocess.run(["xcrun", "simctl", "bootstatus", device, "-b"], check=True, timeout=180)
+# A clean hosted runtime performs Data Migration before SpringBoard is ready.
+# The observed runner took 192 seconds; keep this bounded without rejecting a healthy first boot.
+subprocess.run(["xcrun", "simctl", "bootstatus", device, "-b"], check=True, timeout=600)
 PY
 fi
 xcodebuild "$test_action" \

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailSummaryCard: View {
     let viewModel: VideoDetailViewModel
@@ -55,6 +56,10 @@ struct VideoDetailSummaryCard: View {
 
             if !viewModel.detail.isPGCEpisode {
                 PiliVideoLibraryActions(viewModel: viewModel, descriptionStore: renderPack.descriptionStore)
+            }
+
+            CCNeoButton("离线下载", variant: .ghost, icon: PikaIcon.Name.save) {
+                AppHelper.shared.presentSheet(.sheet) { PiliDownloadSheet(viewModel: viewModel) }
             }
 
             VideoDetailInteractionNotice(store: renderPack.interactionStore)

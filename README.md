@@ -14,9 +14,10 @@
 - 全局定时停止：按实际截止时间计时，支持播完当前再停；到点停止优先于连播，并持久化状态。
 - 空降助手沿用 SponsorBlock 服务，合并重叠区间，减少连续 seek。
 - 稍后再看支持加入、移除，以及清理已看完和失效条目；写操作需登录对应账号。
+- 新增离线下载队列、多 P 与画质选择、暂停续传、后台传输、音视频合并、离线播放与弹幕、批量管理；等待 iOS 编译和真机验收。
 - ChunUI 主题、13/17/24 字号层级、Pika 图标、播放设置与原生玻璃按钮已接入，其他页面仍在迁移。
 
-离线下载、互动视频、笔记、WebDAV、DLNA 等仍有明确缺口；详情以迁移清单为准。此前反馈的退出视频瞬态爆音，必须在目标 iPhone 和 iOS 上复测，不能仅凭更换播放器宣称修复。
+字幕、互动视频、笔记、WebDAV、DLNA 等仍有明确缺口；详情以迁移清单为准。此前反馈的退出视频瞬态爆音，必须在目标 iPhone 和 iOS 上复测，不能仅凭更换播放器宣称修复。
 
 ## 开发与构建
 
@@ -45,7 +46,7 @@ bash Scripts/build-ipa.sh
 3. 并行编译设备 Release 包并生成 `PiliPlusSwift-unsigned.ipa`，上传 Actions artifact。
 4. `main` 和标签的成功构建自动创建预发布，附 IPA、SHA-256、对应源代码和许可说明。PR 只构建，不发布。
 
-下载入口：[Releases](https://github.com/SyIar/piliplus-re/releases)。首次成功运行之前不会有可下载的 IPA。
+下载入口：[Releases](https://github.com/SyIar/piliplus-re/releases)。基础设备 IPA 已在 Actions 构建成功，完整测试通过后才会生成 Release。
 
 IPA **未签名**，需要自行签名后安装。流水线不需要个人证书，也不会发布到 App Store 或 TestFlight。只有全部构建与测试成功才会执行发布任务。
 

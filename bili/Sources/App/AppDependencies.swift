@@ -37,6 +37,7 @@ final class AppDependencies: ObservableObject {
         self.api = api
         self.accountMessageService = AccountMessageService(sessionStore: sessionStore, api: api)
         self.sponsorBlockService = SponsorBlockService()
+        PiliOfflineStore.shared.configure(api: api)
         sessionStore.$playbackCredentialVersion
             .dropFirst()
             .sink { [weak self] _ in
