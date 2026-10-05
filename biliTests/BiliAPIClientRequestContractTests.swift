@@ -3779,6 +3779,56 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testFavoriteFolderAndBatchMutationsPreserveAccountPrivacyAndResourceTypes() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=favorite-session; DedeUserID=1001; bili_jct=favorite-csrf")
+        let version = api.requestSnapshot(purpose: .interaction).playbackCredentialVersion
+        try await api.savePiliFavoriteFolder(id: nil, title: "收藏 A+B & C", intro: "第一行\n第二行", isPublic: false, cover: "", credentialVersion: version)
+        try await api.mutatePiliFavoriteItems(folderID: 8, aids: [12, 11, 12], action: .move(to: 9), credentialVersion: version)
+        try await api.mutatePiliFavoriteItems(folderID: 8, aids: [11], action: .remove, credentialVersion: version)
+        try await api.sortPiliFavoriteFolders(ids: [8, 10, 9], credentialVersion: version)
+        XCTAssertEqual(recorder.requests.map { $0.url?.path }, ["/x/v3/fav/folder/add", "/x/v3/fav/resource/move", "/x/v3/fav/resource/batch-deal", "/x/v3/fav/folder/sort"])
+        let create = formValues(in: recorder.requests[0])
+        XCTAssertEqual(create["title"], "收藏 A+B & C")
+        XCTAssertEqual(create["intro"], "第一行\n第二行")
+        XCTAssertEqual(create["privacy"], "1")
+        let encoded = String(decoding: try XCTUnwrap(requestBodyData(from: recorder.requests[0])), as: UTF8.self)
+        XCTAssertTrue(encoded.contains("%2B"), "A literal plus must survive application/x-www-form-urlencoded decoding")
+        let move = formValues(in: recorder.requests[1])
+        XCTAssertEqual(move["resources"], "11:2,12:2")
+        XCTAssertEqual(move["src_media_id"], "8")
+        XCTAssertEqual(move["tar_media_id"], "9")
+        XCTAssertEqual(move["mid"], "1001")
+        XCTAssertEqual(formValues(in: recorder.requests[2])["del_media_ids"], "8")
+        XCTAssertEqual(formValues(in: recorder.requests[3])["sort"], "8,10,9")
+        XCTAssertNotNil(formValues(in: recorder.requests[3])["sign"])
+        for request in recorder.requests {
+            XCTAssertEqual(formValues(in: request)["csrf"], "favorite-csrf")
+            XCTAssertTrue(request.value(forHTTPHeaderField: "Cookie")?.contains("favorite-session") == true)
+        }
+        do {
+            try await api.mutatePiliFavoriteItems(folderID: 8, aids: [11], action: .remove, credentialVersion: version - 1)
+            XCTFail("Must reject stale account")
+        } catch { XCTAssertEqual(recorder.requests.count, 4) }
+    }
+
+    @MainActor
+    func testFavoriteMutationDoesNotRetryAnAmbiguousNetworkFailure() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in recorder.record(request); throw URLError(.networkConnectionLost) }
+        let api = try makeAPI(cookieHeader: "SESSDATA=favorite-session; DedeUserID=1001; bili_jct=favorite-csrf")
+        let version = api.requestSnapshot(purpose: .interaction).playbackCredentialVersion
+        do {
+            try await api.savePiliFavoriteFolder(id: nil, title: "新收藏夹", intro: "", isPublic: false, cover: "", credentialVersion: version)
+            XCTFail("Expected network error")
+        } catch { XCTAssertEqual(recorder.requests.count, 1) }
+    }
+
+    @MainActor
     func testNoteSaveUsesOneAccountAndEncodesTextWithoutPublishingComments() async throws {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in

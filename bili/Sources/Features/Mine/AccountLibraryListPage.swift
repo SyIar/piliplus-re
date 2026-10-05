@@ -4,6 +4,7 @@ import ChunUI
 struct AccountLibraryListPage: View {
     let kind: AccountLibraryKind
     @ObservedObject var viewModel: MineViewModel
+    @EnvironmentObject private var dependencies: AppDependencies
     @EnvironmentObject private var sessionStore: SessionStore
 
     var body: some View {
@@ -15,6 +16,15 @@ struct AccountLibraryListPage: View {
         .nativeTopScrollEdgeEffect()
         .hiddenInlineNavigationTitle()
         .toolbar {
+            if kind == .favorites, sessionStore.isLoggedIn {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("管理收藏夹") {
+                        AppHelper.shared.presentSheet(.sheet) {
+                            PiliFavoriteFoldersView(api: dependencies.api) { Task { await viewModel.refreshFavorites() } }
+                        }
+                    }
+                }
+            }
             if kind == .watchLater, sessionStore.isLoggedIn {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("管理") {

@@ -124,7 +124,9 @@ extension BiliAPIClient {
         fileName: String,
         mimeType: String,
         fileData: Data,
-        referer: String = "https://www.bilibili.com"
+        referer: String = "https://www.bilibili.com",
+        cookieHeader: String? = nil,
+        retryPolicy: BiliNetworkRetryPolicy = .api
     ) async throws -> T {
         let boundary = "CiliCiliBoundary\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
         var body = Data()
@@ -139,12 +141,15 @@ extension BiliAPIClient {
         body.append(fileData)
         body.append(contentsOf: "\r\n--\(boundary)--\r\n".utf8)
 
+        let resolvedCookieHeader: String
+        if let cookieHeader { resolvedCookieHeader = cookieHeader }
+        else { resolvedCookieHeader = await interactionRequestContext().cookieHeader }
         var request = try await makeRequest(
             base: base,
             path: path,
             query: [:],
             referer: referer,
-            cookieHeader: await interactionRequestContext().cookieHeader
+            cookieHeader: resolvedCookieHeader
         )
         request.httpMethod = "POST"
         request.timeoutInterval = 45
@@ -154,7 +159,7 @@ extension BiliAPIClient {
         let (data, _) = try await data(
             for: request,
             priority: URLSessionTask.highPriority,
-            retryPolicy: .api
+            retryPolicy: retryPolicy
         )
         guard !data.isEmpty else { throw BiliAPIError.emptyData }
         return try await Self.decode(data, priority: URLSessionTask.highPriority)
@@ -253,7 +258,9 @@ extension BiliAPIClient {
     static func formBody(from fields: [String: String]) -> Data {
         var components = URLComponents()
         components.queryItems = fields.map { URLQueryItem(name: $0.key, value: $0.value) }
-        return Data((components.percentEncodedQuery ?? "").utf8)
+        // URL query encoding leaves '+' literal, but HTML form decoding treats it
+        // as a space. Preserve plus signs in note text, names and auth values.
+        return Data((components.percentEncodedQuery ?? "").replacingOccurrences(of: "+", with: "%2B").utf8)
     }
 
     nonisolated static func randomAlphaNumeric(length: Int) -> String {

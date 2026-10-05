@@ -3686,7 +3686,7 @@ nonisolated struct FavoriteFolderListData: Decodable, Hashable {
     let list: [FavoriteFolder]?
 }
 
-nonisolated struct FavoriteFolder: Identifiable, Decodable, Hashable {
+nonisolated struct FavoriteFolder: Identifiable, Decodable, Hashable, Sendable {
     let id: Int
     let title: String?
     let favState: Int?

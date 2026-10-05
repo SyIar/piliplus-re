@@ -1,5 +1,6 @@
 import AVFoundation
 import XCTest
+import PiliPlaybackCore
 @testable import bili
 
 final class VideoListenModeTests: XCTestCase {
@@ -241,7 +242,7 @@ final class VideoListenModeTests: XCTestCase {
         defer { timer.cancel() }
         viewModel.playbackContentMode = .audioOnly
         viewModel.setVideoListenSleepTimer(.minutes30)
-        guard case let .scheduled(deadline, finishCurrent) = timer.policy.state else { return XCTFail("Expected shared timer") }
+        guard case .scheduled(deadline: let deadline, finishCurrent: let finishCurrent) = timer.policy.state else { return XCTFail("Expected shared timer") }
         XCTAssertFalse(finishCurrent)
         XCTAssertEqual(viewModel.videoListenSleepTimerDeadline, deadline)
         XCTAssertNil(viewModel.videoListenSleepTimerTask)

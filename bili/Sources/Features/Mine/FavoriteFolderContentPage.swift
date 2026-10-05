@@ -1,8 +1,10 @@
 import SwiftUI
+import ChunUI
 
 struct FavoriteFolderContentPage: View {
     let folder: FavoriteFolder
     @ObservedObject var viewModel: MineViewModel
+    @EnvironmentObject private var dependencies: AppDependencies
     @EnvironmentObject private var sessionStore: SessionStore
 
     var body: some View {
@@ -18,6 +20,13 @@ struct FavoriteFolderContentPage: View {
         .nativeTopScrollEdgeEffect()
         .hiddenInlineNavigationTitle()
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("整理") {
+                    AppHelper.shared.presentSheet(.sheet) {
+                        PiliFavoriteItemsView(api: dependencies.api, folder: folder) { Task { await reload() } }
+                    }
+                }.disabled(!sessionStore.isLoggedIn || state.isLoading)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task { await reload() }
