@@ -89,7 +89,7 @@ private struct PiliOfflineAudioControls: View {
                                       set: { scrubTime = $0 }), in: 0...duration) { editing in
                     if editing { scrubTime = min(duration, max(0, clock.currentTime)) }
                     isScrubbing = editing
-                    if !editing { player.seek(to: scrubTime) }
+                    if !editing { player.seek(to: scrubTime / duration) }
                 }.accessibilityLabel("音频播放进度")
                 HStack {
                     Text(time(isScrubbing ? scrubTime : clock.currentTime))

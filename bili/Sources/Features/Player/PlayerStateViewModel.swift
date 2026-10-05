@@ -1507,16 +1507,22 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
         surfaceAttachmentGeneration == generation && surfaceView != nil
     }
 
+    // Audio-only sessions have no video view. Keep generation checks so a stale
+    // preparation or timer still cannot activate after a surface handoff.
+    private func hasCurrentPlaybackTarget(generation: Int) -> Bool {
+        surfaceAttachmentGeneration == generation && (isAudioOnlyPlayback || surfaceView != nil)
+    }
+
     private func canActivatePlayback() -> Bool {
         !isTerminated
-            && surfaceView != nil
+            && (isAudioOnlyPlayback || surfaceView != nil)
             && hasPlaybackActivationAuthority
             && allowsPlaybackInCurrentApplicationState
     }
 
     private func canActivatePlayback(generation: Int) -> Bool {
         !isTerminated
-            && hasCurrentSurface(generation: generation)
+            && hasCurrentPlaybackTarget(generation: generation)
             && hasPlaybackActivationAuthority
             && allowsPlaybackInCurrentApplicationState
     }
@@ -2003,7 +2009,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
                   self.engine.hasMedia,
                   self.errorMessage == nil,
                   self.mediaPreparationGeneration == baselineMediaPreparationGeneration,
-                  self.hasCurrentSurface(generation: baselineSurfaceGeneration),
+                  self.hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration),
                   ActivePlaybackCoordinator.shared.isActive(self)
             else { return }
 
@@ -4151,7 +4157,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
                   !self.isTerminated,
                   let pending = self.pendingResumeRecoveryMetric,
                   pending.id == metric.id,
-                  self.hasCurrentSurface(generation: baselineSurfaceGeneration)
+                  self.hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration)
             else { return }
             let snapshot = self.engine.snapshot(durationHint: self.durationHint)
             if let snapshotTime = snapshot.currentTime,
@@ -4291,7 +4297,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
                       !self.isTerminated
                 else { return }
                 let baselineSurfaceGeneration = self.surfaceAttachmentGeneration
-                guard self.hasCurrentSurface(generation: baselineSurfaceGeneration) else { return }
+                guard self.hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration) else { return }
                 self.refreshPlaybackState()
             }
         }
@@ -4359,7 +4365,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
         }
         if !hasPresentedPlayback,
            snapshot.isPlaying,
-           hasCurrentSurface(generation: baselineSurfaceGeneration),
+           hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration),
            acceptFirstFramePresentationFallback(
                currentTime: snapshot.currentTime,
                source: "snapshot"
@@ -4370,7 +4376,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
            engine.hasMedia,
            !snapshot.isPlaying,
            errorMessage == nil,
-           hasCurrentSurface(generation: baselineSurfaceGeneration) {
+           hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration) {
             engine.play()
             engine.setPlaybackRate(playbackRate.rawValue)
             if !hasPresentedPlayback {
@@ -4462,7 +4468,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
             guard !Task.isCancelled,
                   !self.isTerminated,
                   self.mediaPreparationGeneration == generation,
-                  self.hasCurrentSurface(generation: baselineSurfaceGeneration),
+                  self.hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration),
                   ActivePlaybackCoordinator.shared.isActive(self)
             else {
                 signpostMessage = "reason=deferredStartup cancelled"
@@ -4658,7 +4664,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     private func handleEngineFirstFrame(_ time: TimeInterval) {
         guard !isTerminated else { return }
         syncEnginePresentationSize()
-        guard surfaceView != nil else {
+        guard isAudioOnlyPlayback || surfaceView != nil else {
             pendingEngineFirstFrameTime = max(time, 0)
             return
         }
@@ -4668,7 +4674,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     private func consumePendingEngineFirstFrameIfPossible() {
         guard let pendingEngineFirstFrameTime,
               !isTerminated,
-              surfaceView != nil,
+              isAudioOnlyPlayback || surfaceView != nil,
               engine.hasMedia,
               errorMessage == nil
         else { return }
@@ -5184,7 +5190,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
                   !self.isTerminated,
                   let pending = self.pendingSeekRecoveryMetric,
                   pending.id == metric.id,
-                  self.hasCurrentSurface(generation: baselineSurfaceGeneration)
+                  self.hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration)
             else { return }
             let snapshot = self.engine.snapshot(durationHint: self.durationHint)
             if let snapshotTime = snapshot.currentTime,
@@ -5294,7 +5300,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
               wantsAutoplay,
               errorMessage == nil,
               engine.hasMedia,
-              hasCurrentSurface(generation: baselineSurfaceGeneration),
+              hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration),
               canActivatePlayback(generation: baselineSurfaceGeneration)
         else { return false }
 
@@ -5350,7 +5356,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
               wantsAutoplay,
               errorMessage == nil,
               mediaPreparationTask == nil,
-              hasCurrentSurface(generation: baselineSurfaceGeneration),
+              hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration),
               canActivatePlayback(generation: baselineSurfaceGeneration),
               ActivePlaybackCoordinator.shared.isActive(self)
         else { return false }
@@ -5386,7 +5392,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
                 guard !Task.isCancelled,
                       !self.isTerminated,
                       preparationGeneration == self.mediaPreparationGeneration,
-                      self.hasCurrentSurface(generation: baselineSurfaceGeneration),
+                      self.hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration),
                       ActivePlaybackCoordinator.shared.isActive(self)
                 else {
                     self.clearMediaPreparationTaskIfCurrent(preparationGeneration)
@@ -5428,7 +5434,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
                 guard !Task.isCancelled,
                       !self.isTerminated,
                       preparationGeneration == self.mediaPreparationGeneration,
-                      self.hasCurrentSurface(generation: baselineSurfaceGeneration),
+                      self.hasCurrentPlaybackTarget(generation: baselineSurfaceGeneration),
                       ActivePlaybackCoordinator.shared.isActive(self)
                 else {
                     self.clearMediaPreparationTaskIfCurrent(preparationGeneration)

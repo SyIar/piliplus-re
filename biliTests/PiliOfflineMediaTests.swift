@@ -34,9 +34,9 @@ final class PiliOfflineMediaTests: H264PlaybackTestCase {
         defer { try? FileManager.default.removeItem(at: directory) }
         let source = try PiliOfflineStorage.part(item.id, .audio)
         let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1))
-        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100))
-        buffer.frameLength = 44_100
-        if let samples = buffer.floatChannelData?[0] { samples.initialize(repeating: 0, count: 44_100) }
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 132_300))
+        buffer.frameLength = 132_300
+        if let samples = buffer.floatChannelData?[0] { samples.initialize(repeating: 0, count: 132_300) }
         let settings: [String: Any] = [AVFormatIDKey: kAudioFormatMPEG4AAC,
             AVSampleRateKey: 44_100, AVNumberOfChannelsKey: 1, AVEncoderBitRateKey: 128_000]
         // Closing the writer finalizes the container before AVAsset reads it.
@@ -59,11 +59,23 @@ final class PiliOfflineMediaTests: H264PlaybackTestCase {
         defer { model.player.stop() }
         model.player.play()
         let deadline = Date().addingTimeInterval(8)
-        while model.player.playbackClock.currentTime < 0.05, model.player.errorMessage == nil, Date() < deadline {
+        while (model.player.playbackClock.currentTime < 0.05 || !model.player.hasPresentedPlayback), model.player.errorMessage == nil, Date() < deadline {
             try await Task.sleep(for: .milliseconds(100))
         }
         XCTAssertNil(model.player.errorMessage)
         XCTAssertGreaterThan(model.player.playbackClock.currentTime, 0.05, "Exported audio must advance the production player's clock offline")
+        XCTAssertTrue(model.player.hasPresentedPlayback, "Audio must leave startup suppression without a video surface")
+        model.player.pause()
+        XCTAssertFalse(model.player.isPlaying)
+        model.player.seek(to: 0.5)
+        XCTAssertEqual(model.player.playbackClock.currentTime, 1.5, accuracy: 0.15, "The audio slider commits normalized progress")
+        model.player.play()
+        let resumedDeadline = Date().addingTimeInterval(8)
+        while model.player.playbackClock.currentTime < 2, model.player.errorMessage == nil, Date() < resumedDeadline {
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        XCTAssertNil(model.player.errorMessage)
+        XCTAssertGreaterThanOrEqual(model.player.playbackClock.currentTime, 2, "Audio must resume after a paused seek")
     }
 
     func testCorruptMediaIsNeverAcceptedAsCompletedExport() async throws {
