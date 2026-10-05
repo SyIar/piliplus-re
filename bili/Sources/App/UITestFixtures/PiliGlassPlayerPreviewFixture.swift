@@ -3,6 +3,7 @@ import SwiftUI
 /// Opt-in visual fixture. Uses the production controls without account or media requests.
 struct PiliGlassPlayerPreviewFixture: View {
     @StateObject private var clock = PlayerPlaybackClock()
+    @StateObject private var rotation = PlaybackRotationCoordinator()
     @State private var playing = false
     @State private var locked = false
     @State private var message: String?
@@ -40,8 +41,12 @@ struct PiliGlassPlayerPreviewFixture: View {
         .task {
             clock.update(time: 42, duration: 768, force: true)
             try? await Task.sleep(for: .milliseconds(500))
-            AppOrientationLock.update(to: .landscapeRight, in: nil, requestsGeometryUpdate: true)
+            rotation.activate(isLandscape: true)
+            rotation.allowLandscape(in: nil)
+            rotation.requestGeometryUpdate(to: .landscapeRight, in: nil)
         }
+        .onChange(of: locked) { _, value in rotation.setControlsLocked(value) }
+        .onDisappear { rotation.deactivate(in: nil) }
         .alert("预览控件", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("好") { message = nil }
         } message: { Text(message ?? "") }

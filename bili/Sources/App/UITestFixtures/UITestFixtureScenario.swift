@@ -5,6 +5,7 @@ enum UITestFixtureScenario: String {
     case danmaku
     case dynamicDetail
     case fullscreen
+    case subtitles
     case glassPlayer
 
     static var current: Self? {

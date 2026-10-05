@@ -17,6 +17,8 @@ struct UITestFixtureRootView: View {
                 )
             case .fullscreen:
                 UITestPlayerFixtureView()
+            case .subtitles:
+                PiliSubtitlePreviewFixture()
             case .glassPlayer:
                 PiliGlassPlayerPreviewFixture()
             }

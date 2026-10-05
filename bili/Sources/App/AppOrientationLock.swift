@@ -4,6 +4,11 @@ import UIKit
 enum AppOrientationLock {
     private(set) static var supportedOrientations: UIInterfaceOrientationMask = .portrait
 
+    static func currentOrientation(in scene: UIWindowScene? = nil) -> UIInterfaceOrientation {
+        (scene ?? scenes(matching: nil).first { $0.activationState == .foregroundActive })?
+            .effectiveGeometry.interfaceOrientation ?? .unknown
+    }
+
     static func update(
         to orientations: UIInterfaceOrientationMask,
         in scene: UIWindowScene?,

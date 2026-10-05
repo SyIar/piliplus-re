@@ -36,3 +36,7 @@ player_height="$(awk '/pixelHeight:/ { print $2 }' <<< "$player_dimensions")"
 if (( player_width < player_height )); then
   sips -r 270 "$player_preview" > /dev/null
 fi
+
+xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture subtitles
+sleep 3
+xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-subtitles.png"

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MinePlaybackSettingsView: View {
     @ObservedObject var libraryStore: LibraryStore
+    @AppStorage("piliplus.player.lockOrientation") private var locksOrientation = true
     @AppStorage("cc.bili.playback.showsAdvancedSettings.v1") var showsAdvancedPlaybackSettings = false
     @State var isProbingPlaybackCDN = false
     @State var playbackCDNProbeResults: [PlaybackCDNProbeResult] = []
@@ -30,6 +31,11 @@ struct MinePlaybackSettingsView: View {
             }
 
             MinePlaybackToolsSection(libraryStore: libraryStore)
+            Section {
+                Toggle("锁定控件时固定屏幕方向", isOn: $locksOrientation)
+            } footer: {
+                Text("全屏播放器点击锁定后，同时固定当前横屏方向；解锁或退出播放时恢复自动旋转。")
+            }
         }
         .tint(libraryStore.appTintColor)
         .formStyle(.grouped)

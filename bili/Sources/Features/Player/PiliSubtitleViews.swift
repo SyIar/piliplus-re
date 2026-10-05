@@ -13,14 +13,21 @@ struct PiliSubtitleOverlay: View {
     @AppStorage("piliplus.subtitle.opacity") private var opacity = 0.65
     @AppStorage("piliplus.subtitle.delay") private var delay = 0.0
     @AppStorage("piliplus.subtitle.bold") private var bold = true
+    @AppStorage("piliplus.subtitle.textColor") private var textColor = "#FFFFFF"
+    @AppStorage("piliplus.subtitle.secondaryColor") private var secondaryColor = "#FFE080"
     var body: some View {
         let text = controller.timeline.active(at: clock.currentTime - delay).map(\.content).joined(separator: "\n")
+        let secondary = controller.secondaryTimeline.active(at: clock.currentTime - delay).map(\.content).joined(separator: "\n")
         VStack {
             Spacer(minLength: 0)
-            if !text.isEmpty {
-                Text(text)
+            if !text.isEmpty || !secondary.isEmpty {
+                VStack(spacing: 3) {
+                    if !text.isEmpty { Text(text).foregroundStyle(Color(hexRGB: textColor) ?? .white).accessibilityIdentifier("ui.subtitle.primary") }
+                    if !secondary.isEmpty && secondary != text {
+                        Text(secondary).foregroundStyle(Color(hexRGB: secondaryColor) ?? .white).accessibilityIdentifier("ui.subtitle.secondary")
+                    }
+                }
                     .font(.system(size: landscape ? landscapeSize : fontSize, weight: bold ? .semibold : .regular))
-                    .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .shadow(color: .black, radius: 1, x: 0, y: 1)
                     .padding(.horizontal, 8).padding(.vertical, 3)
@@ -63,6 +70,8 @@ struct PiliSubtitleSettingsView: View {
     @AppStorage("piliplus.subtitle.opacity") private var opacity = 0.65
     @AppStorage("piliplus.subtitle.delay") private var delay = 0.0
     @AppStorage("piliplus.subtitle.bold") private var bold = true
+    @AppStorage("piliplus.subtitle.textColor") private var textColor = "#FFFFFF"
+    @AppStorage("piliplus.subtitle.secondaryColor") private var secondaryColor = "#FFE080"
     var body: some View {
         NavigationStack {
             List {
@@ -86,7 +95,33 @@ struct PiliSubtitleSettingsView: View {
                         Text("仅非 AI 字幕").tag("withoutAI")
                     }.onChange(of: mode) { _, _ in controller.selectPreferred() }
                 }
+                Section("双语字幕") {
+                    Toggle("同时显示两种语言", isOn: Binding(get: { controller.dualEnabled }, set: { controller.setDualEnabled($0) }))
+                        .accessibilityIdentifier("ui.subtitle.dual")
+                    if controller.dualEnabled {
+                        Picker("第二语言", selection: Binding(get: { controller.secondaryID ?? "" }, set: { controller.selectSecondary($0) })) {
+                            Text("未选择").tag("")
+                            ForEach(controller.tracks.filter { $0.id != controller.selectedID }) { Text($0.title).tag($0.id) }
+                        }.disabled(controller.selectedID == nil)
+                        if controller.isSecondaryLoading { ProgressView("加载第二语言") }
+                        if let error = controller.secondaryError { Text(error).foregroundStyle(.secondary) }
+                        if controller.secondaryID == nil { Text("先开启主字幕，并选择另一条语言轨道；也可导入本地字幕。").font(.footnote).foregroundStyle(.secondary) }
+                    }
+                }
                 Section("显示") {
+                    ColorPicker("主字幕颜色", selection: subtitleColor($textColor), supportsOpacity: false)
+                    if controller.dualEnabled { ColorPicker("第二语言颜色", selection: subtitleColor($secondaryColor), supportsOpacity: false) }
+                    HStack {
+                        Button("白色") { textColor = "#FFFFFF" }
+                        Button("暖黄色") { textColor = "#FFE080" }.accessibilityIdentifier("ui.subtitle.yellow")
+                        Button("重置颜色") { textColor = "#FFFFFF"; secondaryColor = "#FFE080" }
+                    }.buttonStyle(.borderless)
+                    VStack(spacing: 4) {
+                        Text("字幕颜色预览").foregroundStyle(Color(hexRGB: textColor) ?? .white)
+                        if controller.dualEnabled { Text("Subtitle preview").foregroundStyle(Color(hexRGB: secondaryColor) ?? .white) }
+                    }.frame(maxWidth: .infinity).padding().background(.black, in: RoundedRectangle(cornerRadius: 12))
+                        .accessibilityElement(children: .combine).accessibilityValue(textColor)
+                        .accessibilityIdentifier("ui.subtitle.colorPreview")
                     Stepper("竖屏字号 \(Int(fontSize))", value: $fontSize, in: 10...40)
                     Stepper("全屏字号 \(Int(landscapeSize))", value: $landscapeSize, in: 12...60)
                     Toggle("加粗", isOn: $bold)
@@ -99,6 +134,12 @@ struct PiliSubtitleSettingsView: View {
                     HStack {
                         CCNeoButton("导出 SRT", variant: .ghost, disabled: controller.timeline.cues.isEmpty) { export(vtt: false) }
                         CCNeoButton("导出 VTT", variant: .ghost, disabled: controller.timeline.cues.isEmpty) { export(vtt: true) }
+                    }
+                    if controller.secondaryID != nil {
+                        Menu("导出第二语言") {
+                            Button("SRT") { export(vtt: false, secondary: true) }
+                            Button("VTT") { export(vtt: true, secondary: true) }
+                        }.disabled(controller.secondaryTimeline.cues.isEmpty)
                     }
                     if let exportURL { ShareLink("分享字幕文件", item: exportURL) }
                     if let message { Text(message).ccText(font: .cc.sm, color: .cc.mutedForeground) }
@@ -140,8 +181,13 @@ struct PiliSubtitleSettingsView: View {
             } catch { message = error.localizedDescription }
         }
     }
-    private func export(vtt: Bool) {
-        do { exportURL = try controller.export(vtt: vtt); message = nil }
+    private func subtitleColor(_ hex: Binding<String>) -> Binding<Color> {
+        Binding(get: { Color(hexRGB: hex.wrappedValue) ?? .white }, set: { color in
+            if let value = AppThemeTintColor.hexString(from: color) { hex.wrappedValue = value }
+        })
+    }
+    private func export(vtt: Bool, secondary: Bool = false) {
+        do { exportURL = try controller.export(vtt: vtt, secondary: secondary); message = nil }
         catch { message = error.localizedDescription }
     }
     static func present(controller: PiliSubtitleController, seek: ((Double) -> Void)? = nil) {

@@ -542,6 +542,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
     @State private var isMoreControlsButtonPressed = false
     @State private var isVideoListenQueuePresented = false
     @State private var isGlassControlsLocked = false
+    @AppStorage("piliplus.player.lockOrientation") private var locksOrientation = true
 
     private var isLandscape: Bool {
         rotationCoordinator.chromeLandscape
@@ -823,6 +824,12 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
         }
         .onChange(of: isLandscape) { _, landscape in
             if !landscape { isGlassControlsLocked = false }
+        }
+        .onChange(of: isGlassControlsLocked) { _, locked in
+            rotationCoordinator.setControlsLocked(locked, locksOrientation: locksOrientation)
+        }
+        .onChange(of: locksOrientation) { _, enabled in
+            rotationCoordinator.setControlsLocked(isGlassControlsLocked, locksOrientation: enabled)
         }
         .onChange(of: playbackControlsHideRequestGeneration) { _, _ in
             playbackControlsVisibility.hide(animated: false)

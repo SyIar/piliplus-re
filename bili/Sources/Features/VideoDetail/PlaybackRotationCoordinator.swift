@@ -23,6 +23,8 @@ final class PlaybackRotationCoordinator: ObservableObject {
     @Published private(set) var isLandscape = false
     @Published private(set) var isPortraitFullscreen = false
     @Published private(set) var prewarmLandscape: Bool?
+    @Published private(set) var lockedOrientation: UIInterfaceOrientationMask?
+    private var unlockedOrientations: UIInterfaceOrientationMask = .allButUpsideDown
 
     private var requestCoalescer = VideoDetailRotationRequestCoalescer()
     private(set) var isViewActive = false
@@ -134,6 +136,7 @@ final class PlaybackRotationCoordinator: ObservableObject {
         to target: UIInterfaceOrientationMask,
         in scene: UIWindowScene?
     ) -> Bool {
+        if let lockedOrientation, target.intersection(lockedOrientation).isEmpty { return false }
         guard let target = requestCoalescer.submit(target) else { return false }
         AppOrientationLock.requestGeometryUpdate(to: target, in: scene)
         return true
@@ -144,6 +147,11 @@ final class PlaybackRotationCoordinator: ObservableObject {
         isCurrentlyLandscape: Bool,
         in scene: UIWindowScene?
     ) {
+        unlockedOrientations = isPortraitVideo ? .portrait : .allButUpsideDown
+        if let lockedOrientation {
+            AppOrientationLock.update(to: lockedOrientation, in: scene)
+            return
+        }
         if isPortraitVideo {
             AppOrientationLock.update(to: .portrait, in: scene)
             if isCurrentlyLandscape {
@@ -155,10 +163,33 @@ final class PlaybackRotationCoordinator: ObservableObject {
     }
 
     func allowLandscape(in scene: UIWindowScene?) {
-        AppOrientationLock.update(to: .allButUpsideDown, in: scene)
+        unlockedOrientations = .allButUpsideDown
+        AppOrientationLock.update(to: lockedOrientation ?? unlockedOrientations, in: scene)
+    }
+
+    /// Capture the exact interface direction; `.landscape` would still permit a 180° flip.
+    func setControlsLocked(_ locked: Bool, locksOrientation: Bool = true,
+                           orientation: UIInterfaceOrientation? = nil, in scene: UIWindowScene? = nil) {
+        guard isViewActive else { lockedOrientation = nil; return }
+        if locked && locksOrientation {
+            let current = orientation ?? AppOrientationLock.currentOrientation(in: scene)
+            switch current {
+            case .landscapeLeft: lockedOrientation = .landscapeLeft
+            case .landscapeRight: lockedOrientation = .landscapeRight
+            case .portraitUpsideDown: lockedOrientation = .portraitUpsideDown
+            case .portrait: lockedOrientation = .portrait
+            default: lockedOrientation = isLandscape ? .landscapeRight : .portrait
+            }
+            requestCoalescer.reset()
+        } else {
+            lockedOrientation = nil
+        }
+        AppOrientationLock.update(to: lockedOrientation ?? unlockedOrientations, in: scene)
     }
 
     func restorePortrait(in scene: UIWindowScene?) {
+        lockedOrientation = nil
+        unlockedOrientations = .portrait
         isViewActive = false
         requestCoalescer.reset()
         isSystemRotationTransitioning = false

@@ -20,6 +20,8 @@ final class PiliLiquidGlassUITests: XCTestCase {
         let unlock = app.buttons["ui.player.glass.unlock"]
         XCTAssertTrue(unlock.waitForExistence(timeout: 3))
         XCTAssertFalse(play.exists)
+        XCUIDevice.shared.orientation = .portrait
+        XCTAssertTrue(app.frame.width > app.frame.height, "Lock must prevent device rotation from leaving fullscreen")
         unlock.tap()
         XCTAssertTrue(play.waitForExistence(timeout: 3))
         let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
@@ -27,4 +29,34 @@ final class PiliLiquidGlassUITests: XCTestCase {
         screenshot.lifetime = .keepAlways
         add(screenshot)
     }
+    @MainActor
+    func testBilingualSubtitleControlsAndColorPersistence() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "subtitles", "--ui-test-reset-state"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["ui.subtitle.primary"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.staticTexts["ui.subtitle.secondary"].exists)
+        let toggle = app.switches["ui.subtitle.dual"]
+        for _ in 0..<4 where !toggle.isHittable { app.swipeUp() }
+        XCTAssertTrue(toggle.isHittable)
+        toggle.tap()
+        XCTAssertTrue(app.staticTexts["ui.subtitle.secondary"].waitForExistence(timeout: 3))
+        let yellow = app.buttons["ui.subtitle.yellow"]
+        for _ in 0..<4 where !yellow.isHittable { app.swipeUp() }
+        yellow.tap()
+        app.terminate()
+        app.launchArguments = ["--ui-test-fixture", "subtitles"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["ui.subtitle.secondary"].waitForExistence(timeout: 10))
+        let preview = app.descendants(matching: .any)["ui.subtitle.colorPreview"].firstMatch
+        for _ in 0..<5 where !preview.isHittable { app.swipeUp() }
+        XCTAssertEqual(preview.value as? String, "#FFE080")
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Bilingual subtitle colors"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
 }
