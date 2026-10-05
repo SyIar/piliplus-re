@@ -84,4 +84,23 @@ final class AccountWatchLaterEntryTests: XCTestCase {
     private func decodePayload(_ json: String) throws -> DynamicJSONValue {
         try JSONDecoder().decode(DynamicJSONValue.self, from: Data(json.utf8))
     }
+
+    func testPlaybackQueueSurvivesMetadataMergeWithoutAffectingAPIDecoding() throws {
+        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BV1ToView0001","title":"Seed"}"#.utf8))
+        let detail = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BV1ToView0001","title":"Full detail","cid":123}"#.utf8))
+        let queue = PiliPlaybackQueue(source: .watchLater, credentialVersion: 3, bvids: [video.bvid, "BV1ToView0002"], nextPage: nil)
+
+        let merged = video.withPiliPlaybackQueue(queue).mergingFilledValues(from: detail)
+
+        XCTAssertNil(video.piliPlaybackQueue)
+        XCTAssertEqual(merged.piliPlaybackQueue, queue)
+        XCTAssertEqual(merged.title, "Full detail")
+        XCTAssertEqual(merged.cid, 123)
+    }
+
+    func testFavoriteQueuePaginationPreservesOrderAndRemovesDuplicates() {
+        var queue = PiliPlaybackQueue(source: .favoriteFolder(1), credentialVersion: 0, bvids: ["a", "b"], nextPage: 2)
+        queue.append(["b", "c", "c", "", "d"])
+        XCTAssertEqual(queue.bvids, ["a", "b", "c", "d"])
+    }
 }

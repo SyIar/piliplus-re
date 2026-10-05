@@ -14,12 +14,17 @@ extension VideoDetailViewModel {
             return
         }
         let order = PlaybackOrder(rawValue: UserDefaults.standard.string(forKey: "piliplus.playbackOrder") ?? "") ?? .sequential
+        let pages = detail.pages ?? []
+        let currentIndex = pages.firstIndex { $0.cid == selectedCID }
+        let hasNextPage = currentIndex.map { $0 + 1 < pages.count } ?? false
+        if piliPlaybackQueue != nil, !hasNextPage, order != .stop, order != .repeatOne {
+            loadPiliNextQueueVideo(order: order)
+            return
+        }
         if detail.isPGCEpisode, order != .stop, order != .repeatOne {
             loadPiliNextPgcEpisode(order: order)
             return
         }
-        let pages = detail.pages ?? []
-        let currentIndex = pages.firstIndex { $0.cid == selectedCID }
         let action = PlaybackEndPolicy.resolve(
             order: order, currentIndex: currentIndex, count: pages.count, sleepTimerStops: false
         )
@@ -99,7 +104,7 @@ extension VideoDetailViewModel {
         trackBackgroundTask(task)
     }
 
-    private func switchPiliAutoplayVideo(_ video: VideoItem) {
+    func switchPiliAutoplayVideo(_ video: VideoItem) {
         saveCurrentPlaybackProgressBeforeContentSwitch()
         cancelBackgroundTasks()
         detail = video

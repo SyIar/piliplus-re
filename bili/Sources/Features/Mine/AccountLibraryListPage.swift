@@ -55,7 +55,7 @@ struct AccountLibraryListPage: View {
             LibraryEmptyRow(title: kind.emptyTitle, systemImage: kind.systemImage)
         } else {
             ForEach(items) { item in
-                VideoRouteLink(item.videoItem) {
+                VideoRouteLink(item.videoItem.withPiliPlaybackQueue(kind == .watchLater ? viewModel.watchLaterPlaybackQueue : nil)) {
                     LibraryVideoRow(item: item, timestampTitle: kind.timestampTitle)
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {

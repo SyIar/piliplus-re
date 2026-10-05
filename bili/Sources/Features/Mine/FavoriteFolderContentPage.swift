@@ -27,8 +27,8 @@ struct FavoriteFolderContentPage: View {
                 .disabled(!sessionStore.isLoggedIn || state.isLoading)
             }
         }
-        .task {
-            await loadIfNeeded()
+        .task(id: sessionStore.interactionAccountCredentialVersion) {
+            await reload()
         }
         .refreshable {
             await reload()
@@ -49,7 +49,7 @@ struct FavoriteFolderContentPage: View {
             LibraryEmptyRow(title: "这个收藏夹还没有视频", systemImage: "folder")
         } else {
             ForEach(items) { item in
-                VideoRouteLink(item.videoItem) {
+                VideoRouteLink(item.videoItem.withPiliPlaybackQueue(viewModel.playbackQueue(for: folder))) {
                     LibraryVideoRow(item: item, timestampTitle: "收藏时间")
                 }
                 .task {

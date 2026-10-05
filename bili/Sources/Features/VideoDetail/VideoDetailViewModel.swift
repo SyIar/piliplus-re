@@ -54,6 +54,8 @@ final class VideoDetailViewModel: ObservableObject {
     @Published var videoListenQueueSession: VideoListenQueueSession
     var videoListenQueueTask: Task<Void, Never>?
     var videoListenQueueTaskGeneration = 0
+    var piliPlaybackQueue: PiliPlaybackQueue?
+    var isAdvancingPiliQueue = false
     var videoListenContentSwitchTask: Task<Void, Never>?
     @Published var videoListenSleepTimerOption: VideoListenSleepTimerOption = .off
     @Published var videoListenSleepTimerDeadline: Date?
@@ -163,6 +165,7 @@ final class VideoDetailViewModel: ObservableObject {
         self.detail = seedVideo
         self.selectedCID = seedVideo.historyCID ?? seedVideo.cid ?? seedVideo.pages?.first?.cid
         self.videoListenQueueSession = VideoListenQueueSession(seedVideo: seedVideo)
+        self.piliPlaybackQueue = seedVideo.piliPlaybackQueue
         self.videoListenPlaybackSessionStore = resolvedVideoListenPlaybackSessionStore
         self.pendingVideoListenPlaybackSessionState = nil
         self.serviceDependencies = VideoDetailViewModelDependencies(

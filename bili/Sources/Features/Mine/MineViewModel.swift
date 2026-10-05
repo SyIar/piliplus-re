@@ -49,6 +49,8 @@ final class MineViewModel: ObservableObject {
     private let accountLibraryPageSize = 20
     private var historyCursor: AccountHistoryCursor?
     private var favoriteFolderPages: [Int: Int] = [:]
+    private var watchLaterCredentialVersion: Int?
+    private var favoriteFolderCredentialVersions: [Int: Int] = [:]
 
     init(api: BiliAPIClient, sessionStore: SessionStore) {
         self.api = api
@@ -114,11 +116,16 @@ final class MineViewModel: ObservableObject {
 
     func refreshWatchLater() async {
         guard sessionStore.isLoggedIn else { return }
+        let credentialVersion = sessionStore.historyAccountCredentialVersion
         watchLaterState = .loading
         do {
-            accountWatchLater = Self.uniqued(try await api.fetchAccountWatchLater())
+            let entries = try await api.fetchAccountWatchLater()
+            guard !Task.isCancelled, sessionStore.historyAccountCredentialVersion == credentialVersion else { return }
+            accountWatchLater = Self.uniqued(entries)
+            watchLaterCredentialVersion = credentialVersion
             watchLaterState = .loaded
         } catch {
+            guard !Task.isCancelled, sessionStore.historyAccountCredentialVersion == credentialVersion else { return }
             watchLaterState = .failed(error.localizedDescription)
         }
     }
@@ -134,6 +141,26 @@ final class MineViewModel: ObservableObject {
         accountWatchLater.removeAll { $0.aid == aid }
     }
 
+    func playbackQueue(for folder: FavoriteFolder) -> PiliPlaybackQueue? {
+        guard favoriteFolderCredentialVersions[folder.id] == sessionStore.interactionAccountCredentialVersion else { return nil }
+        return PiliPlaybackQueue(
+            source: .favoriteFolder(folder.id),
+            credentialVersion: sessionStore.interactionAccountCredentialVersion,
+            bvids: (favoriteFolderEntries[folder.id] ?? []).map(\.bvid),
+            nextPage: favoriteFolderHasMore[folder.id] == true ? (favoriteFolderPages[folder.id] ?? 1) + 1 : nil
+        )
+    }
+
+    var watchLaterPlaybackQueue: PiliPlaybackQueue? {
+        guard watchLaterCredentialVersion == sessionStore.historyAccountCredentialVersion else { return nil }
+        return PiliPlaybackQueue(
+            source: .watchLater,
+            credentialVersion: sessionStore.historyAccountCredentialVersion,
+            bvids: accountWatchLater.map(\.bvid),
+            nextPage: nil
+        )
+    }
+
     func cleanWatchLater(_ mode: WatchLaterCleanup) async throws {
         guard !isMutatingWatchLater else { throw CancellationError() }
         isMutatingWatchLater = true
@@ -146,6 +173,7 @@ final class MineViewModel: ObservableObject {
 
     func refreshFavoriteFolder(_ folder: FavoriteFolder) async {
         guard sessionStore.isLoggedIn else { return }
+        let credentialVersion = sessionStore.interactionAccountCredentialVersion
         favoriteFolderEntryStates[folder.id] = .loading
         favoriteFolderLoadMoreStates[folder.id] = .idle
         favoriteFolderPages[folder.id] = 1
@@ -156,10 +184,13 @@ final class MineViewModel: ObservableObject {
                 page: 1,
                 pageSize: accountLibraryPageSize
             )
+            guard !Task.isCancelled, sessionStore.interactionAccountCredentialVersion == credentialVersion else { return }
             favoriteFolderEntries[folder.id] = Self.uniqued(page.entries)
+            favoriteFolderCredentialVersions[folder.id] = credentialVersion
             favoriteFolderHasMore[folder.id] = page.hasMore
             favoriteFolderEntryStates[folder.id] = .loaded
         } catch {
+            guard !Task.isCancelled, sessionStore.interactionAccountCredentialVersion == credentialVersion else { return }
             favoriteFolderEntryStates[folder.id] = .failed(error.localizedDescription)
         }
     }
@@ -198,10 +229,12 @@ final class MineViewModel: ObservableObject {
 
     func loadMoreFavoriteFolder(_ folder: FavoriteFolder) async {
         guard sessionStore.isLoggedIn,
+              favoriteFolderCredentialVersions[folder.id] == sessionStore.interactionAccountCredentialVersion,
               favoriteFolderHasMore[folder.id] == true,
               !(favoriteFolderEntryStates[folder.id]?.isLoading ?? false),
               !(favoriteFolderLoadMoreStates[folder.id]?.isLoading ?? false)
         else { return }
+        let credentialVersion = sessionStore.interactionAccountCredentialVersion
         let nextPage = (favoriteFolderPages[folder.id] ?? 1) + 1
         favoriteFolderLoadMoreStates[folder.id] = .loading
         do {
@@ -210,6 +243,7 @@ final class MineViewModel: ObservableObject {
                 page: nextPage,
                 pageSize: accountLibraryPageSize
             )
+            guard !Task.isCancelled, sessionStore.interactionAccountCredentialVersion == credentialVersion else { return }
             let previousCount = favoriteFolderEntries[folder.id]?.count ?? 0
             favoriteFolderEntries[folder.id] = Self.appendingUnique(
                 page.entries,
@@ -220,6 +254,7 @@ final class MineViewModel: ObservableObject {
                 && (favoriteFolderEntries[folder.id]?.count ?? 0) > previousCount
             favoriteFolderLoadMoreStates[folder.id] = .idle
         } catch {
+            guard !Task.isCancelled, sessionStore.interactionAccountCredentialVersion == credentialVersion else { return }
             favoriteFolderLoadMoreStates[folder.id] = .failed(error.localizedDescription)
         }
     }

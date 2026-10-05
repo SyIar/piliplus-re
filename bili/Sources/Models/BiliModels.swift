@@ -142,6 +142,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
     let recommendReason: String?
     let pgcSeasonID: Int?
     let pgcEpisodeID: Int?
+    // A local route context, deliberately excluded from the API's CodingKeys.
+    var piliPlaybackQueue: PiliPlaybackQueue? = nil
 
     enum CodingKeys: String, CodingKey {
         case bvid, aid, title, pic, desc, duration, pubdate, owner, stat, cid, pages, dimension
@@ -221,7 +223,7 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
             recommendReason: recommendReason ?? fullDetail.recommendReason,
             pgcSeasonID: pgcSeasonID ?? fullDetail.pgcSeasonID,
             pgcEpisodeID: pgcEpisodeID ?? fullDetail.pgcEpisodeID
-        )
+        ).withPiliPlaybackQueue(piliPlaybackQueue ?? fullDetail.piliPlaybackQueue)
     }
 
     nonisolated var isPGCEpisode: Bool {
