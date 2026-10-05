@@ -53,6 +53,10 @@ struct VideoDetailSummaryCard: View {
                 VideoDetailNetworkDiagnosticsButton(action: onShowNetworkDiagnostics)
             }
 
+            if !viewModel.detail.isPGCEpisode {
+                PiliVideoLibraryActions(viewModel: viewModel, descriptionStore: renderPack.descriptionStore)
+            }
+
             VideoDetailInteractionNotice(store: renderPack.interactionStore)
             VideoDetailPlayURLNotice(
                 placeholderStore: renderPack.placeholderStore,

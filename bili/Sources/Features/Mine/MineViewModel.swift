@@ -9,6 +9,7 @@ final class MineViewModel: ObservableObject {
     @Published var historyState: LoadingState = .idle
     @Published var favoriteState: LoadingState = .idle
     @Published var watchLaterState: LoadingState = .idle
+    @Published private(set) var isMutatingWatchLater = false
     @Published private(set) var historyLoadMoreState: LoadingState = .idle {
         didSet { accountLibraryRevision &+= 1 }
     }
@@ -120,6 +121,27 @@ final class MineViewModel: ObservableObject {
         } catch {
             watchLaterState = .failed(error.localizedDescription)
         }
+    }
+
+    func removeWatchLater(_ entry: AccountVideoEntry) async throws {
+        guard !isMutatingWatchLater else { throw CancellationError() }
+        guard let aid = entry.aid, aid > 0 else { throw BiliAPIError.missingPayload }
+        isMutatingWatchLater = true
+        defer { isMutatingWatchLater = false }
+        let identity = await api.interactionRequestContext(purpose: .historyRead).currentUserMID
+        try await api.removeFromWatchLater(aids: [aid])
+        guard await api.interactionRequestContext(purpose: .historyRead).currentUserMID == identity else { return }
+        accountWatchLater.removeAll { $0.aid == aid }
+    }
+
+    func cleanWatchLater(_ mode: WatchLaterCleanup) async throws {
+        guard !isMutatingWatchLater else { throw CancellationError() }
+        isMutatingWatchLater = true
+        defer { isMutatingWatchLater = false }
+        let identity = await api.interactionRequestContext(purpose: .historyRead).currentUserMID
+        try await api.cleanWatchLater(mode)
+        guard await api.interactionRequestContext(purpose: .historyRead).currentUserMID == identity else { return }
+        await refreshWatchLater()
     }
 
     func refreshFavoriteFolder(_ folder: FavoriteFolder) async {

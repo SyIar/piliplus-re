@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct AccountLibraryListPage: View {
     let kind: AccountLibraryKind
@@ -14,6 +15,13 @@ struct AccountLibraryListPage: View {
         .nativeTopScrollEdgeEffect()
         .hiddenInlineNavigationTitle()
         .toolbar {
+            if kind == .watchLater, sessionStore.isLoggedIn {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("管理") {
+                        AppHelper.shared.presentSheet(.half) { PiliWatchLaterToolsView(viewModel: viewModel) }
+                    }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task { await reload() }
@@ -49,6 +57,20 @@ struct AccountLibraryListPage: View {
             ForEach(items) { item in
                 VideoRouteLink(item.videoItem) {
                     LibraryVideoRow(item: item, timestampTitle: kind.timestampTitle)
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    if kind == .watchLater, item.aid != nil {
+                        Button("移除", role: .destructive) {
+                            Task {
+                                do {
+                                    try await viewModel.removeWatchLater(item)
+                                } catch {
+                                    CCToastCenter.shared.show(.error, error.localizedDescription)
+                                }
+                            }
+                        }
+                        .disabled(viewModel.isMutatingWatchLater)
+                    }
                 }
                 .task {
                     await loadMoreIfNeeded(current: item)
