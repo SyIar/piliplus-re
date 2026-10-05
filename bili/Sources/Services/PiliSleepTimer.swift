@@ -72,8 +72,9 @@ final class PiliSleepTimer: ObservableObject {
         now = Date()
         let active = ActivePlaybackCoordinator.shared.currentActivePlayer()
         let before = policy
-        if policy.tick(now: now, hasActiveItem: active != nil) {
+        if policy.tick(now: now, hasActiveItem: active != nil || PiliDLNAController.shared.hasActiveItem) {
             active?.pause()
+            PiliDLNAController.shared.stopForTimer()
         }
         if before != policy {
             persist()

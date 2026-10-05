@@ -4,6 +4,7 @@ import CryptoKit
 import CoreImage
 import Network
 import OSLog
+import PiliPlaybackCore
 import SwiftUI
 import UIKit
 
@@ -5574,7 +5575,7 @@ nonisolated private final class LocalLiveHLSProxy: @unchecked Sendable {
                     continuation.resume(throwing: PlayerEngineError.unsupportedMedia)
                     return
                 }
-                guard !self.isStarted else {
+                guard !self.isStarted, !self.isClosed else {
                     continuation.resume()
                     return
                 }
@@ -7135,6 +7136,9 @@ nonisolated private final class LocalHLSProxyServer: @unchecked Sendable {
     nonisolated(unsafe) private var headers: [String: String]
     nonisolated(unsafe) private var metricsID: String?
     private let listener: NWListener
+    private let bindAddress: String
+    private let rendererAddress: String?
+    private let capabilityPath: String
     private let queue: DispatchQueue
     private let failureStore = HLSProxyFailureStore()
     nonisolated(unsafe) private var remoteFailureHandler: HLSRemoteFailureHandler?
@@ -7146,15 +7150,24 @@ nonisolated private final class LocalHLSProxyServer: @unchecked Sendable {
     nonisolated private init(
         headers: [String: String],
         metricsID: String?,
-        onRemoteFailure: HLSRemoteFailureHandler?
+        onRemoteFailure: HLSRemoteFailureHandler?,
+        castingAddress: String? = nil,
+        rendererAddress: String? = nil
     ) throws {
         self.headers = headers
         self.metricsID = metricsID
         self.remoteFailureHandler = onRemoteFailure
-        self.listener = try NWListener(
-            using: HLSLoopbackEndpointPolicy.tcpListenerParameters(),
-            on: .any
-        )
+        self.bindAddress = castingAddress ?? "127.0.0.1"
+        self.rendererAddress = rendererAddress
+        self.capabilityPath = castingAddress == nil ? "" : "/" + UUID().uuidString.lowercased()
+        let parameters: NWParameters
+        if let castingAddress, rendererAddress != nil {
+            parameters = NWParameters.tcp
+            parameters.requiredLocalEndpoint = .hostPort(host: NWEndpoint.Host(castingAddress), port: .any)
+        } else {
+            parameters = try HLSLoopbackEndpointPolicy.tcpListenerParameters()
+        }
+        self.listener = try NWListener(using: parameters, on: .any)
         self.queue = DispatchQueue(label: "cc.bili.local-hls", qos: .userInitiated)
     }
 
@@ -7185,6 +7198,11 @@ nonisolated private final class LocalHLSProxyServer: @unchecked Sendable {
             metricsID: metricsID,
             onRemoteFailure: onRemoteFailure
         )
+    }
+
+    nonisolated static func makeCasting(headers: [String: String], address: String, renderer: String) throws -> LocalHLSProxyServer {
+        try LocalHLSProxyServer(headers: headers, metricsID: nil, onRemoteFailure: nil,
+                                castingAddress: address, rendererAddress: renderer)
     }
 
     nonisolated func updateMetricsID(_ metricsID: String?) {
@@ -7237,20 +7255,21 @@ nonisolated private final class LocalHLSProxyServer: @unchecked Sendable {
                     case .ready:
                         guard resumeGate.claim() else { return }
                         guard let port = self.listener.port,
-                              let baseURL = URL(string: "http://127.0.0.1:\(port.rawValue)")
+                              let baseURL = URL(string: "http://\(self.bindAddress):\(port.rawValue)\(self.capabilityPath)")
                         else {
                             self.listener.cancel()
                             continuation.resume(throwing: PlayerEngineError.unsupportedMedia)
                             return
                         }
                         let renderedPlaylists = renderPlaylists(baseURL)
-                        self.routes = renderedPlaylists.routes
+                        self.routes = Dictionary(uniqueKeysWithValues: renderedPlaylists.routes.map { (self.capabilityPath + $0.key, $0.value) })
                         continuation.resume(returning: renderedPlaylists)
                     case let .failed(error):
                         guard resumeGate.claim() else { return }
                         continuation.resume(throwing: error)
                     case .cancelled:
-                        break
+                        guard resumeGate.claim() else { return }
+                        continuation.resume(throwing: CancellationError())
                     default:
                         break
                     }
@@ -7259,6 +7278,11 @@ nonisolated private final class LocalHLSProxyServer: @unchecked Sendable {
                     self?.handleConnection(connection)
                 }
                 self.listener.start(queue: self.queue)
+                self.queue.asyncAfter(deadline: .now() + 12) {
+                    guard resumeGate.claim() else { return }
+                    self.listener.cancel()
+                    continuation.resume(throwing: URLError(.timedOut))
+                }
             }
         }
     }
@@ -7268,7 +7292,13 @@ nonisolated private final class LocalHLSProxyServer: @unchecked Sendable {
             connection.cancel()
             return
         }
-        guard HLSLoopbackEndpointPolicy.allows(connection.endpoint) else {
+        let allowed: Bool
+        if let rendererAddress, case let .hostPort(host, _) = connection.endpoint {
+            allowed = String(describing: host) == rendererAddress
+        } else {
+            allowed = rendererAddress == nil && HLSLoopbackEndpointPolicy.allows(connection.endpoint)
+        }
+        guard allowed else {
             PlayerMetricsLog.logger.error(
                 "hlsProxyRejectedNonLoopback endpoint=\(String(describing: connection.endpoint), privacy: .private)"
             )
@@ -7363,6 +7393,10 @@ nonisolated private final class LocalHLSProxyServer: @unchecked Sendable {
                     source: "data"
                 )
             }
+        case let .localFile(url, contentType):
+            Task.detached(priority: .utility) {
+                await self.serveLocalFile(url, contentType: contentType, request: request, to: connection)
+            }
         case let .remoteByteRange(url, fallbackURLs, sourceRange, contentType, transform):
             Task.detached(priority: .userInitiated) { [headers] in
                 await self.serveRemoteByteRange(
@@ -7377,6 +7411,41 @@ nonisolated private final class LocalHLSProxyServer: @unchecked Sendable {
                     to: connection
                 )
             }
+        }
+    }
+
+    nonisolated private func sendFileError(_ code: Int, reason: String, to connection: NWConnection) async throws {
+        let response = HLSProxyHTTPResponseBuilder.errorResponse(statusCode: code, reason: reason)
+        try await sendContent(response.response.headerData + response.body, to: connection)
+    }
+
+    nonisolated private func serveLocalFile(_ url: URL, contentType: String, request: HLSProxyRequest, to connection: NWConnection) async {
+        var sentHeader = false
+        defer { connection.cancel() }
+        do {
+            let file = try FileHandle(forReadingFrom: url)
+            defer { try? file.close() }
+            let length = Int64(try file.seekToEnd())
+            guard length > 0, (request.range?.start ?? 0) < length else {
+                try await sendFileError(416, reason: "Range Not Satisfiable", to: connection); return
+            }
+            let servedRange = request.range?.clamped(toLength: length)
+            let range = servedRange ?? HTTPByteRange(start: 0, endInclusive: length - 1)
+            try await sendStreamingHeader(contentType: contentType, request: request,
+                                           responseLength: range.length, totalLength: length,
+                                           servedRange: servedRange, to: connection)
+            sentHeader = true
+            guard request.method != "HEAD" else { return }
+            try file.seek(toOffset: UInt64(range.start))
+            var remaining = range.length
+            while remaining > 0 {
+                try Task.checkCancellation()
+                guard let chunk = try file.read(upToCount: Int(min(remaining, 64 * 1024))), !chunk.isEmpty else { break }
+                try await sendContent(chunk, to: connection)
+                remaining -= Int64(chunk.count)
+            }
+        } catch {
+            if !sentHeader { try? await sendFileError(404, reason: "Not Found", to: connection) }
         }
     }
 
@@ -8114,4 +8183,64 @@ nonisolated private final class LocalHLSProxyServer: @unchecked Sendable {
         }
     }
 
+}
+
+/// A separately owned relay: stopping the phone player never invalidates the TV's URLs.
+nonisolated struct PiliCastingMediaHost: Sendable {
+    let url: URL
+    let mimeType: String
+    private let server: LocalHLSProxyServer
+
+    fileprivate init(url: URL, mimeType: String, server: LocalHLSProxyServer) {
+        self.url = url; self.mimeType = mimeType; self.server = server
+    }
+    func stop() { server.stop() }
+
+    static func offline(file: URL, address: String, renderer: String) async throws -> Self {
+        guard file.isFileURL, UPnPNetwork.isLocalIPv4(address), UPnPNetwork.isLocalIPv4(renderer) else {
+            throw PlayerEngineError.unsupportedMedia
+        }
+        return try await fileHost(file: file, address: address, renderer: renderer)
+    }
+
+#if DEBUG
+    static func offlineForTesting(file: URL) async throws -> Self {
+        try await fileHost(file: file, address: "127.0.0.1", renderer: "127.0.0.1")
+    }
+#endif
+
+    private static func fileHost(file: URL, address: String, renderer: String) async throws -> Self {
+        let server = try LocalHLSProxyServer.makeCasting(headers: [:], address: address, renderer: renderer)
+        do {
+            let mime = file.pathExtension.lowercased() == "mov" ? "video/quicktime" : "video/mp4"
+            let rendered = try await server.start { base in
+                HLSBridgeRenderedPlaylists(masterPlaylistURL: base.appendingPathComponent("video.mp4"),
+                                           routes: ["/video.mp4": .localFile(file, contentType: mime)])
+            }
+            try Task.checkCancellation()
+            return Self(url: rendered.masterPlaylistURL, mimeType: mime, server: server)
+        } catch { server.stop(); throw error }
+    }
+}
+
+extension LocalHLSBridge {
+    nonisolated static func makeCasting(variant: PlayVariant, duration: TimeInterval?, headers: [String: String],
+                                       address: String, renderer: String) async throws -> PiliCastingMediaHost {
+        guard let videoURL = variant.videoURL, let audioURL = variant.audioURL,
+              UPnPNetwork.isLocalIPv4(address), UPnPNetwork.isLocalIPv4(renderer) else {
+            throw PlayerEngineError.unsupportedMedia
+        }
+        let video = HLSBridgeTrack(url: videoURL, stream: variant.videoStream, mediaType: .video, dynamicRange: variant.dynamicRange)
+        let audio = HLSBridgeTrack(url: audioURL, stream: variant.audioStream, mediaType: .audio)
+        let (plan, _) = try await routePlan(videoTracks: [video], audioTrack: audio, durationHint: duration,
+                                           headers: headers, metricsID: nil)
+        try Task.checkCancellation()
+        // Never use the loopback server instance cache for a LAN relay.
+        let server = try LocalHLSProxyServer.makeCasting(headers: headers, address: address, renderer: renderer)
+        do {
+            let rendered = try await server.start { renderPlaylists(from: plan, baseURL: $0) }
+            try Task.checkCancellation()
+            return PiliCastingMediaHost(url: rendered.masterPlaylistURL, mimeType: "application/vnd.apple.mpegurl", server: server)
+        } catch { server.stop(); throw error }
+    }
 }

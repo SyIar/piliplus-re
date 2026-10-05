@@ -3719,6 +3719,33 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testDLNAResolvesControlURLAndSendsSOAPWithoutAccountCredentials() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.httpMethod == "GET" {
+                return Self.response(for: request, body: "<root><device><friendlyName>TV</friendlyName><serviceList><service><serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType><controlURL>/transport</controlURL></service></serviceList></device></root>")
+            }
+            return Self.response(for: request, body: "<Envelope><Body><PlayResponse/></Body></Envelope>")
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=must-not-leak")
+        let client = PiliDLNAClient(session: api.session)
+        let device = try await client.device(at: URL(string: "http://192.168.1.9:8000/desc.xml")!)
+        try await client.command("Play", service: device.transport, arguments: [("Speed", "1")])
+        let request = try XCTUnwrap(recorder.requests.last)
+        XCTAssertEqual(request.url?.absoluteString, "http://192.168.1.9:8000/transport")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "SOAPACTION"), "\"urn:schemas-upnp-org:service:AVTransport:1#Play\"")
+        let values = try UPnPSOAP.values(try XCTUnwrap(requestBodyData(from: request)))
+        XCTAssertEqual(values["InstanceID"], "0")
+        XCTAssertEqual(values["Speed"], "1")
+        for request in recorder.requests {
+            XCTAssertNil(request.value(forHTTPHeaderField: "Cookie"))
+            XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"))
+            XCTAssertFalse(request.httpShouldHandleCookies)
+        }
+    }
+
+    @MainActor
     func testWebDAVUsesDepthZeroAndCreatesCollectionBeforeUploadingAndRestoring() async throws {
         let recorder = RequestContractRecorder()
         let archive = try SettingsArchive.capture(["piliplus.subtitle.bold": true])

@@ -235,6 +235,7 @@ enum FMP4TimelineNormalizer {
 
 enum HLSProxyRoute: Sendable {
     case data(Data, contentType: String)
+    case localFile(URL, contentType: String)
     case remoteByteRange(
         url: URL,
         fallbackURLs: [URL],

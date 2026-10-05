@@ -23,6 +23,9 @@ struct PiliOfflinePlayerScreen: View {
                            isDanmakuEnabled: showsDanmaku,
                            onToggleDanmaku: { showsDanmaku.toggle() })
                 .id(model.item.id)
+            CCNeoButton("投屏", variant: .ghost, icon: "screen-check") {
+                AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .offline(model) }) }
+            }
             CCNeoButton("字幕", variant: .ghost, icon: PikaIcon.Name.fileText) {
                 PiliSubtitleSettingsView.present(controller: subtitles) { model.player.seek(to: $0) }
             }

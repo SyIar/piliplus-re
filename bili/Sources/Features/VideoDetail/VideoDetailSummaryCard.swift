@@ -62,6 +62,10 @@ struct VideoDetailSummaryCard: View {
                 AppHelper.shared.presentSheet(.sheet) { PiliDownloadSheet(viewModel: viewModel) }
             }
 
+            CCNeoButton("投屏", variant: .ghost, icon: "screen-check") {
+                AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .online(viewModel) }) }
+            }
+
             CCNeoButton("字幕", variant: .ghost, icon: PikaIcon.Name.fileText) {
                 PiliSubtitleSettingsView.present(controller: viewModel.piliSubtitles) { viewModel.stablePlayerViewModel?.seek(to: $0) }
             }

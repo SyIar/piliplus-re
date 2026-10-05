@@ -10,6 +10,7 @@ final class PiliSubtitleController: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
     private var cache: [String: [SubtitleCue]] = [:]
+    private var selectionGeneration = UUID()
     private var selectionTask: Task<Void, Never>?
     private var contextID: String?
     private var generation = UUID()
@@ -22,7 +23,12 @@ final class PiliSubtitleController: ObservableObject {
         contextID = context; self.api = api
         let token = generation
         isLoading = true
-        defer { if generation == token { isLoading = false } }
+        defer {
+            if generation == token {
+                if Task.isCancelled { contextID = nil }
+                if selectionTask == nil { isLoading = false }
+            }
+        }
         do {
             let metadata = try await api.fetchPiliPlayerMetadata(bvid: video.bvid, cid: cid,
                                                                 seasonID: video.pgcSeasonID, episodeID: video.pgcEpisodeID)
@@ -45,7 +51,9 @@ final class PiliSubtitleController: ObservableObject {
         selectPreferred()
     }
     func select(_ id: String?, remember: Bool = true) {
-        selectionTask?.cancel()
+        selectionTask?.cancel(); selectionTask = nil
+        selectionGeneration = UUID()
+        let selectionToken = selectionGeneration
         selectedID = id; timeline = SubtitleTimeline([]); errorMessage = nil
         if remember {
             UserDefaults.standard.set(id == nil ? "off" : "on", forKey: "piliplus.subtitle.mode")
@@ -58,14 +66,14 @@ final class PiliSubtitleController: ObservableObject {
         isLoading = true
         selectionTask = Task { [weak self] in
             guard let self else { return }
-            defer { if self.generation == token && self.selectedID == id { self.isLoading = false } }
+            defer { if self.generation == token && self.selectionGeneration == selectionToken { self.isLoading = false; self.selectionTask = nil } }
             do {
                 let cues = try await api.fetchPiliSubtitles(track)
-                guard !Task.isCancelled, self.generation == token, self.selectedID == id else { return }
+                guard !Task.isCancelled, self.generation == token, self.selectionGeneration == selectionToken, self.selectedID == id else { return }
                 self.cache[id] = cues
                 self.timeline = SubtitleTimeline(cues)
             } catch {
-                guard !Task.isCancelled, self.generation == token, self.selectedID == id else { return }
+                guard !Task.isCancelled, self.generation == token, self.selectionGeneration == selectionToken, self.selectedID == id else { return }
                 self.errorMessage = error.localizedDescription
             }
         }
@@ -93,7 +101,7 @@ final class PiliSubtitleController: ObservableObject {
         select(mode == "off" ? nil : (candidates.first { $0.lan == preferred } ?? candidates.first)?.id, remember: false)
     }
     private func reset() {
-        selectionTask?.cancel(); generation = UUID(); api = nil; contextID = nil
+        selectionTask?.cancel(); selectionTask = nil; generation = UUID(); api = nil; contextID = nil
         selectedID = nil; tracks = []; cache = [:]; timeline = SubtitleTimeline([]); errorMessage = nil; isLoading = false
     }
     deinit { selectionTask?.cancel() }

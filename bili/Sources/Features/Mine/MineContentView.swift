@@ -45,6 +45,9 @@ struct MineContentView: View {
                 } label: {
                     Label { Text("离线下载") } icon: { PikaIcon(PikaIcon.Name.save) }
                 }
+                Button {
+                    AppHelper.shared.presentSheet(.sheet) { PiliDLNAView() }
+                } label: { Label { Text("投屏遥控") } icon: { PikaIcon("screen-check") } }
                 Button("自动连播与定时停止") {
                     PiliPlaybackToolsView.present()
                 }
