@@ -235,6 +235,44 @@ final class VideoListenModeTests: XCTestCase {
     }
 
     @MainActor
+    func testListenTimerUsesGlobalDeadlineAndSurvivesLeavingAudioMode() {
+        let viewModel = makeViewModel(pages: [], libraryStore: LibraryStore(userDefaults: makeUserDefaults()))
+        let timer = PiliSleepTimer.shared
+        defer { timer.cancel() }
+        viewModel.playbackContentMode = .audioOnly
+        viewModel.setVideoListenSleepTimer(.minutes30)
+        guard case let .scheduled(deadline, finishCurrent) = timer.policy.state else { return XCTFail("Expected shared timer") }
+        XCTAssertFalse(finishCurrent)
+        XCTAssertEqual(viewModel.videoListenSleepTimerDeadline, deadline)
+        XCTAssertNil(viewModel.videoListenSleepTimerTask)
+        viewModel.cancelVideoListenSleepTimer()
+        XCTAssertEqual(timer.policy.state, .scheduled(deadline: deadline, finishCurrent: false))
+        viewModel.setVideoListenSleepTimer(.off)
+        XCTAssertEqual(timer.policy.state, .off)
+    }
+
+    @MainActor
+    func testUGCCollectionKeepsSectionOrderAndSeedContextWhenMergingDetail() throws {
+        let json = #"{"bvid":"BV-A","title":"第一集","cid":101,"ugc_season":{"id":8,"title":"合集","sections":[{"id":1,"title":"上","episodes":[{"bvid":"BV-A","cid":101,"title":"第一集"},{"bvid":"BV-B","cid":202,"title":"第二集"}]},{"id":2,"title":"下","episodes":[{"bvid":"BV-C","cid":303,"title":"第三集"},{"bvid":"BV-B","cid":202,"title":"重复"}]}]}}"#
+        let detail = try JSONDecoder().decode(VideoItem.self, from: Data(json.utf8))
+        let seed = makeVideo(bvid: "BV-A", pages: [])
+        let merged = seed.mergingFilledValues(from: detail)
+        XCTAssertEqual(merged.piliUGCSeason?.videos(defaultOwner: nil).map(\.bvid), ["BV-A", "BV-B", "BV-C"])
+        let viewModel = makeViewModel(video: merged, libraryStore: LibraryStore(userDefaults: makeUserDefaults()),
+                                      playbackSessionStore: VideoListenPlaybackSessionStore())
+        viewModel.seedPiliCollectionQueueIfNeeded()
+        XCTAssertEqual(viewModel.piliPlaybackQueue?.bvids, ["BV-A", "BV-B", "BV-C"])
+        XCTAssertEqual(viewModel.piliPlaybackQueue?.titles["BV-B"], "第二集")
+        let explicit = PiliPlaybackQueue(source: .watchLater, credentialVersion: 7, bvids: ["BV-C", "BV-A"], nextPage: nil)
+        viewModel.piliPlaybackQueue = explicit
+        viewModel.seedPiliCollectionQueueIfNeeded()
+        XCTAssertEqual(viewModel.piliPlaybackQueue, explicit, "An explicitly opened list takes priority over a video's collection")
+        viewModel.playbackContentMode = .audioOnly
+        viewModel.syncPiliListenQueue(explicit)
+        XCTAssertEqual(viewModel.videoListenQueueSession.videos.map(\.bvid), ["BV-C", "BV-A"])
+    }
+
+    @MainActor
     func testSleepTimerCountdownFormatting() {
         let now = Date(timeIntervalSince1970: 1_000)
 

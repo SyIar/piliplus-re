@@ -1,6 +1,7 @@
 import AVFoundation
 import Combine
 import SwiftUI
+import PiliPlaybackCore
 import UIKit
 
 /// 详情页 UIKit 外壳：播放器宿主（surface-only + 独立控件浮层）。
@@ -1243,6 +1244,7 @@ struct SurfaceOnlyMoreControlsSheet: View {
 }
 
 private struct SurfaceOnlyVideoListenQuickControls: View {
+    @ObservedObject private var piliPlaybackPreferences = PiliPlaybackPreferences.shared
     @ObservedObject var detailViewModel: VideoDetailViewModel
     @ObservedObject var libraryStore: LibraryStore
     let metrics: PlayerNativeControlMetrics
@@ -1258,25 +1260,25 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
             )
 
             Menu {
-                ForEach(VideoListenPlaybackOrder.allCases) { order in
+                ForEach(PlaybackOrder.allCases, id: \.rawValue) { order in
                     Button {
-                        libraryStore.setVideoListenPlaybackOrder(order)
+                        piliPlaybackPreferences.setOrder(order)
                     } label: {
                         Label(
                             order.title,
-                            systemImage: libraryStore.videoListenPlaybackOrder == order
+                            systemImage: piliPlaybackPreferences.order == order
                                 ? "checkmark"
                                 : order.systemImage
                         )
                     }
                 }
             } label: {
-                Image(systemName: libraryStore.videoListenPlaybackOrder.systemImage)
+                Image(systemName: piliPlaybackPreferences.order.systemImage)
                     .font(.system(size: iconSize, weight: .semibold))
                     .frame(width: metrics.controlHeight, height: metrics.controlHeight)
             }
             .biliPlayerCompactGlassCircle(metrics: metrics)
-            .accessibilityLabel("播放顺序，\(libraryStore.videoListenPlaybackOrder.title)")
+            .accessibilityLabel("播放顺序，\(piliPlaybackPreferences.order.title)")
 
             Menu {
                 ForEach(VideoListenSleepTimerOption.allCases) { option in
@@ -1285,7 +1287,7 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
                     } label: {
                         Label(
                             option.title,
-                            systemImage: detailViewModel.videoListenSleepTimerOption == option
+                            systemImage: detailViewModel.isPiliSleepTimerOptionSelected(option)
                                 ? "checkmark"
                                 : option.systemImage
                         )
@@ -1473,6 +1475,7 @@ private struct VideoListenArtworkLayer: View {
 }
 
 private struct SurfaceOnlyMoreControlsNavigationContent: View {
+    @ObservedObject private var piliPlaybackPreferences = PiliPlaybackPreferences.shared
     @ObservedObject var detailViewModel: VideoDetailViewModel
     @ObservedObject var viewModel: PlayerStateViewModel
     @ObservedObject var libraryStore: LibraryStore
@@ -1539,9 +1542,9 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            Label("播放顺序", systemImage: libraryStore.videoListenPlaybackOrder.systemImage)
+                            Label("播放顺序", systemImage: piliPlaybackPreferences.order.systemImage)
                             Spacer()
-                            Text(libraryStore.videoListenPlaybackOrder.title)
+                            Text(piliPlaybackPreferences.order.title)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -1935,6 +1938,7 @@ private struct SurfaceOnlyLandscapeMoreHeader: View {
 }
 
 private struct SurfaceOnlyLandscapeMoreContent: View {
+    @ObservedObject private var piliPlaybackPreferences = PiliPlaybackPreferences.shared
     @Binding var page: SurfaceOnlyLandscapeMoreControlsPage
     @ObservedObject var detailViewModel: VideoDetailViewModel
     @ObservedObject var viewModel: PlayerStateViewModel
@@ -2014,8 +2018,8 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
 
                         SurfaceOnlyLandscapeMenuRow(
                             title: "播放顺序",
-                            systemImage: libraryStore.videoListenPlaybackOrder.systemImage,
-                            accessory: libraryStore.videoListenPlaybackOrder.title,
+                            systemImage: piliPlaybackPreferences.order.systemImage,
+                            accessory: piliPlaybackPreferences.order.title,
                             showsChevron: true
                         ) {
                             page = .playbackOrder
@@ -2334,21 +2338,21 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
     private var playbackOrderPage: some View {
         ScrollView {
             VStack(spacing: 0) {
-                ForEach(Array(VideoListenPlaybackOrder.allCases.enumerated()), id: \.element.id) { index, order in
+                ForEach(Array(PlaybackOrder.allCases.enumerated()), id: \.element.rawValue) { index, order in
                     SurfaceOnlyLandscapeMenuRow(
                         title: order.title,
                         subtitle: order.subtitle,
-                        systemImage: libraryStore.videoListenPlaybackOrder == order
+                        systemImage: piliPlaybackPreferences.order == order
                             ? "checkmark.circle.fill"
                             : order.systemImage,
                         accessory: nil,
                         showsChevron: false
                     ) {
-                        libraryStore.setVideoListenPlaybackOrder(order)
+                        piliPlaybackPreferences.setOrder(order)
                         close()
                     }
 
-                    if index < VideoListenPlaybackOrder.allCases.count - 1 {
+                    if index < PlaybackOrder.allCases.count - 1 {
                         Divider().padding(.leading, 44)
                     }
                 }
@@ -2364,7 +2368,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                 ForEach(Array(VideoListenSleepTimerOption.allCases.enumerated()), id: \.element.id) { index, option in
                     SurfaceOnlyLandscapeMenuRow(
                         title: option.title,
-                        systemImage: detailViewModel.videoListenSleepTimerOption == option
+                        systemImage: detailViewModel.isPiliSleepTimerOptionSelected(option)
                             ? "checkmark.circle.fill"
                             : option.systemImage,
                         accessory: nil,
@@ -2807,14 +2811,15 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
 }
 
 private struct SurfaceOnlyVideoListenPlaybackOrderPage: View {
+    @ObservedObject private var piliPlaybackPreferences = PiliPlaybackPreferences.shared
     @ObservedObject var libraryStore: LibraryStore
     let closeSheet: () -> Void
 
     var body: some View {
         List {
-            ForEach(VideoListenPlaybackOrder.allCases) { order in
+            ForEach(PlaybackOrder.allCases, id: \.rawValue) { order in
                 Button {
-                    libraryStore.setVideoListenPlaybackOrder(order)
+                    piliPlaybackPreferences.setOrder(order)
                     closeSheet()
                 } label: {
                     Label {
@@ -2825,7 +2830,7 @@ private struct SurfaceOnlyVideoListenPlaybackOrderPage: View {
                                 .foregroundStyle(.secondary)
                         }
                     } icon: {
-                        Image(systemName: libraryStore.videoListenPlaybackOrder == order
+                        Image(systemName: piliPlaybackPreferences.order == order
                             ? "checkmark.circle.fill"
                             : order.systemImage)
                     }
@@ -2856,7 +2861,7 @@ private struct SurfaceOnlyVideoListenSleepTimerPage: View {
                 } label: {
                     Label(
                         option.title,
-                        systemImage: detailViewModel.videoListenSleepTimerOption == option
+                        systemImage: detailViewModel.isPiliSleepTimerOptionSelected(option)
                             ? "checkmark.circle.fill"
                             : option.systemImage
                     )

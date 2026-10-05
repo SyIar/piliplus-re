@@ -4099,11 +4099,9 @@ private final class RequestContractURLProtocol: URLProtocol {
     }
 
     override class func canInit(with request: URLRequest) -> Bool {
-        [
-            "api.bilibili.com", "api.live.bilibili.com", "app.bilibili.com", "comment.bilibili.com",
-            "passport.bilibili.com", "space.bilibili.com", "www.bilibili.com",
-        ].contains(
-            request.url?.host)
+        // This protocol is injected only into contract-test sessions. Never leak a
+        // newly added CDN, WebDAV or LAN fixture request onto the real network.
+        request.url?.scheme == "http" || request.url?.scheme == "https"
     }
 
     override class func canonicalRequest(for request: URLRequest) -> URLRequest {

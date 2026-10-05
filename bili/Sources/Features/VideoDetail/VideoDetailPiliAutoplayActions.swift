@@ -13,11 +13,12 @@ extension VideoDetailViewModel {
             stablePlayerViewModel?.pause()
             return
         }
+        seedPiliCollectionQueueIfNeeded()
         if playbackContentMode == .audioOnly {
             handleVideoListenPlaybackEnded()
             return
         }
-        let order = PlaybackOrder(rawValue: UserDefaults.standard.string(forKey: "piliplus.playbackOrder") ?? "") ?? .sequential
+        let order = PiliPlaybackPreferences.shared.order
         let pages = detail.pages ?? []
         let currentIndex = pages.firstIndex { $0.cid == selectedCID }
         let hasNextPage = currentIndex.map { $0 + 1 < pages.count } ?? false
@@ -83,7 +84,7 @@ extension VideoDetailViewModel {
         trackBackgroundTask(task)
     }
 
-    private func loadPiliRelatedAutoplay() {
+    func loadPiliRelatedAutoplay() {
         let sourceBVID = detail.bvid
         let sourceCID = selectedCID
         let task = Task(priority: .userInitiated) { [weak self] in
@@ -108,11 +109,16 @@ extension VideoDetailViewModel {
         trackBackgroundTask(task)
     }
 
-    func switchPiliAutoplayVideo(_ video: VideoItem) {
+    func switchPiliAutoplayVideo(_ video: VideoItem, startingFromLastPage: Bool = false) {
         saveCurrentPlaybackProgressBeforeContentSwitch()
         cancelBackgroundTasks()
         detail = video
-        selectedCID = video.cid ?? video.pages?.first?.cid
+        piliPlaybackQueue = video.piliPlaybackQueue ?? piliPlaybackQueue
+        selectedCID = startingFromLastPage ? (video.pages?.last?.cid ?? video.cid) : (video.pages?.first?.cid ?? video.cid)
+        if playbackContentMode == .audioOnly {
+            pendingVideoListenPlaybackIntent = true
+            if let queue = piliPlaybackQueue { syncPiliListenQueue(queue) }
+        }
         hasResolvedDetailMetadata = true
         manuallySelectedPageCID = nil
         didResolveCloudHistoryResume = true

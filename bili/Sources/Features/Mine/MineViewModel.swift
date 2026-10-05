@@ -147,7 +147,8 @@ final class MineViewModel: ObservableObject {
             source: .favoriteFolder(folder.id),
             credentialVersion: sessionStore.interactionAccountCredentialVersion,
             bvids: (favoriteFolderEntries[folder.id] ?? []).map(\.bvid),
-            nextPage: favoriteFolderHasMore[folder.id] == true ? (favoriteFolderPages[folder.id] ?? 1) + 1 : nil
+            nextPage: favoriteFolderHasMore[folder.id] == true ? (favoriteFolderPages[folder.id] ?? 1) + 1 : nil,
+            titles: Dictionary((favoriteFolderEntries[folder.id] ?? []).map { ($0.bvid, $0.videoItem.title) }, uniquingKeysWith: { first, _ in first })
         )
     }
 
@@ -157,7 +158,8 @@ final class MineViewModel: ObservableObject {
             source: .watchLater,
             credentialVersion: sessionStore.historyAccountCredentialVersion,
             bvids: accountWatchLater.map(\.bvid),
-            nextPage: nil
+            nextPage: nil,
+            titles: Dictionary(accountWatchLater.map { ($0.bvid, $0.videoItem.title) }, uniquingKeysWith: { first, _ in first })
         )
     }
 

@@ -76,7 +76,7 @@ struct UploaderSeasonSeriesDetailView: View {
     private var videoRows: some View {
         LazyVStack(spacing: 0) {
             ForEach(viewModel.videos) { video in
-                VideoRouteLink(video) {
+                VideoRouteLink(video.withPiliPlaybackQueue(viewModel.piliQueue)) {
                     VideoCompactListRow(
                         display: VideoCardDisplayModel(video: video),
                         coverSize: CGSize(width: 132, height: 74),
@@ -160,6 +160,14 @@ private final class UploaderSeasonSeriesDetailViewModel: ObservableObject {
         self.owner = owner
         self.item = item
         totalCount = item.total
+    }
+
+    var piliQueue: PiliPlaybackQueue? {
+        guard let kind = item.detailKind else { return nil }
+        var queue = PiliPlaybackQueue(source: .collection(owner: owner, kind: kind, ascending: sort == .asc, title: item.title),
+                                      credentialVersion: 0, bvids: [], nextPage: hasMore ? page + 1 : nil)
+        queue.append(videos: videos)
+        return queue
     }
 
     func loadIfNeeded(api: BiliAPIClient) async {

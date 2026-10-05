@@ -30,7 +30,7 @@ final class PiliOfflinePlaybackModel: ObservableObject {
         player.onPlaybackEnded = { [weak self, weak activePlayer] in
             guard let self, self.player === activePlayer else { return }
             let queue = PiliOfflineStore.shared.items.filter { $0.state == .completed }
-            let order = PlaybackOrder(rawValue: UserDefaults.standard.string(forKey: "piliplus.playbackOrder") ?? "") ?? .sequential
+            let order = PiliPlaybackPreferences.shared.order
             let action = PlaybackEndPolicy.resolve(order: order, currentIndex: queue.firstIndex { $0.id == self.item.id },
                                                   count: queue.count, sleepTimerStops: PiliSleepTimer.shared.shouldStopAtPlaybackEnd())
             switch action {

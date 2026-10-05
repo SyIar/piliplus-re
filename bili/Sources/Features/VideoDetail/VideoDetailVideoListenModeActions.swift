@@ -1,4 +1,5 @@
 import Foundation
+import PiliPlaybackCore
 
 enum VideoListenAdvanceDirection: Equatable {
     case previous
@@ -289,6 +290,10 @@ extension VideoDetailViewModel {
               !isPlaybackInvalidatedForNavigation
         else { return }
 
+        if reason != .playbackEnded { PiliSleepTimer.shared.resumeManually() }
+        else if PiliSleepTimer.shared.shouldStopAtPlaybackEnd() { return }
+        seedPiliCollectionQueueIfNeeded()
+
         if let targetPage = VideoListenSequenceResolver.page(
             in: detail.pages ?? [],
             selectedCID: selectedCID,
@@ -299,6 +304,11 @@ extension VideoDetailViewModel {
                 reason: reason
             )
             selectPage(targetPage)
+            return
+        }
+
+        if piliPlaybackQueue != nil {
+            advancePiliQueue(direction: direction, automatic: reason == .playbackEnded)
             return
         }
 
@@ -324,6 +334,18 @@ extension VideoDetailViewModel {
                     relativeTo: self.detail,
                     direction: direction
                 )
+            }
+            guard !Task.isCancelled, !self.isPlaybackInvalidatedForNavigation,
+                  self.isCurrentPlaybackContext(bvid: sourceBVID, cid: sourceCID),
+                  !PiliSleepTimer.shared.shouldStopAtPlaybackEnd() else { return }
+            if targetVideo == nil, direction == .next, PiliPlaybackPreferences.shared.order == .repeatList,
+               !self.videoListenQueueSession.hasMore {
+                targetVideo = self.videoListenQueueSession.videos.first
+                if let first = targetVideo, VideoListenQueueBuilder.representsSameVideo(first, self.detail) {
+                    if let page = self.detail.pages?.first, page.cid != self.selectedCID { self.selectPage(page) }
+                    else { self.stablePlayerViewModel?.seek(to: 0); self.stablePlayerViewModel?.play() }
+                    return
+                }
             }
             guard let targetVideo else {
                 if direction == .previous {
@@ -378,7 +400,7 @@ extension VideoDetailViewModel {
     }
 
     var videoListenSleepTimerAccessoryTitle: String {
-        videoListenSleepTimerOption.title
+        PiliSleepTimer.shared.summary
     }
 
     func prepareVideoListenQueue() async {
@@ -390,6 +412,11 @@ extension VideoDetailViewModel {
             return
         }
 
+        seedPiliCollectionQueueIfNeeded()
+        if let queue = piliPlaybackQueue {
+            syncPiliListenQueue(queue)
+            return
+        }
         let anchor = detail
         if detail.isPGCEpisode {
             let source = VideoListenQueueSource.pgcSeason(id: detail.pgcSeasonID)
@@ -562,6 +589,11 @@ extension VideoDetailViewModel {
               !entry.isCurrent
         else { return }
 
+        PiliSleepTimer.shared.resumeManually()
+        if piliPlaybackQueue != nil, case let .video(video) = entry.target {
+            selectPiliQueueVideo(bvid: video.bvid)
+            return
+        }
         let shouldResumePlayback = currentPlaybackIntent()
         switch entry.target {
         case let .page(page):
@@ -599,6 +631,8 @@ extension VideoDetailViewModel {
         guard playbackContentMode == .audioOnly else { return }
 
         switch videoListenQueueSession.source {
+        case .pili:
+            await loadMorePiliListenQueue()
         case .officialListener(let anchorAID, let sortOrder):
             await loadMoreOfficialVideoListenQueueIfNeeded(
                 current: entry,
@@ -756,6 +790,8 @@ extension VideoDetailViewModel {
         else { return false }
 
         switch videoListenQueueSession.source {
+        case let .pili(source):
+            return piliPlaybackQueue?.source == source && videoListenQueueSession.videos.contains { $0.bvid == detail.bvid }
         case .currentVideo:
             return false
         case .officialListener(_, let sortOrder):
@@ -883,6 +919,7 @@ extension VideoDetailViewModel {
                 guard !Task.isCancelled,
                       self.playbackContentMode == .audioOnly,
                       self.videoListenQueueSession.generation == queueGeneration,
+                      !PiliSleepTimer.shared.policy.preventsAutomaticPlayback,
                       self.isCurrentPlaybackContext(bvid: sourceBVID, cid: sourceCID)
                 else { return }
                 self.applyVideoListenContentSwitch(
@@ -971,72 +1008,51 @@ extension VideoDetailViewModel {
 
     func setVideoListenSleepTimer(_ option: VideoListenSleepTimerOption) {
         guard option == .off || playbackContentMode == .audioOnly else { return }
-
-        videoListenSleepTimerTask?.cancel()
-        videoListenSleepTimerTask = nil
-        videoListenSleepTimerOption = option
-        videoListenSleepTimerDeadline = nil
-
-        guard let durationMinutes = option.durationMinutes else { return }
-        let deadline = Date().addingTimeInterval(TimeInterval(durationMinutes * 60))
-        videoListenSleepTimerDeadline = deadline
-        videoListenSleepTimerTask = Task { @MainActor [weak self] in
-            do {
-                try await Task.sleep(
-                    nanoseconds: UInt64(durationMinutes) * 60 * 1_000_000_000
-                )
-            } catch {
-                return
-            }
-            guard let self,
-                  self.playbackContentMode == .audioOnly,
-                  self.videoListenSleepTimerOption == option,
-                  self.videoListenSleepTimerDeadline == deadline
-            else { return }
-            self.stablePlayerViewModel?.pause()
-            self.persistVideoListenPlaybackSession(wantsPlayback: false)
-            self.videoListenSleepTimerTask = nil
-            self.videoListenSleepTimerOption = .off
-            self.videoListenSleepTimerDeadline = nil
-            PlayerMetricsLog.record(
-                .playbackRecovery,
-                metricsID: self.detail.bvid,
-                title: self.detail.title,
-                message: "listenSleepTimer expired option=\(option.rawValue)"
-            )
-        }
+        videoListenSleepTimerTask?.cancel(); videoListenSleepTimerTask = nil
+        if let minutes = option.durationMinutes { PiliSleepTimer.shared.schedule(minutes: minutes, finishCurrent: false) }
+        else if option == .endOfCurrent { PiliSleepTimer.shared.stopAfterCurrent() }
+        else { PiliSleepTimer.shared.cancel() }
+        syncPiliSleepTimerDisplay()
     }
 
+    // The timer now belongs to the app. Changing rendering mode or leaving a page
+    // only cancels obsolete per-view tasks; it must not erase the user's deadline.
     func cancelVideoListenSleepTimer() {
-        videoListenSleepTimerTask?.cancel()
-        videoListenSleepTimerTask = nil
-        videoListenSleepTimerOption = .off
-        videoListenSleepTimerDeadline = nil
+        videoListenSleepTimerTask?.cancel(); videoListenSleepTimerTask = nil
+        syncPiliSleepTimerDisplay()
+    }
+
+    func syncPiliSleepTimerDisplay() {
+        switch PiliSleepTimer.shared.policy.state {
+        case let .scheduled(deadline, _):
+            videoListenSleepTimerDeadline = deadline
+            videoListenSleepTimerOption = VideoListenSleepTimerOption.allCases.first {
+                $0.durationMinutes != nil && $0.durationMinutes == PiliSleepTimer.shared.requestedMinutes
+            } ?? .off
+        case .waitingForEnd:
+            videoListenSleepTimerDeadline = nil; videoListenSleepTimerOption = .endOfCurrent
+        case .off, .stopped:
+            videoListenSleepTimerDeadline = nil; videoListenSleepTimerOption = .off
+        }
+    }
+    func isPiliSleepTimerOptionSelected(_ option: VideoListenSleepTimerOption) -> Bool {
+        if case .scheduled = PiliSleepTimer.shared.policy.state, option == .off { return false }
+        return videoListenSleepTimerOption == option
     }
 
     func handleVideoListenPlaybackEnded() {
-        guard playbackContentMode == .audioOnly,
-              !isPlaybackInvalidatedForNavigation
-        else { return }
-
-        let action = VideoListenPlaybackEndResolver.action(
-            playbackOrder: libraryStore.videoListenPlaybackOrder,
-            sleepTimerOption: videoListenSleepTimerOption
-        )
-        if videoListenSleepTimerOption == .endOfCurrent {
-            cancelVideoListenSleepTimer()
+        guard playbackContentMode == .audioOnly, !isPlaybackInvalidatedForNavigation else { return }
+        if PiliSleepTimer.shared.shouldStopAtPlaybackEnd() {
+            stablePlayerViewModel?.pause(); persistVideoListenPlaybackSession(wantsPlayback: false); return
         }
-
-        switch action {
-        case .advance:
-            advanceVideoListenPlayback(direction: .next, reason: .playbackEnded)
-        case .replayCurrent:
+        switch PiliPlaybackPreferences.shared.order {
+        case .stop:
+            persistVideoListenPlaybackSession(wantsPlayback: false); stablePlayerViewModel?.pause()
+        case .repeatOne:
             persistVideoListenPlaybackSession(wantsPlayback: true)
-            stablePlayerViewModel?.seek(to: 0)
-            stablePlayerViewModel?.play()
-        case .pause:
-            persistVideoListenPlaybackSession(wantsPlayback: false)
-            stablePlayerViewModel?.pause()
+            stablePlayerViewModel?.seek(to: 0); stablePlayerViewModel?.play()
+        case .sequential, .repeatList, .related:
+            advanceVideoListenPlayback(direction: .next, reason: .playbackEnded)
         }
     }
 
@@ -1077,7 +1093,7 @@ extension VideoDetailViewModel {
             )
         player.setTrackNavigationAvailability(
             hasPrevious: hasPreviousPage || hasPreviousVideo || hasPreviousListenerPage,
-            hasNext: hasNextPage || hasNextVideo || hasNextListenerPage || canLoadQueue
+            hasNext: hasNextPage || hasNextVideo || hasNextListenerPage || videoListenQueueSession.hasMore || canLoadQueue
         )
     }
 

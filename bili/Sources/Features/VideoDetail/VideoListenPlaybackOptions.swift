@@ -234,6 +234,7 @@ enum VideoListenSleepTimerOption: String, CaseIterable, Identifiable, Sendable {
 
 enum VideoListenQueueSource: Hashable {
     case currentVideo
+    case pili(PiliPlaybackQueue.Source)
     case officialListener(anchorAID: Int, sortOrder: VideoListenPlaylistSortOrder)
     case uploader(mid: Int)
     case pgcSeason(id: Int?)
@@ -241,6 +242,8 @@ enum VideoListenQueueSource: Hashable {
 
     var title: String {
         switch self {
+        case let .pili(source):
+            return PiliPlaybackQueue(source: source, credentialVersion: 0, bvids: [], nextPage: nil).title
         case .currentVideo:
             return "当前视频"
         case .officialListener:

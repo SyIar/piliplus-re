@@ -142,12 +142,14 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
     let recommendReason: String?
     let pgcSeasonID: Int?
     let pgcEpisodeID: Int?
+    let piliUGCSeason: PiliUGCSeason?
     // A local route context, deliberately excluded from the API's CodingKeys.
     var piliPlaybackQueue: PiliPlaybackQueue? = nil
 
     enum CodingKeys: String, CodingKey {
         case bvid, aid, title, pic, desc, duration, pubdate, owner, stat, cid, pages, dimension
         case historyResumeTime, historyCID, recommendReason, pgcSeasonID, pgcEpisodeID
+        case piliUGCSeason = "ugc_season"
     }
 
     init(
@@ -167,7 +169,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         historyCID: Int? = nil,
         recommendReason: String? = nil,
         pgcSeasonID: Int? = nil,
-        pgcEpisodeID: Int? = nil
+        pgcEpisodeID: Int? = nil,
+        piliUGCSeason: PiliUGCSeason? = nil
     ) {
         self.bvid = bvid
         self.aid = aid
@@ -186,6 +189,7 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         self.recommendReason = recommendReason
         self.pgcSeasonID = pgcSeasonID
         self.pgcEpisodeID = pgcEpisodeID
+        self.piliUGCSeason = piliUGCSeason
     }
 
     nonisolated func mergingFilledValues(from fullDetail: VideoItem) -> VideoItem {
@@ -222,7 +226,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
             historyCID: historyCID ?? fullDetail.historyCID,
             recommendReason: recommendReason ?? fullDetail.recommendReason,
             pgcSeasonID: pgcSeasonID ?? fullDetail.pgcSeasonID,
-            pgcEpisodeID: pgcEpisodeID ?? fullDetail.pgcEpisodeID
+            pgcEpisodeID: pgcEpisodeID ?? fullDetail.pgcEpisodeID,
+            piliUGCSeason: fullDetail.piliUGCSeason ?? piliUGCSeason
         ).withPiliPlaybackQueue(piliPlaybackQueue ?? fullDetail.piliPlaybackQueue)
     }
 

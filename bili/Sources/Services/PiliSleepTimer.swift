@@ -9,6 +9,7 @@ final class PiliSleepTimer: ObservableObject {
     private static let storageKey = "piliplus.sleepTimer.v1"
     @Published private(set) var policy = SleepTimerPolicy()
     @Published private(set) var now = Date()
+    private(set) var requestedMinutes: Int?
     private var ticker: AnyCancellable?
     private var foregroundObserver: AnyCancellable?
 
@@ -17,6 +18,7 @@ final class PiliSleepTimer: ObservableObject {
            let restored = try? JSONDecoder().decode(SleepTimerPolicy.self, from: data) {
             policy = restored
         }
+        requestedMinutes = UserDefaults.standard.object(forKey: Self.storageKey + ".minutes") as? Int
         foregroundObserver = NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in
                 Task { @MainActor in self?.checkDeadline() }
@@ -37,6 +39,8 @@ final class PiliSleepTimer: ObservableObject {
 
     func schedule(minutes: Int, finishCurrent: Bool) {
         guard (1...1440).contains(minutes) else { return }
+        requestedMinutes = minutes
+        UserDefaults.standard.set(minutes, forKey: Self.storageKey + ".minutes")
         policy.schedule(deadline: Date().addingTimeInterval(Double(minutes) * 60), finishCurrent: finishCurrent)
         now = Date()
         persist()

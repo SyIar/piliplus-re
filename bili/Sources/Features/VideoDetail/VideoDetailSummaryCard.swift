@@ -58,6 +58,12 @@ struct VideoDetailSummaryCard: View {
                 PiliVideoLibraryActions(viewModel: viewModel, descriptionStore: renderPack.descriptionStore)
             }
 
+            if viewModel.piliPlaybackQueue != nil || viewModel.detail.piliUGCSeason != nil {
+                CCNeoButton("合集与播放列表", variant: .ghost, icon: PikaIcon.Name.folder) {
+                    AppHelper.shared.presentSheet(.sheet) { PiliCollectionQueueView(viewModel: viewModel) }
+                }
+            }
+
             CCNeoButton("离线下载", variant: .ghost, icon: PikaIcon.Name.save) {
                 AppHelper.shared.presentSheet(.sheet) { PiliDownloadSheet(viewModel: viewModel) }
             }

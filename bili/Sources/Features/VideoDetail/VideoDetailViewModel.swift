@@ -56,8 +56,9 @@ final class VideoDetailViewModel: ObservableObject {
     @Published var videoListenQueueSession: VideoListenQueueSession
     var videoListenQueueTask: Task<Void, Never>?
     var videoListenQueueTaskGeneration = 0
-    var piliPlaybackQueue: PiliPlaybackQueue?
-    var isAdvancingPiliQueue = false
+    @Published var piliPlaybackQueue: PiliPlaybackQueue?
+    @Published var isAdvancingPiliQueue = false
+    var piliTimerObserver: AnyCancellable?
     var videoListenContentSwitchTask: Task<Void, Never>?
     @Published var videoListenSleepTimerOption: VideoListenSleepTimerOption = .off
     @Published var videoListenSleepTimerDeadline: Date?
@@ -189,6 +190,9 @@ final class VideoDetailViewModel: ObservableObject {
         refreshDetailDisplayMetrics()
         refreshUploaderFanCountText()
         configureLifecycleBindings()
+        piliTimerObserver = PiliSleepTimer.shared.$policy.sink { [weak self] _ in
+            Task { @MainActor in self?.syncPiliSleepTimerDisplay() }
+        }
         syncAllRenderStores()
     }
 

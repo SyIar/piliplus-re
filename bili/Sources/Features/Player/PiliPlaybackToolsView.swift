@@ -4,7 +4,7 @@ import SwiftUI
 
 struct PiliPlaybackToolsView: View {
     @ObservedObject private var sleepTimer = PiliSleepTimer.shared
-    @AppStorage("piliplus.playbackOrder") private var orderRaw = PlaybackOrder.sequential.rawValue
+    @ObservedObject private var preferences = PiliPlaybackPreferences.shared
     @State private var minutes = 30
     @State private var finishCurrent = false
 
@@ -24,9 +24,9 @@ struct PiliPlaybackToolsView: View {
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("自动连播").ccText(font: .cc.baseBold, color: .cc.foreground)
-                    Picker("播放顺序", selection: $orderRaw) {
+                    Picker("播放顺序", selection: Binding(get: { preferences.order }, set: { preferences.setOrder($0) })) {
                         ForEach(PlaybackOrder.allCases, id: \.rawValue) { order in
-                            Text(order.title).tag(order.rawValue)
+                            Text(order.title).tag(order)
                         }
                     }
                     .pickerStyle(.menu)
@@ -66,6 +66,25 @@ struct PiliPlaybackToolsView: View {
 }
 
 extension PlaybackOrder {
+    var systemImage: String {
+        switch self {
+        case .stop: "stop.circle"
+        case .repeatOne: "repeat.1"
+        case .sequential: "list.number"
+        case .repeatList: "repeat"
+        case .related: "play.rectangle.on.rectangle"
+        }
+    }
+    var subtitle: String {
+        switch self {
+        case .stop: "当前内容结束后暂停"
+        case .repeatOne: "循环播放当前分 P 或单集"
+        case .sequential: "按当前列表继续，末尾停止"
+        case .repeatList: "按当前列表继续，末尾回到开头"
+        case .related: "当前内容结束后继续相关推荐；明确选择的列表仍按列表顺序播放"
+        }
+    }
+
     var title: String {
         switch self {
         case .stop: "播完暂停"
