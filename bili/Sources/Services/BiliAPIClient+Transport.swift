@@ -119,6 +119,7 @@ extension BiliAPIClient {
     func postMultipart<T: Decodable & Sendable>(
         base: URL,
         path: String,
+        query: [String: String] = [:],
         fields: [String: String],
         fileField: String,
         fileName: String,
@@ -147,7 +148,7 @@ extension BiliAPIClient {
         var request = try await makeRequest(
             base: base,
             path: path,
-            query: [:],
+            query: query,
             referer: referer,
             cookieHeader: resolvedCookieHeader
         )

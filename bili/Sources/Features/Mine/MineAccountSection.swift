@@ -1,6 +1,8 @@
 import SwiftUI
+import ChunUI
 
 struct MineAccountSection: View {
+    @EnvironmentObject private var dependencies: AppDependencies
     @ObservedObject var viewModel: MineViewModel
     @ObservedObject var sessionStore: SessionStore
     @ObservedObject var libraryStore: LibraryStore
@@ -17,6 +19,10 @@ struct MineAccountSection: View {
                     username: sessionStore.user?.uname ?? "Logged in",
                     uidText: "UID \(sessionStore.user?.mid ?? 0)"
                 )
+
+                Button {
+                    AppHelper.shared.presentSheet(.sheet) { PiliProfileView(api: dependencies.api) }
+                } label: { Label("编辑个人资料", systemImage: "person.crop.circle.badge.pencil") }
 
                 if libraryStore.multiAccountExperimentEnabled {
                     MineOverlayNavigationButton {

@@ -3992,6 +3992,70 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testProfileFieldsUseSignedAppRequestsAndAvatarUsesMainAccountMultipart() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/v2/account/myinfo" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"mid":1001,"name":"原昵称","face":"https://i.example.com/avatar.jpg","sex":0,"sign":"原签名","birthday":"2000-01-01","coins":12}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=profile-session; DedeUserID=1001; bili_jct=profile-csrf", accessKey: "profile-access")
+        let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
+        let profile = try await api.fetchPiliOwnProfile(identity: identity)
+        XCTAssertEqual(profile.name, "原昵称")
+        XCTAssertEqual(profile.coins, 12)
+        try await api.updatePiliProfile(.uname, value: "昵称A+B", identity: identity)
+        try await api.updatePiliProfile(.sign, value: "新签名", identity: identity)
+        try await api.updatePiliProfile(.sex, value: "2", identity: identity)
+        try await api.updatePiliProfile(.birthday, value: "2001-02-03", identity: identity)
+        try await api.updatePiliAvatar(jpeg: Data("fixture-image".utf8), identity: identity)
+        XCTAssertEqual(recorder.requests[0].url?.host, "app.bilibili.com")
+        XCTAssertEqual(Self.queryValues(for: recorder.requests[0])["access_key"], "profile-access")
+        XCTAssertEqual(recorder.requests.dropFirst().map { $0.url?.path }, ["/x/member/app/uname/update", "/x/member/app/sign/update", "/x/member/app/sex/update", "/x/member/app/birthday/update", "/x/member/web/face/update"])
+        for request in recorder.requests[1...4] {
+            let form = formValues(in: request)
+            XCTAssertEqual(form["access_key"], "profile-access")
+            XCTAssertEqual(form["mobi_app"], "android_hd")
+            XCTAssertNotNil(form["sign"])
+            XCTAssertEqual(cookieValues(in: request.value(forHTTPHeaderField: "Cookie"))["SESSDATA"], "profile-session")
+        }
+        XCTAssertEqual(formValues(in: recorder.requests[1])["uname"], "昵称A+B")
+        XCTAssertEqual(formValues(in: recorder.requests[2])["user_sign"], "新签名")
+        XCTAssertEqual(formValues(in: recorder.requests[3])["sex"], "2")
+        XCTAssertEqual(formValues(in: recorder.requests[4])["birthday"], "2001-02-03")
+        let avatar = recorder.requests[5]
+        XCTAssertEqual(Self.queryValues(for: avatar)["csrf"], "profile-csrf")
+        XCTAssertTrue(avatar.value(forHTTPHeaderField: "Content-Type")?.hasPrefix("multipart/form-data; boundary=") == true)
+        let body = String(decoding: try XCTUnwrap(requestBodyData(from: avatar)), as: UTF8.self)
+        XCTAssertTrue(body.contains("name=\"face\"; filename=\"avatar.jpg\""))
+        XCTAssertTrue(body.contains("name=\"dopost\"\r\n\r\nsave"))
+        XCTAssertTrue(body.contains("name=\"DisplayRank\"\r\n\r\n10000"))
+    }
+
+    @MainActor
+    func testProfileRejectsMissingAppLoginAndStaleIdentityAndDoesNotRetryAvatarUpload() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in recorder.record(request); throw URLError(.networkConnectionLost) }
+        let api = try makeAPI(cookieHeader: "SESSDATA=profile-session; DedeUserID=1001; bili_jct=profile-csrf")
+        let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
+        do {
+            try await api.updatePiliProfile(.sign, value: "签名", identity: identity)
+            XCTFail("Do not send an unsigned app profile mutation")
+        } catch { XCTAssertTrue(recorder.requests.isEmpty) }
+        do {
+            try await api.updatePiliAvatar(jpeg: Data([1]), identity: identity)
+            XCTFail("Expected upload error")
+        } catch { XCTAssertEqual(recorder.requests.count, 1) }
+        try api.sessionStore.logout()
+        do {
+            try await api.updatePiliAvatar(jpeg: Data([1]), identity: identity)
+            XCTFail("Reject stale account")
+        } catch { XCTAssertEqual(recorder.requests.count, 1) }
+    }
+
+    @MainActor
     func testNoteSaveUsesOneAccountAndEncodesTextWithoutPublishingComments() async throws {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
