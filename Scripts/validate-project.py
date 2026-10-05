@@ -22,7 +22,7 @@ for relative in [
     require((ROOT / relative).is_file(), f"Missing required file: {relative}")
 
 info = plistlib.loads((ROOT / "Config/bili-Info.plist").read_bytes())
-require(info["CFBundleDisplayName"] == "PiliPlus Swift", "Unexpected app display name")
+require(info["CFBundleDisplayName"] == "哔哩哔哩", "Unexpected app display name")
 require("audio" in info.get("UIBackgroundModes", []), "Background audio mode is required")
 project = (ROOT / "bili.xcodeproj/project.pbxproj").read_text()
 require("io.github.syiar.PiliPlusSwift" in project, "Missing bundle identity")

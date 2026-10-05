@@ -4,6 +4,8 @@
 
 仓库：<https://github.com/SyIar/piliplus-re> · GPL-3.0-only。
 
+应用显示名称为「哔哩哔哩」，图标采用用户指定的白底黑色小电视高清版本，见 [图标来源与生成记录](docs/APP_ICON.md)。这是本仓库的第三方原生客户端。
+
 **当前为 0.1 开发版本，尚未实现 PiliPlus 全部功能，也尚未完成真机验收。** 功能状态见 [迁移对照](docs/FEATURE_PARITY.md) 和 [原版逐项清单](docs/PILIPLUS_FEATURE_INVENTORY.md)。构建通过只证明编译和自动化测试通过，不代表全部业务可用。
 
 ## 原生实现
@@ -24,7 +26,7 @@ DLNA 的后台/队列/设备适配、笔记富文本、高级字幕、图像导�
 
 - iOS 26.1+，macOS + Xcode 26.5 或更新版本。
 - Swift 6 工具链；主应用使用 Swift 5 语言模式、默认 MainActor 隔离和 Approachable Concurrency。
-- Xcode 项目与 scheme 暂保留内部名 `bili`，应用显示名为 `PiliPlus Swift`，Bundle ID 为 `io.github.syiar.PiliPlusSwift`。
+- Xcode 项目与 scheme 暂保留内部名 `bili`，应用显示名为 `哔哩哔哩`，Bundle ID 为 `io.github.syiar.PiliPlusSwift`。
 - ChunUI 固定到源码 revision；Swift Package Manager 在首次构建时解析依赖。
 
 ```bash

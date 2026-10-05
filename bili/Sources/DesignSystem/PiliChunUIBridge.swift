@@ -26,7 +26,7 @@ enum PiliChunUIBridge {
         strings.loadingMore = "加载更多…"
         strings.noMoreData = "没有更多了"
         strings.loadMore = "加载更多"
-        strings.appName = "PiliPlus Swift"
+        strings.appName = "哔哩哔哩"
         strings.unsavedTitle = "尚未保存"
         strings.unsavedMessage = "要保存本次修改吗？"
         strings.keepEditing = "继续编辑"
