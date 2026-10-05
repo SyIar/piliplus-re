@@ -28,6 +28,8 @@ final class SessionStore: ObservableObject {
     @Published private(set) var playbackAccountMID: Int?
     @Published private(set) var dynamicFeedAccountMID: Int?
     @Published private(set) var interactionAccountMID: Int?
+    @Published private(set) var commentReadPolicy: CommentReadAccountPolicy
+    @Published private(set) var commentReadAccountMID: Int?
     @Published private(set) var historyAccountPolicy: WatchHistoryAccountPolicy
 
     private let keychain: KeychainStore
@@ -109,6 +111,8 @@ final class SessionStore: ObservableObject {
         self.playbackAccountMID = resolvedPlaybackMID
         self.dynamicFeedAccountMID = resolvedDynamicFeedMID
         self.interactionAccountMID = resolvedInteractionMID
+        self.commentReadPolicy = storedRegistry?.commentReadPolicy ?? .interaction
+        self.commentReadAccountMID = storedRegistry?.commentReadAccountMID.flatMap { validMIDs.contains($0) ? $0 : nil }
         self.historyAccountPolicy = resolvedHistoryPolicy
         self.credentialsByMID = loadedCredentials
         self.loginCookieHeader = mainCredentials?.cookieHeader
@@ -116,6 +120,7 @@ final class SessionStore: ObservableObject {
         self.accessKey = mainCredentials?.accessKey
         self.loginCredentialKind = mainCredentials?.credentialKind ?? .unknown
         self.user = mainSummary.map(Self.navUserInfo)
+        if self.commentReadPolicy == .account && self.commentReadAccountMID == nil { self.commentReadPolicy = .interaction }
 
         if didMigrateLegacyAccount, let resolvedMainMID, let credentials = loadedCredentials[resolvedMainMID] {
             try? persistAccountCredentials(credentials, for: resolvedMainMID)
@@ -188,6 +193,11 @@ final class SessionStore: ObservableObject {
     ) -> BiliAccountCredentialSnapshot {
         let resolvedPurpose = multiAccountEnabled ? purpose : .main
         let resolution = accountResolution(for: resolvedPurpose)
+        if resolvedPurpose == .commentRead, commentReadPolicy == .anonymous {
+            return BiliAccountCredentialSnapshot(accountMID: nil, cookieHeader: anonymousCookieHeader(),
+                anonymousCookieHeader: anonymousCookieHeader(), accessKey: nil, credentialKind: .unknown,
+                isLoggedIn: false, csrfToken: nil, version: accountConfigurationVersion, isPurposeEnabled: true)
+        }
         guard resolution.isEnabled,
               let mid = resolution.mid,
               let credentials = credentialsByMID[mid]
@@ -368,6 +378,16 @@ final class SessionStore: ObservableObject {
         try persistRegistry()
     }
 
+    func setCommentReadPolicy(_ policy: CommentReadAccountPolicy, mid: Int? = nil) throws {
+        let selectedMID = mid ?? commentReadAccountMID
+        if policy == .account, selectedMID.flatMap({ credentialsByMID[$0] }) == nil { throw MultiAccountSessionError.accountNotFound }
+        guard commentReadPolicy != policy || commentReadAccountMID != selectedMID else { return }
+        commentReadPolicy = policy
+        commentReadAccountMID = selectedMID
+        accountConfigurationVersion &+= 1
+        try persistRegistry()
+    }
+
     func setHistoryAccountPolicy(_ policy: WatchHistoryAccountPolicy) throws {
         guard historyAccountPolicy != policy else { return }
         historyAccountPolicy = policy
@@ -382,6 +402,10 @@ final class SessionStore: ObservableObject {
         }
         guard mainAccountMID != mid else {
             throw MultiAccountSessionError.cannotRemoveMainAccount
+        }
+        if commentReadAccountMID == mid {
+            commentReadAccountMID = nil
+            if commentReadPolicy == .account { commentReadPolicy = .interaction }
         }
         credentialsByMID[mid] = nil
         accounts.removeAll { $0.mid == mid }
@@ -418,6 +442,8 @@ final class SessionStore: ObservableObject {
         playbackAccountMID = nil
         dynamicFeedAccountMID = nil
         interactionAccountMID = nil
+        commentReadAccountMID = nil
+        commentReadPolicy = .interaction
         historyAccountPolicy = .main
         sessdata = nil
         accessKey = nil
@@ -553,6 +579,15 @@ final class SessionStore: ObservableObject {
                 interactionAccountCredentialVersion,
                 true
             )
+        case .commentRead:
+            let mid: Int?
+            switch commentReadPolicy {
+            case .main: mid = mainAccountMID
+            case .interaction: mid = validAccountMID(interactionAccountMID) ?? mainAccountMID
+            case .account: mid = validAccountMID(commentReadAccountMID) ?? mainAccountMID
+            case .anonymous: mid = nil
+            }
+            return (mid, accountConfigurationVersion, true)
         case .historyRead:
             let mid = historyAccountPolicy == .playback
                 ? validAccountMID(playbackAccountMID) ?? mainAccountMID
@@ -648,6 +683,8 @@ final class SessionStore: ObservableObject {
             playbackAccountMID: playbackAccountMID,
             dynamicFeedAccountMID: dynamicFeedAccountMID,
             interactionAccountMID: interactionAccountMID,
+            commentReadPolicy: commentReadPolicy,
+            commentReadAccountMID: commentReadAccountMID,
             historyPolicy: historyAccountPolicy
         )
         let data = try JSONEncoder().encode(registry)

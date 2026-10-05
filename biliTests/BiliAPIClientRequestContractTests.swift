@@ -4349,6 +4349,70 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testIndependentAndAnonymousCommentReadersKeepWritesOnInteractionAccount() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{"replies":[]}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=main; DedeUserID=1001; bili_jct=main-csrf", configure: { store, library in
+            library.setMultiAccountExperimentEnabled(true)
+            try store.saveLoginCookies(["SESSDATA": "reader", "DedeUserID": "2002", "bili_jct": "reader-csrf"], credentialKind: .web)
+            try store.selectMainAccount(mid: 1001)
+            try store.selectInteractionAccount(mid: 1001)
+            try store.setCommentReadPolicy(.account, mid: 2002)
+        })
+        _ = try await api.fetchComments(aid: 7)
+        XCTAssertTrue(recorder.request?.value(forHTTPHeaderField: "Cookie")?.contains("SESSDATA=reader") == true)
+        try api.sessionStore.setCommentReadPolicy(.anonymous)
+        _ = try await api.fetchComments(aid: 7)
+        _ = try await api.fetchCommentReplies(aid: 7, root: 9)
+        _ = try await api.fetchCommentDialog(aid: 7, root: 9, dialog: 10)
+        for request in recorder.requests.dropFirst() {
+            let cookie = request.value(forHTTPHeaderField: "Cookie") ?? ""
+            XCTAssertFalse(cookie.contains("SESSDATA"))
+            XCTAssertFalse(cookie.contains("bili_jct"))
+            XCTAssertFalse(cookie.contains("DedeUserID"))
+        }
+        let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .interaction))
+        try await api.mutatePiliComment(.like(true), oid: "7", type: 1, rpid: 9, identity: identity, referer: "https://www.bilibili.com/video/BVtest")
+        XCTAssertTrue(recorder.request?.value(forHTTPHeaderField: "Cookie")?.contains("SESSDATA=main") == true)
+        XCTAssertEqual(recorder.requests.filter { $0.httpMethod == "POST" }.count, 1)
+    }
+
+    @MainActor
+    func testLiveProbeFollowsHLSMediaCapsTrafficAndDoesNotForwardCredentials() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            let isPlaylist = request.url?.pathExtension == "m3u8"
+            let data = isPlaylist ? Data("#EXTM3U\n#EXTINF:4,\nsegment1.ts\n#EXTINF:4,\nsegment2.ts\n".utf8) : Data(repeating: 0x47, count: 400_000)
+            return Self.response(for: request, headerFields: ["Content-Type": isPlaylist ? "application/vnd.apple.mpegurl" : "video/mp2t"], data: data)
+        }
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [RequestContractURLProtocol.self]
+        configuration.httpShouldSetCookies = false
+        let session = URLSession(configuration: configuration)
+        defer { session.invalidateAndCancel() }
+        let service = LiveCDNProbeService(session: session)
+        let result = try await service.probe(url: URL(string: "https://cdn.example.com/live/index.m3u8")!,
+            headers: ["User-Agent": "probe", "Referer": "https://live.bilibili.com/", "Cookie": "secret", "Authorization": "secret"]) { _ in }
+        XCTAssertGreaterThan(result.bytes, 0)
+        XCTAssertLessThanOrEqual(result.bytes, LiveCDNProbeService.byteLimit)
+        XCTAssertEqual(result.phase, "完成")
+        XCTAssertEqual(recorder.requests.map { $0.url?.lastPathComponent }, ["index.m3u8", "segment1.ts"])
+        XCTAssertTrue(recorder.requests.allSatisfy { $0.value(forHTTPHeaderField: "Cookie") == nil && $0.value(forHTTPHeaderField: "Authorization") == nil })
+        XCTAssertTrue(recorder.requests.allSatisfy { $0.value(forHTTPHeaderField: "Range") != nil })
+        let model = LiveCDNProbeModel(service: service)
+        model.start(candidates: [.init(url: URL(string: "https://cdn.example.com/live.ts")!, protocolName: nil, formatName: nil, codecName: nil, currentQN: nil, qualityTitle: nil, source: "test")], headers: [:])
+        model.cancel()
+        await model.waitUntilFinished()
+        XCTAssertFalse(model.isRunning)
+        XCTAssertEqual(model.completed, 0)
+        XCTAssertTrue(model.message?.contains("已取消") == true)
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

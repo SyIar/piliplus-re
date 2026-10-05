@@ -5,8 +5,22 @@ nonisolated enum BiliAccountPurpose: String, Codable, CaseIterable, Sendable {
     case playback
     case dynamicFeed
     case interaction
+    case commentRead
     case historyRead
     case historyWrite
+}
+
+nonisolated enum CommentReadAccountPolicy: String, Codable, CaseIterable, Identifiable, Sendable {
+    case interaction, main, account, anonymous
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .interaction: "跟随互动账号"
+        case .main: "主账号"
+        case .account: "指定账号"
+        case .anonymous: "匿名读取"
+        }
+    }
 }
 
 nonisolated enum WatchHistoryAccountPolicy: String, Codable, CaseIterable, Identifiable, Sendable {
@@ -91,6 +105,8 @@ nonisolated struct StoredBiliAccountRegistry: Codable, Sendable {
     var playbackAccountMID: Int?
     var dynamicFeedAccountMID: Int?
     var interactionAccountMID: Int?
+    var commentReadPolicy: CommentReadAccountPolicy?
+    var commentReadAccountMID: Int?
     var historyPolicy: WatchHistoryAccountPolicy
 }
 

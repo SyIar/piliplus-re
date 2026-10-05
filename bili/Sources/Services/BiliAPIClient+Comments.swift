@@ -232,6 +232,7 @@ extension BiliAPIClient {
     {
         let mode = sort == .hot ? "3" : "2"
         let pagination = try Self.commentPaginationString(offset: cursor)
+        let revision = await commentReadRevision
         let resolvedCookieHeader = await resolvedCommentCookieHeader(cookieHeader)
         let response: BiliResponse<CommentPage> = try await get(
             base: baseURL,
@@ -248,6 +249,7 @@ extension BiliAPIClient {
             priority: URLSessionTask.defaultPriority
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
+        guard await commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
         return response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
     }
 
@@ -291,6 +293,7 @@ extension BiliAPIClient {
         if sort == .time {
             query["sort"] = "1"
         }
+        let revision = await commentReadRevision
         let resolvedCookieHeader = await resolvedCommentCookieHeader(cookieHeader)
         let response: BiliResponse<CommentPage> = try await get(
             base: baseURL,
@@ -301,6 +304,7 @@ extension BiliAPIClient {
             priority: URLSessionTask.lowPriority
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
+        guard await commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
         return response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
     }
 
@@ -330,6 +334,7 @@ extension BiliAPIClient {
         cookieHeader: String? = nil
     ) async throws -> CommentPage
     {
+        let revision = await commentReadRevision
         let resolvedCookieHeader = await resolvedCommentCookieHeader(cookieHeader)
         let response: BiliResponse<CommentPage> = try await get(
             base: baseURL,
@@ -346,6 +351,7 @@ extension BiliAPIClient {
             priority: URLSessionTask.lowPriority
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
+        guard await commentReadRevision == revision, !Task.isCancelled else { throw CancellationError() }
         return response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
     }
 
@@ -353,7 +359,7 @@ extension BiliAPIClient {
         if let cookieHeader {
             return cookieHeader
         }
-        return await interactionRequestContext().cookieHeader
+        return await requestSnapshot(purpose: .commentRead).cookieHeader
     }
 }
 

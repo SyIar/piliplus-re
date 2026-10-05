@@ -121,6 +121,7 @@ final class VideoDetailViewModel: ObservableObject {
     @Published var lastPlayURLSource: String? {
         didSet { scheduleRenderStoreSync(.networkDiagnostics) }
     }
+    var audioFallbackContentKey: String?
     var currentPlayURLData: PlayURLData?
     @Published var resumeDiagnostics: PlaybackResumeDiagnostics = .none {
         didSet { scheduleRenderStoreSync(.networkDiagnostics) }
@@ -151,6 +152,7 @@ final class VideoDetailViewModel: ObservableObject {
     var uploaderInteractionLoadState = VideoDetailUploaderInteractionLoadState()
     var lastUserSeekAt: Date?
     var loadTiming = VideoDetailViewModelLoadTimingState()
+    private var commentAccountObserver: AnyCancellable?
     private var cleanupStablePlaybackBeforeDeinit: (@Sendable () -> Void)?
     let relatedLoadTimeoutNanoseconds: UInt64 = 5_000_000_000
 
@@ -190,6 +192,19 @@ final class VideoDetailViewModel: ObservableObject {
         refreshDetailDisplayMetrics()
         refreshUploaderFanCountText()
         configureLifecycleBindings()
+        commentAccountObserver = api.commentAccountChanges.sink { [weak self] in
+            guard let self else { return }
+            self.cancelCommentsLoadingTask()
+            self.clearCommentThreadLoads()
+            self.clearCommentThreadCaches()
+            self.comments = []
+            self.commentCursor = ""
+            self.commentsEnd = false
+            self.commentState = .idle
+            self.commentLoadMoreState = .idle
+            self.didCompleteInitialCommentLoad = false
+            if !self.isPlaybackInvalidatedForNavigation { self.beginInitialCommentsLoadIfNeeded(waitForPlaybackStart: false) }
+        }
         piliTimerObserver = PiliSleepTimer.shared.$policy.sink { [weak self] _ in
             Task { @MainActor in self?.syncPiliSleepTimerDisplay() }
         }

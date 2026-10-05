@@ -116,6 +116,8 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var playbackCDNProbeRefreshPolicy: PlaybackCDNProbeRefreshPolicy
     @Published private(set) var playbackCDNProbeRefreshIntervalMinutes: Int
     @Published private(set) var playbackNetworkAddressFamilyPreference: PlaybackNetworkAddressFamilyPreference
+    @Published private(set) var audioQualityPreference: PlaybackAudioQualityPreference
+    @Published private(set) var cellularAudioQualityPreference: PlaybackAudioQualityPreference
     @Published private(set) var prefersBackupAudioURL: Bool
     @Published private(set) var playbackCDNProbeSnapshot: PlaybackCDNProbeSnapshot?
     @Published private(set) var blocksAdDynamics: Bool
@@ -544,6 +546,8 @@ final class LibraryStore: ObservableObject {
                 rawValue: userDefaults.string(forKey: Self.playbackNetworkAddressFamilyPreferenceKey) ?? ""
             ) ?? .automatic
         self.playbackNetworkAddressFamilyPreference = storedAddressFamilyPreference
+        self.audioQualityPreference = PlaybackAudioQualityPreference.stored(in: userDefaults, network: .wifi)
+        self.cellularAudioQualityPreference = PlaybackAudioQualityPreference.stored(in: userDefaults, network: .cellular)
         self.prefersBackupAudioURL = PlaybackAudioURLPolicy.stored(in: userDefaults)
         let currentProbeContextKey = Self.playbackCDNProbeContextKey(
             networkClass: PlaybackEnvironment.current.networkClass,
@@ -905,6 +909,16 @@ final class LibraryStore: ObservableObject {
         userDefaults.set(preference.rawValue, forKey: Self.playbackNetworkAddressFamilyPreferenceKey)
         clearTemporaryPlaybackCDNAvoidance()
         clearPlaybackCDNProbeSnapshots()
+    }
+
+    var effectiveAudioQualityPreference: PlaybackAudioQualityPreference {
+        let network = PlaybackEnvironment.current.networkClass
+        return network == .cellular || network == .constrained ? cellularAudioQualityPreference : audioQualityPreference
+    }
+
+    func setAudioQualityPreference(_ value: PlaybackAudioQualityPreference, cellular: Bool = false) {
+        if cellular { cellularAudioQualityPreference = value } else { audioQualityPreference = value }
+        userDefaults.set(value.rawValue, forKey: cellular ? PlaybackAudioQualityPreference.cellularStorageKey : PlaybackAudioQualityPreference.storageKey)
     }
 
     func setPrefersBackupAudioURL(_ isEnabled: Bool) {
@@ -1667,6 +1681,8 @@ extension LibraryStore {
         playbackCDNProbeRefreshPolicy = restored.playbackCDNProbeRefreshPolicy
         playbackCDNProbeRefreshIntervalMinutes = restored.playbackCDNProbeRefreshIntervalMinutes
         playbackNetworkAddressFamilyPreference = restored.playbackNetworkAddressFamilyPreference
+        audioQualityPreference = restored.audioQualityPreference
+        cellularAudioQualityPreference = restored.cellularAudioQualityPreference
         prefersBackupAudioURL = restored.prefersBackupAudioURL
         playbackCDNProbeSnapshot = restored.playbackCDNProbeSnapshot
         blocksAdDynamics = restored.blocksAdDynamics

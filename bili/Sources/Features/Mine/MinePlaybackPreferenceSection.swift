@@ -23,6 +23,13 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             playbackHistorySyncThresholdPicker
             preferredVideoQualityPicker
             cellularPreferredVideoQualityPicker
+            Picker("默认音质", selection: Binding(get: { libraryStore.audioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0) })) {
+                ForEach(PlaybackAudioQualityPreference.allCases) { Text($0.title).tag($0) }
+            }
+            Picker("蜂窝网络音质", selection: Binding(get: { libraryStore.cellularAudioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0, cellular: true) })) {
+                ForEach(PlaybackAudioQualityPreference.allCases) { Text($0.title).tag($0) }
+            }
+            Text("最佳音质按可用音轨选择无损、杜比或 AAC；播放失败时回退到兼容音轨。需要对应内容和账号权限，听视频手动选择的音轨优先。").font(.footnote).foregroundStyle(.secondary)
             av1HardwareDecodeProbeButton
             videoCodecPreferenceLink
             forceHardwareDecodeToggle

@@ -1848,9 +1848,10 @@ nonisolated struct PlayURLData: Decodable, Sendable {
         cdnPreference: PlaybackCDNPreference,
         codecPreference: VideoCodecPreference,
         requiresHardwareDecode: Bool = PlaybackHardwareDecodePolicy.defaultValue,
-        prefersBackupAudioURL: Bool = PlaybackAudioURLPolicy.stored()
+        prefersBackupAudioURL: Bool = PlaybackAudioURLPolicy.stored(),
+        audioQuality: PlaybackAudioQualityPreference = .stored()
     ) -> [PlayVariant] {
-        let bestAudio = dash?.bestAudioStream
+        let bestAudio = dash?.preferredAudioStream(audioQuality)
         let videosByQuality = Dictionary(grouping: dash?.video ?? [], by: { $0.id ?? 0 })
         let descriptions = Dictionary(uniqueKeysWithValues: zip(acceptQuality ?? [], acceptDescription ?? []))
         let supportByQuality = (supportFormats ?? []).reduce(into: [Int: PlaySupportFormat]()) { result, format in
@@ -2153,7 +2154,7 @@ nonisolated struct VideoListenAudioVariant: Identifiable, Hashable, Sendable {
 
 nonisolated struct PlayVariant: Identifiable, Hashable, Sendable {
     nonisolated var id: String {
-        "\(quality)-\(videoURL?.absoluteString ?? "locked")"
+        "\(quality)-\(videoURL?.absoluteString ?? "locked")-audio:\(audioStream?.id ?? 0):\(audioStream?.codecs ?? "muxed")"
     }
 
     let quality: Int
@@ -2257,6 +2258,14 @@ nonisolated struct PlayVariant: Identifiable, Hashable, Sendable {
             || title.contains("60")
             || badge?.contains("高帧") == true
             || badge?.contains("60") == true
+    }
+
+    nonisolated func replacingAudio(with stream: DASHStream, cdn: PlaybackCDNPreference, prefersBackup: Bool) -> PlayVariant? {
+        guard let url = stream.playURL(cdnPreference: cdn, prefersBackup: prefersBackup) else { return nil }
+        return PlayVariant(quality: quality, title: title, videoURL: videoURL, audioURL: url,
+            videoStream: videoStream, audioStream: stream, codec: codec, resolution: resolution,
+            frameRate: frameRate, bandwidth: bandwidth, isHDR: isHDR, badge: badge,
+            dynamicRangeOverride: dynamicRangeOverride, isAvailabilityPending: isAvailabilityPending)
     }
 
     nonisolated func replacingPlaybackURLs(videoURL: URL?, audioURL: URL?) -> PlayVariant {
@@ -2519,10 +2528,17 @@ nonisolated struct DASHInfo: Decodable, Sendable {
         self.audio = audio
     }
 
-    nonisolated var bestAudioStream: DASHStream? {
+    nonisolated var bestAudioStream: DASHStream? { preferredAudioStream(.compatible) }
+
+    nonisolated func preferredAudioStream(_ preference: PlaybackAudioQualityPreference) -> DASHStream? {
         audio?
-            .filter(\.isHardwareDecodingCompatibleAudio)
+            .filter { $0.isHardwareDecodingCompatibleAudio && $0.playURL(cdnPreference: .automatic) != nil }
             .sorted { lhs, rhs in
+                if preference == .best {
+                    let left = lhs.isLosslessAudioCodec ? 0 : lhs.isDolbyCompatibleAudioCodec ? 1 : 2
+                    let right = rhs.isLosslessAudioCodec ? 0 : rhs.isDolbyCompatibleAudioCodec ? 1 : 2
+                    if left != right { return left < right }
+                }
                 if lhs.audioPlaybackRank != rhs.audioPlaybackRank {
                     return lhs.audioPlaybackRank < rhs.audioPlaybackRank
                 }

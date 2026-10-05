@@ -122,6 +122,18 @@ struct MultiAccountExperimentSettingsView: View {
                 }
                 .pickerStyle(.menu)
 
+                Picker("评论读取", selection: Binding(get: { sessionStore.commentReadPolicy }, set: { policy in
+                    do { try sessionStore.setCommentReadPolicy(policy, mid: sessionStore.commentReadAccountMID ?? sessionStore.mainAccountMID) }
+                    catch { errorMessage = error.localizedDescription }
+                })) {
+                    ForEach(CommentReadAccountPolicy.allCases) { Text($0.title).tag($0) }
+                }
+                if sessionStore.commentReadPolicy == .account {
+                    Picker("评论读取账号", selection: Binding(get: { sessionStore.commentReadAccountMID ?? sessionStore.accounts[0].mid }, set: { mid in
+                        do { try sessionStore.setCommentReadPolicy(.account, mid: mid) }
+                        catch { errorMessage = error.localizedDescription }
+                    })) { ForEach(sessionStore.accounts) { Text($0.displayName).tag($0.mid) } }
+                }
                 Picker(
                     selection: Binding(
                         get: { sessionStore.historyAccountPolicy },
@@ -139,7 +151,7 @@ struct MultiAccountExperimentSettingsView: View {
         } header: {
             Text("账号用途")
         } footer: {
-            Text("主账号负责首页、消息、关注和评论。视频取流账号负责普通视频、番剧和画面预览；动态页取流账号负责动态列表和顶部关注 UP；互动账号负责点赞、投币、收藏及收藏夹。直播仍使用主账号。选择“不上传记录”后不会上传新进度，但仍可查看主账号已有历史。")
+            Text("主账号负责首页、消息和关注。评论读取可单独分配或匿名访问；发评论、点赞、删除仍使用互动账号。视频取流账号负责普通视频、番剧和画面预览；动态页取流账号负责动态列表和顶部关注 UP；互动账号负责点赞、投币、收藏及收藏夹。直播仍使用主账号。选择“不上传记录”后不会上传新进度，但仍可查看主账号已有历史。")
         }
     }
 

@@ -97,6 +97,11 @@ extension VideoDetailViewModel {
                 "autoplay=\(shouldResumePlayback)"
             ]
         )
+        if failedVariant.audioStream != fallbackVariant.audioStream, fallbackVariant.audioStream?.isAACAudioCodec == true {
+            audioFallbackContentKey = audioContentKey
+            if let data = currentPlayURLData { playVariants = sortedPlayVariants(self.playVariants(from: data)) }
+            playbackFallbackMessage = "高音质音轨播放失败，已保留画质并切换至兼容音频"
+        }
         selectedPlayVariant = fallbackVariant
         updateStablePlayerViewModelIfNeeded(
             resumeTimeOverride: resumeTime,

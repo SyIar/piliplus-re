@@ -27,6 +27,7 @@ struct LivePlaybackDiagnosticsSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                LiveCDNProbeSection(viewModel: viewModel)
                 if didCopyDiagnostics {
                     Section {
                         Label("诊断信息已复制", systemImage: "checkmark.circle.fill")

@@ -21,6 +21,7 @@ final class DynamicCommentsViewModel: ObservableObject {
     @Published private(set) var displayedReplyCount: Int?
     let replyStore: DynamicCommentReplyStore
 
+    private var commentAccountObserver: AnyCancellable?
     private let item: DynamicFeedItem
     private let api: BiliAPIClient
     private var blocksGoodsComments = true
@@ -42,6 +43,13 @@ final class DynamicCommentsViewModel: ObservableObject {
         self.api = api
         self.displayedReplyCount = item.replyCount
         self.replyStore = DynamicCommentReplyStore(item: item, api: api, blocksGoodsComments: blocksGoodsComments)
+        commentAccountObserver = api.commentAccountChanges.sink { [weak self] in
+            guard let self else { return }
+            self.loadGeneration &+= 1
+            self.comments = []; self.cursor = ""; self.commentsEnd = false
+            self.state = .idle; self.loadMoreState = .idle
+            Task { [weak self] in await self?.loadInitial() }
+        }
     }
 
     func setBlocksGoodsComments(_ isEnabled: Bool) {

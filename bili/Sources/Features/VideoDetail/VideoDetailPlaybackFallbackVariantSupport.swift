@@ -156,6 +156,13 @@ struct VideoDetailPlaybackFallbackContext: Equatable, Sendable {
 
 extension VideoDetailViewModel {
     func playbackFallbackVariant(excluding failedVariant: PlayVariant) -> PlayVariant? {
+        if failedVariant.audioStream?.isAACAudioCodec == false,
+           let audio = currentPlayURLData?.dash?.bestAudioStream,
+           audio != failedVariant.audioStream,
+           let fallback = failedVariant.replacingAudio(with: audio, cdn: libraryStore.effectivePlaybackCDNPreference, prefersBackup: libraryStore.prefersBackupAudioURL),
+           !failedPlayVariantIDs.contains(fallback.id) {
+            return fallback
+        }
         if let progressiveFallback = sameQualityProgressiveFallbackVariant(excluding: failedVariant) {
             return progressiveFallback
         }

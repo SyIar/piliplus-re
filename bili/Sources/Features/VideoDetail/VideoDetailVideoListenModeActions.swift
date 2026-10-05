@@ -104,7 +104,7 @@ extension VideoDetailViewModel {
             cdnPreference: libraryStore.effectivePlaybackCDNPreference,
             prefersBackupAudioURL: libraryStore.prefersBackupAudioURL
         )
-        let automaticStream = data.dash?.bestAudioStream
+        let automaticStream = data.dash?.preferredAudioStream(effectiveAudioQualityPreference)
         videoListenAudioVariants = variants
         automaticVideoListenAudioVariantID = variants.first { $0.stream == automaticStream }?.id
             ?? variants.first?.id

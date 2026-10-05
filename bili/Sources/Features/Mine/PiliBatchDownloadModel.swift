@@ -106,7 +106,7 @@ final class PiliBatchDownloadModel: ObservableObject {
                                 let count: Int
                                 if kind == .audio {
                                     let audios = data.videoListenAudioVariants(cdnPreference: .automatic)
-                                    guard let audio = audios.first(where: { $0.stream == data.dash?.bestAudioStream }) ?? audios.first else {
+                                    guard let audio = audios.first(where: { $0.stream == data.dash?.preferredAudioStream(self.api.libraryStore.effectiveAudioQualityPreference) }) ?? audios.first else {
                                         throw PiliOfflineError.message("没有独立音频流或当前账号无权下载")
                                     }
                                     count = try self.downloads.enqueueAudio(video: video, pages: [page], audio: audio)

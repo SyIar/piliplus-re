@@ -9,6 +9,7 @@ final class DynamicCommentReplyStore: ObservableObject {
     private var replyLoadGenerations: [Int: Int] = [:]
     private var dialogLoadGenerations: [String: Int] = [:]
 
+    private var commentAccountObserver: AnyCancellable?
     private let item: DynamicFeedItem
     private let api: BiliAPIClient
     private var blocksGoodsComments: Bool
@@ -17,6 +18,13 @@ final class DynamicCommentReplyStore: ObservableObject {
         self.item = item
         self.api = api
         self.blocksGoodsComments = blocksGoodsComments
+        commentAccountObserver = api.commentAccountChanges.sink { [weak self] in
+            guard let self else { return }
+            self.replyLoadGenerations = self.replyLoadGenerations.mapValues { $0 &+ 1 }
+            self.dialogLoadGenerations = self.dialogLoadGenerations.mapValues { $0 &+ 1 }
+            self.setSnapshot(DynamicCommentReplyStoreSnapshot())
+            self.replyItemCache.removeAll(); self.dialogItemCache.removeAll()
+        }
     }
 
     private func updateSnapshot(_ transform: (inout DynamicCommentReplyStoreSnapshot) -> Void) {
@@ -211,7 +219,7 @@ final class DynamicCommentReplyStore: ObservableObject {
             if let cookieHeader {
                 resolvedCookieHeader = cookieHeader
             } else {
-                resolvedCookieHeader = await api.interactionRequestContext().cookieHeader
+                resolvedCookieHeader = await api.interactionRequestContext(purpose: .commentRead).cookieHeader
             }
             guard generation == replyLoadGenerations[comment.id] else { return .superseded }
             let page = try await api.fetchCommentReplies(
@@ -277,7 +285,7 @@ final class DynamicCommentReplyStore: ObservableObject {
 
         updateSnapshot { $0.dialogStates[key] = .loading }
         do {
-            let context = await api.interactionRequestContext()
+            let context = await api.interactionRequestContext(purpose: .commentRead)
             guard generation == dialogLoadGenerations[key] else { return }
             let page = try await api.fetchCommentDialog(
                 oid: oid,

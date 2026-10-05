@@ -352,6 +352,35 @@ final class MultiAccountSessionTests: XCTestCase {
         XCTAssertNil(sanitized.lastPlayCID)
     }
 
+    func testCommentReaderSelectionAnonymousPersistenceAndRemoval() throws {
+        let keychain = makeKeychain()
+        let store = SessionStore(keychain: keychain)
+        defer { try? store.logout() }
+        try saveMainAccount(mid: 1001, session: "main", in: store)
+        try saveMainAccount(mid: 2002, session: "reader", in: store)
+        try store.selectMainAccount(mid: 1001)
+        try store.selectInteractionAccount(mid: 1001)
+        try store.setCommentReadPolicy(.account, mid: 2002)
+        XCTAssertEqual(store.credentialSnapshot(for: .commentRead, multiAccountEnabled: true).accountMID, 2002)
+        XCTAssertEqual(store.credentialSnapshot(for: .interaction, multiAccountEnabled: true).accountMID, 1001)
+        XCTAssertEqual(store.credentialSnapshot(for: .commentRead, multiAccountEnabled: false).accountMID, 1001)
+        XCTAssertEqual(SessionStore(keychain: keychain).commentReadAccountMID, 2002)
+        try store.setCommentReadPolicy(.anonymous)
+        let anonymous = store.credentialSnapshot(for: .commentRead, multiAccountEnabled: true)
+        XCTAssertTrue(anonymous.isPurposeEnabled)
+        XCTAssertFalse(anonymous.isLoggedIn)
+        XCTAssertNil(anonymous.csrfToken)
+        XCTAssertNil(anonymous.accessKey)
+        XCTAssertNil(anonymous.accountMID)
+        XCTAssertEqual(anonymous.cookieHeader, anonymous.anonymousCookieHeader)
+        XCTAssertFalse(anonymous.cookieHeader.contains("SESSDATA"))
+        XCTAssertEqual(SessionStore(keychain: keychain).commentReadPolicy, .anonymous)
+        try store.setCommentReadPolicy(.account, mid: 2002)
+        try store.removeAccount(mid: 2002)
+        XCTAssertEqual(store.commentReadPolicy, .interaction)
+        XCTAssertEqual(store.credentialSnapshot(for: .commentRead, multiAccountEnabled: true).accountMID, 1001)
+    }
+
     private func makeSessionStore() -> SessionStore {
         SessionStore(keychain: makeKeychain())
     }

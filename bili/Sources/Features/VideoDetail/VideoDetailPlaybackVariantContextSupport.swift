@@ -40,12 +40,18 @@ extension VideoDetailViewModel {
         nil
     }
 
+    var audioContentKey: String { "\(detail.bvid)|\(selectedCID ?? 0)" }
+    var effectiveAudioQualityPreference: PlaybackAudioQualityPreference {
+        audioFallbackContentKey == audioContentKey ? .compatible : libraryStore.effectiveAudioQualityPreference
+    }
+
     func playVariants(from data: PlayURLData) -> [PlayVariant] {
         data.playVariants(
             cdnPreference: libraryStore.effectivePlaybackCDNPreference,
             codecPreference: libraryStore.videoCodecPreference,
             requiresHardwareDecode: libraryStore.forceHardwareDecodeEnabled,
-            prefersBackupAudioURL: libraryStore.prefersBackupAudioURL
+            prefersBackupAudioURL: libraryStore.prefersBackupAudioURL,
+            audioQuality: effectiveAudioQualityPreference
         )
     }
 }

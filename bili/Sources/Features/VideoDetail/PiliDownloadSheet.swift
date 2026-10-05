@@ -89,7 +89,7 @@ struct PiliDownloadSheet: View {
         }
         .onAppear {
             if variantID.isEmpty { variantID = variants.first?.id ?? "" }
-            if audioID.isEmpty { audioID = audios.first?.id ?? "" }
+            if audioID.isEmpty { audioID = viewModel.resolvedVideoListenAudioVariant?.id ?? audios.first?.id ?? "" }
         }
     }
 }
