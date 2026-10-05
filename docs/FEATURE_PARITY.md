@@ -26,7 +26,7 @@
 | 视频截图、动图、Live Photo、超分 | 待迁移/技术评估 | AVPlayer 不直接提供原版 mpv 滤镜；需另行实现导出与图像处理 |
 | AI 翻译、高级弹幕、特殊音频效果 | 待迁移/技术评估 | 不能将更换播放器当成功能自动保留 |
 | ChunUI 与 Liquid Glass | 部分迁移 | 已接入主题、字号层级、底栏图标、播放设置与玻璃控件；历史页面仍需逐页统一 |
-| GitHub Actions / IPA Release | 配置已编写，待首次云端执行 | 策略测试 → iOS 测试 → Release 编译 → 未签名 IPA → 预发布 |
+| GitHub Actions / IPA Release | 云端验证中，尚无成功 IPA | 8 项播放策略测试已通过；iOS 测试、Release 编译、未签名 IPA 与预发布仍在验证 |
 
 ## 重点播放验收
 

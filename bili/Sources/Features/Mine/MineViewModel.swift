@@ -128,9 +128,9 @@ final class MineViewModel: ObservableObject {
         guard let aid = entry.aid, aid > 0 else { throw BiliAPIError.missingPayload }
         isMutatingWatchLater = true
         defer { isMutatingWatchLater = false }
-        let identity = await api.interactionRequestContext(purpose: .historyRead).currentUserMID
+        let identity = await api.interactionRequestContext(purpose: .historyRead).cookieHeader
         try await api.removeFromWatchLater(aids: [aid])
-        guard await api.interactionRequestContext(purpose: .historyRead).currentUserMID == identity else { return }
+        guard await api.interactionRequestContext(purpose: .historyRead).cookieHeader == identity else { return }
         accountWatchLater.removeAll { $0.aid == aid }
     }
 
@@ -138,9 +138,9 @@ final class MineViewModel: ObservableObject {
         guard !isMutatingWatchLater else { throw CancellationError() }
         isMutatingWatchLater = true
         defer { isMutatingWatchLater = false }
-        let identity = await api.interactionRequestContext(purpose: .historyRead).currentUserMID
+        let identity = await api.interactionRequestContext(purpose: .historyRead).cookieHeader
         try await api.cleanWatchLater(mode)
-        guard await api.interactionRequestContext(purpose: .historyRead).currentUserMID == identity else { return }
+        guard await api.interactionRequestContext(purpose: .historyRead).cookieHeader == identity else { return }
         await refreshWatchLater()
     }
 

@@ -3595,6 +3595,79 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testWatchLaterMutationsUseExpectedScopeAndMatchingCredentials() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":null}"#)
+        }
+        defer { RequestContractURLProtocol.reset() }
+        let api = try makeAPI(cookieHeader: "SESSDATA=watch-session; DedeUserID=1001; bili_jct=watch-csrf")
+
+        try await api.addToWatchLater(bvid: "BV1ToView0001")
+        try await api.removeFromWatchLater(aids: [20, 10, 20, 0, -1])
+        try await api.cleanWatchLater(.invalid)
+        try await api.cleanWatchLater(.viewed)
+        try await api.cleanWatchLater(.all)
+
+        let requests = recorder.requests
+        XCTAssertEqual(requests.count, 5)
+        guard requests.count == 5 else { return }
+        XCTAssertEqual(requests.map { $0.url?.path }, [
+            "/x/v2/history/toview/add", "/x/v2/history/toview/v2/dels",
+            "/x/v2/history/toview/clear", "/x/v2/history/toview/clear", "/x/v2/history/toview/clear",
+        ])
+        let forms = requests.map { formValues(in: $0) }
+        for (request, form) in zip(requests, forms) {
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(cookieValues(in: request.value(forHTTPHeaderField: "Cookie"))["SESSDATA"], "watch-session")
+            XCTAssertEqual(form["csrf"], "watch-csrf")
+        }
+        XCTAssertEqual(forms[0]["bvid"], "BV1ToView0001")
+        XCTAssertEqual(forms[1]["resources"], "10,20")
+        XCTAssertEqual(forms[2]["clean_type"], "1")
+        XCTAssertEqual(forms[3]["clean_type"], "2")
+        XCTAssertNil(forms[4]["clean_type"])
+    }
+
+    @MainActor
+    func testWatchLaterMutationRejectsMissingCSRFBeforeSendingRequest() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0}"#)
+        }
+        defer { RequestContractURLProtocol.reset() }
+        let api = try makeAPI(cookieHeader: "SESSDATA=watch-session; DedeUserID=1001")
+
+        do {
+            try await api.cleanWatchLater(.all)
+            XCTFail("Expected missing CSRF to reject the mutation")
+        } catch let error as BiliAPIError {
+            guard case .missingCSRF = error else { return XCTFail("Unexpected error: \(error)") }
+        }
+        XCTAssertTrue(recorder.requests.isEmpty)
+    }
+
+    @MainActor
+    func testWatchLaterMutationDoesNotRetryAnAmbiguousTransportFailure() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            throw URLError(.networkConnectionLost)
+        }
+        defer { RequestContractURLProtocol.reset() }
+        let api = try makeAPI(cookieHeader: "SESSDATA=watch-session; DedeUserID=1001; bili_jct=watch-csrf")
+
+        do {
+            try await api.removeFromWatchLater(aids: [10])
+            XCTFail("Expected the network error to propagate")
+        } catch {
+            XCTAssertEqual(recorder.requests.count, 1)
+        }
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,
