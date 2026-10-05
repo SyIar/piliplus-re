@@ -27,7 +27,7 @@ struct PiliOfflinePlayerScreen: View {
                 AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .offline(model) }) }
             }
             CCNeoButton("字幕", variant: .ghost, icon: PikaIcon.Name.fileText) {
-                PiliSubtitleSettingsView.present(controller: subtitles) { model.player.seek(to: $0) }
+                PiliSubtitleSettingsView.present(controller: subtitles) { seconds in model.player.seek(by: seconds - model.player.currentTime) }
             }
             if let message = model.message { Text(message).ccText(font: .cc.sm, color: .cc.mutedForeground) }
             HStack {

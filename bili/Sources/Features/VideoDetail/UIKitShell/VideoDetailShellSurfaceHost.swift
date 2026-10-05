@@ -1,3 +1,4 @@
+import ChunUI
 import AVFoundation
 import Combine
 import SwiftUI
@@ -877,7 +878,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                 },
                 subtitles: {
                     visibility.markInteraction()
-                    PiliSubtitleSettingsView.present(controller: detailViewModel.piliSubtitles) { viewModel.seek(to: $0) }
+                    PiliSubtitleSettingsView.present(controller: detailViewModel.piliSubtitles) { seconds in viewModel.seek(by: seconds - viewModel.currentTime) }
                 },
                 danmaku: { visibility.markInteraction(); onShowDanmakuSettings() },
                 queue: { visibility.markInteraction(keepsVisible: true); isVideoListenQueuePresented = true },

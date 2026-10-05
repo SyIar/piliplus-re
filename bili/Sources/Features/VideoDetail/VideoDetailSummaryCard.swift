@@ -67,7 +67,10 @@ struct VideoDetailSummaryCard: View {
                         AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .online(viewModel) }) }
                     }
                     tool("字幕", icon: "captions.bubble") {
-                        PiliSubtitleSettingsView.present(controller: viewModel.piliSubtitles) { viewModel.stablePlayerViewModel?.seek(to: $0) }
+                        PiliSubtitleSettingsView.present(controller: viewModel.piliSubtitles) { seconds in
+                            guard let player = viewModel.stablePlayerViewModel else { return }
+                            player.seek(by: seconds - player.currentTime)
+                        }
                     }
                     if viewModel.piliPlaybackQueue != nil || viewModel.detail.piliUGCSeason != nil {
                         tool("播放列表", icon: "list.bullet") {

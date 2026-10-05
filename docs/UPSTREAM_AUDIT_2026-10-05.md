@@ -13,6 +13,8 @@
 | 评论管理 | 点踩/取消点踩、删除、UP 置顶/取消置顶、举报；视频/动态/楼中楼共用 | `BiliAPIClient+PiliCommentActions`、`PiliCommentActionsView`、`PiliCommentActionStore`；权限/请求契约/失败回退测试 |
 | 聊天设置 | 服务端允许时显示内容推送开关；读取真实免打扰状态；关闭推送前确认 | `BiliAPIClient+PiliChatSettings`、`PiliChatSettingsView`；请求参数与账号切换测试 |
 
+同时修正在线、离线和横屏字幕列表的时间跳转：字幕返回秒数，不再把秒数误当作 0–1 播放比例。
+
 评论写入使用「互动账号」，聊天设置使用「主账号」。请求携带该账号的 Cookie/CSRF，菜单保留账号版本；账号变化后的旧操作会拒绝，网络错误不自动重复写入。举报不会顺带拉黑。点赞与点踩互斥，失败保留成功前状态；删除与置顶成功后刷新原列表。
 
 ## 已存在，不应重复算作缺失
