@@ -90,19 +90,22 @@ extension BiliAPIClient {
     func postForm<T: Decodable & Sendable>(
         base: URL,
         path: String,
+        query: [String: String] = [:],
         body: [String: String],
         referer: String = "https://www.bilibili.com",
         userAgent: String? = nil,
         cookieHeader: String? = nil,
+        additionalHeaders: [String: String] = [:],
         retryPolicy: BiliNetworkRetryPolicy = .api
     ) async throws -> T {
         var request = try await makeRequest(
             base: base,
             path: path,
-            query: [:],
+            query: query,
             referer: referer,
             userAgent: userAgent,
-            cookieHeader: cookieHeader
+            cookieHeader: cookieHeader,
+            additionalHeaders: additionalHeaders
         )
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded; charset=UTF-8", forHTTPHeaderField: "Content-Type")

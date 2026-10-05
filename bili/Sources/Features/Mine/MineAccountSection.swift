@@ -24,6 +24,15 @@ struct MineAccountSection: View {
                     AppHelper.shared.presentSheet(.sheet) { PiliProfileView(api: dependencies.api) }
                 } label: { Label("编辑个人资料", systemImage: "person.crop.circle.badge.pencil") }
 
+                Button {
+                    AppHelper.shared.presentSheet(.sheet) {
+                        PiliRelationsView(api: dependencies.api)
+                            .environmentObject(dependencies)
+                            .environmentObject(libraryStore)
+                            .environmentObject(sessionStore)
+                    }
+                } label: { Label("关注、粉丝与黑名单", systemImage: "person.2") }
+
                 if libraryStore.multiAccountExperimentEnabled {
                     MineOverlayNavigationButton {
                         onOpenRoute(.multiAccountSettings)

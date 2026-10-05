@@ -49,7 +49,7 @@ bash Scripts/build-ipa.sh
 3. 并行编译设备 Release 包并生成 `PiliPlusSwift-unsigned.ipa`，上传 Actions artifact。
 4. `main` 和标签的成功构建自动创建预发布，附 IPA、SHA-256、对应源代码和许可说明。PR 只构建，不发布。
 
-下载入口：[Releases](https://github.com/SyIar/piliplus-re/releases)。基础设备 IPA 已在 Actions 构建成功，完整测试通过后才会生成 Release。
+下载入口：[Releases](https://github.com/SyIar/piliplus-re/releases)。`f057aef` 和个人资料版本 `79cb740` 已通过完整流水线并自动发布；后续提交继续独立执行构建与测试。
 
 IPA **未签名**，需要自行签名后安装。流水线不需要个人证书，也不会发布到 App Store 或 TestFlight。只有全部构建与测试成功才会执行发布任务。
 

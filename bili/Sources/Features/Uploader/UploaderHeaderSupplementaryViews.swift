@@ -39,13 +39,20 @@ struct UploaderProfileStatusMessage: View {
 }
 
 struct UploaderStatsRow: View {
+    @EnvironmentObject private var dependencies: AppDependencies
+    @EnvironmentObject private var libraryStore: LibraryStore
+    let owner: VideoOwner
     @ObservedObject var viewModel: UploaderViewModel
     let card: UploaderCard?
 
     var body: some View {
         HStack(spacing: 14) {
-            UploaderStatItem(title: "粉丝", value: viewModel.followerCount ?? card?.fans)
-            UploaderStatItem(title: "关注", value: viewModel.followingCount ?? card?.attention)
+            Button { openRelations(.fans) } label: {
+                UploaderStatItem(title: "粉丝", value: viewModel.followerCount ?? card?.fans)
+            }.buttonStyle(.plain)
+            Button { openRelations(.following) } label: {
+                UploaderStatItem(title: "关注", value: viewModel.followingCount ?? card?.attention)
+            }.buttonStyle(.plain)
             UploaderStatItem(title: "获赞", value: viewModel.likeCount)
             UploaderStatItem(title: "投稿", value: viewModel.archiveCount ?? loadedVideoCount)
         }
@@ -53,6 +60,15 @@ struct UploaderStatsRow: View {
 
     private var loadedVideoCount: Int? {
         viewModel.videos.isEmpty ? nil : viewModel.videos.count
+    }
+
+    private func openRelations(_ kind: PiliRelationList) {
+        AppHelper.shared.presentSheet(.sheet) {
+            PiliRelationsView(api: dependencies.api, ownerMID: owner.mid, kind: kind)
+                .environmentObject(dependencies)
+                .environmentObject(libraryStore)
+                .environmentObject(dependencies.api.sessionStore)
+        }
     }
 }
 

@@ -4056,6 +4056,109 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testRelationsKeepSubmittedGroupAndOrderDuringPaginationAndSearchAllFollowing() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            switch request.url?.path {
+            case "/x/web-interface/nav":
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
+            case "/x/relation/tag":
+                let page = Self.queryValues(for: request)["pn"]
+                let users = (page == "1" ? Array(1...20) : [21]).map { ["mid": $0, "uname": "用户\($0)"] as [String: Any] }
+                let data = try JSONSerialization.data(withJSONObject: ["code": 0, "data": users])
+                return Self.response(for: request, data: data)
+            case "/x/relation/tags":
+                return Self.response(for: request, body: #"{"code":0,"data":[{"tagid":0,"name":"默认分组","count":3},{"tagid":-10,"name":"特别关注","count":1},{"tagid":7,"name":"自定义","count":21}]}"#)
+            default:
+                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"mid":50,"uname":"搜索用户","attribute":6}],"total":1}}"#)
+            }
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=relation-session; DedeUserID=1001; bili_jct=relation-csrf")
+        let model = PiliRelationsModel(api: api)
+        model.groupID = 7
+        await model.start()
+        XCTAssertEqual(model.groups.filter(\.isCustom).map(\.id), [7])
+        XCTAssertEqual(model.users.count, 20)
+        model.keyword = "尚未提交"; model.groupID = 8; model.frequent = true
+        await model.load()
+        XCTAssertEqual(model.users.count, 21)
+        XCTAssertFalse(model.hasMore)
+        let pages = recorder.requests.filter { $0.url?.path == "/x/relation/tag" }
+        XCTAssertEqual(pages.count, 2)
+        XCTAssertEqual(Self.queryValues(for: pages[1])["tagid"], "7")
+        XCTAssertEqual(Self.queryValues(for: pages[1])["order_type"], "")
+        XCTAssertEqual(Self.queryValues(for: pages[1])["pn"], "2")
+        model.keyword = "猫A+B"
+        await model.load(reset: true)
+        XCTAssertEqual(model.users.map(\.id), [50])
+        let search = try XCTUnwrap(recorder.requests.last)
+        XCTAssertEqual(search.url?.path, "/x/relation/followings/search")
+        XCTAssertEqual(Self.queryValues(for: search)["name"], "猫A+B")
+        XCTAssertNotNil(Self.queryValues(for: search)["w_rid"])
+        XCTAssertNil(Self.queryValues(for: search)["tagid"], "Search spans all following, not just the previous group")
+        XCTAssertEqual(cookieValues(in: search.value(forHTTPHeaderField: "Cookie"))["SESSDATA"], "relation-session")
+    }
+
+    @MainActor
+    func testRelationMutationsKeepDefaultGroupAndFanRemovalContracts() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/relation" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"attribute":6,"tag":[0,7],"special":1}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{"tagid":8}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=relation-session; DedeUserID=1001; bili_jct=relation-csrf")
+        let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
+        let groups = try await api.fetchPiliRelationGroups(mid: 20, identity: identity)
+        XCTAssertEqual(groups, Set([-10, 7]))
+        let created = try await api.mutatePiliRelation(.createGroup("A+B"), identity: identity)
+        XCTAssertEqual(created, 8)
+        try await api.mutatePiliRelation(.renameGroup(8, "新分组"), identity: identity)
+        try await api.mutatePiliRelation(.sortGroups([8, 7]), identity: identity)
+        try await api.mutatePiliRelation(.setGroups(mid: 20, ids: Array(groups)), identity: identity)
+        try await api.mutatePiliRelation(.setGroups(mid: 20, ids: []), identity: identity)
+        try await api.mutatePiliRelation(.removeFan(20), identity: identity)
+        try await api.mutatePiliRelation(.unblock(30), identity: identity)
+        let writes = recorder.requests.filter { $0.httpMethod == "POST" }
+        XCTAssertEqual(writes.count, 7)
+        XCTAssertEqual(formValues(in: writes[0])["tag"], "A+B")
+        XCTAssertEqual(formValues(in: writes[1])["name"], "新分组")
+        XCTAssertEqual(formValues(in: writes[2])["tagids"], "8,7", "Preserve user-defined order")
+        XCTAssertEqual(formValues(in: writes[3])["tagids"], "-10,7")
+        XCTAssertEqual(formValues(in: writes[4])["tagids"], "0", "An empty selection must explicitly choose the default group")
+        XCTAssertEqual(writes[5].url?.path, "/x/relation/modify")
+        XCTAssertEqual(formValues(in: writes[5])["act"], "7", "Removing a fan must not issue unfollow or blacklist")
+        XCTAssertEqual(formValues(in: writes[6])["act"], "6")
+        for request in writes {
+            XCTAssertEqual(formValues(in: request)["csrf"], "relation-csrf")
+            XCTAssertEqual(cookieValues(in: request.value(forHTTPHeaderField: "Cookie"))["SESSDATA"], "relation-session")
+            XCTAssertNotNil(Self.queryValues(for: request)["x-bili-device-req-json"])
+        }
+        XCTAssertEqual(writes[5].value(forHTTPHeaderField: "Origin"), "https://space.bilibili.com")
+        XCTAssertEqual(writes[5].value(forHTTPHeaderField: "Referer"), "https://space.bilibili.com/20/dynamic")
+    }
+
+    @MainActor
+    func testRelationWritesRejectSystemGroupsStaleAccountsAndAmbiguousRetry() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in recorder.record(request); throw URLError(.networkConnectionLost) }
+        let api = try makeAPI(cookieHeader: "SESSDATA=relation-session; DedeUserID=1001; bili_jct=relation-csrf")
+        let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
+        for action in [PiliRelationMutation.deleteGroup(0), .renameGroup(-10, "改名"), .sortGroups([7, -2]), .block(1001)] {
+            do { try await api.mutatePiliRelation(action, identity: identity); XCTFail("Reject a protected target") }
+            catch { XCTAssertTrue(recorder.requests.isEmpty) }
+        }
+        do { try await api.mutatePiliRelation(.removeFan(20), identity: identity); XCTFail("Expected transport failure") }
+        catch { XCTAssertEqual(recorder.requests.count, 1, "Do not retry a potentially completed relation mutation") }
+        try api.sessionStore.logout()
+        do { try await api.mutatePiliRelation(.createGroup("分组"), identity: identity); XCTFail("Reject stale account") }
+        catch { XCTAssertEqual(recorder.requests.count, 1) }
+    }
+
+    @MainActor
     func testNoteSaveUsesOneAccountAndEncodesTextWithoutPublishingComments() async throws {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in

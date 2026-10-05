@@ -14,7 +14,7 @@ struct UploaderHeaderView: View {
             UploaderSignatureText(sign: card?.sign)
             UploaderFollowMessage(message: viewModel.followMessage, isFollowing: viewModel.isFollowing)
             UploaderProfileStatusMessage(state: viewModel.profileState)
-            UploaderStatsRow(viewModel: viewModel, card: card)
+            UploaderStatsRow(owner: owner, viewModel: viewModel, card: card)
         }
         .padding()
         .biliGlassEffect(
