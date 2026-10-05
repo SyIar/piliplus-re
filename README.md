@@ -10,7 +10,7 @@
 
 - 基于 GPL-3.0 的 [cilicili](https://github.com/Rone89/cilicili) 原生代码继续开发，保留其账号、推荐、搜索、动态、评论、消息、直播与弹幕实现。
 - AVPlayer HLS Bridge 适配 B 站分离音视频流；没有 Flutter 或 mpv 运行时。
-- 新增视频模式多 P、番剧顺序播放、循环和相关视频连播；听视频模式保留已有队列。
+- 新增视频模式多 P、番剧、收藏夹和稍后再看顺序播放、循环，以及相关视频连播；收藏夹按需分页，听视频模式保留已有队列。
 - 全局定时停止：按实际截止时间计时，支持播完当前再停；到点停止优先于连播，并持久化状态。
 - 空降助手沿用 SponsorBlock 服务，合并重叠区间，减少连续 seek。
 - 稍后再看支持加入、移除，以及清理已看完和失效条目；写操作需登录对应账号。
@@ -41,8 +41,8 @@ bash Scripts/build-ipa.sh
 工作流：[Build, test and publish IPA](.github/workflows/build-release.yml)。
 
 1. PR、`main` 推送、`v*` 标签或手动运行触发 macOS 构建。
-2. 执行播放策略测试、仓库校验与 iOS 单元测试。
-3. 编译设备 Release 包并生成 `PiliPlusSwift-unsigned.ipa`，上传 Actions artifact。
+2. 执行播放策略测试、仓库校验；单独编译 iOS 测试包，再在预先启动的单台模拟器上运行测试与截图。
+3. 并行编译设备 Release 包并生成 `PiliPlusSwift-unsigned.ipa`，上传 Actions artifact。
 4. `main` 和标签的成功构建自动创建预发布，附 IPA、SHA-256、对应源代码和许可说明。PR 只构建，不发布。
 
 下载入口：[Releases](https://github.com/SyIar/piliplus-re/releases)。首次成功运行之前不会有可下载的 IPA。
