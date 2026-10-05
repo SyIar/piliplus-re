@@ -24,3 +24,6 @@ xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-light.png"
 xcrun simctl ui "$device_id" appearance dark
 sleep 2
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-dark.png"
+xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassPlayer
+sleep 4
+xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-player-glass.png"

@@ -39,6 +39,9 @@ struct VideoDetailContentPage: View {
             type: viewModel.commentTarget?.type,
             referer: videoReferer
         )
+        .onPiliCommentModerated(oid: viewModel.commentTarget?.oid, type: viewModel.commentTarget?.type) {
+            await viewModel.loadInitialComments()
+        }
     }
 
     private var videoReferer: String {

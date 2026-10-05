@@ -72,112 +72,51 @@ struct CommentMetricBadge: View {
 struct CommentLikeButton: View {
     @Environment(\.commentLikeTarget) private var target
     @EnvironmentObject private var dependencies: AppDependencies
-    @EnvironmentObject private var libraryStore: LibraryStore
-
     let comment: Comment
 
-    @State private var displayState: CommentLikeDisplayState
-    @State private var isMutating = false
+    var body: some View {
+        if let target {
+            PiliCommentAccountContext(sessionStore: dependencies.sessionStore, libraryStore: dependencies.libraryStore) { identity in
+                let subject = PiliCommentActionStore.Subject(identity: identity, oid: target.oid, type: target.type)
+                PiliCommentLikeControl(comment: comment, target: target, subject: subject,
+                                       store: dependencies.commentActions, api: dependencies.api)
+                    .id(subject)
+            }
+        } else {
+            CommentMetricBadge(text: BiliFormatters.compactCount(comment.like), systemImage: "hand.thumbsup", isHighlighted: false)
+        }
+    }
+}
+
+private struct PiliCommentLikeControl: View {
+    let comment: Comment
+    let target: CommentLikeTarget
+    let subject: PiliCommentActionStore.Subject
+    @ObservedObject var store: PiliCommentActionStore
+    let api: BiliAPIClient
     @State private var errorMessage: String?
 
-    init(comment: Comment) {
-        self.comment = comment
-        _displayState = State(initialValue: Self.state(for: comment))
-    }
-
     var body: some View {
-        Group {
-            if target != nil {
-                Button(action: toggleLike) {
-                    badge
-                }
-                .buttonStyle(.plain)
-                .disabled(isMutating)
-                .accessibilityLabel(displayState.isLiked ? "取消点赞评论" : "点赞评论")
-                .accessibilityValue("\(displayState.likeCount) 个赞")
-            } else {
-                badge
+        let state = store.state(comment, subject: subject)
+        Button {
+            Task {
+                do {
+                    try await store.perform(.like(state.reaction != 1), comment: comment, subject: subject, referer: target.referer, api: api)
+                    Haptics.success()
+                } catch { errorMessage = error.localizedDescription }
             }
+        } label: {
+            CommentMetricBadge(text: BiliFormatters.compactCount(state.likeCount),
+                               systemImage: state.reaction == 1 ? "hand.thumbsup.fill" : "hand.thumbsup",
+                               isHighlighted: state.reaction == 1)
         }
-        .onChange(of: sourceState) { _, newValue in
-            guard !isMutating else { return }
-            displayState = newValue
-        }
-        .alert("评论点赞", isPresented: showsError) {
-            Button("好", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "操作失败")
-        }
+        .buttonStyle(.plain)
+        .disabled(store.isBusy(subject) || state.deleted)
+        .accessibilityLabel(state.reaction == 1 ? "取消点赞评论" : "点赞评论")
+        .accessibilityValue("\(state.likeCount) 个赞")
+        .alert("评论操作失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            Button("好", role: .cancel) { errorMessage = nil }
+        } message: { Text(errorMessage ?? "") }
         .dynamicCommentHitArea(.control)
-    }
-
-    private var badge: some View {
-        CommentMetricBadge(
-            text: BiliFormatters.compactCount(displayState.likeCount),
-            systemImage: displayState.isLiked ? "hand.thumbsup.fill" : "hand.thumbsup",
-            isHighlighted: displayState.isLiked
-        )
-        .contentShape(Rectangle())
-    }
-
-    private var sourceState: CommentLikeDisplayState {
-        Self.state(for: comment)
-    }
-
-    private var showsError: Binding<Bool> {
-        Binding(
-            get: { errorMessage != nil },
-            set: { isPresented in
-                if !isPresented {
-                    errorMessage = nil
-                }
-            }
-        )
-    }
-
-    private func toggleLike() {
-        guard !isMutating, let target else { return }
-        let account = dependencies.sessionStore.credentialSnapshot(
-            for: .interaction,
-            multiAccountEnabled: libraryStore.multiAccountExperimentEnabled
-        )
-        guard account.isLoggedIn else {
-            errorMessage = "请先登录互动账号"
-            return
-        }
-
-        Haptics.light()
-        let previousState = displayState
-        let targetState = previousState.toggled()
-        isMutating = true
-        withAnimation(.snappy(duration: 0.2)) {
-            displayState = targetState
-        }
-
-        Task { @MainActor in
-            do {
-                try await dependencies.api.setCommentLike(
-                    oid: target.oid,
-                    type: target.type,
-                    rpid: comment.rpid,
-                    liked: targetState.isLiked,
-                    referer: target.referer
-                )
-                Haptics.success()
-            } catch {
-                withAnimation(.snappy(duration: 0.2)) {
-                    displayState = previousState
-                }
-                errorMessage = "操作失败：\(error.localizedDescription)"
-            }
-            isMutating = false
-        }
-    }
-
-    private static func state(for comment: Comment) -> CommentLikeDisplayState {
-        CommentLikeDisplayState(
-            isLiked: comment.likeState == 1,
-            likeCount: max(0, comment.like ?? 0)
-        )
     }
 }

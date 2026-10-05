@@ -10,6 +10,7 @@ final class AppDependencies: ObservableObject {
     let api: BiliAPIClient
     let accountMessageService: AccountMessageService
     let sponsorBlockService: SponsorBlockService
+    let commentActions = PiliCommentActionStore()
     private let networkMetricsRecorder: BiliNetworkMetricsRecorder
     private var sessionCancellables = Set<AnyCancellable>()
     private var hasScheduledStartupWork = false

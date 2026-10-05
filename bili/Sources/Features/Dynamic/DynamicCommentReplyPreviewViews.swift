@@ -14,6 +14,7 @@ struct DynamicReplyPreviewRow: View {
             typographyRole: .metadata
         )
         .lineLimit(2)
+        .piliCommentActions(reply)
     }
 }
 

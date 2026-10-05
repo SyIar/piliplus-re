@@ -11,8 +11,8 @@ struct HomeFeedVideoCardLabel: View {
         case .singleColumn:
             YouTubeStyleVideoFeedCardView(
                 display: display,
-                usesGenericAuthorIcon: usesGenericAuthorIcon,
-                placesViewAndPublishTimeTrailing: true,
+                usesGenericAuthorIcon: false,
+                placesViewAndPublishTimeTrailing: false,
                 fixedCoverAspectRatio: 16 / 9,
                 fixedCoverSize: metrics.singleColumnFixedCoverSize,
                 coverMaximumPixelLength: 720

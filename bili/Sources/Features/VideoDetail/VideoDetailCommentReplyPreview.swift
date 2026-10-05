@@ -16,6 +16,6 @@ struct ReplyPreviewRow: View {
         )
             .lineLimit(2)
             .fixedSize(horizontal: false, vertical: true)
-            .commentCopyContextMenu(text: reply.content?.message, title: "复制回复")
+            .piliCommentActions(reply)
     }
 }

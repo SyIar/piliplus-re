@@ -58,42 +58,40 @@ struct VideoDetailSummaryCard: View {
                 PiliVideoLibraryActions(viewModel: viewModel, descriptionStore: renderPack.descriptionStore)
             }
 
-            if viewModel.piliPlaybackQueue != nil || viewModel.detail.piliUGCSeason != nil {
-                CCNeoButton("合集与播放列表", variant: .ghost, icon: PikaIcon.Name.folder) {
-                    AppHelper.shared.presentSheet(.sheet) { PiliCollectionQueueView(viewModel: viewModel) }
-                }
-            }
-
-            CCNeoButton("离线下载", variant: .ghost, icon: PikaIcon.Name.save) {
-                AppHelper.shared.presentSheet(.sheet) { PiliDownloadSheet(viewModel: viewModel) }
-            }
-
-            CCNeoButton("投屏", variant: .ghost, icon: "screen-check") {
-                AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .online(viewModel) }) }
-            }
-
-            CCNeoButton("字幕", variant: .ghost, icon: PikaIcon.Name.fileText) {
-                PiliSubtitleSettingsView.present(controller: viewModel.piliSubtitles) { viewModel.stablePlayerViewModel?.seek(to: $0) }
-            }
-
-            CCNeoButton("互动分支", variant: .ghost, icon: PikaIcon.Name.folder) {
-                AppHelper.shared.presentSheet(.sheet) { PiliInteractiveHistoryView(controller: viewModel.piliInteractive) }
-            }
-
-            if let aid = viewModel.detail.aid {
-                HStack {
-                    CCNeoButton("记笔记", variant: .ghost, icon: PikaIcon.Name.edit) {
-                        AppHelper.shared.presentSheet(.sheet) {
-                            NavigationStack {
-                                PiliNoteEditorView(api: viewModel.api, aid: aid, initialTitle: viewModel.detail.title,
-                                                   noteID: nil, initialText: "", time: viewModel.stablePlayerViewModel?.currentTime)
-                            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    tool("离线下载", icon: "arrow.down.circle") {
+                        AppHelper.shared.presentSheet(.sheet) { PiliDownloadSheet(viewModel: viewModel) }
+                    }
+                    tool("投屏", icon: "tv") {
+                        AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .online(viewModel) }) }
+                    }
+                    tool("字幕", icon: "captions.bubble") {
+                        PiliSubtitleSettingsView.present(controller: viewModel.piliSubtitles) { viewModel.stablePlayerViewModel?.seek(to: $0) }
+                    }
+                    if viewModel.piliPlaybackQueue != nil || viewModel.detail.piliUGCSeason != nil {
+                        tool("播放列表", icon: "list.bullet") {
+                            AppHelper.shared.presentSheet(.sheet) { PiliCollectionQueueView(viewModel: viewModel) }
                         }
                     }
-                    CCNeoButton("视频笔记", variant: .ghost, icon: PikaIcon.Name.note) {
-                        AppHelper.shared.presentSheet(.sheet) { PiliNotesLibraryView(api: viewModel.api, video: viewModel.detail) }
+                    tool("互动分支", icon: "point.topleft.down.to.point.bottomright.curvepath") {
+                        AppHelper.shared.presentSheet(.sheet) { PiliInteractiveHistoryView(controller: viewModel.piliInteractive) }
+                    }
+                    if let aid = viewModel.detail.aid {
+                        tool("记笔记", icon: "square.and.pencil") {
+                            AppHelper.shared.presentSheet(.sheet) {
+                                NavigationStack {
+                                    PiliNoteEditorView(api: viewModel.api, aid: aid, initialTitle: viewModel.detail.title,
+                                                       noteID: nil, initialText: "", time: viewModel.stablePlayerViewModel?.currentTime)
+                                }
+                            }
+                        }
+                        tool("视频笔记", icon: "note.text") {
+                            AppHelper.shared.presentSheet(.sheet) { PiliNotesLibraryView(api: viewModel.api, video: viewModel.detail) }
+                        }
                     }
                 }
+                .padding(.vertical, 6)
             }
 
             VideoDetailInteractionNotice(store: renderPack.interactionStore)
@@ -103,6 +101,17 @@ struct VideoDetailSummaryCard: View {
             )
         }
         .frame(width: contentWidth, alignment: .leading)
+    }
+
+    private func tool(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 13, weight: .medium))
+                .padding(.horizontal, 14).frame(height: 36)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.primary)
+        .piliLiquidGlass(in: Capsule(), interactive: true)
     }
 
     private func showCoinPicker() {

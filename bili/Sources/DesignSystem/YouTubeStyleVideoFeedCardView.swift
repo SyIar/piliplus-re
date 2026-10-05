@@ -68,7 +68,7 @@ struct YouTubeStyleVideoFeedCardView: View, Equatable {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             YouTubeStyleVideoFeedThumbnail(
                 display: display,
                 showsPlayBadge: showsPlayBadge,

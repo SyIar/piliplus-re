@@ -420,6 +420,7 @@ private struct AccountPrivateMessageSessionRow: View {
 }
 
 private struct AccountPrivateMessageConversationView: View {
+    @EnvironmentObject private var dependencies: AppDependencies
     let session: AccountPrivateMessageSession
     @ObservedObject var viewModel: AccountMessageCenterViewModel
     let onMarkedRead: () -> Void
@@ -523,6 +524,14 @@ private struct AccountPrivateMessageConversationView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 AccountPrivateMessageConversationHeader(actor: session.actor)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    PiliChatSettingsView(api: dependencies.api, talkerID: session.talkerID)
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+                .accessibilityLabel("聊天设置")
             }
         }
         .sheet(isPresented: $showsEmotePicker) {

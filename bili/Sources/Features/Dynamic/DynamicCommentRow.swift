@@ -25,6 +25,7 @@ struct DynamicCommentRow: View {
 
     var body: some View {
         sharedCommentLayout
+            .piliCommentActions(comment)
     }
 
     private var contentReplyAction: () -> Void {

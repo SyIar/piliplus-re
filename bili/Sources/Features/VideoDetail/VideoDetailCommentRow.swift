@@ -62,6 +62,6 @@ struct CommentRow: View, Equatable {
                 showReplies: showReplies
             )
         }
-        .commentCopyContextMenu(text: comment.content?.message, title: "复制评论")
+        .piliCommentActions(comment)
     }
 }

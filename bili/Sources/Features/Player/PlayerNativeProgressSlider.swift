@@ -3,6 +3,7 @@ import SwiftUI
 enum PlayerNativeProgressStyle: Equatable {
     case standard
     case telegram
+    case liquidGlass
 }
 
 struct PlayerNativeProgressSlider: View {
@@ -83,7 +84,7 @@ struct PlayerNativeProgressSlider: View {
                     .frame(width: width * CGFloat(displayProgress), height: trackHeight)
             } else {
                 Capsule()
-                    .fill(.white.opacity(0.96))
+                    .fill(style == .liquidGlass ? Color(red: 1, green: 0.18, blue: 0.32) : .white.opacity(0.96))
                     .frame(width: width * CGFloat(displayProgress), height: trackHeight)
             }
         }
@@ -108,6 +109,7 @@ struct PlayerNativeProgressSlider: View {
     }
 
     private var trackHeight: CGFloat {
+        if style == .liquidGlass { return scrubbingState.isEditing ? 7 : 4 }
         if style == .telegram {
             return scrubbingState.isEditing ? 10 : 8
         }

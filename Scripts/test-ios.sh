@@ -45,6 +45,7 @@ xcodebuild "$test_action" \
   -derivedDataPath "$result_dir/DerivedData" \
   -resultBundlePath "$result_dir/$result_name.xcresult" \
   -only-testing:biliTests \
+  -only-testing:biliUITests/PiliLiquidGlassUITests \
   -parallel-testing-enabled NO \
   -maximum-concurrent-test-simulator-destinations 1 \
   -destination-timeout 180 \

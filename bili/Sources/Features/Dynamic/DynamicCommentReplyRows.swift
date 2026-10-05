@@ -56,6 +56,7 @@ struct DynamicCommentReplyRootView: View {
             }
             .padding(.vertical, 10)
         }
+        .piliCommentActions(comment)
     }
 }
 
@@ -141,6 +142,7 @@ struct DynamicCommentReplyDetailRow: View {
             }
             .padding(.vertical, 10)
         }
+        .piliCommentActions(reply)
     }
 }
 
@@ -207,5 +209,6 @@ struct DynamicCommentDialogRow: View {
         .padding(.vertical, 10)
         .background(isFocused ? appTintColor.opacity(0.06) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .piliCommentActions(reply)
     }
 }

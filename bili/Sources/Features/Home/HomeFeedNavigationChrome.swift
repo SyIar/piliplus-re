@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeFeedNavigationChrome: ViewModifier {
     @Environment(\.rootNavigationTitleHidden) private var rootNavigationTitleHidden
+    @EnvironmentObject private var sessionStore: SessionStore
     @ObservedObject var viewModel: HomeViewModel
     let modeActions: HomeFeedModeActions
     let scrollActions: HomeFeedScrollActions
@@ -13,13 +14,6 @@ struct HomeFeedNavigationChrome: ViewModifier {
     func body(content: Content) -> some View {
         content
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    navigationTitle
-                        .font(.headline)
-                        .opacity(navigationChromeOpacity)
-                        .accessibilityHidden(hidesNavigationChrome)
-                        .animation(.smooth(duration: 0.18), value: hidesNavigationChrome)
-                }
                 ToolbarItem(placement: .topBarLeading) {
                     HomeFeedModeMenu(currentMode: viewModel.mode, onSelectMode: switchMode)
                         .opacity(navigationChromeOpacity)
@@ -27,37 +21,42 @@ struct HomeFeedNavigationChrome: ViewModifier {
                         .accessibilityHidden(hidesNavigationChrome)
                         .animation(.smooth(duration: 0.18), value: hidesNavigationChrome)
                 }
-                .sharedBackgroundVisibility(toolbarItemBackgroundVisibility)
+                .sharedBackgroundVisibility(.hidden)
                 ToolbarItem(placement: .topBarTrailing) {
-                    accountMessageButton
-                        .opacity(navigationChromeOpacity)
-                        .disabled(hidesNavigationChrome)
-                        .accessibilityHidden(hidesNavigationChrome)
-                        .animation(.smooth(duration: 0.18), value: hidesNavigationChrome)
+                    GlassEffectContainer(spacing: 10) {
+                        HStack(spacing: 10) {
+                            HStack(spacing: 0) {
+                                Button {
+                                    AppHelper.shared.presentSheet(.sheet) { PiliDLNAView() }
+                                } label: {
+                                    Image(systemName: "tv").frame(width: 42, height: 42)
+                                }
+                                .accessibilityLabel("投屏设备")
+                                accountMessageButton.frame(width: 42, height: 42)
+                            }
+                            .buttonStyle(.plain)
+                            .piliLiquidGlass(in: Capsule(), interactive: true)
+
+                            NavigationLink(value: MineOverlayRoute.multiAccountSettings) {
+                                AvatarRemoteImage(urlString: sessionStore.user?.face, pixelSize: 88) {
+                                    Image(systemName: "person.crop.circle.fill")
+                                        .font(.system(size: 32, weight: .regular))
+                                        .foregroundStyle(.primary)
+                                }
+                                .frame(width: 40, height: 40)
+                                .clipShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("账号管理")
+                        }
+                    }
+                    .opacity(navigationChromeOpacity)
+                    .disabled(hidesNavigationChrome)
+                    .accessibilityHidden(hidesNavigationChrome)
                 }
-                .sharedBackgroundVisibility(toolbarItemBackgroundVisibility)
+                .sharedBackgroundVisibility(.hidden)
             }
             .nativeTopNavigationChrome()
-    }
-
-    @ViewBuilder
-    private var navigationTitle: some View {
-        ZStack {
-            if viewModel.mode == .recommend {
-                modeTitle(.recommend, transitionEdge: .leading)
-            } else {
-                modeTitle(.popular, transitionEdge: .trailing)
-            }
-        }
-        .frame(width: 64, height: 24)
-        .clipped()
-        .animation(.smooth(duration: 0.28), value: viewModel.mode)
-    }
-
-    private func modeTitle(_ mode: HomeFeedMode, transitionEdge: Edge) -> some View {
-        Text(mode.title)
-            .frame(width: 64, height: 24)
-            .transition(.move(edge: transitionEdge))
     }
 
     private var hidesNavigationChrome: Bool {
@@ -66,10 +65,6 @@ struct HomeFeedNavigationChrome: ViewModifier {
 
     private var navigationChromeOpacity: Double {
         hidesNavigationChrome ? 0 : 1
-    }
-
-    private var toolbarItemBackgroundVisibility: Visibility {
-        hidesNavigationChrome ? .hidden : .automatic
     }
 
     @ViewBuilder
@@ -140,10 +135,15 @@ private struct HomeAccountMessageButtonContent: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "bell.fill")
+            Image(systemName: "bell")
                 .symbolRenderingMode(.monochrome)
-                .font(.system(size: VideoDetailActionStrip.Metrics.iconSize, weight: .semibold))
-                .foregroundStyle(hasUnread ? appTintColor : Color.primary)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(Color.primary)
+                .overlay(alignment: .topTrailing) {
+                    if hasUnread {
+                        Circle().fill(.red).frame(width: 7, height: 7).offset(x: 4, y: -2)
+                    }
+                }
         }
         .accessibilityLabel("账号消息")
         .accessibilityValue(hasUnread ? "有未读消息" : "全部已读")

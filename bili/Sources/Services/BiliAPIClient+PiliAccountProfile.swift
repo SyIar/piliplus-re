@@ -3,6 +3,7 @@ import Foundation
 nonisolated struct PiliAccountIdentity: Hashable, Sendable {
     let mid: Int
     let version: Int
+    init(mid: Int, version: Int) { self.mid = mid; self.version = version }
     init(_ snapshot: BiliAPIClient.RequestSnapshot) {
         mid = snapshot.currentUserMID ?? 0; version = snapshot.playbackCredentialVersion
     }

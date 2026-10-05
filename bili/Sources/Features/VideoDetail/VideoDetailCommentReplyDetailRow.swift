@@ -82,7 +82,7 @@ struct CommentReplyDetailRow: View {
             }
         }
         .padding(.vertical, 10)
-        .commentCopyContextMenu(text: reply.content?.message, title: "复制回复")
+        .piliCommentActions(reply)
     }
 
     private var replyAction: (() -> Void)? {

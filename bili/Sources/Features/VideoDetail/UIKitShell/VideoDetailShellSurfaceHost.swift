@@ -540,6 +540,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
     @State private var portraitMoreControlsRequestID: UUID?
     @State private var isMoreControlsButtonPressed = false
     @State private var isVideoListenQueuePresented = false
+    @State private var isGlassControlsLocked = false
 
     private var isLandscape: Bool {
         rotationCoordinator.chromeLandscape
@@ -659,6 +660,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                             prepareUserSeekWarmup: prepareUserSeekWarmupIfNeeded,
                             resetPreparedScrubProgress: { lastPreparedScrubProgress = -1 }
                         )
+                        .allowsHitTesting(!isGlassControlsLocked)
                         .zIndex(1)
 
                         BiliPlayerSurfaceOverlayLayer(
@@ -668,6 +670,14 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                         )
                             .zIndex(2)
 
+                        if isLandscape && !isAudioOnlyPlayback {
+                            if chromeState.showsActivePlaybackControls || isGlassControlsLocked {
+                                glassFullscreenControls(playback: nativeActions, visibility: visibilityActions)
+                                    .opacity(isGlassControlsLocked ? 1 : chromeState.playbackControlsOpacity)
+                                    .allowsHitTesting(isGlassControlsLocked || chromeState.playbackControlsAllowsHitTesting)
+                                    .zIndex(3)
+                            }
+                        } else {
                         BiliPlayerControlsOverlayLayer(
                             state: chromeState,
                             playbackControls: AnyView(
@@ -682,6 +692,8 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                             usesFullscreenSafeArea: isPortraitFullscreen
                         )
                         .zIndex(3)
+
+                        }
 
                         if isAudioOnlyPlayback {
                             persistentMoreControlsButton(contentInsets: videoInsets)
@@ -808,6 +820,9 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             }
             playbackControlsVisibility.cancelAutoHide()
         }
+        .onChange(of: isLandscape) { _, landscape in
+            if !landscape { isGlassControlsLocked = false }
+        }
         .onChange(of: playbackControlsHideRequestGeneration) { _, _ in
             playbackControlsVisibility.hide(animated: false)
         }
@@ -832,6 +847,55 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
+    }
+
+    private func glassFullscreenControls(
+        playback: PlayerNativePlaybackControlsActions,
+        visibility: BiliPlayerPlaybackControlsVisibilityActions
+    ) -> some View {
+        PiliGlassFullscreenControls(
+            title: overlaySnapshot.historyVideo.title,
+            author: overlaySnapshot.historyVideo.owner?.name ?? "",
+            shareURL: URL(string: "https://www.bilibili.com/video/\(overlaySnapshot.historyVideo.bvid)"),
+            clock: viewModel.playbackClock,
+            isPlaying: surfaceState.isPlaying,
+            canSeek: surfaceState.canSeek,
+            hasPrevious: viewModel.canRequestPreviousTrack,
+            hasNext: viewModel.canRequestNextTrack,
+            isDanmakuEnabled: overlaySnapshot.isDanmakuEnabled,
+            isLocked: $isGlassControlsLocked,
+            playback: playback,
+            actions: PiliGlassFullscreenActions(
+                close: handleBackButton,
+                cast: {
+                    visibility.markInteraction()
+                    AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .online(detailViewModel) }) }
+                },
+                settings: {
+                    visibility.markInteraction(keepsVisible: true)
+                    isMoreControlsPresented = true
+                },
+                subtitles: {
+                    visibility.markInteraction()
+                    PiliSubtitleSettingsView.present(controller: detailViewModel.piliSubtitles) { viewModel.seek(to: $0) }
+                },
+                danmaku: { visibility.markInteraction(); onShowDanmakuSettings() },
+                queue: { visibility.markInteraction(keepsVisible: true); isVideoListenQueuePresented = true },
+                previous: { visibility.markInteraction(); viewModel.requestPreviousTrack() },
+                next: { visibility.markInteraction(); viewModel.requestNextTrack() },
+                skip: { seconds in
+                    guard surfaceState.canSeek, !viewModel.isTerminated else { return }
+                    visibility.markInteraction()
+                    holdCurrentFrameForSeek()
+                    viewModel.seek(by: seconds)
+                },
+                interaction: { visibility.markInteraction() }
+            ),
+            interactionAccessory: AnyView(PiliFullscreenVideoReactions(
+                viewModel: detailViewModel, store: detailViewModel.interactionRenderStore,
+                markInteraction: { visibility.markInteraction() }
+            ))
+        )
     }
 
     private var backButton: some View {
@@ -869,6 +933,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
         keepsChromeMounted
             && !isCollapsedChromeActive
             && !isBareSurfaceTransitionActive
+            && !(isLandscape && !isAudioOnlyPlayback)
             && surfaceState.showsExplicitPlaybackStartControl
             && surfaceState.errorMessage == nil
     }
@@ -911,7 +976,8 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             isSecondaryControlsPresented: keepsChromeMounted
                 && (isMoreControlsPresented
                     || portraitMoreControlsRequestID != nil
-                    || isVideoListenQueuePresented),
+                    || isVideoListenQueuePresented
+                    || isGlassControlsLocked),
             ignoresContainerSafeArea: true,
             keepsPlayerSurfaceStable: true,
             fullscreenMode: fullscreenMode,

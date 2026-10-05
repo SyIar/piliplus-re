@@ -61,6 +61,7 @@ struct CommentReplyRootView: View {
             }
         }
         .padding(.vertical, 10)
+        .piliCommentActions(comment)
     }
 
     private var replyAction: (() -> Void)? {

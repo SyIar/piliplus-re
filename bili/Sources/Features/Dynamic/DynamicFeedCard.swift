@@ -374,6 +374,9 @@ private struct DynamicDetailView: View {
             type: item.commentType,
             referer: "https://t.bilibili.com/\(item.idStr)"
         )
+        .onPiliCommentModerated(oid: item.commentOID, type: item.commentType) {
+            await commentsViewModel.reload()
+        }
         .task {
             commentsViewModel.setBlocksGoodsComments(libraryStore.blocksGoodsComments)
             await commentsViewModel.loadInitial()

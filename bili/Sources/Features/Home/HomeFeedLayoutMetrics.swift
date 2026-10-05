@@ -19,7 +19,7 @@ struct HomeFeedLayoutMetrics {
             GridItem(.flexible(), spacing: doubleColumnSpacing),
             GridItem(.flexible(), spacing: doubleColumnSpacing)
         ]
-        singleColumnHorizontalPadding = mode == .borderedSingleColumn ? 16 : 12
+        singleColumnHorizontalPadding = 16
 
         switch mode {
         case .singleColumn, .borderedSingleColumn:

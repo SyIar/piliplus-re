@@ -8,6 +8,8 @@
 
 **当前为 0.1 开发版本，尚未实现 PiliPlus 全部功能，也尚未完成真机验收。** 功能状态见 [迁移对照](docs/FEATURE_PARITY.md) 和 [原版逐项清单](docs/PILIPLUS_FEATURE_INVENTORY.md)。构建通过只证明编译和自动化测试通过，不代表全部业务可用。
 
+2026-10-05 本轮新增参考图风格的首页/横屏液态玻璃界面、评论点踩/置顶/删除/举报、聊天内容推送设置。实现范围和剩余缺口见 [本轮源码对比](docs/UPSTREAM_AUDIT_2026-10-05.md)，当前提交的编译与测试结果以 Actions 为准。
+
 ## 原生实现
 
 - 基于 GPL-3.0 的 [cilicili](https://github.com/Rone89/cilicili) 原生代码继续开发，保留其账号、推荐、搜索、动态、评论、消息、直播与弹幕实现。

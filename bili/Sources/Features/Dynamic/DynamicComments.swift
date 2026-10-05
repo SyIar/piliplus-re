@@ -52,6 +52,9 @@ struct DynamicCommentsSheet: View {
             type: item.commentType,
             referer: "https://t.bilibili.com/\(item.idStr)"
         )
+        .onPiliCommentModerated(oid: item.commentOID, type: item.commentType) {
+            await viewModel.reload()
+        }
         .onChange(of: runtimeSettings.blocksGoodsComments) { _, isEnabled in
             viewModel.setBlocksGoodsComments(isEnabled)
         }

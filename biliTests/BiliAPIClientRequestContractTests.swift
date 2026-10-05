@@ -4184,6 +4184,99 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testCommentMutationsBindInteractionAccountAndRetainDynamicType() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=main-session; DedeUserID=1001; bili_jct=main-csrf", configure: { session, library in
+            library.setMultiAccountExperimentEnabled(true)
+            _ = try session.saveAdditionalAccount([Self.makeCookie(name: "SESSDATA", value: "interaction-session"), Self.makeCookie(name: "DedeUserID", value: "2002"), Self.makeCookie(name: "bili_jct", value: "interaction-csrf")])
+            try session.selectInteractionAccount(mid: 2002)
+        })
+        let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .interaction))
+        let actions: [PiliCommentMutation] = [.like(true), .dislike(true), .dislike(false), .pin(true), .pin(false), .delete, .report(reason: 0, text: "说明 A+B & 内容")]
+        for action in actions {
+            try await api.mutatePiliComment(action, oid: "987654321012345678", type: 17, rpid: 88, identity: identity, referer: "https://t.bilibili.com/123")
+        }
+        XCTAssertEqual(recorder.requests.map { $0.url?.lastPathComponent }, ["action", "hate", "hate", "top", "top", "del", "report"])
+        for request in recorder.requests {
+            let body = formValues(in: request)
+            XCTAssertEqual(body["type"], "17", "Dynamic reports must not be sent as video reports")
+            XCTAssertEqual(body["oid"], "987654321012345678")
+            XCTAssertEqual(body["rpid"], "88")
+            XCTAssertEqual(body["csrf"], "interaction-csrf")
+            XCTAssertEqual(cookieValues(in: request.value(forHTTPHeaderField: "Cookie"))["SESSDATA"], "interaction-session")
+        }
+        XCTAssertEqual(formValues(in: recorder.requests[2])["action"], "0")
+        XCTAssertEqual(formValues(in: recorder.requests[6])["content"], "说明 A+B & 内容")
+        XCTAssertEqual(formValues(in: recorder.requests[6])["add_blacklist"], "false")
+    }
+
+    @MainActor
+    func testCommentMutationsRejectStaleIdentityAndDoNotRetryAmbiguousWrite() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in recorder.record(request); throw URLError(.networkConnectionLost) }
+        let api = try makeAPI(cookieHeader: "SESSDATA=comment-session; DedeUserID=1001; bili_jct=comment-csrf")
+        let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .interaction))
+        for action in [PiliCommentMutation.report(reason: 0, text: " "), .report(reason: 22, text: ""), .report(reason: 999, text: "test")] {
+            do { try await api.mutatePiliComment(action, oid: "123", type: 1, rpid: 7, identity: identity, referer: "https://www.bilibili.com"); XCTFail("Reject invalid report") }
+            catch { XCTAssertTrue(recorder.requests.isEmpty) }
+        }
+        do { try await api.mutatePiliComment(.delete, oid: "123", type: 1, rpid: 7, identity: identity, referer: "https://www.bilibili.com"); XCTFail("Expected error") }
+        catch { XCTAssertEqual(recorder.requests.count, 1) }
+        try api.sessionStore.logout()
+        do { try await api.mutatePiliComment(.pin(true), oid: "123", type: 1, rpid: 7, identity: identity, referer: "https://www.bilibili.com"); XCTFail("Reject stale identity") }
+        catch { XCTAssertEqual(recorder.requests.count, 1) }
+    }
+
+    @MainActor
+    func testFailedCommentReactionLeavesSharedStateUnchanged() async throws {
+        RequestContractURLProtocol.install { request in Self.response(for: request, body: #"{"code":-403,"message":"没有权限"}"#) }
+        let api = try makeAPI(cookieHeader: "SESSDATA=comment-session; DedeUserID=1001; bili_jct=comment-csrf")
+        let subject = PiliCommentActionStore.Subject(identity: PiliAccountIdentity(api.requestSnapshot(purpose: .interaction)), oid: "123", type: 1)
+        let comment = try JSONDecoder().decode(Comment.self, from: Data(#"{"rpid":7,"like":9,"action":1}"#.utf8))
+        let store = PiliCommentActionStore()
+        do { try await store.perform(.dislike(true), comment: comment, subject: subject, referer: "https://www.bilibili.com", api: api); XCTFail("Expected permission error") }
+        catch { XCTAssertEqual(store.state(comment, subject: subject), PiliCommentState(comment: comment)) }
+        XCTAssertFalse(store.isBusy(subject))
+    }
+
+    @MainActor
+    func testChatSettingsRespectServerVisibilityAndPushFlagPolarity() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.lastPathComponent == "get_session_ss" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"show_push_setting":1,"push_setting":0}}"#)
+            }
+            if request.url?.lastPathComponent == "get_msg_dnd" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"uid_settings":[{"setting":1}]}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=chat-session; DedeUserID=1001; bili_jct=chat-csrf")
+        let identity = PiliAccountIdentity(api.requestSnapshot())
+        let settings = try await api.fetchPiliChatSettings(talkerID: 20, identity: identity)
+        XCTAssertTrue(settings.receivesPush)
+        XCTAssertTrue(settings.canConfigurePush)
+        XCTAssertTrue(settings.muted, "The upstream response can omit uid for a single requested user")
+        try await api.setPiliChatSetting(talkerID: 20, receivesPush: false, identity: identity)
+        try await api.setPiliChatSetting(talkerID: 20, muted: false, identity: identity)
+        let writes = recorder.requests.filter { $0.httpMethod == "POST" }
+        XCTAssertEqual(writes.map { $0.url?.lastPathComponent }, ["set_push_ss", "set_msg_dnd"])
+        XCTAssertEqual(formValues(in: writes[0])["setting"], "1")
+        XCTAssertEqual(formValues(in: writes[0])["talker_uid"], "20")
+        XCTAssertEqual(formValues(in: writes[1])["setting"], "0")
+        XCTAssertEqual(formValues(in: writes[1])["dnd_uid"], "20")
+        for request in writes { XCTAssertEqual(formValues(in: request)["csrf"], "chat-csrf") }
+        try api.sessionStore.logout()
+        do { try await api.setPiliChatSetting(talkerID: 20, receivesPush: true, identity: identity); XCTFail("Reject stale account") }
+        catch { XCTAssertEqual(recorder.requests.count, 4) }
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

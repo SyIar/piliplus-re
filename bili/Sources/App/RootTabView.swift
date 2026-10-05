@@ -110,7 +110,7 @@ struct RootTabView: View {
     private var rootTabBar: some View {
         TabView(selection: tabSelection) {
             ForEach(visibleRootTabs) { tab in
-                Tab(value: tab) {
+                Tab(value: tab, role: tab == .search ? .search : nil) {
                     rootTabNavigationStack(
                         for: tab,
                         detailPath: rootNavigationPathBinding(for: tab)
@@ -119,7 +119,8 @@ struct RootTabView: View {
                     Label {
                         Text(tab.title)
                     } icon: {
-                        PikaIcon(tab.pikaIcon, size: 22, color: libraryStore.appTintColor)
+                        Image(systemName: tab.systemImage)
+                            .symbolVariant(selectedTab == tab && tab != .search ? .fill : .none)
                     }
                 }
             }

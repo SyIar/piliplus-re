@@ -70,7 +70,7 @@ struct CommentDialogRow: View {
         .padding(.vertical, 10)
         .background(isFocused ? appTintColor.opacity(0.06) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .commentCopyContextMenu(text: reply.content?.message, title: "复制回复")
+        .piliCommentActions(reply)
     }
 
     private var replyAction: (() -> Void)? {

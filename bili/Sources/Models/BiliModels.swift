@@ -3088,6 +3088,7 @@ nonisolated struct Comment: Identifiable, Decodable, Hashable, Sendable {
     let replies: [Comment]?
     let replyCount: Int?
     let likeState: Int?
+    let isPinnedByOwner: Bool
 
     var id: Int { rpid }
 
@@ -3104,6 +3105,8 @@ nonisolated struct Comment: Identifiable, Decodable, Hashable, Sendable {
         case dialogID = "dialog"
         case replyCount = "rcount"
         case likeState = "like_state"
+        case replyControl = "reply_control"
+        case upAction = "up_action"
     }
 
     init(from decoder: Decoder) throws {
@@ -3120,6 +3123,10 @@ nonisolated struct Comment: Identifiable, Decodable, Hashable, Sendable {
         replyCount = container.decodeLossyIntIfPresent(forKey: .replyCount)
         likeState = container.decodeLossyIntIfPresent(forKey: .action)
             ?? container.decodeLossyIntIfPresent(forKey: .likeState)
+        let control = try container.decodeIfPresent(DynamicJSONValue.self, forKey: .replyControl)?.objectValueForDynamicParsing
+        let upAction = try container.decodeIfPresent(DynamicJSONValue.self, forKey: .upAction)?.objectValueForDynamicParsing
+        isPinnedByOwner = (control?["is_up_top"] == .bool(true) || control?["is_up_top"]?.intValueForDynamicParsing == 1)
+            || (upAction?["top"] == .bool(true) || upAction?["top"]?.intValueForDynamicParsing == 1)
     }
 }
 

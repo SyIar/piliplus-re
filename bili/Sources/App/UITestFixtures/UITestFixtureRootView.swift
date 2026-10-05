@@ -17,6 +17,8 @@ struct UITestFixtureRootView: View {
                 )
             case .fullscreen:
                 UITestPlayerFixtureView()
+            case .glassPlayer:
+                PiliGlassPlayerPreviewFixture()
             }
         }
         .environmentObject(dependencies)

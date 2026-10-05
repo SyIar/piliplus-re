@@ -14,9 +14,11 @@ struct HomeFeedModeMenu: View {
                 }
             }
         } label: {
-            Image(systemName: "ellipsis")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
+            HStack(spacing: 6) {
+                Text(currentMode.title).font(.system(size: 22, weight: .bold))
+                Image(systemName: "chevron.down").font(.system(size: 10, weight: .semibold))
+            }
+            .foregroundStyle(.primary)
         }
         .tint(.primary)
         .accessibilityLabel("首页内容")
