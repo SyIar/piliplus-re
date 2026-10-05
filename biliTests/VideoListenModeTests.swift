@@ -830,19 +830,22 @@ final class VideoListenModeTests: XCTestCase {
     }
 
     @MainActor
-    func testCancellingSleepTimerClearsStateAndCancelsTask() throws {
+    func testDisablingSleepTimerClearsGlobalStateAndCancelsObsoleteTask() {
         let defaults = makeUserDefaults()
         let libraryStore = LibraryStore(userDefaults: defaults)
         let viewModel = makeViewModel(pages: [], libraryStore: libraryStore)
         viewModel.playbackContentMode = .audioOnly
+        defer { PiliSleepTimer.shared.cancel() }
 
         viewModel.setVideoListenSleepTimer(.minutes15)
-        let task = try XCTUnwrap(viewModel.videoListenSleepTimerTask)
+        let task = Task<Void, Never> { try? await Task.sleep(nanoseconds: 60_000_000_000) }
+        viewModel.videoListenSleepTimerTask = task
         XCTAssertNotNil(viewModel.videoListenSleepTimerDeadline)
 
-        viewModel.cancelVideoListenSleepTimer()
+        viewModel.setVideoListenSleepTimer(.off)
 
         XCTAssertTrue(task.isCancelled)
+        XCTAssertEqual(PiliSleepTimer.shared.policy.state, .off)
         XCTAssertEqual(viewModel.videoListenSleepTimerOption, .off)
         XCTAssertNil(viewModel.videoListenSleepTimerDeadline)
         XCTAssertNil(viewModel.videoListenSleepTimerTask)

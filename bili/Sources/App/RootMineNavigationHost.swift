@@ -42,7 +42,7 @@ struct RootMineNavigationDestination: View {
                 api: api
             )
         case .history:
-            accountLibraryPage(kind: .history)
+            PiliHistoryView(api: api)
         case .favorites:
             accountLibraryPage(kind: .favorites)
         case .watchLater:

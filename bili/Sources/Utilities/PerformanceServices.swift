@@ -1597,6 +1597,17 @@ actor VideoPreloadCenter {
         }
     }
 
+    #if DEBUG
+    func installStartupPackageWarmupForTesting(variant: PlayVariant, bvid: String, cid: Int, task: Task<Void, Never>) -> Bool {
+        let key = startupWarmupKey(bvid: bvid, cid: cid, page: nil, preferredQuality: variant.quality,
+                                  targetPreferredQuality: variant.quality, cdnPreference: .automatic, routePlanOnly: false)
+        // This controlled test task does no media work and must not depend on the runner's thermal/network budget.
+        guard reserveMediaWarmupSlot(key: key, bvid: bvid, countsAgainstFullBudget: false) else { return false }
+        mediaWarmupTasks[key] = task
+        return true
+    }
+    #endif
+
     func prebuildStartupPackageAndWait(
         variant: PlayVariant,
         targetVariant: PlayVariant?,

@@ -1703,3 +1703,14 @@ extension LibraryStore {
         showsHotSearches = restored.showsHotSearches
     }
 }
+
+extension LibraryStore {
+    func piliCloudHistoryPaused(mid: Int?) -> Bool {
+        guard let mid, mid > 0 else { return false }
+        return userDefaults.bool(forKey: "piliplus.history.paused.\(mid)")
+    }
+    func setPiliCloudHistoryPaused(_ paused: Bool, mid: Int?) {
+        guard let mid, mid > 0 else { return }
+        userDefaults.set(paused, forKey: "piliplus.history.paused.\(mid)")
+    }
+}

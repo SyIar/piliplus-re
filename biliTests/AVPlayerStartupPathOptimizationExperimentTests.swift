@@ -202,13 +202,7 @@ final class AVPlayerStartupPathOptimizationExperimentTests: XCTestCase {
 
     @MainActor
     func testStartupPackagePrebuildReturnsImmediatelyWhenWarmupWaitIsZero() async {
-        let preloadCenter = VideoPreloadCenter.shared
-        await preloadCenter.cancelMediaWarmups(clearCache: true)
-        defer {
-            Task {
-                await preloadCenter.cancelMediaWarmups(clearCache: true)
-            }
-        }
+        let preloadCenter = VideoPreloadCenter()
         let variant = PlayVariant(
             quality: 80,
             title: "1080P",
@@ -223,22 +217,37 @@ final class AVPlayerStartupPathOptimizationExperimentTests: XCTestCase {
             isHDR: false,
             badge: nil
         )
-        let clock = ContinuousClock()
-        let startedAt = clock.now
-
-        let result = await preloadCenter.prebuildStartupPackageAndWait(
-            variant: variant,
-            targetVariant: nil,
-            bvid: "BVImmediatePlayerCreationTest",
-            cid: 1,
-            page: nil,
-            durationHint: nil,
-            cdnPreference: .automatic,
-            timeout: 0
+        let gate = StartupPackageTestGate()
+        let warmup = Task<Void, Never> { await gate.wait() }
+        let installed = await preloadCenter.installStartupPackageWarmupForTesting(
+            variant: variant, bvid: "BVImmediatePlayerCreationTest", cid: 1, task: warmup
         )
-
+        XCTAssertTrue(installed)
+        let returned = expectation(description: "Zero wait returns while warmup is still blocked")
+        var result: VideoStartupPackageWarmupWaitResult?
+        let request = Task { @MainActor in
+            result = await preloadCenter.prebuildStartupPackageAndWait(
+                variant: variant,
+                targetVariant: nil,
+                bvid: "BVImmediatePlayerCreationTest",
+                cid: 1,
+                page: nil,
+                durationHint: nil,
+                cdnPreference: .automatic,
+                timeout: 0
+            )
+            returned.fulfill()
+        }
+        // Assert ordering against a controlled unfinished task, not the hosted
+        // simulator's scheduling latency or a live example.test network request.
+        await fulfillment(of: [returned], timeout: 5)
+        let wasReleased = await gate.isOpen
+        XCTAssertFalse(wasReleased)
         XCTAssertEqual(result, .deferred)
-        XCTAssertLessThan(startedAt.duration(to: clock.now), .milliseconds(250))
+        await gate.release()
+        await request.value
+        await warmup.value
+        await preloadCenter.cancelMediaWarmups(clearCache: true)
     }
 
     @MainActor
@@ -434,4 +443,18 @@ final class AVPlayerStartupPathOptimizationExperimentTests: XCTestCase {
         XCTAssertFalse(VideoDetailPlaybackOptions.performanceTest.usesStartupCaches)
     }
 
+}
+
+private actor StartupPackageTestGate {
+    private(set) var isOpen = false
+    private var continuations: [CheckedContinuation<Void, Never>] = []
+    func wait() async {
+        if isOpen { return }
+        await withCheckedContinuation { continuations.append($0) }
+    }
+    func release() {
+        isOpen = true
+        let pending = continuations; continuations = []
+        for continuation in pending { continuation.resume() }
+    }
 }

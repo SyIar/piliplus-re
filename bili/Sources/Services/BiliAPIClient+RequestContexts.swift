@@ -121,12 +121,13 @@ nonisolated extension BiliAPIClient {
 
     func playbackHistoryRequestContext() async -> PlaybackHistoryRequestContext {
         let snapshot = await requestSnapshot(purpose: .historyWrite)
+        let paused = await libraryStore.piliCloudHistoryPaused(mid: snapshot.currentUserMID)
         return PlaybackHistoryRequestContext(
             cookieHeader: snapshot.cookieHeader,
             appAccessKey: snapshot.appAccessKey,
             isLoggedIn: snapshot.isLoggedIn,
             csrfToken: snapshot.csrfToken,
-            isAccountPurposeEnabled: snapshot.isAccountPurposeEnabled
+            isAccountPurposeEnabled: snapshot.isAccountPurposeEnabled && !paused
         )
     }
 

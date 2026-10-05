@@ -3918,6 +3918,80 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testHistoryKeepsNonVideoRecordsExactDeletionKeysAndRawPaginationCursor() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{"tab":[{"type":"all","name":"全部"},{"type":"archive","name":"视频"},{"type":"live","name":"直播"}],"list":[{"kid":71,"title":"视频","history":{"business":"archive","oid":101,"bvid":"BVhistoryA","cid":201},"view_at":1300,"progress":-1,"duration":90},{"kid":72,"title":"直播","history":{"business":"live","oid":102},"view_at":1200},{"kid":73,"title":"专栏","history":{"business":"article","oid":103},"view_at":1100},{"title":"未知类型","history":{"business":"future-type","oid":104},"view_at":1000}]}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=history-session; DedeUserID=1001; bili_jct=history-csrf")
+        let version = api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion
+        let first = try await api.fetchPiliHistoryPage(credentialVersion: version)
+        XCTAssertEqual(first.records.count, 4)
+        XCTAssertEqual(first.records.first?.video?.bvid, "BVhistoryA")
+        XCTAssertEqual(first.records.first?.progress, -1)
+        XCTAssertEqual(first.records.first?.deletionKey, "archive_71", "Deletion uses kid, not history.oid")
+        XCTAssertEqual(first.records[1].destinationURL?.absoluteString, "https://live.bilibili.com/102")
+        XCTAssertEqual(first.records[2].destinationURL?.absoluteString, "https://www.bilibili.com/read/cv103")
+        XCTAssertNil(first.records[3].deletionKey, "Never guess a missing deletion key")
+        XCTAssertEqual(first.tabs.map(\.id), ["all", "archive", "live"])
+        XCTAssertEqual(first.cursorMax, 104)
+        XCTAssertEqual(first.cursorViewedAt, 1000)
+        XCTAssertTrue(first.hasMore)
+        let second = try await api.fetchPiliHistoryPage(max: first.cursorMax, viewedAt: first.cursorViewedAt, credentialVersion: version)
+        XCTAssertFalse(second.hasMore, "A repeated cursor must not loop forever")
+        _ = try await api.fetchPiliHistoryPage(keyword: "测试", page: 2, credentialVersion: version)
+        XCTAssertEqual(Self.queryValues(for: recorder.requests[0]), ["type": "all", "ps": "20", "max": "0", "view_at": "0"])
+        XCTAssertEqual(Self.queryValues(for: recorder.requests[1])["max"], "104")
+        XCTAssertEqual(recorder.requests[2].url?.path, "/x/web-interface/history/search")
+        XCTAssertEqual(Self.queryValues(for: recorder.requests[2]), ["pn": "2", "keyword": "测试", "business": "all"])
+    }
+
+    @MainActor
+    func testHistoryPauseSuppressesHeartbeatsAndDeletionStaysBoundToAccount() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/v2/history/shadow" {
+                return Self.response(for: request, body: #"{"code":0,"data":false}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=history-session; DedeUserID=1001; bili_jct=history-csrf")
+        api.libraryStore.setMultiAccountExperimentEnabled(true)
+        let version = api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion
+        let initial = try await api.fetchPiliHistoryPaused(credentialVersion: version)
+        XCTAssertFalse(initial)
+        try await api.mutatePiliHistory(.pause(true), credentialVersion: version)
+        try await api.reportVideoHistory(aid: 101, cid: 201, progress: 35, duration: 90, bvid: "BVhistoryA")
+        XCTAssertEqual(recorder.requests.count, 2, "Paused history must not send a heartbeat or fallback report")
+        XCTAssertTrue(api.libraryStore.piliCloudHistoryPaused(mid: 1001))
+        XCTAssertFalse(api.libraryStore.piliCloudHistoryPaused(mid: 2002), "Pause is scoped to its account")
+        try await api.mutatePiliHistory(.pause(false), credentialVersion: version)
+        try await api.reportVideoHistory(aid: 101, cid: 201, progress: 40, duration: 90, bvid: "BVhistoryA")
+        XCTAssertEqual(recorder.requests.last?.url?.path, "/x/click-interface/web/heartbeat")
+        try await api.mutatePiliHistory(.delete(keys: ["live_72", "archive_71", "archive_71"]), credentialVersion: version)
+        XCTAssertEqual(formValues(in: try XCTUnwrap(recorder.requests.last))["kid"], "archive_71,live_72")
+        try await api.mutatePiliHistory(.clear, credentialVersion: version)
+        XCTAssertEqual(recorder.requests.last?.url?.path, "/x/v2/history/clear")
+        for request in recorder.requests where request.httpMethod == "POST" {
+            XCTAssertEqual(formValues(in: request)["csrf"], "history-csrf")
+            XCTAssertTrue(request.value(forHTTPHeaderField: "Cookie")?.contains("history-session") == true)
+        }
+        let count = recorder.requests.count
+        try api.sessionStore.setHistoryAccountPolicy(.playback)
+        do {
+            try await api.mutatePiliHistory(.clear, credentialVersion: version)
+            XCTFail("Reject stale history account version")
+        } catch { XCTAssertEqual(recorder.requests.count, count) }
+        RequestContractURLProtocol.install { request in recorder.record(request); throw URLError(.networkConnectionLost) }
+        do {
+            try await api.mutatePiliHistory(.clear, credentialVersion: api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion)
+            XCTFail("Expected transport failure")
+        } catch { XCTAssertEqual(recorder.requests.count, count + 1, "Do not retry an ambiguous destructive write") }
+    }
+
+    @MainActor
     func testNoteSaveUsesOneAccountAndEncodesTextWithoutPublishingComments() async throws {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
