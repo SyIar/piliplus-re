@@ -28,6 +28,8 @@ jobs:
         run: python3 Scripts/validate-project.py
       - name: Run iOS tests
         run: bash Scripts/test-ios.sh
+      - name: Capture native interface previews
+        run: bash Scripts/capture-preview.sh
       - name: Build unsigned IPA
         run: bash Scripts/build-ipa.sh
       - name: Include license and source provenance

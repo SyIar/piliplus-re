@@ -55,6 +55,15 @@ import Testing
     #expect(shouldStop)
 }
 
+@Test func finishingCurrentDoesNotLatchOntoAnotherVideoAfterRelaunch() throws {
+    var original = SleepTimerPolicy()
+    original.stopAfterCurrent()
+    var restored = try JSONDecoder().decode(SleepTimerPolicy.self, from: JSONEncoder().encode(original))
+    let shouldStop = restored.tick(now: Date(), hasActiveItem: false)
+    #expect(shouldStop)
+    #expect(restored.preventsAutomaticPlayback)
+}
+
 @Test func seekingInsideAdsAndOverlapsUsesOneDestination() {
     let ranges = [SkipSegment(id: "a", start: 10, end: 20), SkipSegment(id: "b", start: 18, end: 25)]
     #expect(SegmentSkipPolicy.destination(at: 15, segments: ranges) == 25)

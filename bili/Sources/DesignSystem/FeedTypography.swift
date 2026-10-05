@@ -167,7 +167,7 @@ enum AppTypography {
             else {
                 return weightedFont
             }
-            return UIFont(descriptor: descriptor, size: preferredFont.pointSize)
+            return UIFont(descriptor: descriptor, size: weightedFont.pointSize)
         }
 
     }

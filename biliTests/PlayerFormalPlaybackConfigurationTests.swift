@@ -383,7 +383,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
     }
 
     @MainActor
-    func testAppTypographyUsesSemanticVideoTitleRoles() {
+    func testAppTypographyUsesChunUISizesAndDynamicType() {
         let regular = AppTypography.Role.feedVideoTitle.uiFont(contentSizeCategory: .large)
         let compact = AppTypography.Role.compactVideoTitle.uiFont(contentSizeCategory: .large)
         let accessibility = AppTypography.Role.feedVideoTitle.uiFont(
@@ -392,15 +392,17 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
 
         XCTAssertEqual(
             regular.pointSize,
-            UIFont.preferredFont(forTextStyle: .headline).pointSize,
+            17,
             accuracy: 0.001
         )
         XCTAssertEqual(
             compact.pointSize,
-            UIFont.preferredFont(forTextStyle: .subheadline).pointSize,
+            17,
             accuracy: 0.001
         )
         XCTAssertGreaterThan(accessibility.pointSize, regular.pointSize)
+        XCTAssertEqual(AppTypography.Role.metadata.uiFont(contentSizeCategory: .large).pointSize, 13, accuracy: 0.001)
+        XCTAssertEqual(AppTypography.Role.pageTitle.uiFont(contentSizeCategory: .large).pointSize, 24, accuracy: 0.001)
     }
 
     @MainActor

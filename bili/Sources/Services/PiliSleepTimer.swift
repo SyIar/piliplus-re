@@ -45,6 +45,7 @@ final class PiliSleepTimer: ObservableObject {
 
     func stopAfterCurrent() {
         policy.stopAfterCurrent()
+        checkDeadline()
         persist()
         updateTicker()
     }

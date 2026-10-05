@@ -49,6 +49,10 @@ public struct SleepTimerPolicy: Codable, Equatable, Sendable {
     /// Returns true when the caller should pause, including after background suspension.
     @discardableResult
     public mutating func tick(now: Date, hasActiveItem: Bool) -> Bool {
+        if state == .waitingForEnd && !hasActiveItem {
+            state = .stopped
+            return true
+        }
         guard case let .scheduled(deadline, finishCurrent) = state, now >= deadline else {
             return state == .stopped
         }

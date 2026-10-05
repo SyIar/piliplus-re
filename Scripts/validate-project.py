@@ -37,7 +37,7 @@ for contents_path in (ROOT / "bili/Assets.xcassets").rglob("Contents.json"):
         if name := item.get("filename"):
             require((contents_path.parent / name).is_file(), f"Missing asset: {contents_path.parent / name}")
 
-for script in ["build-ipa.sh", "test-ios.sh", "select-xcode.sh"]:
+for script in ["build-ipa.sh", "test-ios.sh", "select-xcode.sh", "capture-preview.sh"]:
     subprocess.run(["bash", "-n", str(ROOT / "Scripts" / script)], check=True)
 
 tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT).decode().split("\0")
