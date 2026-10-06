@@ -58,7 +58,12 @@ struct PiliInteractiveChoicesView: View {
                             ProgressView("加载分支").tint(.white)
                         } else if let error = controller.errorMessage {
                             Text(error).font(.caption).multilineTextAlignment(.center)
-                            Button("重试") { controller.retry() }.buttonStyle(.glass)
+                            HStack {
+                                Button("重试") { controller.retry() }.buttonStyle(.glass)
+                                if !controller.history.isEmpty {
+                                    Button("重新开始") { controller.restart() }.buttonStyle(.glass)
+                                }
+                            }
                         }
                         if !controller.isLoading && !usesHotspots && !controller.visibleChoices.isEmpty {
                             ScrollView {

@@ -37,6 +37,7 @@ final class PiliInteractiveController: ObservableObject {
     private enum RetryRequest {
         case choice(PiliInteractiveEdge.Choice, Bool)
         case restore(PiliInteractiveCheckpoint, [PiliInteractiveCheckpoint])
+        case restart
     }
     var isBacktrackingRestricted: Bool { history.contains { $0.noBacktracking } }
     var isOverlayVisible: Bool { choicesVisible || (isLoading && graphVersion != nil) }
@@ -207,11 +208,11 @@ final class PiliInteractiveController: ObservableObject {
     func choose(_ choice: PiliInteractiveEdge.Choice, automatic: Bool = false) {
         guard !isLoading, contextIsCurrent(), plan?.question.choices?.contains(choice) == true,
               session.allows(choice) else { return }
+        retryRequest = .choice(choice, automatic)
         do {
             let next = try session.applying(choice.nativeAction)
             var guardState = advanceGuard
             if automatic { try guardState.record(edgeID: choice.id, session: next) } else { guardState.reset() }
-            retryRequest = .choice(choice, automatic)
             transition(edgeID: choice.id, cid: choice.cid, title: choice.option ?? "分支",
                        session: next, restore: nil, guardState: guardState)
         } catch { fail(error) }
@@ -236,8 +237,10 @@ final class PiliInteractiveController: ObservableObject {
         switch retryRequest {
         case let .choice(choice, automatic): choose(choice, automatic: automatic)
         case let .restore(checkpoint, path): restore(checkpoint, path: path)
+        case .restart: restart()
         case nil:
-            if history.isEmpty, loader != nil { reloadInitial() } else { restart() }
+            if let checkpoint = history.last { restore(checkpoint, path: history) }
+            else if loader != nil { reloadInitial() }
         }
     }
     func restart() {
@@ -245,7 +248,7 @@ final class PiliInteractiveController: ObservableObject {
             if let viewModel { context = nil; prepare(viewModel) }
             return
         }
-        retryRequest = nil
+        retryRequest = .restart
         transition(edgeID: nil, cid: initialCID, title: "开始", session: InteractiveSession(),
                    restore: nil, guardState: InteractiveAdvanceGuard(), restarting: true)
     }

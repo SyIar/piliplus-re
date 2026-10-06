@@ -215,4 +215,27 @@ final class PiliInteractiveControllerTests: XCTestCase {
         XCTAssertEqual(restored.history.count, 1)
         XCTAssertEqual(restored.session.values["score"], 0)
     }
+
+    func testInvalidActionRetriesWithoutImplicitlyRestartingTheStory() async throws {
+        let root = try decode(rootJSON)
+        let next = try decode(#"{"edge_id":2,"edges":{"questions":[{"type":1,"choices":[{"id":4,"cid":40,"native_action":"$score=$score/0"}]}]}}"#)
+        let controller = PiliInteractiveController(defaults: defaults())
+        var opened: [Int] = []
+        controller.start(context: "a", saveKey: "save", graphVersion: 1, cid: 10,
+                         loader: { $0 == nil || $0 == 1 ? root : next },
+                         navigator: { cid, _ in opened.append(cid) })
+        try await settle(controller)
+        _ = controller.handlePlaybackEnded()
+        controller.choose(try XCTUnwrap(controller.visibleChoices.first))
+        try await settle(controller)
+        _ = controller.handlePlaybackEnded()
+        controller.choose(try XCTUnwrap(controller.visibleChoices.first))
+        controller.retry()
+        try await settle(controller)
+        XCTAssertNotNil(controller.errorMessage)
+        XCTAssertEqual(controller.edge?.edgeID, 2)
+        XCTAssertEqual(controller.session.values["score"], 1)
+        XCTAssertEqual(controller.history.count, 2)
+        XCTAssertEqual(opened, [20])
+    }
 }
