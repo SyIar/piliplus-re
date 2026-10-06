@@ -67,6 +67,12 @@ enum PiliPresentation {
         host.loadViewIfNeeded()
         host.view.backgroundColor = .clear
         host.view.isOpaque = false
+        // ChunUI pins its hosting view to the keyboard guide. With the default
+        // true value, a hidden keyboard still leaves a home-indicator-height
+        // strip, cutting the content off before the sheet's bottom corners.
+        // False reaches the physical bottom when hidden and still tracks the
+        // real keyboard when shown, without ignoring SwiftUI safe areas.
+        host.view.keyboardLayoutGuide.usesBottomSafeArea = false
         for child in host.children {
             child.view.backgroundColor = .clear
             child.view.isOpaque = false
@@ -78,15 +84,16 @@ enum PiliPresentation {
     }
 }
 
-private struct PiliPresentationRoot<Content: View>: View {
+struct PiliPresentationRoot<Content: View>: View {
     let content: Content
+    var isSheet = true
     var body: some View {
         Group {
             if let dependencies = PiliPresentation.dependencies {
                 PiliConnectedPresentationRoot(content: content, dependencies: dependencies, library: dependencies.libraryStore)
             } else { content }
         }
-        .environment(\.piliPresentedPage, true)
+        .environment(\.piliPresentedPage, isSheet)
         .modifier(PiliAppChrome())
     }
 }

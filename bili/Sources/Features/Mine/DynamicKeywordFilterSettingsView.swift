@@ -19,13 +19,13 @@ struct DynamicKeywordFilterSettingsView: View {
                 Button {
                     addKeyword()
                 } label: {
-                    MineSettingsLabel("添加关键词", systemImage: "plus.circle")
+                    Text("添加").frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .disabled(normalizedDraftKeyword == nil)
             } header: {
                 Text("添加关键词")
             } footer: {
-                Text("命中任意关键词的动态会自动隐藏。关键词会匹配正文、标题、视频标题和转发内容。")
+                Text("隐藏正文、标题或转发内容含关键词的动态。")
             }
 
             Section {
@@ -54,7 +54,7 @@ struct DynamicKeywordFilterSettingsView: View {
                         Button(role: .destructive) {
                             libraryStore.clearBlockedDynamicKeywords()
                         } label: {
-                            MineSettingsLabel("清空全部", systemImage: "trash")
+                            Text("清空").frame(maxWidth: .infinity, alignment: .trailing)
                         }
                     }
                 }

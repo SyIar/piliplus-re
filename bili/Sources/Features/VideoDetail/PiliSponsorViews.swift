@@ -10,7 +10,7 @@ struct PiliSponsorSettingsView: View {
                     .piliFont(.sm).foregroundStyle(.secondary)
             }
             ForEach(PiliSponsorCategory.allCases) { category in
-                Picker(category.title, selection: Binding(get: { preferences.mode(category.rawValue) }, set: { preferences.set($0, category: category.rawValue) })) {
+                PiliSettingPicker(category.title, selection: Binding(get: { preferences.mode(category.rawValue) }, set: { preferences.set($0, category: category.rawValue) })) {
                     ForEach(PiliSponsorMode.allCases) { Text($0.title).tag($0) }
                 }
             }

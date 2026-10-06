@@ -16,26 +16,34 @@ struct PiliBackupSettingsView: View {
         NavigationStack {
             PiliForm {
                 Section("WebDAV") {
-                    TextField("服务器目录 https://.../dav/", text: $address).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
-                    TextField("用户名", text: $username).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    SecureField("密码", text: $password)
-                    CCNeoButton("保存连接信息", variant: .secondary, disabled: isBusy) {
+                    PiliSettingAction(title: "服务器") {
+                        TextField("https://…/dav/", text: $address).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL).multilineTextAlignment(.trailing)
+                    }
+                    PiliSettingAction(title: "用户名") {
+                        TextField("用户名", text: $username).textInputAutocapitalization(.never).autocorrectionDisabled().multilineTextAlignment(.trailing)
+                    }
+                    PiliSettingAction(title: "密码") { SecureField("密码", text: $password).multilineTextAlignment(.trailing) }
+                    CCNeoButton("保存连接", variant: .secondary, disabled: isBusy) {
                         do { try PiliWebDAVCredentialStore.save(password); message = "密码已存入钥匙串" }
                         catch { message = error.localizedDescription }
                     }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                     CCNeoButton("测试连接", variant: .ghost, disabled: isBusy) {
                         await perform { try await client().testConnection(); message = "连接成功" }
                     }
-                    CCNeoButton("备份设置到 WebDAV", variant: .primary, disabled: isBusy) {
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    CCNeoButton("备份设置", variant: .primary, disabled: isBusy) {
                         await perform { try await client().backup(PiliSettingsBackup.capture()); message = "设置已备份" }
                     }
-                    CCNeoButton("从 WebDAV 恢复", variant: .secondary, disabled: isBusy) {
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    CCNeoButton("恢复设置", variant: .secondary, disabled: isBusy) {
                         await perform { let archive = try await client().restore(); confirmRestore(archive) }
                     }
-                    Text("备份位于指定目录的 PiliPlusSwift/settings.json。备份仅包含设置，登录凭据、下载文件和观看进度保留在本机。")
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    Text("仅备份设置，不含登录凭据、下载和观看进度。文件：PiliPlusSwift/settings.json。")
                         .ccText(font: .cc.sm, color: .cc.mutedForeground)
                     if address.lowercased().hasPrefix("http:") {
-                        Text("当前使用 HTTP，账号密码会通过明文连接发送。服务器支持时请使用 HTTPS。")
+                        Text("HTTP 会明文发送账号密码，请优先使用 HTTPS。")
                             .ccText(font: .cc.sm, color: .cc.mutedForeground)
                     }
                 }
@@ -44,17 +52,20 @@ struct PiliBackupSettingsView: View {
                         do { exportURL = try PiliSettingsBackup.export(); message = nil }
                         catch { message = error.localizedDescription }
                     }
-                    if let exportURL { ShareLink("保存或分享备份文件", item: exportURL) }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    if let exportURL { ShareLink("分享备份", item: exportURL).frame(maxWidth: .infinity, alignment: .trailing) }
                     CCNeoButton("导入设置", variant: .ghost, icon: PikaIcon.Name.filePlus, disabled: isBusy) { importsFile = true }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     CCNeoButton("撤销上次恢复", variant: .ghost, disabled: isBusy) {
-                        CCAlertCenter.shared.present(title: "撤销上次设置恢复？", message: "将恢复为上次导入前的设置。", actions: [
-                            CCAlertAction(title: "取消", role: .secondary),
-                            CCAlertAction(title: "恢复", role: .destructive) {
+                        PiliAlertSession.present(title: "撤销上次设置恢复？", message: "将恢复为上次导入前的设置。", actions: [
+                            PiliAlertButton("取消", role: .cancel),
+                            PiliAlertButton("恢复", role: .destructive) {
                                 do { try PiliSettingsBackup.rollback(libraryStore: libraryStore); message = "已恢复之前的设置" }
                                 catch { message = error.localizedDescription }
                             },
                         ])
                     }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 if isBusy { ProgressView("处理中") }
                 if let message { Text(message).ccText(font: .cc.sm, color: .cc.mutedForeground) }
@@ -86,10 +97,10 @@ struct PiliBackupSettingsView: View {
         do { try await operation() } catch { message = error.localizedDescription }
     }
     private func confirmRestore(_ archive: SettingsArchive) {
-        CCAlertCenter.shared.present(title: "恢复 \(archive.values.count) 项设置？",
+        PiliAlertSession.present(title: "恢复 \(archive.values.count) 项设置？",
                                      message: "备份时间：\(archive.createdAt.formatted())。当前设置会被替换，并在本机保留恢复前的副本。", actions: [
-            CCAlertAction(title: "取消", role: .secondary),
-            CCAlertAction(title: "恢复", role: .destructive) {
+            PiliAlertButton("取消", role: .cancel),
+            PiliAlertButton("恢复", role: .destructive) {
                 do { try PiliSettingsBackup.apply(archive, libraryStore: libraryStore); message = "设置已恢复" }
                 catch { message = error.localizedDescription }
             },

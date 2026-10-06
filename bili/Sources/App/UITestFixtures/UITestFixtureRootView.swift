@@ -32,6 +32,8 @@ struct UITestFixtureRootView: View {
                 PiliContentExportFixture()
             case .glassAudit:
                 PiliGlassAuditFixture()
+            case .glassFeed:
+                PiliGlassFeedFixture()
             case .glassSettings:
                 NavigationStack { MineInterfaceSettingsView(libraryStore: dependencies.libraryStore) }
             case .dynamicComposer:

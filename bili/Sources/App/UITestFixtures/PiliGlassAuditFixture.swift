@@ -78,6 +78,7 @@ private struct PiliGlassAuditSheet: View {
     @State private var nested = false
     @State private var busy = false
     @State private var enabled = true
+    @State private var note = ""
     @State private var detent = PiliSheetDetent.medium
     var body: some View {
         NavigationStack {
@@ -89,6 +90,10 @@ private struct PiliGlassAuditSheet: View {
                     Button("切换到下一面板", action: replace).accessibilityIdentifier("glass.replace")
                     Button(busy ? "结束提交" : "模拟提交") { busy.toggle() }.accessibilityIdentifier("glass.busy")
                     Text(busy ? "提交期间禁止下拉关闭" : "可以下拉关闭")
+                    TextField("备注", text: $note)
+                        .keyboardType(.asciiCapable)
+                        .textInputAutocapitalization(.never)
+                        .accessibilityIdentifier("glass.note")
                 }
             }
             .navigationTitle("播放设置 \(number)")
@@ -118,5 +123,43 @@ private struct PiliGlassAuditNestedSheet: View {
             .navigationTitle("更多设置")
             .navigationBarTitleDisplayMode(.inline)
         }
+    }
+}
+
+/// Exercises the production card and menus without a feed request or playback.
+struct PiliGlassFeedFixture: View {
+    @State private var opened = 0
+    @State private var prewarmed = 0
+    @State private var ownerOpened = false
+    private let videos = [
+        VideoItem(bvid: "BV1fixture001", aid: nil, title: "旅行影像：山川与城市", pic: nil, desc: nil,
+                  duration: 180, pubdate: nil, owner: .init(mid: 123, name: "示例 UP 主", face: nil),
+                  stat: nil, cid: nil, pages: nil, dimension: nil),
+        VideoItem(bvid: "BV1fixture002", aid: nil, title: "音乐现场与幕后故事", pic: nil, desc: nil,
+                  duration: 240, pubdate: nil, owner: .init(mid: 456, name: "音乐频道", face: nil),
+                  stat: nil, cid: nil, pages: nil, dimension: nil)
+    ]
+
+    var body: some View {
+        NavigationStack {
+            GeometryReader { geometry in
+                let metrics = HomeFeedLayoutMetrics(mode: .doubleColumn, containerWidth: geometry.size.width)
+                ScrollView {
+                    LazyVGrid(columns: metrics.doubleColumns, spacing: 16) {
+                        ForEach(videos) { video in
+                            HomeFeedVideoCardButton(metrics: metrics, video: video, display: .init(video: video),
+                                actions: .init(onVideoSelect: nil, onVideoTap: { _ in opened += 1 },
+                                               onVideoPress: { _ in prewarmed += 1 }, onCardAppear: { _, _ in },
+                                               onCardDisappear: { _ in }, onLoadMore: { _ in }, onRefreshFromLastSeenMarker: {}))
+                        }
+                    }.padding(12)
+                    Text("播放 \(opened) · 预热 \(prewarmed)").accessibilityIdentifier("glass.feed.activity")
+                    if ownerOpened { Text("已打开 UP 主").accessibilityIdentifier("glass.feed.owner") }
+                }
+            }
+            .navigationTitle("推荐")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .environment(\.openVideoOwnerRouteAction, { _ in ownerOpened = true })
     }
 }

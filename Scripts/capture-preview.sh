@@ -71,7 +71,12 @@ xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.Pil
 sleep 3
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-settings-accessibility.png"
 
-# Confirm a non-default theme propagates to the separate ChunUI alert window.
+# Also inspect confirmation wrapping at the largest accessible text size.
+xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-alert --glass-reduce-transparency -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+sleep 3
+xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-alert-accessibility.png"
+
+# Confirm a non-default theme propagates to the ChunUI confirmation card.
 xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-alert --glass-preview-purple
 sleep 3
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-alert-purple.png"
@@ -106,3 +111,26 @@ xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-settings-ipad.
 xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-sheet
 sleep 3
 xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-sheet-ipad.png"
+
+xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-alert
+sleep 3
+xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-alert-ipad.png"
+
+# Keep the actual system menu opened by XCUITest as a reviewable screenshot.
+attachment_dir="$result_dir/ui-attachments"
+xcrun xcresulttool export attachments --path "$result_dir/PiliPlusSwift.xcresult" --output-path "$attachment_dir"
+python3 - "$attachment_dir" "$project_root/dist" <<'PYEXPORT'
+import json, pathlib, shutil, sys
+root, destination = map(pathlib.Path, sys.argv[1:])
+def visit(value):
+    if isinstance(value, dict):
+        if value.get("suggestedHumanReadableName", "").startswith("Recommendation card overflow menu"):
+            source = root / value["exportedFileName"]
+            shutil.copyfile(source, destination / "preview-video-menu.png")
+        for child in value.values(): visit(child)
+    elif isinstance(value, list):
+        for child in value: visit(child)
+visit(json.loads((root / "manifest.json").read_text()))
+if not (destination / "preview-video-menu.png").exists():
+    raise SystemExit("Missing recommendation menu test screenshot")
+PYEXPORT

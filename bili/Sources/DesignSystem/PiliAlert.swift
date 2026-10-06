@@ -1,5 +1,4 @@
 import ChunUI
-import Combine
 import SwiftUI
 
 struct PiliAlertButton {
@@ -21,59 +20,108 @@ enum PiliAlertBuilder {
     static func buildArray(_ actions: [[PiliAlertButton]]) -> [PiliAlertButton] { actions.flatMap { $0 } }
 }
 
-/// Preserves the source binding until ChunUI has performed the selected action.
-/// CCAlertCenter dismisses first and invokes handlers after its exit transition.
+/// One app-owned confirmation at a time, presented by ChunUI's public card API.
+/// Keep the source target alive until the chosen action has run; dismissal alone
+/// must never execute an action or clear the target before a deletion reads it.
 @MainActor
 final class PiliAlertSession: ObservableObject {
-    private static weak var active: PiliAlertSession?
+    private static var active: PiliAlertSession?
     private var requestID: UUID?
-    private var observer: AnyCancellable?
-    private var cleanup: Task<Void, Never>?
+    private var isClosing = false
     private var onClose: (() -> Void)?
+
+    static func present(title: String, message: String = "", actions: [PiliAlertButton]) {
+        let session = PiliAlertSession()
+        session.present(title: title, message: message, actions: actions, onClose: {})
+    }
 
     func present(title: String, message: String, actions: [PiliAlertButton], onClose: @escaping () -> Void) {
         guard requestID == nil else { return }
+        Self.active?.dismiss()
+        let token = UUID()
+        requestID = token
+        isClosing = false
         self.onClose = onClose
-        let mapped = actions.map { action in
-            // In the pinned ChunUI API, .default hardcodes foreground black;
-            // .destructive is the themeable filled variant. Only its visual
-            // role is mapped here; the source ButtonRole still drives safety
-            // prompts/cancellation and the original action is retained.
-            CCAlertAction(title: action.title,
-                role: action.role == .cancel ? .secondary : .destructive) { [weak self] in
-                guard let self, requestID != nil else { return }
-                action.action()
-                finish()
-            }
-        }
-        requestID = UUID()
         Self.active = self
-        AppHelper.shared.showBottomAlert(title: title, message: message.isEmpty ? nil : message, actions: mapped)
-        // The package exposes ObservableObject, but keeps its request private.
-        // Any subsequent change means this presentation closed or was replaced.
-        observer = CCAlertCenter.shared.objectWillChange.sink { [weak self] in
-            guard let self, requestID != nil else { return }
-            if Self.active === self { Self.active = nil }
-            cleanup?.cancel()
-            cleanup = Task { @MainActor [weak self] in
-                // The pinned ChunUI revision dispatches a selected action at 180 ms.
-                try? await Task.sleep(for: .milliseconds(350))
-                guard !Task.isCancelled else { return }
-                self?.finish()
+        let card = PiliConfirmationCard(title: title, message: message, actions: actions) { [weak self] action in
+            guard let self, requestID == token, !isClosing else { return }
+            isClosing = true
+            AppHelper.shared.dismissCenterCard {
+                guard self.requestID == token else { return }
+                action.action()
+                self.finish(token)
             }
         }
+        .onDisappear { [weak self] in
+            guard let self, !isClosing else { return }
+            finish(token)
+        }
+        AppHelper.shared.showCenterCard(view: PiliPresentationRoot(content: card, isSheet: false))
     }
 
     func dismiss() {
-        if Self.active === self { CCAlertCenter.shared.dismiss() }
-        finish()
+        guard let token = requestID, !isClosing else { return }
+        isClosing = true
+        if Self.active === self { AppHelper.shared.dismissCenterCard(animated: false) }
+        finish(token)
     }
 
-    private func finish() {
-        guard requestID != nil else { return }
+    private func finish(_ token: UUID) {
+        guard requestID == token else { return }
         if Self.active === self { Self.active = nil }
-        requestID = nil; observer = nil; cleanup?.cancel(); cleanup = nil
+        requestID = nil
+        isClosing = false
         let close = onClose; onClose = nil; close?()
+    }
+}
+
+private struct PiliConfirmationCard: View {
+    let title: String
+    let message: String
+    let actions: [PiliAlertButton]
+    let select: (PiliAlertButton) -> Void
+    @ScaledMetric(relativeTo: .body) private var buttonHeight = 48
+
+    private var viewport: CGSize {
+        AppHelper.shared.topMostViewController()?.view.window?.bounds.size ?? CGSize(width: 390, height: 844)
+    }
+
+    var body: some View {
+        ViewThatFits(in: .vertical) {
+            contents
+            ScrollView { contents }.scrollBounceBehavior(.basedOnSize)
+        }
+        .frame(width: min(360, viewport.width * 0.86))
+        .frame(maxHeight: viewport.height * 0.8)
+        .fixedSize(horizontal: false, vertical: true)
+        .piliGlassCard(radius: 24)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .accessibilityIdentifier("pili.confirmation")
+    }
+
+    private var contents: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text(title).piliFont(.baseBold).accessibilityAddTraits(.isHeader)
+            if !message.isEmpty {
+                Text(message).piliFont(.sm).foregroundStyle(Color.cc.mutedForeground)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            VStack(spacing: 10) {
+                ForEach(Array(actions.enumerated()), id: \.offset) { _, action in
+                    Button(role: action.role) { select(action) } label: {
+                        Text(action.title).piliFont(.baseBold)
+                            .multilineTextAlignment(.center)
+                            .foregroundStyle(action.role == .cancel ? Color.cc.foreground : .white)
+                            .padding(.horizontal, 16).padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, minHeight: buttonHeight)
+                            .ccNeoChrome(action.role == .cancel ? .secondary : .primary,
+                                         height: buttonHeight, accent: Color.cc.primary)
+                    }
+                    .buttonStyle(CCNeoPressStyle())
+                }
+            }
+        }
+        .padding(24)
     }
 }
 

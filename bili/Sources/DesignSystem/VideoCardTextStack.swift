@@ -1,7 +1,19 @@
 import SwiftUI
 import ChunUI
 
+private struct VideoCardHasTrailingMenuKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var videoCardHasTrailingMenu: Bool {
+        get { self[VideoCardHasTrailingMenuKey.self] }
+        set { self[VideoCardHasTrailingMenuKey.self] = newValue }
+    }
+}
+
 struct VideoCardTextStack: View {
+    @Environment(\.videoCardHasTrailingMenu) private var hasTrailingMenu
     let display: VideoCardDisplayModel
     let showsPublishTimeInAuthorRow: Bool
     let showsAuthorIdentity: Bool
@@ -10,7 +22,7 @@ struct VideoCardTextStack: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             titleLabel
-            authorRow
+            authorRow.padding(.trailing, hasTrailingMenu ? 26 : 0)
         }
     }
 

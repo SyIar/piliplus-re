@@ -12,6 +12,7 @@ enum UITestFixtureScenario: String {
     case superChat
     case contentExport
     case glassAudit
+    case glassFeed
     case glassSettings
     case dynamicComposer
 

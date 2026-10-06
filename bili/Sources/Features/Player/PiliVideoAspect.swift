@@ -41,6 +41,6 @@ extension View { func piliVideoAspect(player: PlayerStateViewModel) -> some View
 struct PiliVideoAspectPicker: View {
     @AppStorage(PiliVideoAspect.key) private var mode = "fit"
     var body: some View {
-        Picker("画面比例", selection: $mode) { ForEach(PiliVideoAspect.allCases) { Text($0.title).tag($0.rawValue) } }
+        PiliSettingPicker("画面比例", selection: $mode) { ForEach(PiliVideoAspect.allCases) { Text($0.title).tag($0.rawValue) } }
     }
 }

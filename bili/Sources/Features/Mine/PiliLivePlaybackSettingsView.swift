@@ -9,16 +9,19 @@ struct PiliLivePlaybackSettingsView: View {
     var body: some View {
         PiliForm {
             Section("默认画质") {
-                quality("Wi-Fi／其他网络", selection: $draft.quality)
+                quality("Wi-Fi 等网络", selection: $draft.quality)
                 quality("蜂窝网络", selection: $draft.cellularQuality)
             }
             Section {
-                TextField("使用平台默认 CDN", text: $draft.cdnHost).textInputAutocapitalization(.never).autocorrectionDisabled()
-            } header: { Text("直播 CDN 主机名") }
-              footer: { Text("留空使用平台线路。指定线路失败后会尝试平台备用线路。新设置在下一次打开或重新加载直播时生效。") }
+                PiliSettingAction(title: "CDN") {
+                    TextField("默认", text: $draft.cdnHost).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .multilineTextAlignment(.trailing)
+                }
+            } header: { Text("直播线路") }
+              footer: { Text("留空使用默认线路；失败时尝试备用线路。重新打开直播后生效。") }
             if let error { Text(error).foregroundStyle(Color.cc.destructive) }
         }
-        .navigationTitle("直播播放偏好").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("直播设置").navigationBarTitleDisplayMode(.inline)
         .onAppear { draft = libraryStore.livePlaybackPreferences }
         .toolbar { ToolbarItem(placement: .confirmationAction) {
             Button("保存") {
@@ -28,7 +31,7 @@ struct PiliLivePlaybackSettingsView: View {
         } }
     }
     private func quality(_ title: String, selection: Binding<Int>) -> some View {
-        Picker(title, selection: selection) {
+        PiliSettingPicker(title, selection: selection) {
             ForEach(PiliLivePlaybackPreferences.qualities, id: \.self) { value in Text(LiveStreamQuality.defaultTitle(for: value)).tag(value) }
         }
     }

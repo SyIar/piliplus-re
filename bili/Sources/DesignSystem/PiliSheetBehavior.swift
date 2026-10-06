@@ -57,7 +57,12 @@ final class PiliSheetOwner: NSObject, UISheetPresentationControllerDelegate {
     private func applyDetents() {
         guard !detents.isEmpty, let sheet = host?.sheetPresentationController else { return }
         sheet.animateChanges {
-            sheet.detents = detents.map(\.native)
+            sheet.detents = detents.map { value in
+                let detent = value.native
+                // New detents must retain the material installed on the host.
+                detent.backgroundEffect = UIGlassEffect(style: .regular)
+                return detent
+            }
             sheet.selectedDetentIdentifier = (selection?.wrappedValue ?? detents[0]).identifier
         }
     }

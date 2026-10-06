@@ -12,8 +12,8 @@ struct MineContentFilterSettingsView: View {
     var body: some View {
         PiliForm {
             Section {
-                NavigationLink("视频弹幕屏蔽规则") { PiliDanmakuRulesView(api: dependencies.api) }
-                NavigationLink { PiliCommentKeywordSettingsView() } label: { PiliLabel("评论关键词过滤", systemImage: "text.bubble.badge.minus") }
+                NavigationLink("弹幕屏蔽") { PiliDanmakuRulesView(api: dependencies.api) }
+                NavigationLink { PiliCommentKeywordSettingsView() } label: { PiliLabel("评论关键词", systemImage: "text.bubble.badge.minus") }
                 Toggle(isOn: Binding(
                     get: { libraryStore.blocksAdDynamics },
                     set: { libraryStore.setBlocksAdDynamics($0) }
@@ -39,26 +39,28 @@ struct MineContentFilterSettingsView: View {
                     DynamicKeywordFilterSettingsView(libraryStore: libraryStore)
                 } label: {
                     PlainSettingsNavigationRow(
-                        title: "自定义动态关键词",
+                        title: "动态关键词",
                         subtitle: "\(libraryStore.blockedDynamicKeywords.count) 个关键词",
                     )
                 }
 
-                Text("广告动态会按常见推广关键词过滤；带货动态会按 B 站商品组件和商品元数据过滤；自定义关键词会匹配动态正文、标题和转发内容。")
+                Text("关键词匹配正文、标题和转发内容；广告与带货按内容自动过滤。")
                     .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
 
             Section("内容提示") {
-                Toggle("显示视频警告或争议信息", isOn: $videoWarnings)
-                Toggle("显示动态警告或争议信息", isOn: $dynamicWarnings)
+                Toggle("视频争议提示", isOn: $videoWarnings)
+                Toggle("动态争议提示", isOn: $dynamicWarnings)
             }
             Section("推荐过滤") {
                 NavigationLink("正则、分区与关注豁免") { PiliAdvancedRecommendFilterView(libraryStore: libraryStore) }
-                Toggle("屏蔽黑名单用户的视频", isOn: $blocksCreators)
-                Button("同步黑名单（\(blacklisted.ids.count) 位）") { Task { await blacklisted.refresh(api: dependencies.api, force: true) } }
+                Toggle("屏蔽黑名单视频", isOn: $blocksCreators)
+                PiliSettingAction(title: "黑名单 · \(blacklisted.ids.count) 位") {
+                    Button("同步") { Task { await blacklisted.refresh(api: dependencies.api, force: true) } }
+                }
                 if let error = blacklisted.error { Text(error).piliFont(.sm).foregroundStyle(.secondary) }
-                Picker(selection: Binding(
+                PiliSettingPicker(selection: Binding(
                     get: { libraryStore.recommendMinimumDurationSeconds },
                     set: { libraryStore.setRecommendMinimumDurationSeconds($0) }
                 )) {
@@ -70,7 +72,7 @@ struct MineContentFilterSettingsView: View {
                 }
                 .pickerStyle(.menu)
 
-                Picker(selection: Binding(
+                PiliSettingPicker(selection: Binding(
                     get: { libraryStore.recommendMinimumViewCount },
                     set: { libraryStore.setRecommendMinimumViewCount($0) }
                 )) {
@@ -82,7 +84,7 @@ struct MineContentFilterSettingsView: View {
                 }
                 .pickerStyle(.menu)
 
-                Picker(selection: Binding(
+                PiliSettingPicker(selection: Binding(
                     get: { libraryStore.recommendMinimumLikeRatioPercent },
                     set: { libraryStore.setRecommendMinimumLikeRatioPercent($0) }
                 )) {
@@ -110,7 +112,7 @@ struct MineContentFilterSettingsView: View {
                     MineSettingsLabel("应用到相关推荐", systemImage: "rectangle.stack.badge.minus")
                 }
 
-                Text("默认只过滤首页推荐；打开后也会过滤视频详情页相关推荐。")
+                Text("开启后同时过滤详情页的相关推荐。")
                     .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }

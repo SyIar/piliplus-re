@@ -88,6 +88,7 @@ struct VideoCardBorderedBody<Cover: View>: View {
 }
 
 struct VideoCardBorderedCompactBody: View, Equatable {
+    @Environment(\.videoCardHasTrailingMenu) private var hasTrailingMenu
     enum LeadingMetadata: Equatable {
         case viewCount
         case duration
@@ -190,7 +191,7 @@ struct VideoCardBorderedCompactBody: View, Equatable {
 
                     Spacer(minLength: 6)
 
-                    if !display.publishTimeText.isEmpty {
+                    if !hasTrailingMenu, !display.publishTimeText.isEmpty {
                         Text(display.publishTimeText)
                             .lineLimit(1)
                     }
@@ -198,6 +199,7 @@ struct VideoCardBorderedCompactBody: View, Equatable {
                 .appTypography(.tertiaryMetadata, fallback: .system(size: 11))
             }
         }
+        .padding(.trailing, hasTrailingMenu ? 26 : 0)
         .foregroundStyle(.secondary)
     }
 

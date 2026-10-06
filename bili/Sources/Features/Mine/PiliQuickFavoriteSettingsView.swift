@@ -18,7 +18,7 @@ struct PiliQuickFavoriteSettingsView: View {
                 ForEach(folders) { folder in
                     Button { choose(folder.id) } label: { row(folder.displayTitle, id: folder.id) }
                 }
-            } footer: { Text("点按收藏会切换当前视频在所选文件夹中的收藏状态；长按收藏按钮可选择其他文件夹。默认文件夹按互动账号分别保存。") }
+            } footer: { Text("点按收藏使用此文件夹，长按可更换。默认文件夹按账号保存。") }
             if loading { ProgressView() }
             if let error { Text(error); Button("重试") { Task { await load() } } }
         }

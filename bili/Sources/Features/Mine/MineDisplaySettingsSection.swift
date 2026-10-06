@@ -7,7 +7,7 @@ struct MineDisplaySettingsSection: View {
 
     var body: some View {
         Section("显示") {
-            Picker(selection: Binding(
+            PiliSettingPicker(selection: Binding(
                 get: { libraryStore.appearanceMode },
                 set: { libraryStore.setAppearanceMode($0) }
             )) {
@@ -20,7 +20,7 @@ struct MineDisplaySettingsSection: View {
             .tint(libraryStore.appTintColor)
             .pickerStyle(.menu)
 
-            Picker(selection: Binding(
+            PiliSettingPicker(selection: Binding(
                 get: { libraryStore.appIconPreference },
                 set: { libraryStore.setAppIconPreference($0) }
             )) {
@@ -39,9 +39,9 @@ struct MineDisplaySettingsSection: View {
                 set: { libraryStore.setFollowsSystemFontSize($0) }
             )) {
                 VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("字体跟随系统字号", systemImage: "textformat.size")
+                    MineSettingsLabel("跟随系统字号", systemImage: "textformat.size")
 
-                    Text("关闭后可以固定 App 字号，不再随系统文字大小变化。")
+                    Text("关闭后可手动设置字号。")
                         .appTypography(.settingsSubtitle, fallback: .caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -51,7 +51,7 @@ struct MineDisplaySettingsSection: View {
             if !libraryStore.followsSystemFontSize {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        MineSettingsLabel("手动字体大小", systemImage: "textformat")
+                        MineSettingsLabel("手动字号", systemImage: "textformat")
                         Spacer(minLength: 8)
                         Text(libraryStore.manualFontSize.title)
                             .piliFont(.sm).monospacedDigit()
@@ -63,7 +63,7 @@ struct MineDisplaySettingsSection: View {
                         in: 0...Double(AppManualFontSize.allCases.count - 1),
                         step: 1
                     ) {
-                        Text("手动字体大小")
+                        Text("手动字号")
                     } minimumValueLabel: {
                         Text("A").piliFont(.sm)
                     } maximumValueLabel: {
@@ -74,7 +74,7 @@ struct MineDisplaySettingsSection: View {
                 }
             }
 
-            Picker(selection: Binding(
+            PiliSettingPicker(selection: Binding(
                 get: { libraryStore.remoteImageQualityPreference },
                 set: { libraryStore.setRemoteImageQualityPreference($0) }
             )) {
@@ -99,7 +99,7 @@ struct MineDisplaySettingsSection: View {
                 get: { libraryStore.showsVideoCoverDurationBadges },
                 set: { libraryStore.setShowsVideoCoverDurationBadges($0) }
             )) {
-                MineSettingsLabel("显示视频封面时长", systemImage: "timer")
+                MineSettingsLabel("封面时长", systemImage: "timer")
             }
 
             Toggle(isOn: Binding(
@@ -107,9 +107,9 @@ struct MineDisplaySettingsSection: View {
                 set: { libraryStore.setRemoteImageDiagnosticsEnabled($0) }
             )) {
                 VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("记录图片加载诊断", systemImage: "chart.bar.xaxis")
+                    MineSettingsLabel("图片诊断", systemImage: "chart.bar.xaxis")
 
-                    Text("开着会记缓存、滚动和 CDN 的汇总数字，方便复制给我分析；不记图片、链接、账号或 Cookie。关掉后不再记数，图片照常加载。")
+                    Text("记录加载统计，不含图片、链接或账号信息。")
                         .appTypography(.settingsSubtitle, fallback: .caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -119,12 +119,12 @@ struct MineDisplaySettingsSection: View {
             NavigationLink {
                 RemoteImageDiagnosticsView(libraryStore: libraryStore)
             } label: {
-                MineSettingsLabel("图片加载诊断", systemImage: "chart.bar.xaxis")
+                MineSettingsLabel("查看图片诊断", systemImage: "chart.bar.xaxis")
             }
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    MineSettingsLabel("封面角标暗色底", systemImage: "circle.lefthalf.filled")
+                    MineSettingsLabel("角标底色浓度", systemImage: "circle.lefthalf.filled")
                     Spacer(minLength: 8)
                     Text(videoCoverBadgeContrastBackingOpacityTitle)
                         .piliFont(.sm).monospacedDigit()
@@ -150,10 +150,10 @@ struct MineDisplaySettingsSection: View {
                 get: { libraryStore.minimizesTabBarOnScroll },
                 set: { libraryStore.setMinimizesTabBarOnScroll($0) }
             )) {
-                MineSettingsLabel("滑动时缩小底部 Tab", systemImage: "arrow.down.right.and.arrow.up.left")
+                MineSettingsLabel("滚动收起底栏", systemImage: "arrow.down.right.and.arrow.up.left")
             }
 
-            Picker(selection: Binding(
+            PiliSettingPicker(selection: Binding(
                 get: { libraryStore.videoDetailSegmentedPickerGlassStyle },
                 set: { libraryStore.setVideoDetailSegmentedPickerGlassStyle($0) }
             )) {
@@ -161,7 +161,7 @@ struct MineDisplaySettingsSection: View {
                     Text(glassStyle.title).tag(glassStyle)
                 }
             } label: {
-                MineSettingsLabel("底部栏液态玻璃效果", systemImage: "circle.lefthalf.filled")
+                MineSettingsLabel("底栏玻璃", systemImage: "circle.lefthalf.filled")
             }
             .pickerStyle(.menu)
 
@@ -170,9 +170,9 @@ struct MineDisplaySettingsSection: View {
                 set: { libraryStore.setForce120HzScrollingEnabled($0) }
             )) {
                 VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("强制滑动 120Hz 刷新率", systemImage: "speedometer")
+                    MineSettingsLabel("120Hz 滑动", systemImage: "speedometer")
 
-                    Text("开启后滑动会强制使用 120Hz，可能会引起耗电增加，请谨慎开启。")
+                    Text("可能增加耗电。")
                         .appTypography(.settingsSubtitle, fallback: .caption)
                         .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -186,9 +186,9 @@ struct MineDisplaySettingsSection: View {
                 set: { libraryStore.setDynamicCommentHitAreaVisualizationExperimentEnabled($0) }
             )) {
                 VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("动态评论点击区域可视化", systemImage: "hand.tap")
+                    MineSettingsLabel("显示评论点击区域", systemImage: "hand.tap")
 
-                    Text("用半透明色块标示动态详情和评论弹窗中的回复与独立操作区域。")
+                    Text("标记回复与操作的点击区域。")
                         .appTypography(.settingsSubtitle, fallback: .caption)
                         .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -235,7 +235,7 @@ private struct MineThemeColorControl: View {
 
             currentSelectionFooter
 
-            Text("影响 App 选中状态、系统控件高亮和首页点击刷新颜色。")
+            Text("用于选中状态与控件高亮。")
                 .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
@@ -281,12 +281,15 @@ private struct MineThemeColorControl: View {
                     ),
                     supportsOpacity: false
                 ) {
-                        MineSettingsLabel("直接从色板选", systemImage: "eyedropper")
+                        MineSettingsLabel("自选颜色", systemImage: "eyedropper")
                 }
 
                 HStack(spacing: 10) {
+                    Text("色号")
+                    Spacer(minLength: 8)
                     TextField(AppThemeTintColor.defaultHex, text: $tintHexDraft)
                         .piliFont(.base).monospaced()
+                        .multilineTextAlignment(.trailing)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                         .keyboardType(.asciiCapable)
@@ -314,7 +317,7 @@ private struct MineThemeColorControl: View {
             }
             VStack(alignment: .leading, spacing: 12) {
                 currentColorIdentity
-                resetColorButton
+                resetColorButton.frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
     }
@@ -382,36 +385,16 @@ private struct MineImageCacheControl: View {
     @State private var isWorking = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
                 MineSettingsLabel("图片缓存", systemImage: "photo.on.rectangle")
-
-                Spacer(minLength: 8)
-
-                if isWorking {
-                    ProgressView()
-                        .controlSize(.small)
-                } else {
-                    Text(summaryTitle)
-                        .piliFont(.sm).monospacedDigit()
-                        .foregroundStyle(.secondary)
-                }
+                Text(summaryTitle).piliFont(.sm).monospacedDigit().foregroundStyle(.secondary)
             }
-
-            Text(summaryDetail)
-                .appTypography(.settingsSubtitle, fallback: .caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Button(role: .destructive) {
-                Task {
-                    await clearImageCache()
-                }
-            } label: {
-                MineSettingsLabel("清理图片缓存", systemImage: "trash")
-            }
-            .buttonStyle(.borderless)
-            .disabled(isWorking)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if isWorking { ProgressView().controlSize(.small) }
+            Button("清理", role: .destructive) { Task { await clearImageCache() } }
+                .buttonStyle(.borderless).disabled(isWorking)
+                .accessibilityLabel("清理图片缓存")
         }
         .task {
             await reload()
@@ -421,13 +404,6 @@ private struct MineImageCacheControl: View {
     private var summaryTitle: String {
         guard let statistics else { return "读取中" }
         return ResourceCacheByteFormatter.bytes(statistics.diskUsage)
-    }
-
-    private var summaryDetail: String {
-        guard let statistics else {
-            return "正在读取内存和磁盘图片缓存。"
-        }
-        return "\(statistics.memoryEntryCount) 张 · 磁盘 \(ResourceCacheByteFormatter.bytes(statistics.diskUsage)) / \(ResourceCacheByteFormatter.bytes(statistics.diskCapacity))"
     }
 
     @MainActor

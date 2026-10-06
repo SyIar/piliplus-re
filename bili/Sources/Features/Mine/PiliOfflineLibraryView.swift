@@ -119,9 +119,9 @@ struct PiliOfflineLibraryView: View {
     }
 
     private func confirmDelete(_ ids: Set<UUID>) {
-        CCAlertCenter.shared.present(title: "删除 \(ids.count) 个下载？", message: "媒体文件和对应离线数据将从本机移除。", actions: [
-            CCAlertAction(title: "取消", role: .secondary),
-            CCAlertAction(title: "删除", role: .destructive) {
+        PiliAlertSession.present(title: "删除 \(ids.count) 个下载？", message: "媒体文件和对应离线数据将从本机移除。", actions: [
+            PiliAlertButton("取消", role: .cancel),
+            PiliAlertButton("删除", role: .destructive) {
                 ids.forEach(store.remove)
                 selection.subtract(ids)
             },

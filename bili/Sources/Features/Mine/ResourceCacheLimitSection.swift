@@ -9,7 +9,7 @@ struct ResourceCacheLimitSection: View {
         Section {
             Toggle("启用缓存上限", isOn: $isCacheLimitEnabled)
 
-            Picker(selection: $cacheLimitMegabytes) {
+            PiliSettingPicker(selection: $cacheLimitMegabytes) {
                 ForEach(ResourceCacheLimitSettings.limitMegabytePresets, id: \.self) { megabytes in
                     Text(ResourceCacheByteFormatter.megabytes(megabytes))
                         .tag(megabytes)
@@ -21,7 +21,7 @@ struct ResourceCacheLimitSection: View {
             .disabled(!isCacheLimitEnabled)
 
             Button(action: applyLimit) {
-                MineSettingsLabel("立即应用上限", systemImage: "gauge.with.dots.needle.50percent")
+                Text("应用上限").frame(maxWidth: .infinity, alignment: .trailing)
             }
             .disabled(!isCacheLimitEnabled)
         } header: {

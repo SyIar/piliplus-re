@@ -20,7 +20,7 @@ struct MultiAccountExperimentSettingsView: View {
                 PiliUnavailableView(
                     "实验尚未开启",
                     systemImage: "person.2.badge.gearshape",
-                    description: Text("请先在隐私设置中打开“多账号用途分配实验”。")
+                    description: Text("请先在隐私设置中打开“多账号分工（实验）”。")
                 )
             }
         }
@@ -53,7 +53,7 @@ struct MultiAccountExperimentSettingsView: View {
                     description: Text("添加账号后才能分配用途。")
                 )
             } else {
-                Picker(
+                PiliSettingPicker(
                     selection: Binding(
                         get: { sessionStore.mainAccountMID ?? sessionStore.accounts[0].mid },
                         set: { value in selectMainAccount(value) }
@@ -67,7 +67,7 @@ struct MultiAccountExperimentSettingsView: View {
                 }
                 .pickerStyle(.menu)
 
-                Picker(
+                PiliSettingPicker(
                     selection: Binding(
                         get: {
                             sessionStore.playbackAccountMID
@@ -85,7 +85,7 @@ struct MultiAccountExperimentSettingsView: View {
                 }
                 .pickerStyle(.menu)
 
-                Picker(
+                PiliSettingPicker(
                     selection: Binding(
                         get: {
                             sessionStore.dynamicFeedAccountMID
@@ -103,7 +103,7 @@ struct MultiAccountExperimentSettingsView: View {
                 }
                 .pickerStyle(.menu)
 
-                Picker(
+                PiliSettingPicker(
                     selection: Binding(
                         get: {
                             sessionStore.interactionAccountMID
@@ -121,19 +121,19 @@ struct MultiAccountExperimentSettingsView: View {
                 }
                 .pickerStyle(.menu)
 
-                Picker("评论读取", selection: Binding(get: { sessionStore.commentReadPolicy }, set: { policy in
+                PiliSettingPicker("评论读取", selection: Binding(get: { sessionStore.commentReadPolicy }, set: { policy in
                     do { try sessionStore.setCommentReadPolicy(policy, mid: sessionStore.commentReadAccountMID ?? sessionStore.mainAccountMID) }
                     catch { errorMessage = error.localizedDescription }
                 })) {
                     ForEach(CommentReadAccountPolicy.allCases) { Text($0.title).tag($0) }
                 }
                 if sessionStore.commentReadPolicy == .account {
-                    Picker("评论读取账号", selection: Binding(get: { sessionStore.commentReadAccountMID ?? sessionStore.accounts[0].mid }, set: { mid in
+                    PiliSettingPicker("评论读取账号", selection: Binding(get: { sessionStore.commentReadAccountMID ?? sessionStore.accounts[0].mid }, set: { mid in
                         do { try sessionStore.setCommentReadPolicy(.account, mid: mid) }
                         catch { errorMessage = error.localizedDescription }
                     })) { ForEach(sessionStore.accounts) { Text($0.displayName).tag($0.mid) } }
                 }
-                Picker(
+                PiliSettingPicker(
                     selection: Binding(
                         get: { sessionStore.historyAccountPolicy },
                         set: { value in selectHistoryPolicy(value) }
@@ -183,7 +183,7 @@ struct MultiAccountExperimentSettingsView: View {
                 }
             }
         } footer: {
-            Text("新增账号使用独立的临时网页登录环境，不会自动带入当前主账号的 Cookie。首版暂不提供第二账号的短信和扫码登录。")
+            Text("新增账号使用独立网页登录，不带入主账号凭据。")
         }
     }
 

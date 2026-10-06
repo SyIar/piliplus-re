@@ -78,6 +78,7 @@ struct PiliMessageKeywordView: View {
             Section("新关键词") {
                 TextField("屏蔽词", text: $input)
                 Button("添加") { mutate("KeywordBlockingAdd", word: input.trimmingCharacters(in: .whitespacesAndNewlines)) }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                     .disabled(input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || input.count > characterLimit || words.count >= limit)
                 Text("最多 \(limit) 个，每个最多 \(characterLimit) 字").piliFont(.sm).foregroundStyle(.secondary)
             }

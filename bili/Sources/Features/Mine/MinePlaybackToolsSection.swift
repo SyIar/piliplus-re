@@ -20,8 +20,8 @@ struct MinePlaybackToolsSection: View {
                 ResourceLoadingExperimentSettingsView(libraryStore: libraryStore)
             } label: {
                 PlainSettingsNavigationRow(
-                    title: "资源加载调度",
-                    subtitle: "4 项正式启用，1 项仍可独立调整",
+                    title: "加载优化",
+                    subtitle: "续播预热与加载诊断",
                 )
             }
 
@@ -38,7 +38,7 @@ struct MinePlaybackToolsSection: View {
                 PlayerPerformanceLogView()
             } label: {
                 PlainSettingsNavigationRow(
-                    title: "启动链路性能日志",
+                    title: "播放启动日志",
                     subtitle: "首帧、准备和缓冲",
                 )
             }
@@ -50,8 +50,8 @@ struct MinePlaybackToolsSection: View {
                 )
             ) {
                 VStack(alignment: .leading, spacing: 3) {
-                    MineSettingsLabel("可播放降级限时实验", systemImage: "timer")
-                    Text("已有可播放低档位后，完整取流最多再等待 650ms；超时直接开始播放")
+                    MineSettingsLabel("快速起播（实验）", systemImage: "timer")
+                    Text("等待高清超过 650 毫秒时，先以可用画质播放。")
                         .piliFont(.sm)
                         .foregroundStyle(.secondary)
                 }
@@ -91,7 +91,7 @@ struct MinePlaybackToolsSection: View {
                     }
                 )
             ) {
-                MineSettingsLabel("视频详情导航时延诊断", systemImage: "stopwatch")
+                MineSettingsLabel("详情打开耗时", systemImage: "stopwatch")
             }
 
             Toggle(
@@ -118,10 +118,10 @@ struct MinePlaybackToolsSection: View {
                     set: { libraryStore.setShowsVideoDetailPinnedProgressBar($0) }
                 )
             ) {
-                MineSettingsLabel("视频窗口底部进度条", systemImage: "line.3.horizontal.decrease")
+                MineSettingsLabel("窗口底部进度条", systemImage: "line.3.horizontal.decrease")
             }
 
-            Picker(
+            PiliSettingPicker(
                 selection: Binding(
                     get: { libraryStore.videoListenPlaylistSortOrder },
                     set: { libraryStore.setVideoListenPlaylistSortOrder($0) }

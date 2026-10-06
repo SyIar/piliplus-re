@@ -19,7 +19,7 @@ struct RecommendKeywordFilterSettingsView: View {
                 Button {
                     addKeyword()
                 } label: {
-                    MineSettingsLabel("添加关键词", systemImage: "plus.circle")
+                    Text("添加").frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .disabled(normalizedDraftKeyword == nil)
             } header: {
@@ -53,7 +53,7 @@ struct RecommendKeywordFilterSettingsView: View {
                     Button(role: .destructive) {
                         libraryStore.clearBlockedRecommendKeywords()
                     } label: {
-                        MineSettingsLabel("清空全部", systemImage: "trash")
+                        Text("清空").frame(maxWidth: .infinity, alignment: .trailing)
                     }
                 }
             } header: {

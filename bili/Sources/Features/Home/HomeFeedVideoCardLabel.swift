@@ -11,6 +11,7 @@ struct HomeFeedVideoCardLabel: View {
         case .singleColumn:
             YouTubeStyleVideoFeedCardView(
                 display: display,
+                showsMetadataSummary: false,
                 usesGenericAuthorIcon: false,
                 placesViewAndPublishTimeTrailing: false,
                 fixedCoverAspectRatio: 16 / 9,
@@ -29,7 +30,7 @@ struct HomeFeedVideoCardLabel: View {
         case .doubleColumn:
             VideoCardView(
                 display: display,
-                showsPublishTimeInAuthorRow: true,
+                showsPublishTimeInAuthorRow: false,
                 showsAuthorIdentity: showsAuthorIdentity,
                 usesGenericAuthorIcon: usesGenericAuthorIcon,
                 showsCoverViewCountBadge: false,
@@ -41,7 +42,7 @@ struct HomeFeedVideoCardLabel: View {
         case .borderedDoubleColumn:
             VideoCardView(
                 display: display,
-                showsPublishTimeInAuthorRow: true,
+                showsPublishTimeInAuthorRow: false,
                 showsAuthorIdentity: showsAuthorIdentity,
                 usesGenericAuthorIcon: usesGenericAuthorIcon,
                 showsCoverViewCountBadge: false,

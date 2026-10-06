@@ -2,6 +2,7 @@ import SwiftUI
 import ChunUI
 
 struct YouTubeStyleVideoFeedMetadataRow: View {
+    @Environment(\.videoCardHasTrailingMenu) private var hasTrailingMenu
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let display: VideoCardDisplayModel
@@ -40,6 +41,7 @@ struct YouTubeStyleVideoFeedMetadataRow: View {
                 }
             }
         }
+        .padding(.trailing, hasTrailingMenu ? 26 : 0)
         .frame(minHeight: Self.avatarSide, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .leading)
     }

@@ -24,10 +24,10 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             playbackHistorySyncThresholdPicker
             preferredVideoQualityPicker
             cellularPreferredVideoQualityPicker
-            Picker("默认音质", selection: Binding(get: { libraryStore.audioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0) })) {
+            PiliSettingPicker("默认音质", selection: Binding(get: { libraryStore.audioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0) })) {
                 ForEach(PlaybackAudioQualityPreference.allCases) { Text($0.title).tag($0) }
             }
-            Picker("蜂窝网络音质", selection: Binding(get: { libraryStore.cellularAudioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0, cellular: true) })) {
+            PiliSettingPicker("蜂窝网络音质", selection: Binding(get: { libraryStore.cellularAudioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0, cellular: true) })) {
                 ForEach(PlaybackAudioQualityPreference.allCases) { Text($0.title).tag($0) }
             }
             Text("最佳音质按可用音轨选择无损、杜比或 AAC；播放失败时回退到兼容音轨。需要对应内容和账号权限，听视频手动选择的音轨优先。").piliFont(.sm).foregroundStyle(.secondary)
@@ -100,7 +100,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     }
 
     private var playbackAutoOptimizationPicker: some View {
-        Picker(selection: Binding(
+        PiliSettingPicker(selection: Binding(
             get: { libraryStore.playbackAutoOptimizationMode },
             set: { libraryStore.setPlaybackAutoOptimizationMode($0) }
         )) {
@@ -132,7 +132,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     }
 
     private var playbackHistorySyncThresholdPicker: some View {
-        Picker(selection: Binding<Int>(
+        PiliSettingPicker(selection: Binding<Int>(
             get: { libraryStore.playbackHistorySyncThresholdSeconds },
             set: { libraryStore.setPlaybackHistorySyncThresholdSeconds($0) }
         )) {
@@ -140,13 +140,13 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text("\(seconds) 秒").tag(seconds)
             }
         } label: {
-            MineSettingsLabel("观看记录同步门槛", systemImage: "clock.arrow.circlepath")
+            MineSettingsLabel("历史同步门槛", systemImage: "clock.arrow.circlepath")
         }
         .pickerStyle(.menu)
     }
 
     private var preferredVideoQualityPicker: some View {
-        Picker(selection: Binding<Int>(
+        PiliSettingPicker(selection: Binding<Int>(
             get: { libraryStore.preferredVideoQuality ?? 0 },
             set: { libraryStore.setPreferredVideoQuality($0 == 0 ? nil : $0) }
         )) {
@@ -161,7 +161,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     }
 
     private var cellularPreferredVideoQualityPicker: some View {
-        Picker(selection: Binding<Int>(
+        PiliSettingPicker(selection: Binding<Int>(
             get: { libraryStore.cellularPreferredVideoQuality ?? 0 },
             set: { libraryStore.setCellularPreferredVideoQuality($0 == 0 ? nil : $0) }
         )) {
@@ -216,7 +216,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     }
 
     private var dolbyVisionRenderingPolicyPicker: some View {
-        Picker(selection: Binding(
+        PiliSettingPicker(selection: Binding(
             get: { libraryStore.dolbyVisionRenderingPolicy },
             set: { libraryStore.setDolbyVisionRenderingPolicy($0) }
         )) {
@@ -230,7 +230,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     }
 
     private var playbackStreamSourcePicker: some View {
-        Picker(selection: Binding(
+        PiliSettingPicker(selection: Binding(
             get: { libraryStore.playbackStreamSourcePreference },
             set: { libraryStore.setPlaybackStreamSourcePreference($0) }
         )) {
@@ -238,7 +238,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(source.title).tag(source)
             }
         } label: {
-            MineSettingsLabel("播放取流来源", systemImage: "antenna.radiowaves.left.and.right")
+            MineSettingsLabel("播放来源", systemImage: "antenna.radiowaves.left.and.right")
         }
         .pickerStyle(.menu)
     }
@@ -249,8 +249,8 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             set: { libraryStore.setCellularBiliTrafficCompatibilityExperimentEnabled($0) }
         )) {
             VStack(alignment: .leading, spacing: 3) {
-                MineSettingsLabel("蜂窝网络 B站定向流量兼容实验", systemImage: "antenna.radiowaves.left.and.right")
-                Text("使用手机流量时优先 B站域名，外部线路仍会在播放失败时兜底；无法确认套餐是否实际免流。")
+                MineSettingsLabel("定向流量兼容（实验）", systemImage: "antenna.radiowaves.left.and.right")
+                Text("蜂窝网络优先使用 B 站线路；失败时仍可能消耗普通流量。")
                     .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
@@ -258,7 +258,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     }
 
     private var playbackCDNPicker: some View {
-        Picker(selection: Binding(
+        PiliSettingPicker(selection: Binding(
             get: { libraryStore.playbackCDNPreference },
             set: { libraryStore.setPlaybackCDNPreference($0) }
         )) {
@@ -276,7 +276,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             get: { libraryStore.prefersBackupAudioURL },
             set: { libraryStore.setPrefersBackupAudioURL($0) }
         )) {
-            MineSettingsLabel("音频优先备用 URL", systemImage: "speaker.wave.2")
+            MineSettingsLabel("优先备用音频线路", systemImage: "speaker.wave.2")
         }
     }
 
@@ -303,7 +303,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             }
 
             Button(action: commitPlaybackCustomCDNHost) {
-                MineSettingsLabel("应用自定义 CDN", systemImage: "checkmark.circle")
+                Text("应用线路").frame(maxWidth: .infinity, alignment: .trailing)
             }
             .disabled(isCustomCDNHostDraftInvalid)
         }
@@ -319,7 +319,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     }
 
     private var playbackCDNProbeRefreshPolicyPicker: some View {
-        Picker(selection: Binding(
+        PiliSettingPicker(selection: Binding(
             get: { libraryStore.playbackCDNProbeRefreshPolicy },
             set: { libraryStore.setPlaybackCDNProbeRefreshPolicy($0) }
         )) {
@@ -349,14 +349,14 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 )
             }
         } else {
-            MineSettingsLabel("App 启动或回到前台时会刷新 CDN 参考；没有真实播放地址时只做 Host 弱参考，不更新自动推荐。", systemImage: "bolt.horizontal")
+            MineSettingsLabel("启动或返回 App 时更新线路参考；实际播放结果优先。", systemImage: "bolt.horizontal")
                 .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
     }
 
     private var playbackNetworkAddressFamilyPicker: some View {
-        Picker(selection: Binding(
+        PiliSettingPicker(selection: Binding(
             get: { libraryStore.playbackNetworkAddressFamilyPreference },
             set: { libraryStore.setPlaybackNetworkAddressFamilyPreference($0) }
         )) {
@@ -373,7 +373,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     private var playbackNetworkAddressFamilyNotice: some View {
         if libraryStore.playbackNetworkAddressFamilyPreference != .automatic,
            libraryStore.playbackCDNProbeSnapshotForCurrentContext == nil {
-            MineSettingsLabel("网络协议已切换，请重新测速 CDN 以生成匹配的新参考。", systemImage: "arrow.triangle.2.circlepath")
+            MineSettingsLabel("协议已切换，请重新测速。", systemImage: "arrow.triangle.2.circlepath")
                 .piliFont(.sm)
                 .foregroundStyle(Color.cc.warning)
         }
@@ -381,7 +381,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
 
     private var playbackCDNProbeButton: some View {
         Button(action: probePlaybackCDN) {
-            MineSettingsLabel(isProbingPlaybackCDN ? "测速中" : "测试 CDN 连通性", systemImage: "speedometer")
+            Text(isProbingPlaybackCDN ? "测速中" : "立即测速").frame(maxWidth: .infinity, alignment: .trailing)
         }
         .disabled(isProbingPlaybackCDN)
     }
@@ -396,7 +396,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     }
 
     private var defaultPlaybackRatePicker: some View {
-        Picker(selection: Binding(
+        PiliSettingPicker(selection: Binding(
             get: { libraryStore.defaultPlaybackRate },
             set: { libraryStore.setDefaultPlaybackRate($0) }
         )) {

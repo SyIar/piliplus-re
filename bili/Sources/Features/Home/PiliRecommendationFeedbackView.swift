@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import ChunUI
 
 struct PiliRecommendationFeedbackView: View {
@@ -69,13 +70,44 @@ struct PiliRecommendationFeedbackView: View {
     }
 }
 
-struct PiliRecommendationMenu: ViewModifier {
+/// Shared by the visible overflow button and the card's long-press menu.
+struct PiliRecommendationActions: View {
     let video: VideoItem
     @EnvironmentObject private var dependencies: AppDependencies
-    func body(content: Content) -> some View {
-        content.contextMenu {
-            PiliIconButton("不感兴趣／视频点踩", systemImage: "hand.thumbsdown") {
-                PiliPresentation.present(.sheet) { PiliRecommendationFeedbackView(api: dependencies.api, video: video) }
+    @EnvironmentObject private var session: SessionStore
+    @State private var addingToWatchLater = false
+
+    var body: some View {
+        if session.isLoggedIn {
+            PiliIconButton("稍后再看", systemImage: "clock") {
+                guard !addingToWatchLater else { return }
+                addingToWatchLater = true
+                Task {
+                    defer { addingToWatchLater = false }
+                    do {
+                        try await dependencies.api.addToWatchLater(bvid: video.bvid)
+                        CCToastCenter.shared.show(.success, "已加入稍后再看")
+                    } catch { CCToastCenter.shared.show(.error, error.localizedDescription) }
+                }
+            }.disabled(addingToWatchLater)
+        }
+        if let owner = video.owner, owner.mid > 0 {
+            VideoOwnerRouteLink(owner: owner) {
+                PiliLabel("访问 UP 主", systemImage: "person.crop.circle")
+            }
+        }
+        PiliIconButton("复制 BV 号", systemImage: "doc.on.doc") {
+            UIPasteboard.general.string = video.bvid
+            CCToastCenter.shared.show(.success, "已复制 BV 号")
+        }
+        PiliIconButton("复制链接", systemImage: "link") {
+            UIPasteboard.general.string = "https://www.bilibili.com/video/\(video.bvid)"
+            CCToastCenter.shared.show(.success, "已复制链接")
+        }
+        Divider()
+        PiliIconButton("不感兴趣", systemImage: "hand.thumbsdown") {
+            PiliPresentation.present(.sheet) {
+                PiliRecommendationFeedbackView(api: dependencies.api, video: video)
             }
         }
     }

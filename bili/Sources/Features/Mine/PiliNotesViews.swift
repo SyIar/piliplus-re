@@ -87,9 +87,9 @@ struct PiliNotesLibraryView: View {
     private func confirmDelete() {
         let records = items.filter { selection.contains($0.id) }, mode = published
         guard let version = loadedVersion else { return }
-        CCAlertCenter.shared.present(title: "删除 \(records.count) 条笔记？", message: "云端笔记将被删除。", actions: [
-            CCAlertAction(title: "取消", role: .secondary),
-            CCAlertAction(title: "删除", role: .destructive) {
+        PiliAlertSession.present(title: "删除 \(records.count) 条笔记？", message: "云端笔记将被删除。", actions: [
+            PiliAlertButton("取消", role: .cancel),
+            PiliAlertButton("删除", role: .destructive) {
                 Task {
                     loading = true
                     do {
@@ -194,9 +194,9 @@ struct PiliNoteEditorView: View {
             Toggle("公开笔记", isOn: $published)
             CCNeoButton(published ? "公开发布" : "保存到云端", variant: .primary, fullWidth: true, disabled: saving || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
                 if published {
-                    CCAlertCenter.shared.present(title: "公开发布这条笔记？", message: "其他用户可以查看笔记内容。", actions: [
-                        CCAlertAction(title: "取消", role: .secondary),
-                        CCAlertAction(title: "发布", role: .destructive) { Task { await save() } },
+                    PiliAlertSession.present(title: "公开发布这条笔记？", message: "其他用户可以查看笔记内容。", actions: [
+                        PiliAlertButton("取消", role: .cancel),
+                        PiliAlertButton("发布", role: .destructive) { Task { await save() } },
                     ])
                 } else { await save() }
             }

@@ -3894,13 +3894,13 @@ nonisolated enum RemoteImageQualityPreference: String, CaseIterable, Identifiabl
     var detail: String {
         switch self {
         case .automatic:
-            return "Wi-Fi 保持高清，蜂窝、低电量或发热时降低封面和缩略图尺寸。"
+            return "Wi-Fi 高清；蜂窝、低电量或发热时省流。"
         case .dataSaver:
-            return "优先少流量，适合蜂窝网络或缓存空间紧张时使用。"
+            return "降低图片质量，节省流量与缓存。"
         case .balanced:
-            return "限制超大缩略图，兼顾清晰度和缓存占用。"
+            return "兼顾清晰度与缓存占用。"
         case .high:
-            return "按界面请求尺寸加载，适合 Wi-Fi 和高质量封面。"
+            return "优先清晰度，流量占用较高。"
         }
     }
 

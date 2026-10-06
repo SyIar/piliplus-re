@@ -81,3 +81,40 @@ struct MinePlaybackPreferenceChip: View {
             }
     }
 }
+
+/// Keep a menu picker in the trailing column even when its explanation wraps.
+/// Native Form pickers move the value below a multiline label on narrow screens.
+struct PiliSettingPicker<Selection: Hashable, Options: View, Label: View>: View {
+    @Binding private var selection: Selection
+    private let options: Options
+    private let label: Label
+
+    init(selection: Binding<Selection>, @ViewBuilder content: () -> Options, @ViewBuilder label: () -> Label) {
+        _selection = selection; options = content(); self.label = label()
+    }
+
+    init(_ title: String, selection: Binding<Selection>, @ViewBuilder content: () -> Options) where Label == Text {
+        _selection = selection; options = content(); label = Text(title)
+    }
+
+    var body: some View {
+        HStack(spacing: 16) {
+            label.frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+            Picker(selection: $selection) { options } label: { label }
+                .labelsHidden().pickerStyle(.menu)
+                .lineLimit(1).layoutPriority(1)
+        }
+    }
+}
+
+struct PiliSettingAction<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: () -> Content
+    var body: some View {
+        HStack(spacing: 16) {
+            Text(title).frame(maxWidth: .infinity, alignment: .leading)
+            content()
+        }
+    }
+}

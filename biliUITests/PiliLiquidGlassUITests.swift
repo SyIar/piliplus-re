@@ -32,6 +32,14 @@ final class PiliLiquidGlassUITests: XCTestCase {
         app.buttons["glass.expand"].tap()
         let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         screenshot.name = "ChunUI nested glass sheet"; screenshot.lifetime = .keepAlways; add(screenshot)
+        let note = app.textFields["glass.note"]
+        XCTAssertTrue(note.waitForExistence(timeout: 10))
+        note.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10))
+        note.typeText("glass")
+        XCTAssertEqual(note.value as? String, "glass")
+        XCTAssertLessThanOrEqual(note.frame.maxY, app.keyboards.firstMatch.frame.minY + 1,
+                                 "The full-height sheet must still keep its editor above the keyboard")
         app.buttons["glass.close"].tap()
         XCTAssertTrue(open.waitForExistence(timeout: 10))
     }
@@ -74,9 +82,50 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
         app.buttons["取消"].firstMatch.tap()
         XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 1 次")
+        remove.tap()
+        XCTAssertTrue(app.buttons["确认删除"].waitForExistence(timeout: 10))
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.buttons["确认删除"])
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 10), .completed)
+        remove.tap()
+        XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["取消"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 1 次")
         app.buttons["glass.settings"].tap()
         XCTAssertTrue(app.buttons["选择颜色 #3264F0"].waitForExistence(timeout: 10))
         app.buttons["选择颜色 #3264F0"].tap()
+    }
+
+    @MainActor
+    func testRecommendationMenuDoesNotStartPlaybackAndOpensExistingActions() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "glassFeed"]
+        app.launch()
+        let menu = app.buttons["video.menu.BV1fixture001"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 15), app.debugDescription)
+        let second = app.buttons["video.menu.BV1fixture002"]
+        XCTAssertEqual(menu.frame.midY, second.frame.midY, accuracy: 1)
+        XCTAssertLessThan(menu.frame.maxX, second.frame.minX)
+        menu.tap()
+        XCTAssertTrue(app.buttons["复制 BV 号"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(app.buttons["不感兴趣"].exists)
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Recommendation card overflow menu"; screenshot.lifetime = .keepAlways; add(screenshot)
+        app.buttons["复制 BV 号"].tap()
+        XCTAssertEqual(app.staticTexts["glass.feed.activity"].label, "播放 0 · 预热 0")
+        menu.tap()
+        app.buttons["访问 UP 主"].tap()
+        XCTAssertTrue(app.staticTexts["glass.feed.owner"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["glass.feed.activity"].label, "播放 0 · 预热 0")
+        menu.tap()
+        app.buttons["不感兴趣"].tap()
+        XCTAssertTrue(app.navigationBars["推荐与视频反馈"].waitForExistence(timeout: 10))
+        app.buttons["完成"].tap()
+        XCTAssertTrue(menu.waitForExistence(timeout: 10))
+        app.buttons["video.open.BV1fixture001"].tap()
+        XCTAssertTrue(app.staticTexts["glass.feed.activity"].label.hasPrefix("播放 1"))
     }
 
     @MainActor
