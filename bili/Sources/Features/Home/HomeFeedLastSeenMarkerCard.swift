@@ -27,7 +27,7 @@ struct HomeFeedLastSeenMarkerCard: View {
 
     private var singleColumnLabel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            cover(cornerRadius: 18)
+            cover(cornerRadius: 16)
 
             HStack(alignment: .center, spacing: 9) {
                 markerAvatar(size: 34, iconSize: 15)
@@ -48,8 +48,11 @@ struct HomeFeedLastSeenMarkerCard: View {
             }
             .frame(height: 34)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.bottom, 10)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+        .piliGlassCard()
         .contentShape(Rectangle())
     }
 
@@ -82,16 +85,17 @@ struct HomeFeedLastSeenMarkerCard: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, 2)
+            .padding(.horizontal, 10)
+            .padding(.bottom, 10)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+        .piliGlassCard(radius: 15)
         .contentShape(Rectangle())
     }
 
     private var borderedDoubleColumnLabel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            cover(cornerRadius: 14, aspectRatio: 16 / 10)
-                .videoCardBorderedCover()
+            cover(cornerRadius: 18, aspectRatio: 16 / 10)
 
             VStack(alignment: .leading, spacing: 4) {
                 StableVideoTitleText(
@@ -179,16 +183,12 @@ struct HomeFeedLastSeenMarkerCard: View {
     }
 
     private func cover(cornerRadius: CGFloat, aspectRatio: CGFloat = 16.0 / 9.0) -> some View {
-        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         return Color.clear
             .aspectRatio(aspectRatio, contentMode: .fit)
             .overlay {
                 ZStack {
-                    shape
-                        .fill(Color.cc.card.opacity(0.92))
-
-                    shape
-                        .fill(Color(.tertiarySystemFill).opacity(0.55))
+                    Color.cc.card.opacity(0.92)
+                    Color(.tertiarySystemFill).opacity(0.55)
 
                     VStack(spacing: 8) {
                         PiliIcon(systemName: "arrow.clockwise", size: 24)
@@ -201,9 +201,9 @@ struct HomeFeedLastSeenMarkerCard: View {
                             .lineLimit(1)
                     }
                 }
-                .biliPlayerClearGlass(interactive: true, in: shape)
             }
             .frame(maxWidth: .infinity)
+            .videoCardTopCover(cornerRadius: cornerRadius)
     }
 
     private func markerAvatar(size: CGFloat, iconSize: CGFloat) -> some View {

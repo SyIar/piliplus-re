@@ -68,14 +68,13 @@ struct YouTubeStyleVideoFeedCardView: View, Equatable {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 0) {
             YouTubeStyleVideoFeedThumbnail(
                 display: display,
                 showsPlayBadge: showsPlayBadge,
                 coverAspectRatio: effectiveCoverAspectRatio,
                 fixedCoverSize: fixedCoverSize,
-                coverMaximumPixelLength: coverMaximumPixelLength,
-                coverShadowLevel: coverShadowLevel
+                coverMaximumPixelLength: coverMaximumPixelLength
             )
 
             YouTubeStyleVideoFeedMetadataRow(
@@ -85,10 +84,12 @@ struct YouTubeStyleVideoFeedCardView: View, Equatable {
                 placesViewAndPublishTimeTrailing: placesViewAndPublishTimeTrailing
             )
             .padding(.horizontal, 10)
+            .padding(.top, 10)
             .padding(.bottom, 10)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .piliGlassCard()
+        .mediaShadow(coverShadowLevel, opacityScale: 0.5)
         .contentShape(Rectangle())
     }
 

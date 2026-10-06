@@ -71,6 +71,13 @@ xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.Pil
 sleep 3
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-settings-accessibility.png"
 
+# Confirm a non-default theme propagates to the separate ChunUI alert window.
+xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-alert --glass-preview-purple
+sleep 3
+xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-alert-purple.png"
+xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-default
+sleep 2
+
 # Check the same production form and presentation adapters on a tablet.
 ipad_id="$(xcrun simctl list devices available -j | python3 -c '
 import json,re,sys

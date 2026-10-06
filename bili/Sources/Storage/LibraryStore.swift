@@ -366,6 +366,7 @@ final class LibraryStore: ObservableObject {
     private static let visibleRootTabsKey = "cc.bili.display.visibleRootTabs.v1"
     private static let homeRefreshTriggerDistanceKey = "cc.bili.home.refreshTriggerDistance.v1"
     private static let homeFeedLayoutKey = "cc.bili.home.feedLayout.v1"
+    private static let homeFeedDensityMigrationKey = "cc.bili.home.twoColumnDefaultApplied.v1"
     private static let homeRecommendFeedSourcePreferenceKey = "cc.bili.home.recommendFeedSourcePreference.v1"
     private static let showsHotSearchesKey = "cc.bili.search.showsHotSearches.v1"
     private static let supportedPlaybackRates = [0.75, 1.0, 1.25, 1.5, 2.0]
@@ -374,7 +375,7 @@ final class LibraryStore: ObservableObject {
     nonisolated static let defaultAppTintColorHex = AppThemeTintColor.defaultHex
     nonisolated static let defaultPlaybackStreamSourcePreference: PlaybackStreamSourcePreference = .app
     nonisolated static let defaultHomeRecommendFeedSourcePreference: HomeRecommendFeedSourcePreference = .app
-    nonisolated static let defaultHomeFeedLayout: HomeFeedLayout = .singleColumn
+    nonisolated static let defaultHomeFeedLayout: HomeFeedLayout = .doubleColumn
     nonisolated static let defaultPlaybackHistorySyncThresholdSeconds = 5
     nonisolated static let supportedPlaybackHistorySyncThresholdSeconds = [5, 10, 30]
     nonisolated static let supportedVideoQualities = BiliVideoQuality.supportedQualities
@@ -708,10 +709,7 @@ final class LibraryStore: ObservableObject {
             userDefaults.object(forKey: Self.homeRefreshTriggerDistanceKey) as? Double
                 ?? Self.defaultHomeRefreshTriggerDistance
         )
-        self.homeFeedLayout =
-            HomeFeedLayout(
-                rawValue: userDefaults.string(forKey: Self.homeFeedLayoutKey) ?? ""
-            ) ?? Self.defaultHomeFeedLayout
+        self.homeFeedLayout = Self.loadHomeFeedLayout(from: userDefaults)
         self.homeRecommendFeedSourcePreference =
             HomeRecommendFeedSourcePreference(
                 rawValue: userDefaults.string(forKey: Self.homeRecommendFeedSourcePreferenceKey) ?? ""
@@ -1474,6 +1472,23 @@ final class LibraryStore: ObservableObject {
     func setHomeFeedLayout(_ layout: HomeFeedLayout) {
         homeFeedLayout = layout
         userDefaults.set(layout.rawValue, forKey: Self.homeFeedLayoutKey)
+    }
+
+    private static func loadHomeFeedLayout(from defaults: UserDefaults) -> HomeFeedLayout {
+        var layout = HomeFeedLayout(rawValue: defaults.string(forKey: homeFeedLayoutKey) ?? "")
+            ?? defaultHomeFeedLayout
+        // Apply the requested denser home once to existing installations too.
+        // A later explicit choice in settings remains persistent.
+        if !defaults.bool(forKey: homeFeedDensityMigrationKey) {
+            switch layout {
+            case .singleColumn: layout = .doubleColumn
+            case .borderedSingleColumn: layout = .borderedDoubleColumn
+            case .doubleColumn, .borderedDoubleColumn: break
+            }
+            defaults.set(layout.rawValue, forKey: homeFeedLayoutKey)
+            defaults.set(true, forKey: homeFeedDensityMigrationKey)
+        }
+        return layout
     }
 
     func setShowsHotSearches(_ isEnabled: Bool) {

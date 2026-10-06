@@ -73,6 +73,18 @@ private struct MediaShadowModifier: ViewModifier {
 }
 
 extension View {
+    /// A cover joined to metadata shares the card silhouette. Never put a
+    /// separate glass rim or shadow along the image-to-text edge.
+    func videoCardTopCover(cornerRadius: CGFloat = 16) -> some View {
+        clipShape(UnevenRoundedRectangle(
+            topLeadingRadius: cornerRadius,
+            bottomLeadingRadius: 0,
+            bottomTrailingRadius: 0,
+            topTrailingRadius: cornerRadius,
+            style: .continuous
+        ))
+    }
+
     func mediaShadow(_ level: MediaShadowLevel = .regular) -> some View {
         modifier(MediaShadowModifier(level: level, opacityScale: 1))
     }

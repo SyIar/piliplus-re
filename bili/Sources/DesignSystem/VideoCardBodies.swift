@@ -11,6 +11,7 @@ struct VideoCardElevatedBody<Cover: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             cover
+                .videoCardTopCover(cornerRadius: 14)
 
             VideoCardTextStack(
                 display: display,
@@ -22,7 +23,7 @@ struct VideoCardElevatedBody<Cover: View>: View {
             .padding(.top, 7)
             .padding(.bottom, 8)
         }
-        .piliGlassCard()
+        .piliGlassCard(radius: 14)
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(Color(.separator).opacity(0.10), lineWidth: 0.5)
@@ -40,9 +41,9 @@ struct VideoCardBlendedBody<Cover: View>: View {
     let usesGenericAuthorIcon: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 0) {
             cover
-                .videoCoverSurface(cornerRadius: 15, shadowLevel: .control)
+                .videoCardTopCover(cornerRadius: 15)
 
             VideoCardTextStack(
                 display: display,
@@ -51,6 +52,7 @@ struct VideoCardBlendedBody<Cover: View>: View {
                 usesGenericAuthorIcon: usesGenericAuthorIcon
             )
             .padding(.horizontal, 10)
+            .padding(.top, 8)
             .padding(.bottom, 10)
         }
         .piliGlassCard(radius: 15)
@@ -67,9 +69,9 @@ struct VideoCardBorderedBody<Cover: View>: View {
     private let cornerRadius: CGFloat = 18
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 0) {
             cover
-                .videoCardBorderedCover()
+                .videoCardTopCover(cornerRadius: cornerRadius)
 
             VideoCardTextStack(
                 display: display,
@@ -78,6 +80,7 @@ struct VideoCardBorderedBody<Cover: View>: View {
                 usesGenericAuthorIcon: usesGenericAuthorIcon
             )
             .padding(.horizontal, 10)
+            .padding(.top, 8)
             .padding(.bottom, 10)
         }
         .videoCardBorderedSurface(cornerRadius: cornerRadius)
@@ -247,9 +250,6 @@ extension View {
         modifier(VideoCardBorderedSurfaceModifier(cornerRadius: cornerRadius, showsShadow: showsShadow))
     }
 
-    func videoCardBorderedCover(cornerRadius: CGFloat = 14) -> some View {
-        videoCoverSurface(cornerRadius: cornerRadius, emphasizesBorder: true)
-    }
 }
 
 private struct CompactVideoResultSurfaceModifier: ViewModifier {

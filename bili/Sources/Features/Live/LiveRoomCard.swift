@@ -10,7 +10,7 @@ struct LiveRoomCard: View {
                 fallbackCoverURL: fallbackCoverURL,
                 avatarCoverFallbackURL: avatarCoverFallbackURL
             )
-            .videoCardBorderedCover()
+            .videoCardTopCover(cornerRadius: 18)
 
             LiveRoomCardMetadataRow(
                 room: room,

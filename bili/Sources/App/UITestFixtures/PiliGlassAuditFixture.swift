@@ -53,8 +53,16 @@ struct PiliGlassAuditFixture: View {
             }
             PiliAlertButton("取消", role: .cancel)
         } message: { "删除后无法恢复。" }
+        .onChange(of: library.appTintColorHex, initial: true) { _, _ in
+            PiliChunUIBridge.configure(tint: library.appTintColor)
+        }
         .task {
             let arguments = ProcessInfo.processInfo.arguments
+            if arguments.contains("--glass-preview-purple") {
+                library.setAppTintColorHex("#AF52DE")
+            } else if arguments.contains("--glass-preview-default") {
+                library.resetAppTintColor()
+            }
             guard arguments.contains("--glass-preview-sheet") || arguments.contains("--glass-preview-alert") else { return }
             try? await Task.sleep(for: .milliseconds(600))
             if arguments.contains("--glass-preview-sheet") { route = Route(id: 1) }

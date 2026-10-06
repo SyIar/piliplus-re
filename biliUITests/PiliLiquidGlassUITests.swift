@@ -45,6 +45,17 @@ final class PiliLiquidGlassUITests: XCTestCase {
         app.launch()
         let remove = app.buttons["glass.delete"]
         XCTAssertTrue(remove.waitForExistence(timeout: 15))
+        app.buttons["glass.settings"].tap()
+        let swatches = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "选择颜色 #"))
+        XCTAssertTrue(swatches.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertEqual(swatches.count, 8)
+        let rowY = swatches.firstMatch.frame.midY
+        for swatch in swatches.allElementsBoundByIndex {
+            XCTAssertTrue(swatch.isHittable)
+            XCTAssertEqual(swatch.frame.midY, rowY, accuracy: 1, "All eight colors must fit one row")
+        }
+        app.buttons["选择颜色 #AF52DE"].tap()
+        app.navigationBars.buttons.firstMatch.tap()
         remove.tap()
         XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
         app.buttons["取消"].firstMatch.tap()
@@ -52,6 +63,10 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 0 次")
         remove.tap()
         XCTAssertTrue(app.buttons["确认删除"].waitForExistence(timeout: 10))
+        let themedAlert = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        themedAlert.name = "Confirmation follows the selected purple theme"
+        themedAlert.lifetime = .keepAlways
+        add(themedAlert)
         app.buttons["确认删除"].tap()
         let once = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "已删除 1 次"), object: app.staticTexts["glass.deleted"])
         XCTAssertEqual(XCTWaiter.wait(for: [once], timeout: 10), .completed)
@@ -59,6 +74,9 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
         app.buttons["取消"].firstMatch.tap()
         XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 1 次")
+        app.buttons["glass.settings"].tap()
+        XCTAssertTrue(app.buttons["选择颜色 #3264F0"].waitForExistence(timeout: 10))
+        app.buttons["选择颜色 #3264F0"].tap()
     }
 
     @MainActor

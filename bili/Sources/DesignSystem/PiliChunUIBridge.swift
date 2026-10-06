@@ -10,6 +10,11 @@ enum PiliChunUIBridge {
         colors.primary = tint
         colors.ring = tint
         colors.info = tint
+        // ChunUI's colored confirmation variant reads this token. Keep all
+        // affirmative actions on the selected brand axis, including deletion.
+        colors.destructive = tint
+        colors.success = tint
+        colors.warning = tint
         var strings = CCStrings()
         strings.cancel = "取消"
         strings.confirm = "确定"

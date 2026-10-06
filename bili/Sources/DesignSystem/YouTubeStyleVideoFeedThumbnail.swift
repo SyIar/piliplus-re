@@ -7,7 +7,6 @@ struct YouTubeStyleVideoFeedThumbnail: View {
     let coverAspectRatio: CGFloat
     let fixedCoverSize: CGSize?
     let coverMaximumPixelLength: Int
-    let coverShadowLevel: MediaShadowLevel
     @State private var coverLoadedState = VideoCoverLoadedState()
 
     var body: some View {
@@ -35,7 +34,7 @@ struct YouTubeStyleVideoFeedThumbnail: View {
                 .clipped()
             }
             .frame(maxWidth: .infinity)
-            .videoCoverSurface(cornerRadius: 18, shadowLevel: coverShadowLevel)
+            .videoCardTopCover()
     }
 
     @ViewBuilder

@@ -18,8 +18,9 @@ extension EnvironmentValues {
     }
 }
 
-/// App composition of ChunUI surfaces. A sheet owns its material; rows inside it
-/// remain transparent so scrolling content never stacks multiple blur layers.
+/// The native grouped list owns the section outline. Row backgrounds have no
+/// independent rounded shape, stroke or glass rim: adjacent rows form one calm
+/// material surface, with only the section's outer corners rounded by SwiftUI.
 struct PiliGlassRowBackground: View {
     @Environment(\.piliPresentedPage) private var presented
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -32,11 +33,9 @@ struct PiliGlassRowBackground: View {
             } else if presented {
                 Color.cc.card.opacity(0.35)
             } else {
-                Color.clear.ccGlassEffect(.roundedRectangle(CGFloat.cc.base))
+                Rectangle().fill(.ultraThinMaterial)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: CGFloat.cc.base))
-        .padding(.vertical, 3)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -47,7 +46,8 @@ struct PiliForm<Content: View>: View {
     init(@ViewBuilder content: () -> Content) { self.content = content() }
     var body: some View {
         Form {
-            content.listRowBackground(PiliGlassRowBackground()).listRowSeparator(.hidden)
+            content.listRowBackground(PiliGlassRowBackground())
+                .listRowSeparatorTint(Color.cc.mutedForeground.opacity(0.16))
         }
         .buttonStyle(.borderless)
         .piliPageChrome()
@@ -59,7 +59,8 @@ struct PiliList<Content: View>: View {
     init(@ViewBuilder content: () -> Content) { self.content = content() }
     var body: some View {
         List {
-            content.listRowBackground(PiliGlassRowBackground()).listRowSeparator(.hidden)
+            content.listRowBackground(PiliGlassRowBackground())
+                .listRowSeparatorTint(Color.cc.mutedForeground.opacity(0.16))
         }
         .buttonStyle(.borderless)
         .piliPageChrome()
@@ -75,7 +76,8 @@ struct PiliSelectionList<Selection: Hashable, Content: View>: View {
     }
     var body: some View {
         List(selection: $selection) {
-            content.listRowBackground(PiliGlassRowBackground()).listRowSeparator(.hidden)
+            content.listRowBackground(PiliGlassRowBackground())
+                .listRowSeparatorTint(Color.cc.mutedForeground.opacity(0.16))
         }
         .buttonStyle(.borderless)
         .piliPageChrome()

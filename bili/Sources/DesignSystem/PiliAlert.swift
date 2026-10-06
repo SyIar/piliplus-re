@@ -35,8 +35,12 @@ final class PiliAlertSession: ObservableObject {
         guard requestID == nil else { return }
         self.onClose = onClose
         let mapped = actions.map { action in
+            // In the pinned ChunUI API, .default hardcodes foreground black;
+            // .destructive is the themeable filled variant. Only its visual
+            // role is mapped here; the source ButtonRole still drives safety
+            // prompts/cancellation and the original action is retained.
             CCAlertAction(title: action.title,
-                role: action.role == .destructive ? .destructive : action.role == .cancel ? .secondary : .default) { [weak self] in
+                role: action.role == .cancel ? .secondary : .destructive) { [weak self] in
                 guard let self, requestID != nil else { return }
                 action.action()
                 finish()

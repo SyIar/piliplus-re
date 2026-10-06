@@ -219,7 +219,6 @@ private struct MineThemeColorControl: View {
     @State private var tintHexDraft = ""
 
     private let swatchHexes = AppThemeTintColor.toneHexes
-    private let swatchColumns = Array(repeating: GridItem(.fixed(32), spacing: 12), count: 6)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -254,19 +253,22 @@ private struct MineThemeColorControl: View {
     private var selectedModeContent: some View {
         switch selectionMode {
         case .tone:
-            LazyVGrid(columns: swatchColumns, alignment: .leading, spacing: 12) {
+            HStack(spacing: 0) {
                 ForEach(swatchHexes, id: \.self) { hex in
                     Button {
                         libraryStore.setAppTintColorHex(hex)
                         tintHexDraft = libraryStore.appTintColorHex
                     } label: {
                         colorSwatch(hex)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("选择颜色 \(hex)")
+                    .accessibilityAddTraits(libraryStore.appTintColorHex == hex ? .isSelected : [])
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: 400, alignment: .leading)
         case .palette:
             VStack(alignment: .leading, spacing: 10) {
                 ColorPicker(
