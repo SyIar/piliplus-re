@@ -25,6 +25,9 @@ struct PiliDownloadSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                if viewModel.detail.isPGCEpisode || viewModel.detail.piliUGCSeason != nil {
+                    Section { NavigationLink("缓存整个合集 / 选择分集") { PiliCollectionDownloadView(api: viewModel.api, seed: viewModel.detail) } }
+                }
                 Section {
                     Text(viewModel.detail.title).ccText(font: .cc.baseBold, color: .cc.foreground)
                     Picker("下载内容", selection: $mediaKind) {

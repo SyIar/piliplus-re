@@ -85,12 +85,14 @@ final class PiliOfflineStore: ObservableObject {
                 && $0.effectiveMediaKind == .video && $0.quality == variant.quality }) else { continue }
             let title = pages.count > 1 || (video.pages?.count ?? 0) > 1
                 ? "\(video.title) · \(page.part ?? "P\(page.page ?? 1)")" : video.title
-            let item = OfflineDownloadItem(
+            var item = OfflineDownloadItem(
                 bvid: video.bvid, cid: page.cid, title: title, author: video.owner?.name ?? "",
                 coverURL: video.pic, duration: Double(page.duration ?? video.duration ?? 0),
                 quality: variant.quality, qualityTitle: variant.title, codec: variant.codec,
                 seasonID: video.pgcSeasonID, episodeID: video.pgcEpisodeID
             )
+            item.collectionID = video.piliUGCSeason?.id.map { "ugc:\($0)" }
+            item.collectionTitle = video.piliUGCSeason?.title ?? video.title
             updated.append(item)
             added += 1
         }
@@ -117,6 +119,8 @@ final class PiliOfflineStore: ObservableObject {
             )
             item.mediaKind = .audio
             item.audioQualityID = audio.stream.id
+            item.collectionID = video.piliUGCSeason?.id.map { "ugc:\($0)" }
+            item.collectionTitle = video.piliUGCSeason?.title ?? video.title
             updated.append(item)
             added += 1
         }

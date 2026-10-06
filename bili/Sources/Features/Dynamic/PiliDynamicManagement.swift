@@ -27,6 +27,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
     let api: BiliAPIClient
     @State private var composer: ComposerRoute?
     @State private var showsReport = false
+    @State private var showsExport = false
     @State private var confirmDelete = false
     @State private var message: String?
     @State private var busy = false
@@ -36,6 +37,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
         content.contextMenu {
             Button("转发动态", systemImage: "arrowshape.turn.up.right") { var draft = PiliDynamicDraft(); draft.repostID = item.idStr; composer = .init(draft: draft) }
             Button("复制动态文字", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.displayText ?? "" }
+            Button("保存完整动态", systemImage: "square.and.arrow.down") { showsExport = true }
             Button("举报动态", systemImage: "exclamationmark.bubble") { showsReport = true }
             if item.author?.mid == api.requestSnapshot(purpose: .main).currentUserMID {
                 if ["DYNAMIC_TYPE_WORD", "DYNAMIC_TYPE_DRAW", "DYNAMIC_TYPE_FORWARD"].contains(item.type ?? "") {
@@ -54,6 +56,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
         .sheet(isPresented: $showsReport) {
             NavigationStack { PiliContentReportView(api: api, target: .dynamic(id: item.idStr, author: item.author?.mid ?? 0)) }
         }
+        .sheet(isPresented: $showsExport) { PiliContentImageExportView(document: .dynamic(item)) }
         .confirmationDialog("删除这条动态？", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("删除", role: .destructive) { mutate("remove", identity: operationIdentity) }
         }

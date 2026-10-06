@@ -144,7 +144,7 @@ final class PiliBatchDownloadModel: ObservableObject {
     private func loadVideos(check: @MainActor () throws -> Void) async throws -> [VideoItem] {
         if case let .selected(videos) = request.source {
             var seen = Set<String>()
-            return videos.filter { !$0.bvid.isEmpty && seen.insert($0.bvid).inserted }
+            return videos.filter { !$0.bvid.isEmpty && seen.insert("\($0.bvid)|\($0.pgcEpisodeID ?? 0)").inserted }
         }
         var videos: [VideoItem] = []
         var seen = Set<String>()

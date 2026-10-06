@@ -92,8 +92,8 @@ struct PiliArticleParagraph: View {
     }
     private func image(_ raw: String) -> some View {
         VStack {
-            CachedRemoteImage(url: URL(string: raw.normalizedBiliURL()), targetPixelSize: 1600) { $0.resizable().scaledToFit() } placeholder: { ProgressView().frame(height: 120) }
-            if let url = URL(string: raw.normalizedBiliURL()) { ShareLink("保存或分享图片", item: url).font(.caption) }
+            ZoomyRemoteImage(url: URL(string: raw.normalizedBiliURL()), targetPixelSize: 1600,
+                cornerRadius: 8, contentMode: .fit) { ProgressView().frame(height: 120) }
         }
     }
     @ViewBuilder private func cardView(_ card: DynamicJSONValue) -> some View {

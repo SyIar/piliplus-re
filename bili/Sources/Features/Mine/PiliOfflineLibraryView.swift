@@ -7,12 +7,28 @@ struct PiliOfflineLibraryView: View {
     @State private var selection = Set<UUID>()
     @State private var editMode = EditMode.inactive
     @AppStorage("piliplus.offline.cellular") private var allowsCellular = false
+    @AppStorage("piliplus.offline.groupCollections") private var groupsCollections = true
+
+    private var groups: [(key: String, title: String, items: [OfflineDownloadItem])] {
+        if !groupsCollections { return [("all", "全部下载", store.items)] }
+        var order: [String] = [], values: [String: [OfflineDownloadItem]] = [:]
+        for item in store.items {
+            let key = item.collectionKey
+            if values[key] == nil { order.append(key) }
+            values[key, default: []].append(item)
+        }
+        return order.map { key in
+            let items = values[key] ?? []
+            return (key, items.first?.collectionTitle ?? items.first?.title ?? "合集", items)
+        }
+    }
 
     var body: some View {
         List(selection: $selection) {
             if let error = store.storageError { Text(error).ccText(font: .cc.sm, color: .cc.mutedForeground) }
             Section {
                 Toggle("允许蜂窝网络下载新任务", isOn: $allowsCellular)
+                Toggle("按视频 / 合集分组", isOn: $groupsCollections)
                 Text("已下载 \(ByteCountFormatter.string(fromByteCount: store.items.reduce(0) { $0 + $1.fileSize }, countStyle: .file))")
                     .ccText(font: .cc.sm, color: .cc.mutedForeground)
             }
@@ -23,7 +39,9 @@ struct PiliOfflineLibraryView: View {
                     Text("在视频播放页选择“离线下载”").ccText(font: .cc.sm, color: .cc.mutedForeground)
                 }.frame(maxWidth: .infinity).padding(.vertical, 36)
             } else {
-                ForEach(store.items) { item in
+                ForEach(groups, id: \.key) { group in
+                    Section(group.title) {
+                    ForEach(group.items) { item in
                     VStack(alignment: .leading, spacing: 12) {
                         if let url = try? PiliOfflineStorage.playbackURL(item), editMode != .active {
                             NavigationLink {
@@ -40,6 +58,8 @@ struct PiliOfflineLibraryView: View {
                     }
                     .padding(.vertical, 8)
                     .tag(item.id)
+                    }
+                    }
                 }
             }
         }

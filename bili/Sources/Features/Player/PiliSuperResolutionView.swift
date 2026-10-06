@@ -1,8 +1,10 @@
 import AVFoundation
 import CoreImage
-import MetalFX
 import MetalKit
 import SwiftUI
+#if canImport(MetalFX)
+import MetalFX
+#endif
 
 nonisolated enum PiliSuperResolutionPolicy {
     static let key = "piliplus.player.superResolution"
@@ -19,7 +21,13 @@ nonisolated enum PiliSuperResolutionPolicy {
 
 struct PiliSuperResolutionSettingsView: View {
     @AppStorage(PiliSuperResolutionPolicy.key) private var mode = 0
-    private var supported: Bool { MTLCreateSystemDefaultDevice().map { MTLFXSpatialScalerDescriptor.supportsDevice($0) } ?? false }
+    private var supported: Bool {
+#if canImport(MetalFX)
+        MTLCreateSystemDefaultDevice().map { MTLFXSpatialScalerDescriptor.supportsDevice($0) } ?? false
+#else
+        false
+#endif
+    }
     var body: some View {
         Form {
             Picker("超分辨率", selection: $mode) { Text("关闭").tag(0); Text("效率 · 最高 1.5 倍").tag(1); Text("画质 · 最高 2 倍").tag(2) }
@@ -35,6 +43,7 @@ struct PiliSuperResolutionSettingsView: View {
 
 /// The native AVPlayer remains underneath and continues to own audio, timing and PiP.
 /// Only SDR display frames are upscaled, with two GPU jobs at most and no CPU pixel copies.
+#if canImport(MetalFX)
 @MainActor
 final class PiliSuperResolutionView: MTKView, @preconcurrency MTKViewDelegate {
     private weak var player: AVPlayer?
@@ -130,3 +139,13 @@ nonisolated private final class PiliMetalFrameLifetime: @unchecked Sendable {
     let pixels: CVPixelBuffer
     init(texture: CVMetalTexture, pixels: CVPixelBuffer) { self.texture = texture; self.pixels = pixels }
 }
+#else
+@MainActor
+final class PiliSuperResolutionView: UIView {
+    init?(player: AVPlayer, item: AVPlayerItem, mode: Int) { return nil }
+    required init?(coder: NSCoder) { return nil }
+    func isUsing(_ item: AVPlayerItem) -> Bool { false }
+    func invalidateFrame() {}
+    func stop() { removeFromSuperview() }
+}
+#endif

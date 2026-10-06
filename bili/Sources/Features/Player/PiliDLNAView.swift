@@ -38,6 +38,20 @@ struct PiliDLNAView: View {
                         }
                         Button("定时停止") { PiliPlaybackToolsView.present() }
                     }
+                    if let queue = casting.queue, !queue.entries.isEmpty {
+                        Section("投屏列表") {
+                            HStack {
+                                Button("上一条") { casting.selectQueueItem(casting.queueIndex - 1) }.disabled(casting.queueIndex == 0)
+                                Spacer()
+                                Button("下一条") { casting.selectQueueItem(casting.queueIndex + 1) }.disabled(casting.queueIndex + 1 >= queue.entries.count)
+                            }
+                            ForEach(Array(queue.entries.enumerated()), id: \.element.id) { index, entry in
+                                Button { casting.selectQueueItem(index) } label: {
+                                    HStack { Text(entry.title); Spacer(); if index == casting.queueIndex { Image(systemName: "tv.fill") } }
+                                }
+                            }
+                        }.disabled(casting.isBusy)
+                    }
                 }
                 if source == nil, casting.renderer == nil, !casting.isBusy {
                     Section { Text("暂无正在播放的投屏，请在视频播放页或离线播放器中选择投屏。") }

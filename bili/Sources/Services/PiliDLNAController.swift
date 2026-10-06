@@ -9,6 +9,9 @@ struct PiliCastSource {
     let variant: PlayVariant?
     let localFile: URL?
     let headers: [String: String]
+    var queueLoader: (@MainActor () async throws -> PiliCastQueuePlan)? = nil
+    var queuePlan: PiliCastQueuePlan? = nil
+    var queueIndex: Int? = nil
 
     static func online(_ model: VideoDetailViewModel) throws -> Self {
         guard let variant = model.selectedPlayVariant, variant.videoURL != nil, variant.audioURL != nil else {
@@ -17,11 +20,12 @@ struct PiliCastSource {
         return Self(title: model.detail.title, duration: model.stablePlayerViewModel?.duration ?? 0,
                     position: model.stablePlayerViewModel?.currentTime ?? 0, variant: variant, localFile: nil,
                     headers: BiliHLSManifestBuilder.httpHeaders(referer: "https://www.bilibili.com/video/\(model.detail.bvid)",
-                                                                cookieHeader: model.api.requestSnapshot(purpose: .playback).cookieHeader))
+                                                                cookieHeader: model.api.requestSnapshot(purpose: .playback).cookieHeader),
+                    queueLoader: onlineQueue(model))
     }
     static func offline(_ model: PiliOfflinePlaybackModel) throws -> Self {
         Self(title: model.item.title, duration: model.item.duration, position: model.player.currentTime,
-             variant: nil, localFile: try PiliOfflineStorage.playbackURL(model.item), headers: [:])
+             variant: nil, localFile: try PiliOfflineStorage.playbackURL(model.item), headers: [:], queuePlan: offlineQueue(current: model.item))
     }
 }
 
@@ -36,6 +40,8 @@ final class PiliDLNAController: ObservableObject {
     @Published private(set) var duration: Double = 0
     @Published private(set) var volume: Double = 50
     @Published private(set) var errorMessage: String?
+    @Published private(set) var queue: PiliCastQueuePlan?
+    @Published private(set) var queueIndex = 0
     private let client = PiliDLNAClient()
     private var host: PiliCastingMediaHost?
     private var operationTask: Task<Void, Never>?
@@ -47,15 +53,20 @@ final class PiliDLNAController: ObservableObject {
 
     var hasActiveItem: Bool { renderer != nil || isBusy }
 
-    func start(_ source: PiliCastSource, on device: UPnPRenderer) {
+    func start(_ source: PiliCastSource, on device: UPnPRenderer, automatic: Bool = false) {
         guard !isBusy else { return }
+        if automatic, PiliSleepTimer.shared.policy.preventsAutomaticPlayback { return }
         isBusy = true; errorMessage = nil; timerStopRequested = false
-        PiliSleepTimer.shared.resumeManually()
+        if !automatic { PiliSleepTimer.shared.resumeManually() }
         operationTask = Task { [weak self] in
             guard let self else { return }
             defer { self.isBusy = false }
             var newHost: PiliCastingMediaHost?
             do {
+                var plan = source.queuePlan
+                if plan == nil, let loader = source.queueLoader { plan = try await loader() }
+                try Task.checkCancellation()
+                if automatic, PiliSleepTimer.shared.shouldStopAtPlaybackEnd() { throw CancellationError() }
                 if self.renderer != nil { try await self.stopCurrent() }
                 let token = UUID(); self.generation = token
                 let address = try PiliLANAddress.currentIPv4()
@@ -69,6 +80,7 @@ final class PiliDLNAController: ObservableObject {
                 try Task.checkCancellation()
                 guard let prepared = newHost, !self.timerStopRequested else { throw CancellationError() }
                 self.renderer = device; self.host = prepared; self.title = source.title
+                self.queue = plan; self.queueIndex = source.queueIndex ?? plan?.initialIndex ?? 0
                 self.duration = source.duration; self.position = 0; self.hasPlayed = false; self.didReachEnd = false
                 try await self.client.command("SetAVTransportURI", service: device.transport, arguments: [
                     ("CurrentURI", prepared.url.absoluteString),
@@ -94,6 +106,27 @@ final class PiliDLNAController: ObservableObject {
             }
         }
     }
+    func selectQueueItem(_ index: Int, automatic: Bool = false) {
+        guard !isBusy, let queue, queue.entries.indices.contains(index), let device = renderer else { return }
+        if automatic, PiliSleepTimer.shared.shouldStopAtPlaybackEnd() { stopForTimer(); return }
+        if !automatic { PiliSleepTimer.shared.resumeManually() }
+        let token = generation
+        isBusy = true; errorMessage = nil
+        operationTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                var source = try await queue.entries[index].resolve()
+                try Task.checkCancellation()
+                guard self.generation == token else { self.isBusy = false; return }
+                source.queuePlan = queue; source.queueIndex = index
+                self.isBusy = false
+                self.start(source, on: device, automatic: automatic)
+            } catch {
+                self.isBusy = false
+                if !Task.isCancelled { self.errorMessage = "无法播放下一条：\(error.localizedDescription)" }
+            }
+        }
+    }
     func playPause() {
         guard let renderer else { return }
         let play = !isPlaying
@@ -102,6 +135,7 @@ final class PiliDLNAController: ObservableObject {
             try await self.client.command(play ? "Play" : "Pause", service: renderer.transport,
                                            arguments: play ? [("Speed", "1")] : [])
             self.isPlaying = play
+            if play { self.didReachEnd = false }
         }
     }
     func seek(_ time: Double) {
@@ -147,6 +181,7 @@ final class PiliDLNAController: ObservableObject {
             throw error
         }
         host?.stop(); host = nil; self.renderer = nil
+        queue = nil; queueIndex = 0
         isPlaying = false; position = 0; title = ""; timerStopRequested = false
     }
     private func perform(_ action: @escaping @MainActor () async throws -> Void) {
@@ -168,15 +203,25 @@ final class PiliDLNAController: ObservableObject {
                         let time = try await self.client.command("GetPositionInfo", service: device.transport)
                         let transport = try await self.client.command("GetTransportInfo", service: device.transport)
                         guard !Task.isCancelled, self.generation == token, !self.isBusy else { continue }
+                        let previousPosition = self.position
                         if let value = UPnPSOAP.seconds(time["RelTime"]) { self.position = value }
                         if let value = UPnPSOAP.seconds(time["TrackDuration"]), value > 0 { self.duration = value }
                         let state = transport["CurrentTransportState"] ?? ""
                         self.isPlaying = state == "PLAYING" || state == "TRANSITIONING"
                         if state == "PLAYING" { self.hasPlayed = true }
                         if state == "STOPPED", self.hasPlayed, !self.didReachEnd,
-                           self.duration > 0, self.position >= self.duration - 3 {
+                           self.duration > 0, max(self.position, previousPosition) >= self.duration - 3 {
                             self.didReachEnd = true
-                            if PiliSleepTimer.shared.shouldStopAtPlaybackEnd() { self.stopForTimer() }
+                            let stops = PiliSleepTimer.shared.shouldStopAtPlaybackEnd()
+                            if stops { self.stopForTimer() }
+                            else {
+                                switch PlaybackEndPolicy.resolve(order: PiliPlaybackPreferences.shared.order, currentIndex: self.queueIndex,
+                                    count: self.queue?.entries.count ?? 0, sleepTimerStops: false) {
+                                case .advance(let index): self.selectQueueItem(index, automatic: true)
+                                case .replay: self.selectQueueItem(self.queueIndex, automatic: true)
+                                case .stop, .loadRelated: break
+                                }
+                            }
                         }
                     } catch {
                         guard !Task.isCancelled, self.generation == token else { return }

@@ -57,6 +57,10 @@ public struct OfflineDownloadItem: Identifiable, Codable, Hashable, Sendable {
     // Optional stored fields keep indexes written before audio-only downloads readable.
     public var mediaKind: OfflineMediaKind?
     public var audioQualityID: Int?
+    public var collectionID: String?
+    public var collectionTitle: String?
+
+    public var collectionKey: String { collectionID ?? seasonID.map { "season:\($0)" } ?? "video:\(bvid)" }
 
     public init(id: UUID = UUID(), bvid: String, cid: Int, title: String, author: String,
                 coverURL: String?, duration: Double, quality: Int, qualityTitle: String,
