@@ -53,6 +53,7 @@ struct MineContentView: View {
                 }
             }
             Section("数据") {
+                NavigationLink { PiliAccountUtilitiesView() } label: { Label("账号记录与空间隐私", systemImage: "person.text.rectangle") }
                 NavigationLink { PiliCoursesView(api: dependencies.api) } label: { Label("收藏的课程", systemImage: "graduationcap") }
                 Button {
                     AppHelper.shared.presentSheet(.sheet) { PiliNotesLibraryView(api: dependencies.api) }

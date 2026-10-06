@@ -4656,7 +4656,6 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
-    @MainActor
     func testPGCCatalogueUsesServerFiltersAndTimelineResultEnvelope() async throws {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
@@ -4727,6 +4726,74 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         XCTAssertEqual(counter.currentValue, 3)
     }
 
+    @MainActor
+    func testSpacePrivacyAndPGCReviewsPreserveWireSemanticsAndDoNotRetryWrites() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/space/setting/app" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"privacy":{"disable_following":1,"fav_video":0,"future":9}}}"#)
+            }
+            if request.url?.path == "/pgc/review/long/list" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"next":"cursor2","count":0,"list":[{"review_id":42,"article_id":50,"score":10,"author":{"mid":9,"uname":"作者"},"content":"长评","stat":{"likes":3}}]}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=utilities; DedeUserID=1001; bili_jct=utilities-csrf")
+        let identity = PiliAccountIdentity(api.requestSnapshot())
+        let values = try await api.piliSpacePrivacy(identity: identity)
+        XCTAssertEqual(values, ["disable_following": 1, "fav_video": 0])
+        try await api.piliSaveSpacePrivacy(["disable_following": 0], identity: identity)
+        var request = try XCTUnwrap(recorder.request)
+        XCTAssertEqual(request.url?.path, "/x/space/privacy/batch/modify")
+        var fields = formValues(in: request)
+        XCTAssertEqual(fields["disable_following"], "0"); XCTAssertNil(fields["fav_video"])
+        XCTAssertEqual(fields["csrf"], "utilities-csrf")
+        let reviews = try await api.piliPGCReviews(mediaID: 4, long: true, latest: true, cursor: "cursor1")
+        XCTAssertNil(reviews.total); XCTAssertEqual(reviews.next, "cursor2"); XCTAssertEqual(reviews.items.first?.articleID, 50)
+        try await api.piliMutatePGCReview(mediaID: 4, action: .save(id: nil, score: 8, text: "A+B", share: false), identity: identity)
+        request = try XCTUnwrap(recorder.request); fields = formValues(in: request)
+        XCTAssertEqual(request.url?.path, "/pgc/review/short/post")
+        XCTAssertEqual(fields["content"], "A+B"); XCTAssertEqual(fields["score"], "8"); XCTAssertNil(fields["share_feed"])
+        try await api.piliMutatePGCReview(mediaID: 4, action: .like(42), identity: identity)
+        XCTAssertEqual(formValues(in: try XCTUnwrap(recorder.request))["review_type"], "2")
+        do {
+            try await api.piliSaveSpacePrivacy(["fav_video": 1], identity: .init(mid: 2, version: identity.version))
+            XCTFail("An old account must not write privacy settings")
+        } catch { }
+        XCTAssertEqual(recorder.request?.url?.path, "/pgc/review/action/like")
+    }
+
+    @MainActor
+    func testDiscoveryKeepsWeeklyNumbersRankingTypesAndPreciousPagination() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png","sub_url":"https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png"}}}"#)
+            }
+            if request.url?.path == "/x/web-interface/popular/series/list" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"number":400,"name":"第 400 期"}]}}"#)
+            }
+            if request.url?.path == "/pgc/web/rank/list" {
+                return Self.response(for: request, body: #"{"code":0,"result":{"list":[{"season_id":3,"title":"番剧"}]}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"aid":1,"bvid":"BV1test","title":"每周视频"}]}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "")
+        let issues = try await api.piliWeeklyIssues(); XCTAssertEqual(issues.first?.id, 400)
+        let weekly = try await api.piliDiscoveryVideos(weekly: 400)
+        XCTAssertEqual(weekly.videos.first?.title, "每周视频"); XCTAssertFalse(weekly.more)
+        var query = URLComponents(url: try XCTUnwrap(recorder.request?.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertTrue(query.contains(.init(name: "number", value: "400")))
+        XCTAssertTrue(query.contains { $0.name == "w_rid" })
+        let ranks = try await api.piliDiscoveryVideos(rank: PiliRankCategory.all[1]); XCTAssertEqual(ranks.media.first?.seasonID, 3)
+        _ = try await api.piliDiscoveryVideos(preciousPage: 2)
+        query = URLComponents(url: try XCTUnwrap(recorder.request?.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertTrue(query.contains(.init(name: "page", value: "2"))); XCTAssertTrue(query.contains(.init(name: "page_size", value: "100")))
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

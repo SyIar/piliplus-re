@@ -9,7 +9,7 @@ extension HomeFeedPageCoordinator {
     ) async throws -> [VideoItem] {
         switch mode {
         case .popular:
-            return try await api.fetchPopularVideos(page: popularPage)
+            return filterFeedRecommendations(try await api.fetchPopularVideos(page: popularPage))
         case .recommend:
             if usesNativeAppRecommendSource(for: mode) {
                 return filterFeedRecommendations(try await api.fetchRecommendFeed(

@@ -77,6 +77,16 @@ final class VideoRecommendationFilterTests: XCTestCase {
         )
     }
 
+    func testBlacklistedAuthorsRemainHiddenWhenOtherRelatedFiltersAreOff() throws {
+        let videos = try JSONDecoder().decode([VideoItem].self, from: Data(#"[{"bvid":"BV-blocked","title":"blocked","owner":{"mid":9,"name":"blocked"}},{"bvid":"BV-kept","title":"kept","owner":{"mid":10,"name":"kept"}}]"#.utf8))
+        let configuration = VideoRecommendationFilterConfiguration(minimumDurationSeconds: 0, minimumViewCount: 0,
+            minimumLikeRatioPercent: 0, blockedKeywords: [], appliesToRelatedVideos: false, blockedUserIDs: [9])
+        XCTAssertEqual(VideoRecommendationFilter.filtered(videos, configuration: configuration, context: .feed).map(\.bvid), ["BV-kept"])
+        XCTAssertEqual(VideoRecommendationFilter.filtered(videos, configuration: configuration, context: .related).map(\.bvid), ["BV-kept"])
+        let privacy = try XCTUnwrap(PiliSpacePrivacyField.all.first { $0.id == "disable_following" })
+        XCTAssertTrue(privacy.isOn(0)); XCTAssertEqual(privacy.value(true), 0); XCTAssertEqual(privacy.value(false), 1)
+    }
+
     private func video(
         _ bvid: String,
         title: String,

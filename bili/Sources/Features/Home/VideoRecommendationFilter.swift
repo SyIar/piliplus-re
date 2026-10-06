@@ -11,12 +11,14 @@ nonisolated struct VideoRecommendationFilterConfiguration: Equatable, Sendable {
     let minimumLikeRatioPercent: Int
     let blockedKeywords: [String]
     let appliesToRelatedVideos: Bool
+    var blockedUserIDs: Set<Int> = []
 
     var isActive: Bool {
         minimumDurationSeconds > 0
             || minimumViewCount > 0
             || minimumLikeRatioPercent > 0
             || !blockedKeywords.isEmpty
+            || !blockedUserIDs.isEmpty
     }
 }
 
@@ -27,7 +29,9 @@ nonisolated enum VideoRecommendationFilter {
         context: VideoRecommendationFilterContext
     ) -> [VideoItem] {
         guard configuration.isActive else { return videos }
-        guard context == .feed || configuration.appliesToRelatedVideos else { return videos }
+        guard context == .feed || configuration.appliesToRelatedVideos else {
+            return videos.filter { !configuration.blockedUserIDs.contains($0.owner?.mid ?? 0) }
+        }
         return videos.filter { includes($0, configuration: configuration) }
     }
 
@@ -35,6 +39,7 @@ nonisolated enum VideoRecommendationFilter {
         _ video: VideoItem,
         configuration: VideoRecommendationFilterConfiguration
     ) -> Bool {
+        if configuration.blockedUserIDs.contains(video.owner?.mid ?? 0) { return false }
         if configuration.minimumDurationSeconds > 0,
            let duration = video.duration,
            duration > 0,
@@ -86,7 +91,8 @@ extension LibraryStore {
             minimumViewCount: recommendMinimumViewCount,
             minimumLikeRatioPercent: recommendMinimumLikeRatioPercent,
             blockedKeywords: blockedRecommendKeywords,
-            appliesToRelatedVideos: appliesRecommendFiltersToRelatedVideos
+            appliesToRelatedVideos: appliesRecommendFiltersToRelatedVideos,
+            blockedUserIDs: PiliBlacklistedCreators.shared.effectiveIDs
         )
     }
 }

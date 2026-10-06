@@ -58,6 +58,14 @@ struct HomeFeedNavigationChrome: ViewModifier {
                 .sharedBackgroundVisibility(.hidden)
             }
             .nativeTopNavigationChrome()
+            .task(id: PiliAccountIdentity(viewModel.pageCoordinator.api.requestSnapshot())) {
+                await PiliBlacklistedCreators.shared.refresh(api: viewModel.pageCoordinator.api)
+            }
+            .onReceive(PiliBlacklistedCreators.shared.$ids) { ids in
+                guard UserDefaults.standard.object(forKey: "piliplus.filter.blacklistedCreators") as? Bool ?? true else { return }
+                let kept = viewModel.videos.filter { !ids.contains($0.owner?.mid ?? 0) }
+                if kept.count != viewModel.videos.count { viewModel.updateFeed(kept) }
+            }
     }
 
     private var hidesNavigationChrome: Bool {

@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct MineContentFilterSettingsView: View {
+    @EnvironmentObject private var dependencies: AppDependencies
+    @AppStorage("piliplus.filter.blacklistedCreators") private var blocksCreators = true
+    @ObservedObject private var blacklisted = PiliBlacklistedCreators.shared
     @ObservedObject var libraryStore: LibraryStore
 
     var body: some View {
@@ -42,6 +45,9 @@ struct MineContentFilterSettingsView: View {
             }
 
             Section("推荐过滤") {
+                Toggle("屏蔽黑名单用户的视频", isOn: $blocksCreators)
+                Button("同步黑名单（\(blacklisted.ids.count) 位）") { Task { await blacklisted.refresh(api: dependencies.api, force: true) } }
+                if let error = blacklisted.error { Text(error).font(.caption).foregroundStyle(.secondary) }
                 Picker(selection: Binding(
                     get: { libraryStore.recommendMinimumDurationSeconds },
                     set: { libraryStore.setRecommendMinimumDurationSeconds($0) }

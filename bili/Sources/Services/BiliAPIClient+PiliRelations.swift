@@ -174,6 +174,12 @@ extension BiliAPIClient {
             referer: referer, userAgent: Self.webUserAgent, cookieHeader: context.cookieHeader, additionalHeaders: headers,
             retryPolicy: .init(label: "relationMutation", attempts: 1, baseDelayNanoseconds: 0, maxDelayNanoseconds: 0, jitterNanoseconds: 0))
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
+        guard identity.matches(requestSnapshot()) else { throw PiliOfflineError.message("账号已切换") }
+        switch action {
+        case .block(let mid): PiliBlacklistedCreators.shared.didChange(mid: mid, blocked: true, account: identity)
+        case .unblock(let mid): PiliBlacklistedCreators.shared.didChange(mid: mid, blocked: false, account: identity)
+        default: break
+        }
         return response.payload?.objectValueForDynamicParsing?["tagid"]?.intValueForDynamicParsing
     }
 }

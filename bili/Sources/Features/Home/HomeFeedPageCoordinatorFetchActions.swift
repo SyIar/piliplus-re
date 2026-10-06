@@ -19,7 +19,7 @@ extension HomeFeedPageCoordinator {
             }
             return filterFeedRecommendations(try await api.fetchRecommendFeed(freshIndex: freshIndex))
         case .popular:
-            return try await api.fetchPopularVideos(page: popularPage)
+            return filterFeedRecommendations(try await api.fetchPopularVideos(page: popularPage))
         }
     }
 }

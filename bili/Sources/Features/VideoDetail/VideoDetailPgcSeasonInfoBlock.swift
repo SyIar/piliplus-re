@@ -6,6 +6,8 @@ struct VideoDetailPgcSeasonInfoBlock: View {
 
     @Environment(\.appThemeTintColor) private var appTintColor
     @State private var isDescriptionExpanded = false
+    @State private var showsReviews = false
+    @EnvironmentObject private var dependencies: AppDependencies
 
     private var episodeCount: Int {
         season.selectableEpisodes.count
@@ -58,6 +60,9 @@ struct VideoDetailPgcSeasonInfoBlock: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            if let mediaID = season.mediaID, mediaID > 0, !detail.piliIsCourse {
+                Button("评分与点评", systemImage: "star.bubble") { showsReviews = true }
+            }
             if let descriptionText {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(descriptionText)
@@ -80,8 +85,11 @@ struct VideoDetailPgcSeasonInfoBlock: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel("番剧 \(season.displayTitle)")
+        .sheet(isPresented: $showsReviews) {
+            if let mediaID = season.mediaID { NavigationStack { PiliPGCReviewsView(api: dependencies.api, mediaID: mediaID, title: season.displayTitle) } }
+        }
     }
 
     private func normalizedText(_ text: String?) -> String? {

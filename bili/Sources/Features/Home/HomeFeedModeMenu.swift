@@ -14,6 +14,7 @@ struct HomeFeedModeMenu: View {
                 }
             }
             Divider()
+            NavigationLink { PiliDiscoveryView() } label: { Label("每周必看与排行榜", systemImage: "chart.bar.xaxis") }
             NavigationLink { PiliPGCCatalogueView() } label: { Label("番剧与影视", systemImage: "film") }
         } label: {
             HStack(spacing: 6) {

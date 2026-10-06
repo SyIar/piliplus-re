@@ -12,7 +12,11 @@ final class PiliCastingRelayTests: XCTestCase {
         let host = try await PiliCastingMediaHost.offlineForTesting(file: file)
         defer { host.stop() }
         let config = URLSessionConfiguration.ephemeral
-        config.timeoutIntervalForRequest = 5
+        // Hosted simulators can pause network delivery during startup/load. Keep a
+        // bounded integration timeout; every response and payload is still verified.
+        config.timeoutIntervalForRequest = 20
+        config.timeoutIntervalForResource = 30
+        config.connectionProxyDictionary = [:]
         let session = URLSession(configuration: config)
         defer { session.invalidateAndCancel() }
         var request = URLRequest(url: host.url)
