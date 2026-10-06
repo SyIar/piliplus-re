@@ -87,6 +87,38 @@ final class VideoRecommendationFilterTests: XCTestCase {
         XCTAssertTrue(privacy.isOn(0)); XCTAssertEqual(privacy.value(true), 0); XCTAssertEqual(privacy.value(false), 1)
     }
 
+    @MainActor
+    func testStaleFeedCommitRechecksFiltersAndRemapsSeenBoundary() throws {
+        let suiteName = "PiliFeedCommitTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let library = LibraryStore(userDefaults: defaults)
+        let session = SessionStore(keychain: KeychainStore(service: suiteName))
+        let api = BiliAPIClient(sessionStore: session, libraryStore: library, homeRecommendDiagnosticsStore: .shared)
+        let model = HomeViewModel(api: api, libraryStore: library, sessionStore: session)
+        let snapshot = try JSONDecoder().decode([VideoItem].self, from: Data(#"[{"bvid":"BV-new","title":"new","owner":{"mid":10}},{"bvid":"BV-ad-new","title":"广告 new","owner":{"mid":9}},{"bvid":"BV-new2","title":"new2","owner":{"mid":11}},{"bvid":"BV-ad-old","title":"广告 old","owner":{"mid":9}},{"bvid":"BV-old","title":"old","owner":{"mid":12}}]"#.utf8))
+
+        model.updateFeed(snapshot, lastSeenMarkerIndex: 3, blockedUserIDs: [])
+        XCTAssertEqual(model.videos.count, 5)
+        XCTAssertEqual(model.lastSeenMarkerIndex, 3)
+
+        // An earlier request/cached snapshot arrives after the user changes filtering.
+        library.setBlockedRecommendKeywords(["广告"])
+        model.updateFeed(snapshot, lastSeenMarkerIndex: 3, blockedUserIDs: [])
+        XCTAssertEqual(model.videos.map(\.bvid), ["BV-new", "BV-new2", "BV-old"])
+        XCTAssertEqual(model.videoCells.count, 3)
+        XCTAssertEqual(model.lastSeenMarkerIndex, 2)
+
+        // The @Published blacklist callback carries the next value before storage updates.
+        library.setBlockedRecommendKeywords([])
+        model.updateFeed(snapshot, lastSeenMarkerIndex: 3, blockedUserIDs: [9])
+        XCTAssertEqual(model.videos.map(\.bvid), ["BV-new", "BV-new2", "BV-old"])
+        XCTAssertEqual(model.lastSeenMarkerIndex, 2)
+        model.updateFeed(snapshot, lastSeenMarkerIndex: 3, blockedUserIDs: [9, 10, 11])
+        XCTAssertEqual(model.videos.map(\.bvid), ["BV-old"])
+        XCTAssertNil(model.lastSeenMarkerIndex)
+    }
+
     private func video(
         _ bvid: String,
         title: String,

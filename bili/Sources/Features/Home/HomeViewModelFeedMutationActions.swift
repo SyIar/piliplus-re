@@ -13,27 +13,25 @@ extension HomeViewModel {
             preservesExistingRecommendations: shouldPreserveExistingRecommendations,
             usesNativeReplacement: pageCoordinator.usesNativeAppRecommendSource(for: mode)
         )
-        updateFeed(mergedFeed.videos)
-        updateLastSeenMarkerIndex(mergedFeed.lastSeenMarkerIndex)
-        exposureRecorder.recordIfNeeded(mergedFeed.videos, mode: mode)
+        updateFeed(mergedFeed.videos, lastSeenMarkerIndex: mergedFeed.lastSeenMarkerIndex)
+        exposureRecorder.recordIfNeeded(videos, mode: mode)
         Task {
             await ResourceLoadingForegroundPriorityGate.shared.beginFirstScreenPriorityWindow(for: .home)
         }
-        mediaPreloadCoordinator.scheduleImagePrefetch(for: mergedFeed.videos)
-        mediaPreloadCoordinator.schedulePlaybackPreload(for: newVideos, initialDelay: 0.75)
+        mediaPreloadCoordinator.scheduleImagePrefetch(for: videos)
+        mediaPreloadCoordinator.schedulePlaybackPreload(for: pageCoordinator.filterFeedRecommendations(newVideos), initialDelay: 0.75)
         scheduleRecommendMetadataHydration(
-            for: mergedFeed.videos,
+            for: videos,
             revision: requestRevision,
             reason: "refresh"
         )
     }
 
     func appendUnique(_ more: [VideoItem]) {
-        let unique = HomeFeedMergePolicy.uniqueAppendVideos(more, to: videos)
+        let unique = HomeFeedMergePolicy.uniqueAppendVideos(pageCoordinator.filterFeedRecommendations(more), to: videos)
         guard !unique.isEmpty else { return }
-        updateFeed(videos + unique)
+        updateFeed(videos + unique, lastSeenMarkerIndex: lastSeenMarkerIndex)
         exposureRecorder.recordIfNeeded(unique, mode: mode)
-        updateLastSeenMarkerIndex(lastSeenMarkerIndex)
         snapshotCoordinator.save(
             videos: videos,
             mode: mode,
@@ -53,13 +51,12 @@ extension HomeViewModel {
         guard let snapshot = snapshotCoordinator.load(mode: mode),
               !snapshot.videos.isEmpty
         else { return }
-        updateFeed(snapshot.videos)
-        updateLastSeenMarkerIndex(snapshot.lastSeenMarkerIndex)
+        updateFeed(snapshot.videos, lastSeenMarkerIndex: snapshot.lastSeenMarkerIndex)
         state = .loaded
         Task {
             await ResourceLoadingForegroundPriorityGate.shared.beginFirstScreenPriorityWindow(for: .home)
         }
-        mediaPreloadCoordinator.scheduleImagePrefetch(for: Array(snapshot.videos.prefix(8)))
+        mediaPreloadCoordinator.scheduleImagePrefetch(for: Array(videos.prefix(8)))
     }
 
 }

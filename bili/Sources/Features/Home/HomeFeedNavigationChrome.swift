@@ -64,7 +64,11 @@ struct HomeFeedNavigationChrome: ViewModifier {
             .onReceive(PiliBlacklistedCreators.shared.$ids) { ids in
                 guard UserDefaults.standard.object(forKey: "piliplus.filter.blacklistedCreators") as? Bool ?? true else { return }
                 let kept = viewModel.videos.filter { !ids.contains($0.owner?.mid ?? 0) }
-                if kept.count != viewModel.videos.count { viewModel.updateFeed(kept) }
+                if kept.count != viewModel.videos.count {
+                    // @Published sends before storage changes; use the incoming snapshot.
+                    viewModel.updateFeed(viewModel.videos, lastSeenMarkerIndex: viewModel.lastSeenMarkerIndex,
+                                         blockedUserIDs: ids)
+                }
             }
     }
 

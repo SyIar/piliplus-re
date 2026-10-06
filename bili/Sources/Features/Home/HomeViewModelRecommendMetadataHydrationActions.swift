@@ -81,7 +81,7 @@ extension HomeViewModel {
         }
 
         guard didChange else { return }
-        updateFeed(mergedVideos)
+        updateFeed(mergedVideos, lastSeenMarkerIndex: lastSeenMarkerIndex)
         snapshotCoordinator.save(
             videos: videos,
             mode: mode,

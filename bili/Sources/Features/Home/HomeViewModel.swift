@@ -69,10 +69,25 @@ final class HomeViewModel: ObservableObject {
         recommendMetadataHydrationTasks.values.forEach { $0.cancel() }
     }
 
-    func updateFeed(_ newVideos: [VideoItem]) {
-        videoCells = cellStore.update(with: newVideos)
-        videos = newVideos
-        if !newVideos.isEmpty {
+    func updateFeed(
+        _ newVideos: [VideoItem],
+        lastSeenMarkerIndex markerIndex: Int? = nil,
+        blockedUserIDs: Set<Int>? = nil
+    ) {
+        // Refreshes, cached snapshots and metadata hydration can outlive a filter change.
+        // Recheck at the commit boundary, including retained cards from older requests.
+        var configuration = libraryStore.videoRecommendationFilterConfiguration
+        if let blockedUserIDs { configuration.blockedUserIDs = blockedUserIDs }
+        let filtered = VideoRecommendationFilter.filtered(newVideos, configuration: configuration, context: .feed)
+        let filteredMarker = markerIndex.flatMap { index -> Int? in
+            guard index > 0, index < newVideos.count else { return nil }
+            let retainedIDs = Set(filtered.map(\.id))
+            return newVideos.prefix(index).filter { retainedIDs.contains($0.id) }.count
+        }
+        videoCells = cellStore.update(with: filtered)
+        videos = filtered
+        updateLastSeenMarkerIndex(filteredMarker)
+        if !filtered.isEmpty {
             StageOneBaselineMetricsStore.shared.markHomeFirstData()
         }
     }

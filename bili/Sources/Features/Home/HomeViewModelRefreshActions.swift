@@ -55,8 +55,7 @@ extension HomeViewModel {
         } catch {
             guard revision == requestRevision else { return }
             if preservesExistingRecommendations, !previousVideos.isEmpty {
-                updateFeed(previousVideos)
-                updateLastSeenMarkerIndex(previousLastSeenMarkerIndex)
+                updateFeed(previousVideos, lastSeenMarkerIndex: previousLastSeenMarkerIndex)
                 state = .loaded
                 return
             }

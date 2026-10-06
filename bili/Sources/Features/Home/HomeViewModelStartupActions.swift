@@ -29,8 +29,7 @@ extension HomeViewModel {
         updateLastSeenMarkerIndex(nil)
         updateFeed([])
         if newMode == .recommend, !retainedRecommendVideos.isEmpty {
-            updateFeed(retainedRecommendVideos)
-            updateLastSeenMarkerIndex(retainedRecommendLastSeenMarkerIndex)
+            updateFeed(retainedRecommendVideos, lastSeenMarkerIndex: retainedRecommendLastSeenMarkerIndex)
             state = .loaded
         } else {
             restoreCachedVideosIfAvailable()

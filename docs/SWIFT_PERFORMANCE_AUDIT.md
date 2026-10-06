@@ -12,7 +12,6 @@
 | [Apple：Reducing disk writes](https://developer.apple.com/documentation/xcode/reducing-disk-writes) | 合并小写入，图片与文字草稿分开，使用原子更新保留失败恢复能力。 |
 | [Foundation：UserDefaults.synchronize](https://developer.apple.com/documentation/foundation/userdefaults/synchronize()) | Apple 明确说明此方法不必要且不应使用。正常 set 已由系统异步持久化，不应在播放历史保存路径等待同步。 |
 | [Swift 6.2 Released](https://www.swift.org/blog/swift-6.2-released/) | 在新的并发规则下，async 本身不保证离开调用者 actor。明确隔离 CPU/磁盘任务，同时保持可取消性和 Sendable 边界。 |
-
 | [Apple：ProMotion 帧率策略](https://developer.apple.com/documentation/quartzcore/optimizing-iphone-and-ipad-apps-to-support-promotion-displays) | SwiftUI/UIKit 已参与系统帧率调度；CADisplayLink 的帧率是偏好，不能保证 120 Hz。按显示器、温度、电量和前后台条件停止不必要回调。 |
 
 ## 已定位并处理
@@ -30,7 +29,7 @@
 9. **GPU 超分预算**：输入最多 1920、输出最多 2560 像素边长，同步中的 GPU 命令最多两份；HDR/VR/PiP、后台、低电量或温控约束时退回正常视频路径。模拟器/不支持 MetalFX 的设备不会假装启用 GPU 效果。
 10. **长响应与渲染热点**：高能曲线限制响应大小并预采样至最多 400 点，使用 Canvas；SponsorBlock 拉取/解码移到明确并发路径并限制响应/片段数，自动分类集合缓存，播放时钟回调不每帧解析 UserDefaults。
 11. **评论归档**：独立 actor 顺序读写、16 MB 文件上限、最近 2,000 条、原子落盘；坏备份不会覆盖旧数据。发布已在服务端成功时，本机保存失败不把它改为可重试的网络失败，避免重复发评。
-12. **结果过期与账号隔离**：分页加载使用代次标记；旧筛选/旧账号结果不能回填新列表。黑名单在账号内做有限缓存，关系操作后立即更新，不在每个视频卡片里重复读接口。
+12. **结果过期与账号隔离**：分页加载使用代次标记；旧筛选/旧账号结果不能回填新列表。黑名单在账号内做有限缓存，关系操作后立即更新，不在每个视频卡片里重复读接口。首页在列表写回时再次应用最新过滤，防止保留列表、缓存恢复或元数据补全带回已屏蔽内容，并重新计算“上次看到这里”的边界。
 
 缩图的收益是可验证的像素数量上界下降。没有在此报告声称实测节省多少 MB；JPEG/HEIF 解码缓冲、色彩空间、操作系统缓存和设备差异均会影响进程峰值。
 
