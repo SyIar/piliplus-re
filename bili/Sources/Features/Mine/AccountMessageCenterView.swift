@@ -3,12 +3,14 @@ import SwiftUI
 struct AccountMessageCenterView: View {
     @ObservedObject var viewModel: AccountMessageCenterViewModel
     @EnvironmentObject private var sessionStore: SessionStore
+    @EnvironmentObject private var dependencies: AppDependencies
     @State private var showsDiagnostics = false
 
     var body: some View {
         List {
             if sessionStore.isLoggedIn {
                 Section {
+                    NavigationLink { PiliMessageSettingsView(api: dependencies.api) } label: { Label("消息设置", systemImage: "slider.horizontal.3") }
                     NavigationLink {
                         AccountPrivateMessageSessionsView(viewModel: viewModel)
                     } label: {
@@ -48,6 +50,12 @@ struct AccountMessageCenterView: View {
                             systemImage: "person.badge.plus",
                             unreadText: nil
                         )
+                    }
+                }
+                Section("折叠消息") {
+                    ForEach([2, 3, 4, 5, 7, 8], id: \.self) { type in
+                        let title = [2: "未关注人的消息", 3: "陌生人消息", 4: "已拦截消息", 5: "粉丝群", 7: "AI 消息", 8: "客服消息"][type] ?? "折叠消息"
+                        NavigationLink(title) { PiliFoldedMessagesView(api: dependencies.api, viewModel: viewModel, pageType: type, title: title) }
                     }
                 }
             } else {

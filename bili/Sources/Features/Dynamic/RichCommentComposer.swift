@@ -1208,12 +1208,7 @@ struct RichCommentComposerView: View {
     }
 
     private static func normalizedImageData(_ data: Data) async -> Data? {
-        await Task.detached(priority: .userInitiated) {
-            autoreleasepool {
-                guard let image = UIImage(data: data) else { return nil }
-                return image.jpegData(compressionQuality: 0.88) ?? data
-            }
-        }.value
+        await PiliImagePreparation.jpeg(data)
     }
 
     private func submitDraft() {

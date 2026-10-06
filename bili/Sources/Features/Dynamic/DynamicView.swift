@@ -3,6 +3,7 @@ import SwiftUI
 struct DynamicView: View {
     @EnvironmentObject private var dependencies: AppDependencies
     @EnvironmentObject private var libraryStore: LibraryStore
+    @State private var showsComposer = false
 
     var body: some View {
         DynamicContentRoot(
@@ -10,6 +11,15 @@ struct DynamicView: View {
             libraryStore: libraryStore,
             sessionStore: dependencies.sessionStore
         )
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showsComposer = true } label: { Image(systemName: "square.and.pencil") }
+                    .accessibilityLabel("发布动态").accessibilityIdentifier("pili.dynamic.compose")
+            }
+        }
+        .sheet(isPresented: $showsComposer) {
+            PiliDynamicComposer(api: dependencies.api) { NotificationCenter.default.post(name: .piliDynamicChanged, object: nil) }
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 import Foundation
 
-struct DynamicCommentImage: Encodable, Equatable, Sendable {
+nonisolated struct DynamicCommentImage: Encodable, Equatable, Sendable {
     let imageURL: String
     let width: Int
     let height: Int

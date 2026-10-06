@@ -16,6 +16,9 @@ struct UploaderDynamicsSection: View {
 
     var body: some View {
         LazyVStack(spacing: 0) {
+            NavigationLink {
+                PiliDynamicSearchView(api: api, mid: viewModel.seedOwner.mid)
+            } label: { Label("搜索用户动态", systemImage: "magnifyingglass").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }
             if viewModel.dynamicItems.isEmpty && viewModel.dynamicState.isLoading {
                 DynamicFeedSkeletonList()
                     .padding(.horizontal, 16)

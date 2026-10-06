@@ -419,7 +419,7 @@ private struct AccountPrivateMessageSessionRow: View {
     }
 }
 
-private struct AccountPrivateMessageConversationView: View {
+struct AccountPrivateMessageConversationView: View {
     @EnvironmentObject private var dependencies: AppDependencies
     let session: AccountPrivateMessageSession
     @ObservedObject var viewModel: AccountMessageCenterViewModel

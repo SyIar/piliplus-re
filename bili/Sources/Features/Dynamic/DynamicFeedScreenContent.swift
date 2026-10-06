@@ -35,5 +35,6 @@ struct DynamicFeedScreenContent: View {
             )
         }
         .background(Color(.systemBackground))
+        .onReceive(NotificationCenter.default.publisher(for: .piliDynamicChanged)) { _ in Task { await viewModel.refresh() } }
     }
 }

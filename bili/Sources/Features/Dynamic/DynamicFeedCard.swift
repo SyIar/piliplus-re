@@ -36,7 +36,7 @@ struct DynamicFeedCard: View {
     }
 
     var body: some View {
-        Group {
+        VStack(alignment: .leading, spacing: 8) {
             if let video = display.video, display.usesHomeVideoCardStyle {
                 DynamicHomeVideoFeedCard(
                     video: video,
@@ -71,10 +71,12 @@ struct DynamicFeedCard: View {
                     showsActionBar: showsActionBar
                 )
             }
+            PiliDynamicAttachments(item: item, api: api)
         }
         .sheet(item: $commentsTarget) { target in
             DynamicCommentsSheet(item: target, api: api)
         }
+        .modifier(PiliDynamicManagementModifier(item: item, api: api))
     }
 
     private func showComments() {

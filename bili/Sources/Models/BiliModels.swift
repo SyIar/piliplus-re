@@ -5466,9 +5466,10 @@ nonisolated struct DynamicModuleDynamic: Decodable, Hashable {
     let desc: DynamicText?
     let major: DynamicMajor?
     let additional: DynamicAdditional?
+    let topic: DynamicJSONValue?
 
     enum CodingKeys: String, CodingKey {
-        case desc, major, additional
+        case desc, major, additional, topic
     }
 
     init(from decoder: Decoder) throws {
@@ -5476,6 +5477,7 @@ nonisolated struct DynamicModuleDynamic: Decodable, Hashable {
         desc = try? container.decodeIfPresent(DynamicText.self, forKey: .desc)
         major = try? container.decodeIfPresent(DynamicMajor.self, forKey: .major)
         additional = try? container.decodeIfPresent(DynamicAdditional.self, forKey: .additional)
+        topic = try? container.decodeIfPresent(DynamicJSONValue.self, forKey: .topic)
     }
 
     var paidContent: DynamicPaidContent? {
