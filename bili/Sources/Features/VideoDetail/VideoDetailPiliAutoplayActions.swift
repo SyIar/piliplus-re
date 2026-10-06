@@ -53,7 +53,7 @@ extension VideoDetailViewModel {
             guard let self else { return }
             do {
                 let season = try await self.api.fetchPgcSeasonInfo(
-                    seasonID: source.pgcSeasonID, epID: source.pgcEpisodeID
+                    seasonID: source.pgcSeasonID, epID: source.pgcEpisodeID, isCourse: source.piliIsCourse
                 )
                 guard !Task.isCancelled,
                       !self.isPlaybackInvalidatedForNavigation,

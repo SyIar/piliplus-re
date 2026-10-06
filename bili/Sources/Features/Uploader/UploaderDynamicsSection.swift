@@ -16,6 +16,10 @@ struct UploaderDynamicsSection: View {
 
     var body: some View {
         LazyVStack(spacing: 0) {
+            NavigationLink { PiliCoursesView(api: api, ownerMID: viewModel.seedOwner.mid) } label: { Label("用户课程", systemImage: "graduationcap").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }
+            NavigationLink {
+                PiliUserArticlesView(api: api, mid: viewModel.seedOwner.mid)
+            } label: { Label("用户图文", systemImage: "doc.richtext").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }
             NavigationLink {
                 PiliDynamicSearchView(api: api, mid: viewModel.seedOwner.mid)
             } label: { Label("搜索用户动态", systemImage: "magnifyingglass").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }

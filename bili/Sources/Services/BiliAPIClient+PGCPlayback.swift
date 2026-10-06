@@ -14,7 +14,8 @@ nonisolated struct PlaybackAPIRequestContext: Sendable {
 }
 
 extension BiliAPIClient {
-    nonisolated func fetchPgcSeasonInfo(seasonID: Int?, epID: Int? = nil) async throws -> PgcSeasonInfo {
+    nonisolated func fetchPgcSeasonInfo(seasonID: Int?, epID: Int? = nil, isCourse: Bool = false) async throws -> PgcSeasonInfo {
+        if isCourse { return try await piliCourseSeason(seasonID: seasonID, episodeID: epID) }
         var candidates = [(query: [String: String], referer: String)]()
         if let epID, epID > 0 {
             candidates.append(
@@ -66,6 +67,9 @@ extension BiliAPIClient {
     ) async throws -> PlayURLData {
         let context = await playbackAPIRequestContext()
         let requestedQuality = preferredQuality ?? context.effectivePreferredVideoQuality ?? qn
+        if let courseID = bvid.piliCourseEpisodeID {
+            return try await piliCoursePlayURL(epID: courseID, cid: cid, seasonID: seasonID, quality: requestedQuality)
+        }
         let streamSource = context.playbackStreamSourcePreference
         let keys = try await fetchWBIKeys(priority: URLSessionTask.highPriority)
         let referer: String

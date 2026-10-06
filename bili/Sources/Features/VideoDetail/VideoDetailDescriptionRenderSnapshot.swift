@@ -40,6 +40,8 @@ struct VideoDetailDescriptionRenderSnapshot: Equatable {
     }
 
     private static func videoShareURL(for video: VideoItem) -> URL? {
+        if let courseID = video.bvid.piliCourseEpisodeID { return URL(string: "https://www.bilibili.com/cheese/play/ep\(courseID)") }
+        if video.isPGCEpisode, let ep = video.pgcEpisodeID { return URL(string: "https://www.bilibili.com/bangumi/play/ep\(ep)") }
         let bvid = video.bvid.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !bvid.isEmpty else { return nil }
         return URL(string: "https://www.bilibili.com/video/\(bvid)")

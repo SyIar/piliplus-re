@@ -133,7 +133,7 @@ struct PiliNoteReaderView: View {
     }
 }
 
-private struct PiliNoteOperationView: View {
+struct PiliNoteOperationView: View {
     let operation: DynamicJSONValue
     var body: some View {
         let object = operation.objectValueForDynamicParsing ?? [:]

@@ -24,6 +24,9 @@ enum AppLinkDestination {
     case videoComment(VideoCommentRoute)
     case liveRoom(LiveRoom)
     case user(VideoOwner)
+    case course(PiliCourseRoute)
+    case article(PiliArticleRoute)
+    case dynamic(String)
     case browser(URL)
 }
 
@@ -54,6 +57,9 @@ nonisolated struct VideoCommentRoute: Hashable, Sendable {
 nonisolated enum AppLinkRouter {
     static func destination(for url: URL, api: BiliAPIClient) async -> AppLinkDestination {
         let normalizedURL = normalizedHTTPURL(url) ?? url
+        if let course = PiliCourseRoute(url: normalizedURL) { return .course(course) }
+        if let article = PiliArticleRoute(url: normalizedURL) { return .article(article) }
+        if normalizedURL.host == "t.bilibili.com", Int64(normalizedURL.lastPathComponent) != nil { return .dynamic(normalizedURL.lastPathComponent) }
 
         if let videoLink = BiliVideoLink(url: normalizedURL) {
             if let video = await videoItem(for: videoLink, api: api) {
@@ -81,6 +87,7 @@ nonisolated enum AppLinkRouter {
     }
 
     static func canHandle(_ url: URL) -> Bool {
+        if PiliArticleRoute(url: url) != nil { return true }
         guard let scheme = url.scheme?.lowercased() else { return false }
         return scheme == "http" || scheme == "https"
     }
@@ -156,6 +163,9 @@ nonisolated enum AppLinkRouter {
         api: BiliAPIClient
     ) async -> AppLinkDestination? {
         let normalizedURL = normalizedHTTPURL(resolvedURL) ?? resolvedURL
+        if let course = PiliCourseRoute(url: normalizedURL) { return .course(course) }
+        if let article = PiliArticleRoute(url: normalizedURL) { return .article(article) }
+        if normalizedURL.host == "t.bilibili.com", Int64(normalizedURL.lastPathComponent) != nil { return .dynamic(normalizedURL.lastPathComponent) }
         if let videoLink = BiliVideoLink(url: normalizedURL),
            let video = await videoItem(for: videoLink, api: api) {
             return videoDestination(video, url: normalizedURL)

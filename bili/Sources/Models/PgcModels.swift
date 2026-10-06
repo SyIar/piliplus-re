@@ -250,6 +250,7 @@ nonisolated struct PgcEpisode: Decodable, Hashable, Identifiable, Sendable {
 
     var durationSeconds: Int? {
         guard let duration, duration > 0 else { return nil }
+        if bvid?.piliCourseEpisodeID != nil { return duration }
         return duration > 10_000 ? duration / 1000 : duration
     }
 

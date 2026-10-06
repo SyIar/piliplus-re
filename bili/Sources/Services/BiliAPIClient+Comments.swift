@@ -75,7 +75,9 @@ extension BiliAPIClient {
         else {
             throw BiliAPIError.missingPayload
         }
-        let interactionContext = await interactionRequestContext()
+        let snapshot = await requestSnapshot(purpose: .interaction)
+        if let scope = PiliCommentSubmissionScope.current, !scope.identity.matches(snapshot) { throw PiliOfflineError.message("互动账号已切换") }
+        let interactionContext = snapshot
         guard interactionContext.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         guard let csrf = interactionContext.csrfToken, !csrf.isEmpty else {
             throw BiliAPIError.missingCSRF
@@ -87,6 +89,9 @@ extension BiliAPIClient {
             "plat": "1",
             "csrf": csrf,
         ]
+        if let mentions = PiliCommentSubmissionScope.current?.mentions, !mentions.isEmpty {
+            body["at_name_to_mid"] = String(decoding: try JSONEncoder().encode(mentions), as: UTF8.self)
+        }
         if let root, let parent {
             body["root"] = String(root)
             body["parent"] = String(parent)
@@ -103,7 +108,7 @@ extension BiliAPIClient {
             body: body,
             referer: "https://t.bilibili.com/",
             cookieHeader: interactionContext.cookieHeader,
-            retryPolicy: .api
+            retryPolicy: Self.piliSingleWrite
         )
         guard response.code == 0 else {
             throw BiliAPIError.api(code: response.code, message: response.displayMessage)
@@ -111,7 +116,9 @@ extension BiliAPIClient {
     }
 
     func uploadDynamicCommentImage(_ imageData: Data) async throws -> DynamicCommentImage {
-        let csrf = try await requireCSRF()
+        let snapshot = await requestSnapshot(purpose: .interaction)
+        if let scope = PiliCommentSubmissionScope.current, !scope.identity.matches(snapshot) { throw PiliOfflineError.message("互动账号已切换") }
+        guard snapshot.isLoggedIn, let csrf = snapshot.csrfToken else { throw BiliAPIError.missingCSRF }
         let response: BiliResponse<DynamicCommentImageUploadPayload> = try await postMultipart(
             base: baseURL,
             path: "/x/dynamic/feed/draw/upload_bfs",
@@ -124,7 +131,7 @@ extension BiliAPIClient {
             fileName: "comment.jpg",
             mimeType: "image/jpeg",
             fileData: imageData,
-            referer: "https://t.bilibili.com/"
+            referer: "https://t.bilibili.com/", cookieHeader: snapshot.cookieHeader, retryPolicy: Self.piliSingleWrite
         )
         guard response.code == 0,
               let payload = response.payload,

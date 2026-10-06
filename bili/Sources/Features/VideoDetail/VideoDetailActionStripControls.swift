@@ -8,11 +8,7 @@ struct VideoDetailActionStripShareButton: View {
 
     var body: some View {
         if let shareURL {
-            ShareLink(
-                item: shareURL,
-                subject: Text(shareSubject),
-                message: Text(shareMessage)
-            ) {
+            PiliShareMenu(url: shareURL, title: shareSubject, message: shareMessage) {
                 VideoDetailActionStripIconLabel(
                     systemImage: "square.and.arrow.up",
                     foregroundStyle: .primary

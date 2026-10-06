@@ -54,6 +54,7 @@ struct RichCommentDraft: Equatable, Sendable {
     var selection: RichCommentSelection?
     var images: [RichCommentImageDraft]
     var replyTarget: DynamicCommentComposerTarget?
+    var mentions: [PiliNamedResource] = []
 
     init(
         elements: [RichCommentDraftElement] = [],
@@ -890,17 +891,9 @@ struct RichCommentAttachmentStrip: View {
             HStack(spacing: 8) {
                 ForEach(images) { image in
                     ZStack(alignment: .topTrailing) {
-                        if let uiImage = UIImage(data: image.data) {
-                            Image(uiImage: uiImage)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 68, height: 68)
-                                .clipShape(.rect(cornerRadius: 12, style: .continuous))
-                        } else {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(.secondary.opacity(0.12))
-                                .frame(width: 68, height: 68)
-                        }
+                        PiliDraftThumbnail(bytes: image.data)
+                            .frame(width: 68, height: 68)
+                            .clipShape(.rect(cornerRadius: 12, style: .continuous))
 
                         if isUploading {
                             ProgressView()
@@ -952,6 +945,8 @@ struct RichCommentComposerView: View {
     @State private var selectedPhotos = [PhotosPickerItem]()
     @State private var pendingSelectedPhotos = [PhotosPickerItem]()
     @State private var showsPhotoPicker = false
+    @State private var showsMentionPicker = false
+    @State private var identity: PiliAccountIdentity?
     @State private var isLoadingImages = false
     @State private var isSubmitting = false
     @State private var errorMessage: String?
@@ -978,6 +973,7 @@ struct RichCommentComposerView: View {
         self.api = api
         self.submit = submit
         self.onDismiss = onDismiss
+        _identity = State(initialValue: PiliAccountIdentity(api.requestSnapshot(purpose: .interaction)))
     }
 
     private var sendableMessage: String {
@@ -1044,6 +1040,9 @@ struct RichCommentComposerView: View {
                 .accessibilityLabel(inputMode == .emotes ? "切换至系统键盘" : "选择表情")
                 .accessibilityIdentifier("dynamic.comment.composer.emote")
 
+                Button { isEditorFocused = false; showsMentionPicker = true } label: { Image(systemName: "at").frame(width: ControlLayout.size, height: ControlLayout.size) }
+                    .buttonStyle(.glass).buttonBorderShape(.circle).accessibilityLabel("提及用户")
+
                 Button {
                     showsPhotoPicker = true
                 } label: {
@@ -1105,6 +1104,12 @@ struct RichCommentComposerView: View {
         .onChange(of: showsPhotoPicker) { _, isPresented in
             guard !isPresented else { return }
             processPendingPhotos()
+        }
+        .sheet(isPresented: $showsMentionPicker) {
+            PiliResourcePicker(title: "提及用户", load: { try await api.piliMentions(keyword: $0) }) { user in
+                draft.mentions.removeAll { $0.id == user.id }; draft.mentions.append(user)
+                draft = draft.insertingText("@\(user.name) ", at: draft.selection)
+            }
         }
         .photosPicker(
             isPresented: $showsPhotoPicker,
@@ -1220,12 +1225,20 @@ struct RichCommentComposerView: View {
         submitTask = Task { @MainActor in
             defer { isSubmitting = false }
             do {
-                var pictures = [DynamicCommentImage]()
-                for image in draft.images {
-                    try Task.checkCancellation()
-                    pictures.append(try await api.uploadDynamicCommentImage(image.data))
+                guard let identity, identity.matches(api.requestSnapshot(purpose: .interaction)) else { throw PiliOfflineError.message("互动账号已切换，请重新打开编辑器") }
+                let tokens = PiliDynamicComposer.tokens(from: draft.elements, mentions: draft.mentions)
+                var mentions: [String: Int] = [:]
+                for token in tokens where token.type == 2 {
+                    mentions[String(token.text.dropFirst())] = Int(token.businessID)
                 }
-                try await submit(submissionTarget, message, pictures.isEmpty ? nil : pictures)
+                try await PiliCommentSubmissionScope.$current.withValue(.init(identity: identity, mentions: mentions)) {
+                    var pictures = [DynamicCommentImage]()
+                    for image in draft.images {
+                        try Task.checkCancellation()
+                        pictures.append(try await api.uploadDynamicCommentImage(image.data))
+                    }
+                    try await submit(submissionTarget, message, pictures.isEmpty ? nil : pictures)
+                }
                 draft = RichCommentDraft()
                 isEditorFocused = false
                 Haptics.success()

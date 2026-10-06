@@ -14,7 +14,7 @@ extension VideoDetailViewModel {
         prepareRelatedNetworkLoad()
 
         do {
-            let season = try await api.fetchPgcSeasonInfo(seasonID: seasonID, epID: sourceEpisodeID)
+            let season = try await api.fetchPgcSeasonInfo(seasonID: seasonID, epID: sourceEpisodeID, isCourse: sourceDetail.piliIsCourse)
             guard !Task.isCancelled,
                   !isPlaybackInvalidatedForNavigation,
                   detail.bvid == sourceBVID,

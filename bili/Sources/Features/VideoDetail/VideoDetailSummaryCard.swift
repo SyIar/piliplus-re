@@ -58,6 +58,10 @@ struct VideoDetailSummaryCard: View {
                 PiliVideoLibraryActions(viewModel: viewModel, descriptionStore: renderPack.descriptionStore)
             }
 
+            if let seasonID = viewModel.detail.piliUGCSeason?.id {
+                PiliSeasonActionsView(api: viewModel.api, seasonID: seasonID, collectionBVID: viewModel.detail.bvid)
+            }
+
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     tool("离线下载", icon: "arrow.down.circle") {

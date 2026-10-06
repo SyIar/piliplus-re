@@ -163,6 +163,8 @@ struct RootTabView: View {
                     )
                 }
                 .videoDestinations()
+                .navigationDestination(for: PiliCourseRoute.self) { route in PiliCoursePlaybackView(api: dependencies.api, route: route) }
+                .navigationDestination(for: PiliArticleRoute.self) { route in PiliArticleView(api: dependencies.api, route: route) }
                 .dynamicDetailDestinations(
                     path: detailPath,
                     api: dependencies.api

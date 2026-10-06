@@ -25,6 +25,15 @@ extension BiliAPIClient {
     ) async throws {
         let context = await playbackHistoryRequestContext()
         guard context.isAccountPurposeEnabled else { return }
+        if let courseID = bvid?.piliCourseEpisodeID {
+            guard let csrf = context.csrfToken, context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
+            var fields = ["epid": String(courseID), "type": "10", "played_time": String(max(0, Int(progress))), "csrf": csrf]
+            if let aid { fields["aid"] = String(aid) }
+            if let cid { fields["cid"] = String(cid) }
+            let response: BiliResponse<EmptyBiliPayload> = try await postForm(base: baseURL, path: "/x/click-interface/web/heartbeat", body: fields, cookieHeader: context.cookieHeader)
+            guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
+            return
+        }
         var webError: Error?
         if let csrf = context.csrfToken, !csrf.isEmpty, context.isLoggedIn {
             do {

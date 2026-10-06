@@ -53,6 +53,7 @@ struct MineContentView: View {
                 }
             }
             Section("数据") {
+                NavigationLink { PiliCoursesView(api: dependencies.api) } label: { Label("收藏的课程", systemImage: "graduationcap") }
                 Button {
                     AppHelper.shared.presentSheet(.sheet) { PiliNotesLibraryView(api: dependencies.api) }
                 } label: { Label { Text("我的笔记") } icon: { PikaIcon(PikaIcon.Name.note) } }

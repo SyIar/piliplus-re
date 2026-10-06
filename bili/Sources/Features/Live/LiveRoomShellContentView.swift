@@ -681,11 +681,7 @@ private struct LiveRoomSimpleLiveLayoutView: View {
     @ViewBuilder
     private var liveShareAction: some View {
         if let shareURL = URL(string: "https://live.bilibili.com/\(viewModel.roomID)") {
-            ShareLink(
-                item: shareURL,
-                subject: Text(viewModel.title),
-                message: Text("来自哔哩哔哩的直播间")
-            ) {
+            PiliShareMenu(url: shareURL, title: viewModel.title, message: "来自哔哩哔哩的直播间") {
                 Label("分享", systemImage: "square.and.arrow.up")
                     .font(.caption.weight(.semibold))
                     .frame(maxWidth: .infinity)

@@ -1228,7 +1228,7 @@ extension VideoDetailViewModel {
         }
         guard seasonID != nil || episodeID != nil else { return nil }
         do {
-            let season = try await api.fetchPgcSeasonInfo(seasonID: seasonID, epID: episodeID)
+            let season = try await api.fetchPgcSeasonInfo(seasonID: seasonID, epID: episodeID, isCourse: detail.piliIsCourse)
             guard !Task.isCancelled,
                   playbackContentMode == .audioOnly,
                   detail.pgcSeasonID == seasonID

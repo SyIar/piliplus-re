@@ -28,6 +28,7 @@ struct VideoDetailPgcEpisodeSection<ActionContent: View>: View {
                         detail: detail
                     )
 
+                    PiliSeasonActionsView(api: dependencies.api, seasonID: season.seasonID ?? 0, isCourse: detail.piliIsCourse)
                     actionContent()
 
                     VideoDetailPgcEpisodeLoadedSection(
@@ -73,7 +74,7 @@ struct VideoDetailPgcEpisodeSection<ActionContent: View>: View {
         do {
             season = try await dependencies.api.fetchPgcSeasonInfo(
                 seasonID: detail.pgcSeasonID,
-                epID: epID
+                epID: epID, isCourse: detail.piliIsCourse
             )
             state = .loaded
         } catch is CancellationError {

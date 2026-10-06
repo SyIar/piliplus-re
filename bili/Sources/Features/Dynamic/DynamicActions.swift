@@ -81,11 +81,7 @@ struct DynamicFeedActionBar: View {
     @ViewBuilder
     private var shareActionPill: some View {
         if let url = display.shareURL {
-            ShareLink(
-                item: url,
-                subject: Text(display.shareTitle),
-                message: Text(display.shareMessage)
-            ) {
+            PiliShareMenu(url: url, title: display.shareTitle, message: display.shareMessage, repostID: display.dynamicID) {
                 DynamicActionPillLabel(
                     title: display.repostTitle,
                     systemImage: "arrowshape.turn.up.right"

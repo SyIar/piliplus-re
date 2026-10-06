@@ -8,7 +8,9 @@ nonisolated struct VideoDetailCommentTarget: Hashable {
 
     init?(detail: VideoItem) {
         let bvid = detail.bvid.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let aid = detail.aid, aid > 0 {
+        if let courseID = detail.bvid.piliCourseEpisodeID {
+            self.oid = String(courseID); self.type = 33
+        } else if let aid = detail.aid, aid > 0 {
             self.oid = String(aid)
             self.type = 1
         } else if detail.isPGCEpisode,
