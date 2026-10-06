@@ -1,6 +1,6 @@
 # 默认蓝色、迁移缺口与上游开放事项评估
 
-> 后续独立开发：`feat/native-near-term-features` 已实现近期八项增强，具体范围、入口、验证进度及真机边界见 [近期实现记录](NEAR_TERM_IMPLEMENTATION.md)。本文件保留原基线审计，不能用其中的“待迁移”覆盖该分支的新状态。
+> 后续进度：近期八项增强已合入 main 并发布，见 [近期实现记录](NEAR_TERM_IMPLEMENTATION.md)。树状评论、重复弹幕合并和复杂互动视频见 [2026-10-06 增量](COMMENT_DANMAKU_INTERACTIVE.md)；用户已排除 VideoTogether/Chromecast，人像防挡暂不纳入。本文件保留 2026-10-05 的审计快照，其中“待迁移”不覆盖后续实现状态。
 
 评估日期：2026-10-05。原生代码基线为 [`4cabbcc9`](https://github.com/SyIar/piliplus-re/commit/4cabbcc9e97b5dde79c4013932b3a5db55623971)，上游 main 为 [`7a4f442f`](https://github.com/bggRGjQaUbCoE/PiliPlus/commit/7a4f442f450ff0698d0fbe5cecb9666cd1c12e3f)。本次产品改动是主题色；下文的候选功能是评估结果，并未在本次全部实现。
 
