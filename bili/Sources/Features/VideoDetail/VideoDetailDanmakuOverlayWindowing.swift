@@ -10,7 +10,7 @@ extension VideoDetailDanmakuOverlayState {
 
         var lowerTime = max(0, sanitizedTime - effectiveWindowLookBehind)
         var upperTime = sanitizedTime + effectiveWindowLookAhead
-        if store?.snapshot.effectiveSettings.mergesDuplicates == true {
+        if snapshot.settings.mergesDuplicates {
             // Include complete merge windows so scrolling/seeking never changes
             // the representative or count of an already loaded group.
             lowerTime = floor(lowerTime / 15) * 15

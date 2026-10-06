@@ -33,8 +33,8 @@ final class VideoDetailDanmakuOverlayState: ObservableObject {
         publishedSourceItemsRevision = -1
         publishedWindowRange = 0..<0
         lastWindowCenterBucket = nil
-        updateWindow(around: playerViewModel.playbackClock.currentTime, force: true)
         refreshSnapshot(renderSnapshot: renderSnapshot, playerViewModel: playerViewModel)
+        updateWindow(around: playerViewModel.playbackClock.currentTime, force: true)
 
         bindRenderStoreUpdates(store: store, playerViewModel: playerViewModel)
         bindPlaybackClock(playerViewModel: playerViewModel)
