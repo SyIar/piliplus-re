@@ -9,6 +9,9 @@ enum UITestFixtureScenario: String {
     case glassPlayer
     case commentTree
     case interactive
+    case superChat
+    case contentExport
+    case dynamicComposer
 
     static var current: Self? {
         let arguments = ProcessInfo.processInfo.arguments

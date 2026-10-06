@@ -43,8 +43,9 @@ struct PiliDLNAView: View {
                             HStack {
                                 Button("上一条") { casting.selectQueueItem(casting.queueIndex - 1) }.disabled(casting.queueIndex == 0)
                                 Spacer()
-                                Button("下一条") { casting.selectQueueItem(casting.queueIndex + 1) }.disabled(casting.queueIndex + 1 >= queue.entries.count)
+                                Button("下一条") { casting.selectQueueItem(casting.queueIndex + 1) }.disabled(casting.queueIndex + 1 >= queue.entries.count && queue.loadMore == nil)
                             }
+                            if queue.loadMore != nil { Button("加载更多") { casting.loadMoreQueue() } }
                             ForEach(Array(queue.entries.enumerated()), id: \.element.id) { index, entry in
                                 Button { casting.selectQueueItem(index) } label: {
                                     HStack { Text(entry.title); Spacer(); if index == casting.queueIndex { Image(systemName: "tv.fill") } }

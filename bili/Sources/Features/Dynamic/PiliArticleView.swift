@@ -64,17 +64,17 @@ struct PiliArticleParagraph: View {
         let kind = value["para_type"].piliInt
         switch kind {
         case 1, 4, 8:
-            Text(Self.richText((kind == 8 ? value["heading"] : value["text"])["nodes"].piliArray))
+            PiliArticleRichText(nodes: (kind == 8 ? value["heading"] : value["text"])["nodes"].piliArray)
                 .font(kind == 8 ? .title3.bold() : .body).textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: value["align"].piliInt == 1 ? .center : .leading)
                 .padding(.leading, kind == 4 ? 12 : 0).overlay(alignment: .leading) { if kind == 4 { Rectangle().fill(.secondary.opacity(0.4)).frame(width: 3) } }
         case 2:
-            ForEach(value["pic"]["pics"].piliArray, id: \.self) { pic in image(pic["url"].piliString) }
+            ForEach(value["pic"]["pics"].piliArray, id: \.self) { pic in image(pic["url"].piliString, liveVideo: pic["live_url"].piliString) }
         case 3:
             if !value["line"]["pic"]["url"].piliString.isEmpty { image(value["line"]["pic"]["url"].piliString) } else { Divider() }
         case 5:
             ForEach(Array(value["list"]["items"].piliArray.enumerated()), id: \.offset) { index, item in
-                HStack(alignment: .top) { Text(value["list"]["style"].piliInt == 1 ? "\(index + 1)." : "•"); Text(Self.richText(item["nodes"].piliArray.isEmpty ? item["text"]["nodes"].piliArray : item["nodes"].piliArray)).textSelection(.enabled) }
+                HStack(alignment: .top) { Text(value["list"]["style"].piliInt == 1 ? "\(index + 1)." : "•"); PiliArticleRichText(nodes: item["nodes"].piliArray.isEmpty ? item["text"]["nodes"].piliArray : item["nodes"].piliArray).textSelection(.enabled) }
             }
         case 6:
             let card = value["link_card"]["card"]
@@ -90,9 +90,12 @@ struct PiliArticleParagraph: View {
             if !value.dynamicDisplayText.orEmpty.isEmpty { Text(value.dynamicDisplayText.orEmpty).textSelection(.enabled) }
         }
     }
-    private func image(_ raw: String) -> some View {
-        VStack {
-            ZoomyRemoteImage(url: URL(string: raw.normalizedBiliURL()), targetPixelSize: 1600,
+    private func image(_ raw: String, liveVideo: String = "") -> some View {
+        let url = URL(string: raw.normalizedBiliURL())
+        let item = ZoomyImagePreviewItem(id: raw, viewerURL: url, mediaBadgeText: liveVideo.isEmpty ? nil : "LIVE",
+            liveVideoURL: liveVideo.isEmpty ? nil : URL(string: liveVideo.normalizedBiliURL()))
+        return VStack {
+            ZoomyRemoteImage(url: url, viewerItems: [item], viewerItemID: raw, targetPixelSize: 1600,
                 cornerRadius: 8, contentMode: .fit) { ProgressView().frame(height: 120) }
         }
     }
@@ -124,29 +127,95 @@ struct PiliArticleParagraph: View {
     }
 }
 
-struct PiliArticleHTML: UIViewRepresentable {
+struct PiliArticleHTML: View {
     let html: String
+    @State private var height: CGFloat = 80
+    var body: some View { PiliArticleWebContent(html: html, height: $height).frame(height: height) }
+}
+
+private struct PiliArticleWebContent: UIViewRepresentable {
+    let html: String
+    @Binding var height: CGFloat
     @Environment(\.openURL) private var openURL
-    func makeCoordinator() -> Coordinator { Coordinator(openURL: openURL) }
+    func makeCoordinator() -> Coordinator { Coordinator(openURL: openURL, height: $height) }
     func makeUIView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration(); config.websiteDataStore = .nonPersistent(); config.defaultWebpagePreferences.allowsContentJavaScript = false
-        let view = WKWebView(frame: .zero, configuration: config); view.isOpaque = false; view.backgroundColor = .clear; view.navigationDelegate = context.coordinator
-        view.scrollView.isScrollEnabled = true
+        let config = WKWebViewConfiguration()
+        config.websiteDataStore = .nonPersistent()
+        config.defaultWebpagePreferences.allowsContentJavaScript = false
+        let view = WKWebView(frame: .zero, configuration: config)
+        view.isOpaque = false; view.backgroundColor = .clear; view.navigationDelegate = context.coordinator
+        view.scrollView.isScrollEnabled = false
+        context.coordinator.observation = view.scrollView.observe(\.contentSize, options: [.new]) { [weak coordinator = context.coordinator] _, change in
+            guard let size = change.newValue, size.height > 0, size.height.isFinite else { return }
+            Task { @MainActor [weak coordinator] in coordinator?.resize(size.height) }
+        }
         return view
     }
     func updateUIView(_ view: WKWebView, context: Context) {
+        context.coordinator.height = $height
+        view.scrollView.isScrollEnabled = context.coordinator.contentHeight > 20_000
         guard context.coordinator.html != html else { return }; context.coordinator.html = html
-        view.loadHTMLString("<meta name='viewport' content='width=device-width,initial-scale=1'><style>:root{color-scheme:light dark}body{font:17px -apple-system;line-height:1.7;margin:0;background:transparent}img,video{max-width:100%;height:auto}pre{white-space:pre-wrap}a{color:#3264f0}</style>" + html, baseURL: URL(string: "https://www.bilibili.com/"))
+        view.loadHTMLString("<meta name='viewport' content='width=device-width,initial-scale=1'><style>:root{color-scheme:light dark}body{font:17px -apple-system;line-height:1.7;margin:0;background:transparent;overflow-wrap:anywhere}img,video{max-width:100%;height:auto}img.emote{height:1.5em;vertical-align:middle}img.formula{vertical-align:middle;max-height:12em}pre{white-space:pre-wrap}a{color:#3264f0}table{max-width:100%;border-collapse:collapse}td,th{border:1px solid #8888;padding:6px}</style>" + html, baseURL: URL(string: "https://www.bilibili.com/"))
     }
-    func sizeThatFits(_ proposal: ProposedViewSize, uiView: WKWebView, context: Context) -> CGSize? { CGSize(width: proposal.width ?? 320, height: max(500, proposal.height ?? 620)) }
+    static func dismantleUIView(_ view: WKWebView, coordinator: Coordinator) {
+        coordinator.observation?.invalidate(); coordinator.observation = nil; view.stopLoading(); view.navigationDelegate = nil
+    }
     final class Coordinator: NSObject, WKNavigationDelegate {
         var html = ""
+        var observation: NSKeyValueObservation?
+        var contentHeight: CGFloat = 80
+        var height: Binding<CGFloat>
         let openURL: OpenURLAction
-        init(openURL: OpenURLAction) { self.openURL = openURL }
+        init(openURL: OpenURLAction, height: Binding<CGFloat>) { self.openURL = openURL; self.height = height }
+        func resize(_ value: CGFloat) {
+            contentHeight = value
+            // Extremely long legacy articles retain their own scroll surface.
+            let next: CGFloat = value > 20_000 ? 900 : max(36, ceil(value))
+            if abs(height.wrappedValue - next) > 1 { height.wrappedValue = next }
+        }
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             if action.navigationType == .linkActivated, let url = action.request.url { openURL(url); decisionHandler(.cancel) }
             else { decisionHandler(action.navigationType == .other ? .allow : .cancel) }
         }
+    }
+}
+
+struct PiliArticleRichText: View {
+    let nodes: [DynamicJSONValue]
+    var body: some View {
+        if nodes.contains(where: { !$0["formula"]["latex_content"].piliString.isEmpty || !$0["rich"]["emoji"].piliObject.isEmpty }) {
+            PiliArticleHTML(html: Self.html(nodes))
+        } else { Text(PiliArticleParagraph.richText(nodes)) }
+    }
+    nonisolated static func html(_ nodes: [DynamicJSONValue]) -> String {
+        func escape(_ text: String) -> String {
+            text.replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "<", with: "&lt;")
+                .replacingOccurrences(of: ">", with: "&gt;").replacingOccurrences(of: "\"", with: "&quot;")
+                .replacingOccurrences(of: "'", with: "&#39;")
+        }
+        return nodes.map { node in
+            let formula = node["formula"]["latex_content"].piliString
+            if !formula.isEmpty {
+                var url = URLComponents(string: "https://api.bilibili.com/x/web-frontend/mathjax/tex")!
+                url.queryItems = [URLQueryItem(name: "formula", value: formula)]
+                return "<img class='formula' alt='\(escape(formula))' src='\(escape(url.url!.absoluteString))'>"
+            }
+            let rich = node["rich"], word = node["word"]
+            let label = word["words"].piliString.isEmpty ? (rich["text"].piliString.isEmpty ? rich["orig_text"].piliString : rich["text"].piliString) : word["words"].piliString
+            var content = escape(label).replacingOccurrences(of: "\n", with: "<br>")
+            let emoji = rich["emoji"]["url"].piliString.normalizedBiliURL()
+            if let url = URL(string: emoji), ["https", "http"].contains(url.scheme ?? "") {
+                content = "<img class='emote' src='\(escape(emoji))' alt='\(escape(label))'>"
+            }
+            let style = word.piliObject.isEmpty ? rich["style"] : word["style"]
+            if style["bold"].piliInt == 1 { content = "<b>" + content + "</b>" }
+            if style["italic"].piliInt == 1 { content = "<i>" + content + "</i>" }
+            if style["strikethrough"].piliInt == 1 { content = "<s>" + content + "</s>" }
+            var jump = rich["jump_url"].piliString.normalizedBiliURL()
+            if rich["type"].piliString == "RICH_TEXT_NODE_TYPE_AT", rich["rid"].piliInt > 0 { jump = "https://space.bilibili.com/\(rich["rid"].piliInt)" }
+            if let url = URL(string: jump), ["https", "http"].contains(url.scheme ?? "") { content = "<a href='\(escape(jump))'>" + content + "</a>" }
+            return content
+        }.joined()
     }
 }
 

@@ -2,6 +2,16 @@ import XCTest
 @testable import bili
 
 final class PiliArticleCourseTests: XCTestCase {
+    func testArticleInlineHTMLRetainsFormulaEscapesTextAndRejectsScriptLinks() throws {
+        let nodes = try JSONDecoder().decode([DynamicJSONValue].self, from: Data(#"[{"word":{"words":"<script>unsafe</script>"}},{"formula":{"latex_content":"x^{2}+y^{2}"}},{"rich":{"text":"link","jump_url":"javascript:alert(1)"}},{"rich":{"orig_text":"[笑]","emoji":{"url":"https://i.example.com/a.png"}}}]"#.utf8))
+        let html = PiliArticleRichText.html(nodes)
+        XCTAssertTrue(html.contains("&lt;script&gt;"))
+        XCTAssertTrue(html.contains("/mathjax/tex?formula="))
+        XCTAssertTrue(html.contains("class='emote'"))
+        XCTAssertFalse(html.contains("javascript:"))
+        XCTAssertFalse(html.contains("<script>"))
+    }
+
     func testCourseUsesDedicatedIdentityDurationAndReplyTarget() throws {
         let input = try JSONDecoder().decode(DynamicJSONValue.self, from: Data(#"{"season_id":90,"title":"课程","up_info":{"mid":10,"name":"老师","face":"https://example.com/a.jpg"},"episodes":[{"id":91,"aid":999,"bvid":"BVnormal","cid":92,"title":"第一课","duration":10800}]}"#.utf8))
         let season = try BiliAPIClient.piliCourseSeason(input)

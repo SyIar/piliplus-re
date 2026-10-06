@@ -58,7 +58,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
         .sheet(isPresented: $showsReport) {
             NavigationStack { PiliContentReportView(api: api, target: .dynamic(id: item.idStr, author: item.author?.mid ?? 0)) }
         }
-        .sheet(isPresented: $showsExport) { PiliContentImageExportView(document: .dynamic(item)) }
+        .sheet(isPresented: $showsExport) { PiliDynamicExportView(api: api, id: item.idStr) }
         .sheet(isPresented: $checksVisibility) { NavigationStack { PiliVisibilityCheckView(api: api, target: .dynamic(item.idStr)) } }
         .confirmationDialog("删除这条动态？", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("删除", role: .destructive) { mutate("remove", identity: operationIdentity) }

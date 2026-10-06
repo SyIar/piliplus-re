@@ -25,6 +25,12 @@ struct UITestFixtureRootView: View {
                 PiliCommentTreeFixture()
             case .interactive:
                 PiliInteractiveFixture()
+            case .superChat:
+                PiliSuperChatFixture(api: dependencies.api)
+            case .contentExport:
+                PiliContentExportFixture()
+            case .dynamicComposer:
+                PiliDynamicComposerFixture()
             }
         }
         .environmentObject(dependencies)

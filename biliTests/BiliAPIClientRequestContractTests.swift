@@ -4526,6 +4526,45 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testDynamicReservationUsesNumericStatusAndServerUpdatedState() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{"final_btn_status":2,"reserve_update":18,"desc_update":"18 人预约"}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=reservation; DedeUserID=1001; bili_jct=reservation-csrf")
+        let result = try await api.piliToggleDynamicReservation(id: 55, dynamicID: "66", status: 1, total: 17, identity: .init(api.requestSnapshot()))
+        XCTAssertEqual(result["final_btn_status"].piliInt, 2)
+        let request = try XCTUnwrap(recorder.request)
+        let body = try JSONSerialization.jsonObject(with: XCTUnwrap(requestBodyData(from: request))) as? [String: Any]
+        XCTAssertEqual(request.url?.path, "/x/dynamic/feed/reserve/click")
+        XCTAssertEqual(body?["reserve_id"] as? Int, 55)
+        XCTAssertEqual(body?["cur_btn_status"] as? Int, 1)
+        XCTAssertEqual(body?["dynamic_id_str"] as? String, "66")
+    }
+
+    @MainActor
+    func testCastingQueueLazilyPagesAndRejectsChangedListAccount() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{"has_more":false,"medias":[{"bvid":"BVfirst","aid":1},{"bvid":"BVnext","aid":2,"title":"Next"}]}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=queue; DedeUserID=1001; bili_jct=queue-csrf")
+        let initial = PiliPlaybackQueue(source: .favoriteFolder(80), credentialVersion: api.sessionStore.interactionAccountCredentialVersion,
+            bvids: ["BVfirst"], nextPage: 2)
+        let expanded = try await PiliCastSource.expandedCastQueue(initial, api: api)
+        XCTAssertEqual(expanded.bvids, ["BVfirst", "BVnext"])
+        XCTAssertEqual(expanded.titles["BVnext"], "Next")
+        XCTAssertNil(expanded.nextPage)
+        XCTAssertEqual(recorder.requests.count, 1)
+        XCTAssertEqual(Self.queryValues(for: try XCTUnwrap(recorder.request))["pn"], "2")
+        let stale = PiliPlaybackQueue(source: .favoriteFolder(80), credentialVersion: -1, bvids: ["BVfirst"], nextPage: 2)
+        do { _ = try await PiliCastSource.expandedCastQueue(stale, api: api); XCTFail("Reject stale credentials before fetching") }
+        catch { XCTAssertEqual(recorder.requests.count, 1) }
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

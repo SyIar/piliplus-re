@@ -121,7 +121,7 @@ struct PiliDynamicComposer: View {
                         rich = rich.insertingText("@\(item.name) ", at: rich.selection)
                     }
                 case .topic:
-                    PiliResourcePicker(title: "话题", load: { try await api.piliTopics(keyword: $0) }) { item in content.topicID = item.id; content.topicName = item.name }
+                    PiliResourcePicker(title: "话题", load: { try await api.piliTopics(keyword: $0) }, loadPage: { try await api.piliTopics(keyword: $0, page: $1) }) { item in content.topicID = item.id; content.topicName = item.name }
                 case .vote:
                     PiliVoteCreator(api: api, identity: identity, voteID: content.voteID) { id, title in content.voteID = id; content.voteTitle = title }
                 case .reservation:
@@ -237,7 +237,10 @@ struct PiliDraftThumbnail: View {
 struct PiliResourcePicker: View {
     let title: String
     let load: (String) async throws -> [PiliNamedResource]
+    var loadPage: ((String, Int) async throws -> [PiliNamedResource])? = nil
     let select: (PiliNamedResource) -> Void
+    @State private var page = 1
+    @State private var hasMore = false
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     @State private var items: [PiliNamedResource] = []
@@ -253,17 +256,30 @@ struct PiliResourcePicker: View {
                         VStack(alignment: .leading) { Text(item.name); if !item.subtitle.isEmpty { Text(item.subtitle).font(.caption).foregroundStyle(.secondary) } }
                     }
                 }
+                if hasMore { Button("加载更多") { Task { await nextPage() } }.disabled(loading) }
             }.navigationTitle(title).searchable(text: $query)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() } } }
                 .task(id: query) {
-                    let requested = query; loading = true; error = nil
+                    let requested = query; page = 1; hasMore = false; items = []; loading = true; error = nil
                     do {
                         try await Task.sleep(for: .milliseconds(250))
                         let values = try await load(requested)
                         try Task.checkCancellation()
-                        items = values; loading = false
+                        items = values; loading = false; hasMore = loadPage != nil && !requested.isEmpty && values.count >= 20
                     } catch is CancellationError {} catch { if requested == query { self.error = error.localizedDescription; loading = false } }
                 }
         }
     }
+    private func nextPage() async {
+        guard !loading, hasMore, let loadPage else { return }
+        let requested = query, next = page + 1; loading = true; error = nil
+        defer { if requested == query { loading = false } }
+        do {
+            let values = try await loadPage(requested, next)
+            guard !Task.isCancelled, requested == query else { return }
+            var seen = Set(items.map(\.id)); let added = values.filter { seen.insert($0.id).inserted }
+            items += added; page = next; hasMore = !added.isEmpty && values.count >= 20
+        } catch { if requested == query, !Task.isCancelled { self.error = error.localizedDescription } }
+    }
+
 }

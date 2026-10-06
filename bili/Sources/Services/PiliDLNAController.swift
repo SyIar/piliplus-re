@@ -107,6 +107,9 @@ final class PiliDLNAController: ObservableObject {
         }
     }
     func selectQueueItem(_ index: Int, automatic: Bool = false) {
+        if let queue, index == queue.entries.count, queue.loadMore != nil {
+            loadMoreQueue(advance: true, automatic: automatic); return
+        }
         guard !isBusy, let queue, queue.entries.indices.contains(index), let device = renderer else { return }
         if automatic, PiliSleepTimer.shared.shouldStopAtPlaybackEnd() { stopForTimer(); return }
         if !automatic { PiliSleepTimer.shared.resumeManually() }
@@ -125,6 +128,40 @@ final class PiliDLNAController: ObservableObject {
                 self.isBusy = false
                 if !Task.isCancelled { self.errorMessage = "无法播放下一条：\(error.localizedDescription)" }
             }
+        }
+    }
+    func loadMoreQueue(advance: Bool = false, automatic: Bool = false) {
+        guard !isBusy, let queue, let loadMore = queue.loadMore else { return }
+        if automatic, PiliSleepTimer.shared.shouldStopAtPlaybackEnd() { stopForTimer(); return }
+        let token = generation, previousCount = queue.entries.count
+        isBusy = true; errorMessage = nil
+        operationTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let expanded = try await loadMore()
+                guard !Task.isCancelled, self.generation == token else { self.isBusy = false; return }
+                self.queue = expanded; self.isBusy = false
+                if advance {
+                    if expanded.entries.count > previousCount { self.selectQueueItem(previousCount, automatic: automatic) }
+                    else if automatic { self.advanceAfterEnd() }
+                }
+            } catch {
+                self.isBusy = false
+                if !Task.isCancelled { self.errorMessage = "列表加载失败：\(error.localizedDescription)" }
+            }
+        }
+    }
+    private func advanceAfterEnd() {
+        if PiliSleepTimer.shared.shouldStopAtPlaybackEnd() { stopForTimer(); return }
+        let order = PiliPlaybackPreferences.shared.order
+        if (order == .sequential || order == .repeatList), let queue,
+           queueIndex + 1 >= queue.entries.count, queue.loadMore != nil {
+            loadMoreQueue(advance: true, automatic: true); return
+        }
+        switch PlaybackEndPolicy.resolve(order: order, currentIndex: queueIndex, count: queue?.entries.count ?? 0, sleepTimerStops: false) {
+        case .advance(let index): selectQueueItem(index, automatic: true)
+        case .replay: selectQueueItem(queueIndex, automatic: true)
+        case .stop, .loadRelated: break
         }
     }
     func playPause() {
@@ -212,16 +249,7 @@ final class PiliDLNAController: ObservableObject {
                         if state == "STOPPED", self.hasPlayed, !self.didReachEnd,
                            self.duration > 0, max(self.position, previousPosition) >= self.duration - 3 {
                             self.didReachEnd = true
-                            let stops = PiliSleepTimer.shared.shouldStopAtPlaybackEnd()
-                            if stops { self.stopForTimer() }
-                            else {
-                                switch PlaybackEndPolicy.resolve(order: PiliPlaybackPreferences.shared.order, currentIndex: self.queueIndex,
-                                    count: self.queue?.entries.count ?? 0, sleepTimerStops: false) {
-                                case .advance(let index): self.selectQueueItem(index, automatic: true)
-                                case .replay: self.selectQueueItem(self.queueIndex, automatic: true)
-                                case .stop, .loadRelated: break
-                                }
-                            }
+                            self.advanceAfterEnd()
                         }
                     } catch {
                         guard !Task.isCancelled, self.generation == token else { return }

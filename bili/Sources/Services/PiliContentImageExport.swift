@@ -17,13 +17,35 @@ nonisolated struct PiliContentImageDocument: Sendable {
     }
     static func dynamic(_ item: DynamicFeedItem) -> Self {
         var text = item.displayText ?? "", pictures = item.imageItems.map(\.url)
-        if let original = item.original {
-            text += "\n\n转发内容\n" + (original.displayText ?? "")
-            pictures += original.imageItems.map(\.url)
+        func appendCard(_ module: DynamicModuleDynamic?) {
+            if let archive = module?.major?.resolvedArchive {
+                text += "\n\n视频：" + (archive.title ?? "")
+                if let desc = archive.desc, !desc.isEmpty { text += "\n" + desc }
+                if let bvid = archive.bvid { text += "\nhttps://www.bilibili.com/video/" + bvid }
+                if let cover = archive.cover, !cover.isEmpty { pictures.append(cover) }
+            }
+            if let paid = module?.paidContent {
+                text += "\n\n" + paid.title
+                if let subtitle = paid.subtitle { text += "\n" + subtitle }
+                if let cover = paid.cover, !cover.isEmpty { pictures.append(cover) }
+            }
+            let additional = module?.additional?.raw ?? .null
+            let vote = additional["vote"], reserve = additional["reserve"]
+            if vote["vote_id"].piliInt > 0 { text += "\n\n投票：" + vote["desc"].piliString }
+            if reserve["rid"].piliInt > 0 {
+                text += "\n\n预约：" + reserve["title"].piliString + "\n" + reserve["desc1"]["text"].piliString + " " + reserve["desc2"]["text"].piliString
+            }
         }
+        appendCard(item.modules?.moduleDynamic)
+        if let original = item.original {
+            text += "\n\n转发自 " + (original.author?.name ?? "") + "\n" + (original.displayText ?? "")
+            pictures += original.imageItems.map(\.url); appendCard(original.modules?.moduleDynamic)
+        }
+        var seen = Set<String>(); pictures = pictures.filter { seen.insert($0.normalizedBiliURL()).inserted }
         return .init(title: "动态", author: item.author?.name ?? "", text: text,
             pictures: pictures, source: "https://t.bilibili.com/" + item.idStr)
     }
+
 }
 
 nonisolated enum PiliContentImageExport {

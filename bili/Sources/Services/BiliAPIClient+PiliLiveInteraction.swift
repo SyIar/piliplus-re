@@ -41,19 +41,23 @@ nonisolated struct PiliLiveEmote: Identifiable, Sendable {
     let reason: String
     static func parse(_ data: DynamicJSONValue) -> [Self] {
         var seen = Set<String>()
-        return data["data"].piliArray.enumerated().flatMap { index, group in
-            group["emoticons"].piliArray.compactMap { value -> Self? in
-                let text = value["emoji"].piliString, unique = value["emoticon_unique"].piliString
+        var result: [Self] = []
+        for (index, group) in data["data"].piliArray.enumerated() {
+            let rawName = group["pkg_name"].piliString
+            let package = rawName.isEmpty ? "表情包 \(index + 1)" : rawName
+            let insertsText = group["pkg_type"].piliInt == 3
+            for value in group["emoticons"].piliArray {
+                let text = value["emoji"].piliString
+                let unique = value["emoticon_unique"].piliString
                 let id = unique.isEmpty ? text : unique
-                guard !id.isEmpty, seen.insert(id).inserted else { return nil }
-                let permission = value["perm"].piliInt
-                let unavailable = value.piliObject["perm"] != nil && permission == 0
-                return Self(id: id, text: text, image: value["url"].piliString.normalizedBiliURL(),
-                    package: group["pkg_name"].piliString.isEmpty ? "表情包 \(index + 1)" : group["pkg_name"].piliString,
-                    insertsText: group["pkg_type"].piliInt == 3, allowed: !unavailable,
-                    reason: value["unlock_show_text"].piliString)
+                guard !id.isEmpty, seen.insert(id).inserted else { continue }
+                let unavailable = value.piliObject["perm"] != nil && value["perm"].piliInt == 0
+                let image = value["url"].piliString.normalizedBiliURL()
+                result.append(Self(id: id, text: text, image: image, package: package, insertsText: insertsText,
+                    allowed: !unavailable, reason: value["unlock_show_text"].piliString))
             }
         }
+        return result
     }
 }
 

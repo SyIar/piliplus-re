@@ -9,6 +9,7 @@ struct PiliCastQueueEntry: Identifiable {
 struct PiliCastQueuePlan {
     let entries: [PiliCastQueueEntry]
     let initialIndex: Int
+    var loadMore: (@MainActor () async throws -> PiliCastQueuePlan)? = nil
 }
 
 extension PiliCastSource {
@@ -18,19 +19,20 @@ extension PiliCastSource {
         let codec = model.selectedPlayVariant?.codec
         let explicitQueue = model.piliPlaybackQueue
         let version = api.requestSnapshot(purpose: .playback).playbackCredentialVersion
-        return {
+        return { try await onlinePlan(seed: seed, currentCID: currentCID, api: api, quality: quality, codec: codec,
+            explicitQueue: explicitQueue, version: version) }
+    }
+
+    private static func onlinePlan(seed: VideoItem, currentCID: Int?, api: BiliAPIClient, quality: Int,
+                                   codec: String?, explicitQueue: PiliPlaybackQueue?, version: Int) async throws -> PiliCastQueuePlan {
             var videos: [VideoItem]
-            if seed.isPGCEpisode {
+            if let explicitQueue, explicitQueue.bvids.count > 1 || explicitQueue.nextPage != nil {
+                videos = explicitQueue.placeholderVideos().map { $0.bvid == seed.bvid ? seed : $0 }
+            } else if seed.isPGCEpisode {
                 let season = try await api.fetchPgcSeasonInfo(seasonID: seed.pgcSeasonID, epID: seed.pgcEpisodeID, isCourse: seed.piliIsCourse)
                 videos = season.allPlayableEpisodes.compactMap { $0.videoItem(in: season) }
-            } else if let collection = seed.piliUGCSeason {
-                videos = collection.videos(defaultOwner: seed.owner)
-            } else if let explicitQueue, explicitQueue.bvids.count > 1 {
-                videos = explicitQueue.bvids.map { bvid in
-                    bvid == seed.bvid ? seed : VideoItem(bvid: bvid, aid: nil, title: explicitQueue.titles[bvid] ?? bvid,
-                        pic: nil, desc: nil, duration: nil, pubdate: nil, owner: nil, stat: nil, cid: nil, pages: nil, dimension: nil)
-                }
-            } else { videos = [seed] }
+            } else if let collection = seed.piliUGCSeason { videos = collection.videos(defaultOwner: seed.owner) }
+            else { videos = [seed] }
             if videos.isEmpty { videos = [seed] }
             var entries: [PiliCastQueueEntry] = []
             for video in videos {
@@ -63,8 +65,50 @@ extension PiliCastSource {
             var seen = Set<String>(); entries = entries.filter { seen.insert($0.id).inserted }
             let index = entries.firstIndex { $0.id == "\(seed.bvid)|\(currentCID ?? 0)" }
                 ?? entries.firstIndex { $0.id.hasPrefix(seed.bvid + "|") } ?? 0
-            return .init(entries: entries, initialIndex: index)
+            var plan = PiliCastQueuePlan(entries: entries, initialIndex: index)
+            if let explicitQueue, explicitQueue.nextPage != nil {
+                plan.loadMore = {
+                    let expanded = try await expandedCastQueue(explicitQueue, api: api)
+                    return try await onlinePlan(seed: seed, currentCID: currentCID, api: api, quality: quality,
+                        codec: codec, explicitQueue: expanded, version: version)
+                }
+            }
+            return plan
+    }
+
+    static func expandedCastQueue(_ initial: PiliPlaybackQueue, api: BiliAPIClient) async throws -> PiliPlaybackQueue {
+        var queue = initial
+        func check() throws {
+            let current: Int
+            switch queue.source {
+            case .watchLater, .watchLaterFiltered: current = api.sessionStore.historyAccountCredentialVersion
+            case .favoriteFolder: current = api.sessionStore.interactionAccountCredentialVersion
+            case .ugcSeason, .collection: return
+            }
+            guard current == queue.credentialVersion else { throw PiliOfflineError.message("列表账号已切换，请重新投屏") }
         }
+        let count = queue.bvids.count
+        for _ in 0..<5 {
+            try check(); try Task.checkCancellation()
+            guard let page = queue.nextPage else { break }
+            switch queue.source {
+            case let .watchLaterFiltered(filter):
+                let data = try await api.fetchPiliWatchLaterPage(page: page, filter: filter)
+                queue.append(videos: data.entries.map(\.videoItem)); queue.nextPage = data.hasMore ? page + 1 : nil
+            case let .favoriteFolder(id):
+                let data = try await api.fetchFavoriteFolderVideoPage(folderID: id, page: page, pageSize: 20)
+                queue.append(videos: data.entries.map(\.videoItem)); queue.nextPage = data.hasMore ? page + 1 : nil
+            case let .collection(owner, kind, ascending, _):
+                let data = try await api.fetchUploaderSeasonSeriesArchivePage(mid: owner.mid, owner: owner, kind: kind,
+                    page: page, pageSize: 30, sort: ascending ? .asc : .desc)
+                queue.append(videos: data.videos); queue.nextPage = data.hasMore ? page + 1 : nil
+            case .watchLater, .ugcSeason: queue.nextPage = nil
+            }
+            try check(); try Task.checkCancellation()
+            if queue.bvids.count > count { break }
+        }
+        if queue.bvids.count == count, queue.nextPage != nil { throw PiliOfflineError.message("后续页面暂时没有可播放内容，请重试加载") }
+        return queue
     }
 
     static func offlineQueue(current: OfflineDownloadItem) -> PiliCastQueuePlan {

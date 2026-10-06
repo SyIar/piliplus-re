@@ -6,6 +6,8 @@ struct PiliDynamicAttachments: View {
     @State private var showsVote = false
     private var vote: DynamicJSONValue { item.modules?.moduleDynamic?.additional?.raw["vote"] ?? .null }
     var body: some View {
+        let reserve = item.modules?.moduleDynamic?.additional?.raw["reserve"] ?? .null
+        if reserve["rid"].piliInt > 0 { PiliDynamicReservationView(api: api, dynamicID: item.idStr, value: reserve) }
         let topic = item.modules?.moduleDynamic?.topic ?? .null
         if topic["id"].piliInt > 0 {
             NavigationLink { PiliTopicView(api: api, id: topic["id"].piliInt, name: topic["name"].piliString) }

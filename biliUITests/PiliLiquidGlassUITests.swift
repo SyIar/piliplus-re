@@ -2,6 +2,64 @@ import XCTest
 
 final class PiliLiquidGlassUITests: XCTestCase {
     @MainActor
+    func testLiveSuperChatRetainsExpiredMessagesInHistory() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "superChat"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["清晰的画面，也要清晰地呈现每一条留言。"].waitForExistence(timeout: 15))
+        let expired = app.staticTexts["这条留言已经结束展示，仍可在历史中查看。"]
+        XCTAssertFalse(expired.exists)
+        app.segmentedControls.buttons["全部"].tap()
+        XCTAssertTrue(expired.waitForExistence(timeout: 10))
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Live Super Chat cards and history"; screenshot.lifetime = .keepAlways; add(screenshot)
+        app.segmentedControls.buttons["关闭"].tap()
+        XCTAssertTrue(app.staticTexts["醒目留言已关闭"].waitForExistence(timeout: 10))
+        XCTAssertFalse(expired.exists)
+        app.segmentedControls.buttons["有效"].tap()
+    }
+
+    @MainActor
+    func testCompleteContentExportCreatesShareablePages() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "contentExport"]
+        app.launch()
+        let save = app.buttons["保存全部到相册"]
+        XCTAssertTrue(save.waitForExistence(timeout: 20), app.debugDescription)
+        XCTAssertTrue(save.isEnabled)
+        XCTAssertTrue(app.buttons["分享图片"].exists)
+        XCTAssertFalse(app.buttons["重试"].exists)
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Complete content image export"; screenshot.lifetime = .keepAlways; add(screenshot)
+    }
+
+    @MainActor
+    func testDynamicComposerEditsTitleMentionsAndSubmitsThroughFixtureTransport() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "dynamicComposer"]
+        app.launch()
+        let title = app.textFields["标题（可选）"]
+        XCTAssertTrue(title.waitForExistence(timeout: 15))
+        title.tap(); title.typeText("Simulator draft")
+        app.buttons["提及用户"].tap()
+        let user = app.buttons["测试用户"]
+        XCTAssertTrue(user.waitForExistence(timeout: 10), app.debugDescription)
+        user.tap()
+        let publish = app.buttons["pili.dynamic.publish"]
+        XCTAssertTrue(publish.waitForExistence(timeout: 10))
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Native dynamic composer with mention"; screenshot.lifetime = .keepAlways; add(screenshot)
+        publish.tap()
+        XCTAssertTrue(app.staticTexts["fixture.dynamic.published"].waitForExistence(timeout: 15), app.debugDescription)
+    }
+
+    @MainActor
     func testInteractiveChoicesHotspotsAndCheckpointRestore() {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait

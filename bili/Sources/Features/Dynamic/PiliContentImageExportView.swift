@@ -41,3 +41,27 @@ struct PiliContentImageExportView: View {
         }
     }
 }
+
+
+struct PiliDynamicExportView: View {
+    let api: BiliAPIClient
+    let id: String
+    @State private var document: PiliContentImageDocument?
+    @State private var error: String?
+    @State private var revision = UUID()
+    var body: some View {
+        Group {
+            if let document { PiliContentImageExportView(document: document) }
+            else if let error { VStack(spacing: 16) { Text(error); Button("重新加载完整动态") { revision = UUID() } }.padding() }
+            else { ProgressView("读取完整动态") }
+        }.task(id: revision) {
+            error = nil
+            do {
+                let data = try await api.piliContentRead("/x/polymer/web-dynamic/v1/detail", query: ["id": id, "features": "itemOpusStyle,onlyfansVote"])
+                let item = try data["item"].piliDecode(DynamicFeedItem.self)
+                guard !Task.isCancelled, item.idStr == id else { throw CancellationError() }
+                document = .dynamic(item)
+            } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
+        }
+    }
+}
