@@ -1,0 +1,125 @@
+name: Verify Actions upgrades
+
+on:
+  push:
+    branches: [codex/validate-actions-upgrades-20261006]
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    name: Upload fixtures (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Create package, preview and test-result fixtures
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64
+          import hashlib
+          import json
+          import zipfile
+
+          dist = Path("dist")
+          dist.mkdir()
+          with zipfile.ZipFile(dist / "PiliPlusSwift.ipa", "w") as archive:
+              archive.writestr("Payload/PiliPlus.app/smoke.txt", "Actions upgrade fixture\n")
+          (dist / "LICENSE").write_text("Smoke test license fixture\n", encoding="utf-8")
+          (dist / "Licenses").mkdir()
+          (dist / "Licenses" / "测试说明.txt").write_text("产物往返校验\n", encoding="utf-8")
+          png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9WQAAAAASUVORK5CYII=")
+          for number in (1, 2):
+              (dist / f"preview-{number}.png").write_bytes(png)
+          manifest = {
+              str(path.relative_to(dist)): hashlib.sha256(path.read_bytes()).hexdigest()
+              for path in sorted(dist.rglob("*")) if path.is_file()
+          }
+          (dist / "SHA256SUMS.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+          result = Path("build/tests/Smoke.xcresult/Data")
+          result.mkdir(parents=True)
+          (result / "fixture.bin").write_bytes(bytes(range(256)) * 4)
+          PY
+      - name: Upload package directory
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: package-${{ matrix.os }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload preview glob
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: previews-${{ matrix.os }}
+          path: dist/preview-*.png
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload test-result bundle glob
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: test-results-${{ matrix.os }}
+          path: build/tests/*.xcresult
+          if-no-files-found: error
+          retention-days: 1
+
+  download:
+    name: Download and verify (${{ matrix.os }})
+    needs: upload
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, ubuntu-latest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Download package directory
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: package-${{ matrix.os }}
+          path: received/package
+      - name: Download previews
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: previews-${{ matrix.os }}
+          path: received/previews
+      - name: Download test-result bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: test-results-${{ matrix.os }}
+          path: received/tests
+      - name: Verify checksums, extraction paths and file contents
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import zipfile
+
+          package = Path("received/package")
+          manifest = json.loads((package / "SHA256SUMS.json").read_text(encoding="utf-8"))
+          observed = {
+              str(path.relative_to(package))
+              for path in package.rglob("*") if path.is_file()
+          }
+          assert observed == set(manifest) | {"SHA256SUMS.json"}, observed
+          for relative, expected in manifest.items():
+              assert hashlib.sha256((package / relative).read_bytes()).hexdigest() == expected, relative
+          with zipfile.ZipFile(package / "PiliPlusSwift.ipa") as archive:
+              assert archive.read("Payload/PiliPlus.app/smoke.txt") == b"Actions upgrade fixture\n"
+          previews = Path("received/previews")
+          assert {p.name for p in previews.iterdir()} == {"preview-1.png", "preview-2.png"}
+          for number in (1, 2):
+              name = f"preview-{number}.png"
+              assert hashlib.sha256((previews / name).read_bytes()).hexdigest() == manifest[name], name
+          tests = Path("received/tests")
+          assert sorted(str(p.relative_to(tests)) for p in tests.rglob("*") if p.is_file()) == ["Smoke.xcresult/Data/fixture.bin"]
+          assert (tests / "Smoke.xcresult/Data/fixture.bin").read_bytes() == bytes(range(256)) * 4
+          print("PASS: package, preview and test-result artifacts retained their paths and SHA-256 checksums.")
+          PY
