@@ -8,5 +8,6 @@ let package = Package(
     targets: [
         .target(name: "PiliPlaybackCore"),
         .testTarget(name: "PiliPlaybackCoreTests", dependencies: ["PiliPlaybackCore"]),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

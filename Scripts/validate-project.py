@@ -30,6 +30,11 @@ for product in ["ChunUI", "PiliPlaybackCore"]:
     require(f"productName = {product};" in project, f"Missing SwiftPM product {product}")
 require("b240cbbdb9c6d7afc9f02d9ce4ddff5a25ce73bb" in project, "ChunUI revision must be pinned")
 require("mpv" not in project.lower(), "The iOS target must use AVPlayer")
+language_modes = re.findall(r"SWIFT_VERSION = ([^;]+);", project)
+require(len(language_modes) == 6 and set(language_modes) == {"6.0"},
+        "App, unit tests and UI tests must use Swift 6 in Debug and Release")
+require(project.count("SWIFT_STRICT_CONCURRENCY = complete;") == 6,
+        "All Swift targets must keep complete concurrency checking")
 
 for contents_path in (ROOT / "bili/Assets.xcassets").rglob("Contents.json"):
     contents = json.loads(contents_path.read_text())

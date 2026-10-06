@@ -29,7 +29,7 @@
 ## 开发与构建
 
 - iOS 26.1+，macOS + Xcode 26.5 或更新版本。
-- Swift 6 工具链；主应用使用 Swift 5 语言模式、默认 MainActor 隔离和 Approachable Concurrency。
+- Swift 6 工具链及语言模式（应用、单元测试、UI 测试、核心包）；主应用保留默认 MainActor 隔离和 Approachable Concurrency，启用完整并发检查。
 - Xcode 项目与 scheme 暂保留内部名 `bili`，应用显示名为 `哔哩哔哩`；Debug Bundle ID 为 `io.github.syiar.PiliPlusSwift`，Release 为 `cc.bili`。
 - ChunUI 固定到源码 revision；Swift Package Manager 在首次构建时解析依赖。
 
