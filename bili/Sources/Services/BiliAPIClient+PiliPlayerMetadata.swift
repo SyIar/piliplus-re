@@ -60,7 +60,7 @@ extension BiliAPIClient {
         // CDN subtitle requests deliberately carry no account credentials.
         let (data, _) = try await self.data(for: request, priority: URLSessionTask.defaultPriority)
         guard data.count <= 8 * 1024 * 1024 else { throw PiliOfflineError.message("字幕文件过大") }
-        struct Document: Decodable { let body: [SubtitleCue] }
+        nonisolated struct Document: Decodable { let body: [SubtitleCue] }
         return try await Task.detached(priority: .userInitiated) {
             SubtitleTimeline(try JSONDecoder().decode(Document.self, from: data).body).cues
         }.value

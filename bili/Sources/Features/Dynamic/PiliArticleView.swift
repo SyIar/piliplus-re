@@ -177,7 +177,7 @@ private struct PiliArticleWebContent: UIViewRepresentable {
             let next: CGFloat = value > 20_000 ? 900 : max(36, ceil(value))
             if abs(height.wrappedValue - next) > 1 { height.wrappedValue = next }
         }
-        func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void) {
             if action.navigationType == .linkActivated, let url = action.request.url { openURL(url); decisionHandler(.cancel) }
             else { decisionHandler(action.navigationType == .other ? .allow : .cancel) }
         }

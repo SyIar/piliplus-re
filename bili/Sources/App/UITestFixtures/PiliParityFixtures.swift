@@ -57,7 +57,7 @@ struct PiliDynamicComposerFixture: View {
 }
 
 /// This session intercepts every request. The fixture cannot publish to Bilibili.
-private final class PiliContentFixtureProtocol: URLProtocol {
+nonisolated private final class PiliContentFixtureProtocol: URLProtocol {
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
