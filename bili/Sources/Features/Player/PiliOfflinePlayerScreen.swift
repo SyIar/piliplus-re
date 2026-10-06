@@ -7,6 +7,8 @@ struct PiliOfflinePlayerScreen: View {
     @EnvironmentObject private var libraryStore: LibraryStore
     @StateObject private var subtitles = PiliSubtitleController()
     @State private var danmaku: [DanmakuItem] = []
+    @State private var unfilteredDanmaku: [DanmakuItem] = []
+    @EnvironmentObject private var dependencies: AppDependencies
     @State private var showsDanmaku = true
 
     init(item: OfflineDownloadItem, url: URL) {
@@ -58,13 +60,18 @@ struct PiliOfflinePlayerScreen: View {
             if isAudio { model.player.play() }
             let values = await Task.detached(priority: .utility) { isAudio ? [] : PiliOfflineDanmaku.load(id) }.value
             guard !Task.isCancelled, model.item.id == id else { return }
-            danmaku = values
+            unfilteredDanmaku = values
+            applyRules()
             let cached = await Task.detached(priority: .utility) { PiliCachedSubtitle.load(id) }.value
             guard !Task.isCancelled, model.item.id == id else { return }
             subtitles.loadOffline(cached)
         }
         .onAppear { PiliSleepTimer.shared.resumeManually() }
+        .onReceive(PiliDanmakuRulesStore.shared.$revision) { _ in applyRules() }
         .onDisappear { model.leave() }
+    }
+    private func applyRules() {
+        danmaku = PiliDanmakuRulesStore.shared.filter(unfilteredDanmaku, identity: PiliAccountIdentity(dependencies.api.requestSnapshot()))
     }
 }
 

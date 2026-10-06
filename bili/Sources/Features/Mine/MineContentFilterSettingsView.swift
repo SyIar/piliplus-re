@@ -11,6 +11,7 @@ struct MineContentFilterSettingsView: View {
     var body: some View {
         Form {
             Section {
+                NavigationLink("视频弹幕屏蔽规则") { PiliDanmakuRulesView(api: dependencies.api) }
                 NavigationLink { PiliCommentKeywordSettingsView() } label: { Label("评论关键词过滤", systemImage: "text.bubble.badge.minus") }
                 Toggle(isOn: Binding(
                     get: { libraryStore.blocksAdDynamics },
@@ -52,6 +53,7 @@ struct MineContentFilterSettingsView: View {
                 Toggle("显示动态警告或争议信息", isOn: $dynamicWarnings)
             }
             Section("推荐过滤") {
+                NavigationLink("正则、分区与关注豁免") { PiliAdvancedRecommendFilterView(libraryStore: libraryStore) }
                 Toggle("屏蔽黑名单用户的视频", isOn: $blocksCreators)
                 Button("同步黑名单（\(blacklisted.ids.count) 位）") { Task { await blacklisted.refresh(api: dependencies.api, force: true) } }
                 if let error = blacklisted.error { Text(error).font(.caption).foregroundStyle(.secondary) }

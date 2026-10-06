@@ -104,6 +104,8 @@ final class VideoDetailViewModel: ObservableObject {
         }
     }
     @Published var danmakuItems: [DanmakuItem] = []
+    var unfilteredDanmakuItems: [DanmakuItem] = []
+    private var danmakuRulesObserver: AnyCancellable?
     @Published var danmakuItemsRevision = 0
     @Published var danmakuState: LoadingState = .idle
     @Published var isDanmakuEnabled = true {
@@ -209,6 +211,10 @@ final class VideoDetailViewModel: ObservableObject {
         refreshDetailDisplayMetrics()
         refreshUploaderFanCountText()
         configureLifecycleBindings()
+        PiliDanmakuRulesStore.shared.synchronize(api: api)
+        danmakuRulesObserver = PiliDanmakuRulesStore.shared.$revision.sink { [weak self] _ in
+            Task { @MainActor [weak self] in self?.applyDanmakuRules() }
+        }
         commentAccountObserver = api.commentAccountChanges.sink { [weak self] in
             guard let self else { return }
             self.cancelCommentsLoadingTask()

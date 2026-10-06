@@ -47,8 +47,8 @@ extension LiveRoomViewModel {
             let (streamResult, streamHTTPHeaders) = try await (streamResultTask, streamHTTPHeadersTask)
             guard !Task.isCancelled, isCurrentLoad(generation) else { return }
 
-            let candidates = LiveStreamStartupHealthMemory.shared
-                .orderedStartupCandidates(streamResult.candidates)
+            let candidates = libraryStore.livePlaybackPreferences.candidates(
+                LiveStreamStartupHealthMemory.shared.orderedStartupCandidates(streamResult.candidates))
             guard !candidates.isEmpty else {
                 streamFallbackMessage = "暂时无法刷新直播进度"
                 return
@@ -221,8 +221,8 @@ extension LiveRoomViewModel {
                 state = .loaded
                 return
             }
-            let candidates = LiveStreamStartupHealthMemory.shared
-                .orderedStartupCandidates(streamResult.candidates)
+            let candidates = libraryStore.livePlaybackPreferences.candidates(
+                LiveStreamStartupHealthMemory.shared.orderedStartupCandidates(streamResult.candidates))
             streamCandidates = candidates
             availableQualities = streamResult.playableQualities
             currentCandidateIndex = Self.preferredCandidateIndex(

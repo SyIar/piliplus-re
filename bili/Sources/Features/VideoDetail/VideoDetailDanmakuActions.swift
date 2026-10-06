@@ -11,6 +11,8 @@ extension VideoDetailViewModel {
             resetDanmakuLoad(clearItems: true)
             return
         }
+        let api = api
+        Task { await PiliDanmakuRulesStore.shared.refresh(api: api) }
         let playbackTime = stablePlayerViewModel?.currentTime ?? 0
         scheduleDanmakuSegmentsAfterFirstFrameIfNeeded(cid: cid, around: playbackTime, force: force)
     }

@@ -18,6 +18,7 @@ struct PiliLiveExploreView: View {
     var body: some View {
         List {
             Section {
+                NavigationLink("常用分区") { PiliLiveFavoriteAreasView(api: api) }
                 NavigationLink { PiliLiveAreaRoomsView(api: api, title: "我关注的直播", parentID: nil, areaID: 0) } label: { Label("我关注的直播", systemImage: "heart") }
             }
             if loading { ProgressView() }
@@ -40,7 +41,7 @@ struct PiliLiveExploreView: View {
     }
 }
 
-private struct PiliLiveAreaRoomsView: View {
+struct PiliLiveAreaRoomsView: View {
     let api: BiliAPIClient
     let title: String
     let parentID: Int?

@@ -73,7 +73,8 @@ struct PiliVideoToolsView: View {
                     if store.chapters.isEmpty { Text("此视频未提供章节") }
                     ForEach(store.chapters) { chapter in
                         Button {
-                            model.stablePlayerViewModel?.seek(to: chapter.start); dismiss()
+                            if let player = model.stablePlayerViewModel { player.seek(by: chapter.start - player.currentTime) }
+                            dismiss()
                         } label: {
                             HStack {
                                 if !chapter.image.isEmpty {

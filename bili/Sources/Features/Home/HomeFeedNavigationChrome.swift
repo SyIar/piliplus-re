@@ -58,6 +58,9 @@ struct HomeFeedNavigationChrome: ViewModifier {
                 .sharedBackgroundVisibility(.hidden)
             }
             .nativeTopNavigationChrome()
+            .onReceive(PiliFeedDismissals.shared.$revision) { _ in
+                viewModel.updateFeed(viewModel.videos, lastSeenMarkerIndex: viewModel.lastSeenMarkerIndex)
+            }
             .task(id: PiliAccountIdentity(viewModel.pageCoordinator.api.requestSnapshot())) {
                 await PiliBlacklistedCreators.shared.refresh(api: viewModel.pageCoordinator.api)
             }

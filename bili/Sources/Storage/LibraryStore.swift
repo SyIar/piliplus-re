@@ -128,6 +128,9 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var recommendMinimumViewCount: Int
     @Published private(set) var recommendMinimumLikeRatioPercent: Int
     @Published private(set) var blockedRecommendKeywords: [String]
+    @Published private(set) var advancedRecommendFilter: PiliAdvancedRecommendFilter
+    @Published private(set) var quickFavoriteFolders: [String: Int]
+    @Published private(set) var livePlaybackPreferences: PiliLivePlaybackPreferences
     @Published private(set) var appliesRecommendFiltersToRelatedVideos: Bool
     @Published private(set) var danmakuEnabled: Bool
     @Published private(set) var danmakuSettings: DanmakuSettings
@@ -204,6 +207,9 @@ final class LibraryStore: ObservableObject {
     private static let recommendMinimumViewCountKey = "cc.bili.content.recommendMinimumViewCount.v1"
     private static let recommendMinimumLikeRatioPercentKey = "cc.bili.content.recommendMinimumLikeRatioPercent.v1"
     private static let blockedRecommendKeywordsKey = "cc.bili.content.blockedRecommendKeywords.v1"
+    private static let advancedRecommendFilterKey = "cc.bili.content.advancedRecommendFilter.v1"
+    private static let quickFavoriteFoldersKey = "cc.bili.content.quickFavoriteFolders.v1"
+    private static let livePlaybackPreferencesKey = "cc.bili.playback.livePreferences.v1"
     private static let appliesRecommendFiltersToRelatedVideosKey =
         "cc.bili.content.appliesRecommendFiltersToRelatedVideos.v1"
     private static let danmakuEnabledKey = "cc.bili.playback.danmakuEnabled.v1"
@@ -593,6 +599,11 @@ final class LibraryStore: ObservableObject {
         self.blockedRecommendKeywords = Self.normalizedBlockedRecommendKeywords(
             userDefaults.stringArray(forKey: Self.blockedRecommendKeywordsKey) ?? []
         )
+        self.advancedRecommendFilter = userDefaults.data(forKey: Self.advancedRecommendFilterKey)
+            .flatMap { try? JSONDecoder().decode(PiliAdvancedRecommendFilter.self, from: $0) } ?? .init()
+        self.quickFavoriteFolders = userDefaults.dictionary(forKey: Self.quickFavoriteFoldersKey) as? [String: Int] ?? [:]
+        self.livePlaybackPreferences = userDefaults.data(forKey: Self.livePlaybackPreferencesKey)
+            .flatMap { try? JSONDecoder().decode(PiliLivePlaybackPreferences.self, from: $0) } ?? .init()
         self.appliesRecommendFiltersToRelatedVideos =
             userDefaults.object(forKey: Self.appliesRecommendFiltersToRelatedVideosKey) as? Bool ?? false
         self.danmakuEnabled = userDefaults.object(forKey: Self.danmakuEnabledKey) as? Bool ?? true
@@ -1145,6 +1156,26 @@ final class LibraryStore: ObservableObject {
         userDefaults.set(recommendMinimumDurationSeconds, forKey: Self.recommendMinimumDurationSecondsKey)
     }
 
+    func setAdvancedRecommendFilter(_ value: PiliAdvancedRecommendFilter) throws {
+        try value.validate()
+        let data = try JSONEncoder().encode(value)
+        advancedRecommendFilter = value
+        userDefaults.set(data, forKey: Self.advancedRecommendFilterKey)
+    }
+
+    func quickFavoriteFolder(account: Int) -> Int { account > 0 ? quickFavoriteFolders[String(account)] ?? 0 : 0 }
+    func setQuickFavoriteFolder(_ id: Int, account: Int) {
+        guard account > 0, id >= 0 else { return }
+        quickFavoriteFolders[String(account)] = id > 0 ? id : nil
+        userDefaults.set(quickFavoriteFolders, forKey: Self.quickFavoriteFoldersKey)
+    }
+    func setLivePlaybackPreferences(_ value: PiliLivePlaybackPreferences) throws {
+        try value.validate()
+        let data = try JSONEncoder().encode(value)
+        livePlaybackPreferences = value
+        userDefaults.set(data, forKey: Self.livePlaybackPreferencesKey)
+    }
+
     func setRecommendMinimumViewCount(_ count: Int) {
         recommendMinimumViewCount = Self.normalizedRecommendFilterValue(
             count,
@@ -1695,6 +1726,9 @@ extension LibraryStore {
         recommendMinimumViewCount = restored.recommendMinimumViewCount
         recommendMinimumLikeRatioPercent = restored.recommendMinimumLikeRatioPercent
         blockedRecommendKeywords = restored.blockedRecommendKeywords
+        advancedRecommendFilter = restored.advancedRecommendFilter
+        quickFavoriteFolders = restored.quickFavoriteFolders
+        livePlaybackPreferences = restored.livePlaybackPreferences
         appliesRecommendFiltersToRelatedVideos = restored.appliesRecommendFiltersToRelatedVideos
         danmakuEnabled = restored.danmakuEnabled
         danmakuSettings = restored.danmakuSettings

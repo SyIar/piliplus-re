@@ -44,7 +44,10 @@ struct VideoDetailSummaryCardActions {
 
     func favorite() {
         Haptics.light()
-        showFavoriteFolders()
+        guard let viewModel = viewModelBox.viewModel else { return }
+        Task {
+            if !(await viewModel.quickFavoriteIfConfigured()), !viewModel.isPlaybackInvalidatedForNavigation { showFavoriteFolders() }
+        }
     }
 
     func share() {

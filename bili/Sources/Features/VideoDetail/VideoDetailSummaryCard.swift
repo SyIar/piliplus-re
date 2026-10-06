@@ -47,7 +47,8 @@ struct VideoDetailSummaryCard: View {
                 onLike: renderPack.actions.like,
                 onCoin: showCoinPicker,
                 onFavorite: renderPack.actions.favorite,
-                onShareTap: renderPack.actions.share
+                onShareTap: renderPack.actions.share,
+                onChooseFavorite: renderPack.actions.showFavoriteFolders
             )
 
             if showsNetworkDiagnosticsButton {
@@ -67,6 +68,18 @@ struct VideoDetailSummaryCard: View {
                     if !viewModel.detail.piliIsCourse { PiliTripleButton(viewModel: viewModel, store: renderPack.interactionStore) }
                     tool("章节与视频信息", icon: "list.bullet.rectangle") {
                         AppHelper.shared.presentSheet(.sheet) { PiliVideoToolsView(model: viewModel, store: viewModel.piliVideoTools) }
+                    }
+                    if !viewModel.detail.isPGCEpisode, !viewModel.detail.piliIsCourse {
+                        tool("AI 总结", icon: "text.badge.star") {
+                            AppHelper.shared.presentSheet(.sheet) { PiliAIConclusionView(model: viewModel) }
+                        }
+                        tool("视频点踩", icon: "hand.thumbsdown") {
+                            AppHelper.shared.presentSheet(.sheet) {
+                                PiliRecommendationFeedbackView(api: viewModel.api, video: viewModel.detail) {
+                                    viewModel.interactionState.isLiked = false
+                                }
+                            }
+                        }
                     }
                     tool("截图与动图", icon: "camera") { PiliMediaCaptureView.present(viewModel) }
                     tool("原声翻译", icon: "waveform") {

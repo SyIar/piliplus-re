@@ -23,6 +23,7 @@ nonisolated struct HomeFeedCachedVideo: Codable {
     let stat: HomeFeedCachedStat?
     let cid: Int?
     let recommendReason: String?
+    let piliRecommendation: PiliRecommendationMetadata?
 }
 
 nonisolated struct HomeFeedCachedOwner: Codable {

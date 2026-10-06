@@ -20,6 +20,7 @@ struct HomeFeedVideoCardButton: View {
             .buttonStyle(PressPreloadButtonStyle {
                 actions.onVideoPress(video)
             })
+            .modifier(PiliRecommendationMenu(video: video))
         } else {
             Button {
                 actions.onVideoTap(video)
@@ -32,6 +33,7 @@ struct HomeFeedVideoCardButton: View {
             .buttonStyle(PressPreloadButtonStyle {
                 actions.onVideoPress(video)
             })
+            .modifier(PiliRecommendationMenu(video: video))
         }
     }
 }

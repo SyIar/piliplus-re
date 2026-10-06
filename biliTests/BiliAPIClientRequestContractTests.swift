@@ -4887,6 +4887,133 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testVideoDanmakuRulesAndRecallUseOwnedIdentityAndSingleWrites() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            switch request.url?.path {
+            case "/x/dm/filter/user": return Self.response(for: request, body: #"{"code":0,"data":{"rule":[{"id":7,"type":0,"filter":"广告"}]}}"#)
+            case "/x/dm/filter/user/add": return Self.response(for: request, body: #"{"code":0,"data":{"id":8,"type":2,"filter":"884863d2"}}"#)
+            default: return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
+            }
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=rules; DedeUserID=1001; bili_jct=rules-csrf")
+        let identity = PiliAccountIdentity(api.requestSnapshot())
+        let suite = "DanmakuRules.\(UUID().uuidString)", defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = PiliDanmakuRulesStore(defaults: defaults)
+        await store.refresh(api: api)
+        XCTAssertEqual(store.rules.map(\.id), [7])
+        try await store.add(text: "123", type: 2, api: api, identity: identity)
+        let add = try XCTUnwrap(recorder.requests.first { $0.url?.path == "/x/dm/filter/user/add" })
+        XCTAssertEqual(formValues(in: add)["filter"], "884863d2")
+        XCTAssertEqual(formValues(in: add)["csrf"], "rules-csrf")
+        let item = DanmakuItem(id: "local", time: 1, mode: 1, fontSize: 25, color: 0xffffff, text: "自己的弹幕",
+            serverID: "9007199254740993", cid: 99, senderHash: PiliDanmakuRule.userHash(1001))
+        try await api.recallPiliDanmaku(item, identity: identity)
+        let recall = try XCTUnwrap(recorder.requests.last { $0.url?.path == "/x/dm/recall" })
+        XCTAssertEqual(formValues(in: recall)["dmid"], "9007199254740993")
+        XCTAssertEqual(formValues(in: recall)["cid"], "99")
+        store.didRecall(item, identity: identity)
+        XCTAssertTrue(store.filter([item], identity: identity).isEmpty)
+        let foreign = DanmakuItem(id: "foreign", time: 1, mode: 1, fontSize: 25, color: 0xffffff, text: "其他用户", serverID: "77", cid: 99, senderHash: "884863d2")
+        do { try await api.recallPiliDanmaku(foreign, identity: identity); XCTFail("Must reject another sender") } catch {}
+        XCTAssertEqual(recorder.requests.filter { $0.url?.path == "/x/dm/recall" }.count, 1)
+        let reloaded = PiliDanmakuRulesStore(defaults: defaults); reloaded.synchronize(api: api)
+        XCTAssertEqual(reloaded.rules.map(\.id), [7, 8])
+        try api.sessionStore.saveLoginCookies(["SESSDATA": "other", "DedeUserID": "2002", "bili_jct": "other-csrf"], credentialKind: .web)
+        reloaded.synchronize(api: api)
+        XCTAssertTrue(reloaded.rules.isEmpty, "Rules must not leak across accounts")
+        do { try await reloaded.add(text: "旧账号", type: 0, api: api, identity: identity); XCTFail("Stale account") } catch {}
+        XCTAssertEqual(recorder.requests.filter { $0.url?.path == "/x/dm/filter/user/add" }.count, 1)
+    }
+
+    @MainActor
+    func testFailedDanmakuRuleDeletionKeepsRulesAndDoesNotRetry() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/dm/filter/user" { return Self.response(for: request, body: #"{"code":0,"data":{"rule":[{"id":7,"type":0,"filter":"广告"}]}}"#) }
+            return Self.response(for: request, body: #"{"code":-403,"message":"拒绝删除"}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=rules; DedeUserID=1001; bili_jct=rules-csrf")
+        let store = PiliDanmakuRulesStore(defaults: try XCTUnwrap(UserDefaults(suiteName: UUID().uuidString)))
+        await store.refresh(api: api)
+        do { try await store.remove(try XCTUnwrap(store.rules.first), api: api, identity: PiliAccountIdentity(api.requestSnapshot())); XCTFail("Expected rejection") } catch {}
+        XCTAssertEqual(store.rules.map(\.id), [7])
+        XCTAssertEqual(recorder.requests.filter { $0.url?.path == "/x/dm/filter/user/del" }.count, 1)
+    }
+
+    @MainActor
+    func testRecommendationFeedbackIsSignedUncachedAndPreservesReasonKind() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in recorder.record(request); return Self.response(for: request, body: #"{"code":0,"data":{}}"#) }
+        let api = try makeAPI(cookieHeader: "SESSDATA=feed; DedeUserID=1001; bili_jct=feed-csrf", accessKey: "feed-access")
+        let video = try XCTUnwrap(JSONDecoder().decode(RecommendFeedItem.self, from: Data(#"{"param":"123","title":"测试","card_goto":"av","three_point_v2":[{"type":"feedback","reasons":[{"id":7,"name":"标题问题"}]}]}"#.utf8)).asVideoItem())
+        let reason = try XCTUnwrap(video.piliRecommendation?.reasons.first), identity = PiliAccountIdentity(api.requestSnapshot())
+        try await api.piliFeedFeedback(video: video, reason: reason, identity: identity)
+        try await api.piliFeedFeedback(video: video, reason: reason, identity: identity)
+        let requests = recorder.requests.filter { $0.url?.path == "/x/feed/dislike" }
+        XCTAssertEqual(requests.count, 2, "Each user submission must reach the server, never a GET cache")
+        let request = try XCTUnwrap(requests.first)
+        let query = URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertEqual(request.httpMethod, "GET"); XCTAssertEqual(request.url?.host, "app.bilibili.com")
+        for (key, value) in ["id": "123", "goto": "av", "feedback_id": "7", "access_key": "feed-access"] {
+            XCTAssertTrue(query.contains(.init(name: key, value: value)))
+        }
+        XCTAssertFalse(query.contains { $0.name == "reason_id" }); XCTAssertTrue(query.contains { $0.name == "sign" })
+        do { try await api.piliFeedFeedback(video: video, reason: .init(value: 999, name: "伪造", kind: "dislike"), identity: identity); XCTFail("Unknown reason") } catch {}
+        XCTAssertEqual(recorder.requests.filter { $0.url?.path == "/x/feed/dislike" }.count, 2)
+    }
+
+    @MainActor
+    func testVideoDislikeAndLiveFavoriteOrderingHaveSeparateEndpoints() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/v2/view" { return Self.response(for: request, body: #"{"code":0,"data":{"req_user":{"dislike":1}}}"#) }
+            if request.url?.path.hasSuffix("get_fav_tag") == true { return Self.response(for: request, body: #"{"code":0,"data":{"tags":[{"id":3,"parent_id":1,"name":"A"},{"id":5,"parent_id":2,"name":"B"}]}}"#) }
+            return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=app; DedeUserID=1001; bili_jct=app-csrf", accessKey: "app-access")
+        let identity = PiliAccountIdentity(api.requestSnapshot())
+        let disliked = try await api.piliVideoDisliked(aid: 123, identity: identity); XCTAssertTrue(disliked)
+        try await api.piliDislikeVideo(aid: 123, dislike: false, identity: identity)
+        let dislike = try XCTUnwrap(recorder.request)
+        XCTAssertEqual(dislike.url?.path, "/x/v2/view/dislike")
+        XCTAssertEqual(dislike.httpMethod, "POST"); XCTAssertEqual(formValues(in: dislike)["dislike"], "0")
+        let areas = try await api.piliLiveFavoriteAreas(identity: identity)
+        XCTAssertEqual(areas.map(\.id), [3, 5])
+        try await api.setPiliLiveFavoriteAreas(Array(areas.reversed()), identity: identity)
+        let save = try XCTUnwrap(recorder.request)
+        XCTAssertEqual(save.url?.host, "api.live.bilibili.com")
+        XCTAssertEqual(save.url?.path, "/xlive/app-interface/v2/second/set_fav_tag")
+        XCTAssertEqual(formValues(in: save)["tags"], "5,3")
+        XCTAssertEqual(formValues(in: save)["access_key"], "app-access")
+        XCTAssertNotNil(formValues(in: save)["sign"])
+    }
+
+    @MainActor
+    func testAIConclusionSignsCurrentPartAndPropagatesPlatformUnavailable() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            if request.url?.path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/7cd084941338484aae1ad9425b84077c.png","sub_url":"https://i.example.com/4932caff0ff746eab6f01bf08b70ac45.png"}}}"#)
+            }
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{"code":-1,"message":"暂无总结"}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=summary; DedeUserID=1001")
+        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","title":"测试","owner":{"mid":42,"name":"UP"}}"#.utf8))
+        do { _ = try await api.piliAIConclusion(video: video, cid: 99, identity: PiliAccountIdentity(api.requestSnapshot())); XCTFail("Unavailable summary") }
+        catch { XCTAssertTrue(error.localizedDescription.contains("暂无总结")) }
+        let request = try XCTUnwrap(recorder.requests.first { $0.url?.path == "/x/web-interface/view/conclusion/get" })
+        let query = URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        for (key, value) in ["bvid": "BVtest", "cid": "99", "up_mid": "42"] { XCTAssertTrue(query.contains(.init(name: key, value: value))) }
+        XCTAssertTrue(query.contains { $0.name == "w_rid" }); XCTAssertTrue(query.contains { $0.name == "wts" })
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,
