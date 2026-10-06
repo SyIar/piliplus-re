@@ -74,8 +74,10 @@ struct VideoDetailSummaryCard: View {
                             AppHelper.shared.presentSheet(.sheet) { PiliAIConclusionView(model: viewModel) }
                         }
                         tool("视频点踩", icon: "hand.thumbsdown") {
+                            let video = viewModel.detail
                             AppHelper.shared.presentSheet(.sheet) {
-                                PiliRecommendationFeedbackView(api: viewModel.api, video: viewModel.detail) {
+                                PiliRecommendationFeedbackView(api: viewModel.api, video: video) {
+                                    guard viewModel.detail.bvid == video.bvid else { return }
                                     viewModel.interactionState.isLiked = false
                                 }
                             }

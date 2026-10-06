@@ -5014,6 +5014,45 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testQuickFavoriteOnlyRemovesConfiguredFolderAndPreservesOtherMemberships() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/v3/fav/folder/created/list-all" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"id":7,"title":"默认","fav_state":1},{"id":8,"title":"其他","fav_state":1}]}}"#)
+            }
+            if request.url?.path == "/x/v3/fav/resource/deal" { return Self.response(for: request, body: #"{"code":0}"#) }
+            return Self.response(for: request, body: #"{"code":-404,"message":"No metadata in fixture"}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=fav; DedeUserID=1001; bili_jct=fav-csrf")
+        api.libraryStore.setQuickFavoriteFolder(7, account: 1001)
+        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","aid":123,"title":"测试","cid":99}"#.utf8))
+        let model = VideoDetailViewModel(seedVideo: video, api: api, libraryStore: api.libraryStore,
+            sessionStore: api.sessionStore, sponsorBlockService: SponsorBlockService())
+        let handled = await model.quickFavoriteIfConfigured()
+        XCTAssertTrue(handled)
+        XCTAssertTrue(model.interactionState.isFavorited, "The other folder still contains the video")
+        let request = try XCTUnwrap(recorder.requests.first { $0.url?.path == "/x/v3/fav/resource/deal" })
+        XCTAssertEqual(formValues(in: request)["add_media_ids"], "")
+        XCTAssertEqual(formValues(in: request)["del_media_ids"], "7")
+        XCTAssertEqual(formValues(in: request)["csrf"], "fav-csrf")
+        XCTAssertEqual(recorder.requests.filter { $0.url?.path == "/x/v3/fav/resource/deal" }.count, 1)
+    }
+
+    @MainActor
+    func testVideoDislikeRejectsMainIdentityWhenAnotherInteractionAccountIsSelected() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in recorder.record(request); return Self.response(for: request, body: #"{"code":0}"#) }
+        let api = try makeAPI(cookieHeader: "SESSDATA=main; DedeUserID=1001; bili_jct=main-csrf", accessKey: "main-access", configure: { session, library in
+            _ = try session.saveAdditionalAccount([Self.makeCookie(name: "DedeUserID", value: "2002"),
+                Self.makeCookie(name: "SESSDATA", value: "interaction"), Self.makeCookie(name: "bili_jct", value: "interaction-csrf")])
+            try session.selectInteractionAccount(mid: 2002); library.setMultiAccountExperimentEnabled(true)
+        })
+        do { try await api.piliDislikeVideo(aid: 123, dislike: true, identity: PiliAccountIdentity(api.requestSnapshot())); XCTFail("Wrong account") } catch {}
+        XCTAssertTrue(recorder.requests.isEmpty)
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

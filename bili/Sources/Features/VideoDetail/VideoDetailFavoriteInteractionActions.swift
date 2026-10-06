@@ -8,7 +8,9 @@ extension VideoDetailViewModel {
         guard folderID > 0, let aid = detail.aid else { return false }
         let bvid = detail.bvid
         var needsPicker = false
-        _ = await performInteractionMutation(.favorite) {
+        _ = await performInteractionMutation(.favorite, isCurrent: {
+            identity.matches(api.requestSnapshot(purpose: .interaction)) && isCurrentVideoContext(aid: aid, bvid: bvid)
+        }) {
             let folders = try await api.fetchFavoriteFolders(for: aid)
             guard identity.matches(api.requestSnapshot(purpose: .interaction)), isCurrentVideoContext(aid: aid, bvid: bvid), !isPlaybackInvalidatedForNavigation else { throw CancellationError() }
             guard let folder = folders.first(where: { $0.id == folderID }) else {

@@ -57,6 +57,10 @@ final class PiliParityGapTests: XCTestCase {
             XCTAssertTrue(VideoRecommendationFilter.filtered([video], configuration: config, context: .feed).isEmpty)
             XCTAssertEqual(VideoRecommendationFilter.filtered([video], configuration: config, context: .related), [video])
         }
+        let popular = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVpopular","title":"热门视频","tname":"游戏"}"#.utf8))
+        let configuration = VideoRecommendationFilterConfiguration(minimumDurationSeconds: 0, minimumViewCount: 0,
+            minimumLikeRatioPercent: 0, blockedKeywords: [], appliesToRelatedVideos: false, advanced: .init(zonePattern: "游戏"))
+        XCTAssertTrue(VideoRecommendationFilter.filtered([popular], configuration: configuration, context: .feed).isEmpty)
     }
 
     func testAIConclusionHandlesUnavailableAndMalformedTimePoints() throws {

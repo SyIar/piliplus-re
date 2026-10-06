@@ -20,6 +20,7 @@ final class HomeViewModel: ObservableObject {
     var retainedRecommendVideos = [VideoItem]()
     var retainedRecommendLastSeenMarkerIndex: Int?
     private var recommendContextCancellable: AnyCancellable?
+    private var advancedFilterCancellable: AnyCancellable?
     let pageCoordinator: HomeFeedPageCoordinator
     let snapshotCoordinator: HomeFeedSnapshotCoordinator
     let mediaPreloadCoordinator: HomeFeedMediaPreloadCoordinator
@@ -49,6 +50,12 @@ final class HomeViewModel: ObservableObject {
         )
         exposureRecorder = HomeFeedExposureRecorder(pageCoordinator: pageCoordinator)
         mode = initialMode
+        advancedFilterCancellable = libraryStore.$advancedRecommendFilter.dropFirst().sink { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.updateFeed(self.videos, lastSeenMarkerIndex: self.lastSeenMarkerIndex)
+            }
+        }
         recommendContextCancellable = Publishers.CombineLatest4(
             libraryStore.$guestModeEnabled,
             libraryStore.$homeRecommendFeedSourcePreference,

@@ -11,20 +11,21 @@ extension BiliAPIClient {
     }
 
     func piliVideoDisliked(aid: Int, identity: PiliAccountIdentity) async throws -> Bool {
-        let data = try await piliAccountAppRequest(path: "/x/v2/view", parameters: ["aid": String(aid)], post: false, identity: identity)
+        let data = try await piliAccountAppRequest(path: "/x/v2/view", parameters: ["aid": String(aid)], post: false, identity: identity, purpose: .interaction)
         guard case .object = data["req_user"] else { throw BiliAPIError.missingPayload }
         return data["req_user"]["dislike"].piliInt == 1
     }
 
     func piliDislikeVideo(aid: Int, dislike: Bool, identity: PiliAccountIdentity) async throws {
         guard aid > 0 else { throw BiliAPIError.missingPayload }
-        try await piliAccountAppRequest(path: "/x/v2/view/dislike", parameters: ["aid": String(aid), "dislike": dislike ? "1" : "0"], post: true, identity: identity)
+        try await piliAccountAppRequest(path: "/x/v2/view/dislike", parameters: ["aid": String(aid), "dislike": dislike ? "1" : "0"], post: true, identity: identity, purpose: .interaction)
     }
 
     @discardableResult
     func piliAccountAppRequest(path: String, parameters: [String: String], post: Bool,
-                                        identity: PiliAccountIdentity, base: URL? = nil) async throws -> DynamicJSONValue {
-        let context = requestSnapshot(purpose: .main)
+                                        identity: PiliAccountIdentity, base: URL? = nil,
+                                        purpose: BiliAccountPurpose = .main) async throws -> DynamicJSONValue {
+        let context = requestSnapshot(purpose: purpose)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开页面") }
         guard let key = context.appAccessKey, !key.isEmpty else { throw PiliOfflineError.message("此操作需要 App 登录，请使用短信或 App 扫码登录") }
         let profile = BiliAppSigner.Profile.androidHD
@@ -42,7 +43,7 @@ extension BiliAPIClient {
             let (data, _) = try await self.data(for: request, priority: URLSessionTask.highPriority, retryPolicy: Self.piliSingleWrite)
             response = try await Self.decode(data, priority: URLSessionTask.highPriority)
         }
-        guard identity.matches(requestSnapshot()) else { throw PiliOfflineError.message("账号已切换") }
+        guard identity.matches(requestSnapshot(purpose: purpose)) else { throw PiliOfflineError.message("账号已切换") }
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
         return response.payload ?? .null
     }

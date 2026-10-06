@@ -145,6 +145,7 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
     let piliUGCSeason: PiliUGCSeason?
     let piliArgueInfo: DynamicJSONValue?
     let piliRecommendation: PiliRecommendationMetadata?
+    let piliZoneName: String?
     // A local route context, deliberately excluded from the API's CodingKeys.
     var piliPlaybackQueue: PiliPlaybackQueue? = nil
 
@@ -154,6 +155,7 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         case piliUGCSeason = "ugc_season"
         case piliArgueInfo = "argue_info"
         case piliRecommendation
+        case piliZoneName = "tname"
     }
 
     init(
@@ -176,7 +178,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         pgcEpisodeID: Int? = nil,
         piliUGCSeason: PiliUGCSeason? = nil,
         piliArgueInfo: DynamicJSONValue? = nil,
-        piliRecommendation: PiliRecommendationMetadata? = nil
+        piliRecommendation: PiliRecommendationMetadata? = nil,
+        piliZoneName: String? = nil
     ) {
         self.bvid = bvid
         self.aid = aid
@@ -198,6 +201,7 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         self.piliUGCSeason = piliUGCSeason
         self.piliArgueInfo = piliArgueInfo
         self.piliRecommendation = piliRecommendation
+        self.piliZoneName = piliZoneName
     }
 
     nonisolated func mergingFilledValues(from fullDetail: VideoItem) -> VideoItem {
@@ -237,7 +241,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
             pgcEpisodeID: pgcEpisodeID ?? fullDetail.pgcEpisodeID,
             piliUGCSeason: fullDetail.piliUGCSeason ?? piliUGCSeason,
             piliArgueInfo: fullDetail.piliArgueInfo ?? piliArgueInfo,
-            piliRecommendation: piliRecommendation ?? fullDetail.piliRecommendation
+            piliRecommendation: piliRecommendation ?? fullDetail.piliRecommendation,
+            piliZoneName: fullDetail.piliZoneName ?? piliZoneName
         ).withPiliPlaybackQueue(piliPlaybackQueue ?? fullDetail.piliPlaybackQueue)
     }
 

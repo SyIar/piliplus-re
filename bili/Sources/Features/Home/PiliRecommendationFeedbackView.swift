@@ -1,10 +1,12 @@
 import SwiftUI
+import ChunUI
 
 struct PiliRecommendationFeedbackView: View {
     let api: BiliAPIClient
     let video: VideoItem
     let onDislike: (() -> Void)?
     private let identity: PiliAccountIdentity
+    private let interactionIdentity: PiliAccountIdentity
     @State private var busy = false
     @State private var error: String?
     @State private var disliked: Bool?
@@ -13,6 +15,7 @@ struct PiliRecommendationFeedbackView: View {
     init(api: BiliAPIClient, video: VideoItem, onDislike: (() -> Void)? = nil) {
         self.api = api; self.video = video; self.onDislike = onDislike
         identity = PiliAccountIdentity(api.requestSnapshot())
+        interactionIdentity = PiliAccountIdentity(api.requestSnapshot(purpose: .interaction))
     }
     var body: some View {
         NavigationStack {
@@ -36,7 +39,7 @@ struct PiliRecommendationFeedbackView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
             .task {
                 guard let aid = video.aid, aid > 0 else { return }
-                do { disliked = try await api.piliVideoDisliked(aid: aid, identity: identity) }
+                do { disliked = try await api.piliVideoDisliked(aid: aid, identity: interactionIdentity) }
                 catch { self.error = error.localizedDescription }
             }
         }
@@ -57,7 +60,7 @@ struct PiliRecommendationFeedbackView: View {
         Task {
             defer { busy = false }
             do {
-                try await api.piliDislikeVideo(aid: aid, dislike: value, identity: identity)
+                try await api.piliDislikeVideo(aid: aid, dislike: value, identity: interactionIdentity)
                 disliked = value
                 if value { onDislike?() }
             } catch { self.error = error.localizedDescription }

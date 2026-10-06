@@ -23,7 +23,7 @@ struct PiliQuickFavoriteSettingsView: View {
             if let error { Text(error); Button("重试") { Task { await load() } } }
         }
         .navigationTitle("快速收藏").navigationBarTitleDisplayMode(.inline)
-        .task(id: session.playbackCredentialVersion) { await load() }
+        .task(id: PiliAccountIdentity(api.requestSnapshot(purpose: .interaction))) { await load() }
     }
     private func row(_ title: String, id: Int) -> some View {
         HStack {

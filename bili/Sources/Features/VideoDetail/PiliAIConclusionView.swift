@@ -38,6 +38,7 @@ struct PiliAIConclusionView: View {
     @ObservedObject var model: VideoDetailViewModel
     @ObservedObject private var session: SessionStore
     @State private var result: PiliAIConclusion?
+    @State private var resultKey: String?
     @State private var loading = false
     @State private var error: String?
     @State private var generation = UUID()
@@ -57,14 +58,14 @@ struct PiliAIConclusionView: View {
                         Section(outline.title) {
                             ForEach(outline.points) { point in
                                 Button {
-                                    guard let player = model.stablePlayerViewModel, !player.isTerminated else { return }
+                                    guard resultKey == key, let player = model.stablePlayerViewModel, !player.isTerminated else { return }
                                     player.seek(by: point.seconds - player.currentTime); dismiss()
                                 } label: {
                                     HStack(alignment: .top) {
                                         Text(BiliFormatters.duration(Int(point.seconds))).monospacedDigit().foregroundStyle(.tint)
                                         Text(point.content).foregroundStyle(.primary)
                                     }
-                                }.disabled(model.stablePlayerViewModel == nil)
+                                }.disabled(model.stablePlayerViewModel == nil || resultKey != key)
                             }
                         }
                     }
@@ -76,14 +77,14 @@ struct PiliAIConclusionView: View {
         }
     }
     private func load() async {
-        let token = UUID(); generation = token; result = nil; error = nil; loading = true
+        let token = UUID(), requestKey = key; generation = token; result = nil; resultKey = nil; error = nil; loading = true
         defer { if generation == token { loading = false } }
         let video = model.detail, identity = PiliAccountIdentity(model.api.requestSnapshot())
         guard let cid = model.selectedCID else { error = "视频分 P 尚未加载"; return }
         do {
             let value = try await model.api.piliAIConclusion(video: video, cid: cid, identity: identity.mid > 0 ? identity : nil)
             guard !Task.isCancelled, generation == token, model.selectedCID == cid, model.detail.bvid == video.bvid else { return }
-            result = value
+            resultKey = requestKey; result = value
         } catch { if !Task.isCancelled, generation == token { self.error = error.localizedDescription } }
     }
 }

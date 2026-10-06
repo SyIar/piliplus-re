@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import PiliPlaybackCore
 
 nonisolated struct PiliDanmakuRule: Codable, Identifiable, Equatable, Sendable {
     let id: Int

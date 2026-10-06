@@ -55,7 +55,8 @@ nonisolated enum VideoRecommendationFilter {
                                  context: VideoRecommendationFilterContext, title: NSRegularExpression?, zone: NSRegularExpression?) -> Bool {
         if configuration.blockedUserIDs.contains(video.owner?.mid ?? 0) { return false }
         if context == .feed, configuration.advanced.exemptsFollowed, video.piliRecommendation?.followed == true { return true }
-        for (pattern, text) in [(title, video.title), (zone, video.piliRecommendation?.zone ?? "")] {
+        let zoneName = [video.piliZoneName, video.piliRecommendation?.zone].compactMap { $0 }.joined(separator: " ")
+        for (pattern, text) in [(title, video.title), (zone, zoneName)] {
             if let pattern, pattern.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil { return false }
         }
         if configuration.minimumDurationSeconds > 0,
