@@ -29,13 +29,14 @@ final class PiliInteractiveControllerTests: XCTestCase {
     func testFailedBranchAndRetryCommitVariablesOnlyAfterPlaybackSucceeds() async throws {
         let root = try decode(rootJSON), next = try decode(nextJSON), defaults = defaults()
         let controller = PiliInteractiveController(defaults: defaults)
-        var rejectsNode = true, rejectsPlayback = true, opened: [Int] = []
+        let failures = FailureState()
+        var opened: [Int] = []
         controller.start(context: "a", saveKey: "save.a", graphVersion: 1, cid: 10, loader: { id in
             if id == nil || id == 1 { return root }
-            if rejectsNode { throw BiliAPIError.emptyData }
+            if failures.rejectsNode { throw BiliAPIError.emptyData }
             return next
         }, navigator: { cid, _, _ in
-            if rejectsPlayback { throw BiliAPIError.emptyData }
+            if failures.rejectsPlayback { throw BiliAPIError.emptyData }
             opened.append(cid)
         })
         try await settle(controller)
@@ -47,12 +48,12 @@ final class PiliInteractiveControllerTests: XCTestCase {
         XCTAssertEqual(controller.history.count, 1)
         XCTAssertEqual(controller.session.values["score"], 0)
         XCTAssertNil(defaults.data(forKey: "save.a"))
-        rejectsNode = false
+        failures.rejectsNode = false
         controller.retry()
         try await settle(controller)
         XCTAssertEqual(controller.history.count, 1)
         XCTAssertEqual(controller.session.values["score"], 0)
-        rejectsPlayback = false
+        failures.rejectsPlayback = false
         controller.retry()
         try await settle(controller)
         XCTAssertEqual(opened, [20])
@@ -64,10 +65,10 @@ final class PiliInteractiveControllerTests: XCTestCase {
 
     func testFailedRevisitKeepsCurrentPathAndSuccessfulRevisitRestoresVariables() async throws {
         let root = try decode(rootJSON), next = try decode(nextJSON), controller = PiliInteractiveController(defaults: defaults())
-        var rejectsRoot = false
+        let failures = FailureState()
         controller.start(context: "a", saveKey: "save", graphVersion: 1, cid: 10, loader: { id in
             if id == nil || id == 1 {
-                if rejectsRoot { throw BiliAPIError.emptyData }
+                if failures.rejectsRoot { throw BiliAPIError.emptyData }
                 return root
             }
             return next
@@ -77,12 +78,12 @@ final class PiliInteractiveControllerTests: XCTestCase {
         _ = controller.handlePlaybackEnded()
         controller.choose(try XCTUnwrap(controller.visibleChoices.first))
         try await settle(controller)
-        rejectsRoot = true
+        failures.rejectsRoot = true
         controller.revisit(checkpoint)
         try await settle(controller)
         XCTAssertEqual(controller.history.count, 2)
         XCTAssertEqual(controller.session.values["score"], 1)
-        rejectsRoot = false
+        failures.rejectsRoot = false
         controller.retry()
         try await settle(controller)
         XCTAssertEqual(controller.history.count, 1)
@@ -301,4 +302,12 @@ final class PiliInteractiveControllerTests: XCTestCase {
         XCTAssertEqual(controller.history.count, 1)
         XCTAssertNil(controller.errorMessage)
     }
+}
+
+/// Mutable fixture controls stay on the same actor as Loader/Navigator callbacks.
+@MainActor
+private final class FailureState {
+    var rejectsNode = true
+    var rejectsPlayback = true
+    var rejectsRoot = false
 }

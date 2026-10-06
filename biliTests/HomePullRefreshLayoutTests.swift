@@ -2,6 +2,7 @@ import XCTest
 import SwiftUI
 @testable import bili
 
+@MainActor
 final class HomePullRefreshLayoutTests: XCTestCase {
     @MainActor
     func testRefreshingReservesStableTopInset() {

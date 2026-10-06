@@ -159,6 +159,7 @@ final class DynamicRichTextInteractionTests: XCTestCase {
         return result
     }
 
+    @MainActor
     private func midpoint(
         of characterRange: NSRange,
         in attributedString: NSAttributedString,

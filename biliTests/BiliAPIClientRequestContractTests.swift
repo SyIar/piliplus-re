@@ -4691,7 +4691,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let recorder = RequestContractRecorder()
         let counter = RequestContractCounter()
         RequestContractURLProtocol.install { request in
-            counter.increment(); recorder.record(request)
+            _ = counter.increment(); recorder.record(request)
             let body = request.httpMethod == "POST" ? "{}" : #"[{"UUID":"skip","cid":12,"category":"sponsor","actionType":"skip","segment":[1,4]},{"UUID":"mute","category":"sponsor","actionType":"mute","segment":[4,8]},{"UUID":"full","category":"exclusive_access","actionType":"full","segment":[0,90]},{"UUID":"poi","category":"poi_highlight","actionType":"poi","segment":[20,20]},{"UUID":"invalid","category":"sponsor","actionType":"skip","segment":[8,2]}]"#
             return Self.response(for: request, body: body)
         }
