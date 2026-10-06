@@ -26,6 +26,7 @@ enum AppLinkDestination {
     case user(VideoOwner)
     case course(PiliCourseRoute)
     case article(PiliArticleRoute)
+    case supplement(PiliSupplementRoute)
     case dynamic(String)
     case browser(URL)
 }
@@ -57,6 +58,7 @@ nonisolated struct VideoCommentRoute: Hashable, Sendable {
 nonisolated enum AppLinkRouter {
     static func destination(for url: URL, api: BiliAPIClient) async -> AppLinkDestination {
         let normalizedURL = normalizedHTTPURL(url) ?? url
+        if let route = PiliSupplementRoute(url: normalizedURL) { return .supplement(route) }
         if let course = PiliCourseRoute(url: normalizedURL) { return .course(course) }
         if let article = PiliArticleRoute(url: normalizedURL) { return .article(article) }
         if normalizedURL.host == "t.bilibili.com", Int64(normalizedURL.lastPathComponent) != nil { return .dynamic(normalizedURL.lastPathComponent) }
@@ -163,6 +165,7 @@ nonisolated enum AppLinkRouter {
         api: BiliAPIClient
     ) async -> AppLinkDestination? {
         let normalizedURL = normalizedHTTPURL(resolvedURL) ?? resolvedURL
+        if let route = PiliSupplementRoute(url: normalizedURL) { return .supplement(route) }
         if let course = PiliCourseRoute(url: normalizedURL) { return .course(course) }
         if let article = PiliArticleRoute(url: normalizedURL) { return .article(article) }
         if normalizedURL.host == "t.bilibili.com", Int64(normalizedURL.lastPathComponent) != nil { return .dynamic(normalizedURL.lastPathComponent) }

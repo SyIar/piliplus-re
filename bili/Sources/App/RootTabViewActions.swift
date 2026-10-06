@@ -61,6 +61,8 @@ extension RootTabView {
             pushRootRoute(route)
         case .article(let route):
             pushRootRoute(route)
+        case .supplement(let route):
+            pushRootRoute(route)
         case .dynamic(let id):
             pushRootRoute(DynamicDetailTarget.remote(id: id))
         case .browser(let url):

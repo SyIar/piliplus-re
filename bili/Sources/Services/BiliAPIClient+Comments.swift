@@ -115,6 +115,11 @@ extension BiliAPIClient {
         }
         let id = max(response.payload?["rpid"].piliInt ?? 0, response.payload?["reply"]["rpid"].piliInt ?? 0)
         if id > 0 {
+            // A local disk failure must never turn a successful server submission
+            // into a retry that posts the same comment a second time.
+            try? await PiliCommentArchive.shared.record(.init(account: snapshot.currentUserMID ?? 0, id: id,
+                oid: normalizedOID, type: type, root: root ?? 0, parent: parent ?? 0, message: normalizedMessage,
+                pictures: pictures?.map(\.imageURL) ?? [], created: Int(Date().timeIntervalSince1970)))
             await PiliVisibilityCheckCenter.shared.schedule(.comment(oid: oid, type: type, id: id, root: root ?? 0),
                 api: self, identity: PiliAccountIdentity(snapshot))
         }

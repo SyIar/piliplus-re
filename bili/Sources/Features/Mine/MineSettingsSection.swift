@@ -6,6 +6,7 @@ struct MineSettingsSection: View {
 
     var body: some View {
         Section("设置") {
+            NavigationLink { PiliSettingsSearchView(onOpenRoute: onOpenRoute) } label: { Label("搜索设置", systemImage: "magnifyingglass") }
             MineOverlayNavigationButton {
                 onOpenRoute(.interfaceSettings)
             } label: {

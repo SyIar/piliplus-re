@@ -4794,6 +4794,63 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testAUAudioReadsUseListenerProtocolAndAnonymousPlaybackIdentity() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path.hasSuffix("/PlayURL") == true {
+                var audio = PiliProtoMessage(); audio.set(1, integer: 30280); audio.set(2, string: "https://audio.example.com/song.m4a")
+                var dash = PiliProtoMessage(); dash.set(1, integer: 60); dash.set(3, messages: [audio])
+                var info = PiliProtoMessage(); info.set(5, message: dash)
+                var entry = PiliProtoMessage(); entry.set(1, integer: 123); entry.set(2, message: info)
+                var response = PiliProtoMessage(); response.set(4, messages: [entry])
+                return Self.response(for: request, data: BiliListenerPlaylistCodec.frame(response.data))
+            }
+            var response = PiliProtoMessage(); response.set(3, integer: 1)
+            return Self.response(for: request, data: BiliListenerPlaylistCodec.frame(response.data))
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=secret; DedeUserID=1001; buvid3=device", accessKey: "secret-key", configure: { _, library in library.setIncognitoModeEnabled(true) })
+        let result = try await api.piliAudioPlaylist(id: 123, order: .reverse)
+        XCTAssertNil(result.next)
+        let sources = try await api.piliAudioSources(PiliAudioCodec.item(123)); XCTAssertEqual(sources.first?.duration, 60)
+        XCTAssertTrue(recorder.requests.allSatisfy { !($0.value(forHTTPHeaderField: "Cookie") ?? "").contains("secret") })
+        XCTAssertTrue(recorder.requests.allSatisfy { !($0.value(forHTTPHeaderField: "authorization") ?? "").contains("secret-key") })
+        let request = try XCTUnwrap(recorder.requests.first)
+        let body = try PiliProtoMessage(data: BiliListenerPlaylistCodec.unframe(try XCTUnwrap(requestBodyData(from: request))))
+        XCTAssertEqual(try body.message(3).integer(1), 3); XCTAssertEqual(try body.message(3).integer(3), 123)
+        XCTAssertEqual(try body.message(7).integer(1), 2)
+    }
+
+    @MainActor
+    func testCommunityDetailsAndMemberAudioKeepSeparateEndpointNamespaces() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png","sub_url":"https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png"}}}"#)
+            }
+            if request.url?.path == "/audio/music-service/web/song/upper" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"totalSize":1,"data":[{"id":123,"title":"AU","cover":"https://i0.hdslb.com/a.jpg"}]}}"#)
+            }
+            if request.url?.path == "/x/esports/match/info" { return Self.response(for: request, body: #"{"code":0,"data":{"contest":{"home_score":1,"away_score":2}}}"#) }
+            return Self.response(for: request, body: #"{"code":0,"data":{"music_title":"测试音乐"}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=s; bili_jct=csrf; DedeUserID=1001")
+        let audio = try await api.piliMemberExtras(.audio, mid: 17, page: 1)
+        XCTAssertEqual(audio.items.first?["id"].piliInt, 123); XCTAssertFalse(audio.more)
+        XCTAssertEqual(recorder.request?.url?.host, "www.bilibili.com")
+        let match = try await api.piliMatch(123); XCTAssertEqual(match["away_score"].piliInt, 2)
+        _ = try await api.piliBubble(id: "6", category: "7", sort: 2, page: 3)
+        let query = URLComponents(url: try XCTUnwrap(recorder.request?.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        for (key, value) in ["tribee_id": "6", "category_id": "7", "sort_type": "2", "page_num": "3"] { XCTAssertTrue(query.contains(.init(name: key, value: value))) }
+        _ = try await api.piliMusic("MA10")
+        XCTAssertEqual(recorder.request?.url?.path, "/x/copyright-music-publicity/bgm/detail")
+        try await api.piliMusicWish("MA10", selected: false, identity: .init(api.requestSnapshot()))
+        XCTAssertEqual(formValues(in: try XCTUnwrap(recorder.request))["state"], "1")
+        XCTAssertEqual(formValues(in: try XCTUnwrap(recorder.request))["csrf"], "csrf")
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

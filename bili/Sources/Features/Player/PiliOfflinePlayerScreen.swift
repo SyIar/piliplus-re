@@ -68,7 +68,7 @@ struct PiliOfflinePlayerScreen: View {
     }
 }
 
-private struct PiliOfflineAudioControls: View {
+struct PiliOfflineAudioControls: View {
     @ObservedObject var player: PlayerStateViewModel
     @ObservedObject var clock: PlayerPlaybackClock
     let title: String
