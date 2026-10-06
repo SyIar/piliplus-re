@@ -736,8 +736,10 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                 }
 
                 if showsCenterPlaybackControl {
-                    centerPlaybackControl
-                        .zIndex(5)
+                    PiliInteractivePlaybackControlGate(controller: detailViewModel.piliInteractive) {
+                        centerPlaybackControl
+                    }
+                    .zIndex(5)
                 }
 
                 if !isAudioOnlyPlayback {

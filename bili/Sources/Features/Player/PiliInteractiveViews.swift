@@ -1,6 +1,15 @@
 import ChunUI
 import SwiftUI
 
+/// Keep the paused player's center button from covering a story hotspot.
+struct PiliInteractivePlaybackControlGate<Content: View>: View {
+    @ObservedObject var controller: PiliInteractiveController
+    @ViewBuilder let content: () -> Content
+    var body: some View {
+        if !controller.isOverlayVisible { content() }
+    }
+}
+
 struct PiliInteractiveOverlay: View {
     @ObservedObject var controller: PiliInteractiveController
     @Environment(\.scenePhase) private var scenePhase
