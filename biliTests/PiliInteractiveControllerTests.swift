@@ -34,7 +34,7 @@ final class PiliInteractiveControllerTests: XCTestCase {
             if id == nil || id == 1 { return root }
             if rejectsNode { throw BiliAPIError.emptyData }
             return next
-        }, navigator: { cid, _ in
+        }, navigator: { cid, _, _ in
             if rejectsPlayback { throw BiliAPIError.emptyData }
             opened.append(cid)
         })
@@ -71,7 +71,7 @@ final class PiliInteractiveControllerTests: XCTestCase {
                 return root
             }
             return next
-        }, navigator: { _, _ in })
+        }, navigator: { _, _, _ in })
         try await settle(controller)
         let checkpoint = try XCTUnwrap(controller.history.first)
         _ = controller.handlePlaybackEnded()
@@ -96,7 +96,7 @@ final class PiliInteractiveControllerTests: XCTestCase {
         let leaf = try decode(#"{"edge_id":2,"title":"结束","is_leaf":1,"no_backtracking":1}"#)
         let controller = PiliInteractiveController(defaults: defaults())
         controller.start(context: "a", saveKey: "save", graphVersion: 1, cid: 10,
-                         loader: { $0 == nil || $0 == 1 ? root : leaf }, navigator: { _, _ in })
+                         loader: { $0 == nil || $0 == 1 ? root : leaf }, navigator: { _, _, _ in })
         try await settle(controller)
         let checkpoint = try XCTUnwrap(controller.history.first)
         _ = controller.handlePlaybackEnded()
@@ -121,7 +121,7 @@ final class PiliInteractiveControllerTests: XCTestCase {
         let controller = PiliInteractiveController(defaults: defaults())
         var opened = 0
         controller.start(context: "a", saveKey: "save", graphVersion: 1, cid: 10,
-                         loader: { $0 == nil ? root : leaf }, navigator: { _, _ in opened += 1 })
+                         loader: { $0 == nil ? root : leaf }, navigator: { _, _, _ in opened += 1 })
         try await settle(controller)
         controller.updatePlayback(time: 1, duration: 10)
         XCTAssertEqual(opened, 0)
@@ -138,10 +138,10 @@ final class PiliInteractiveControllerTests: XCTestCase {
         var continuation: CheckedContinuation<PiliInteractiveEdge, Error>?
         controller.start(context: "old", saveKey: "old.save", graphVersion: 1, cid: 10,
                          loader: { _ in try await withCheckedThrowingContinuation { continuation = $0 } },
-                         navigator: { _, _ in XCTFail("An obsolete context must never navigate") })
+                         navigator: { _, _, _ in XCTFail("An obsolete context must never navigate") })
         try await waitUntil { continuation != nil }
         controller.start(context: "new", saveKey: "new.save", graphVersion: 2, cid: 99,
-                         loader: { _ in fresh }, navigator: { _, _ in })
+                         loader: { _ in fresh }, navigator: { _, _, _ in })
         try await settle(controller)
         continuation?.resume(returning: old)
         await Task.yield()
@@ -155,21 +155,21 @@ final class PiliInteractiveControllerTests: XCTestCase {
         let root = try decode(rootJSON), next = try decode(nextJSON), defaults = defaults()
         let controller = PiliInteractiveController(defaults: defaults)
         controller.start(context: "graph1", saveKey: "account.1.video.graph1", graphVersion: 1, cid: 10,
-                         loader: { $0 == nil || $0 == 1 ? root : next }, navigator: { _, _ in })
+                         loader: { $0 == nil || $0 == 1 ? root : next }, navigator: { _, _, _ in })
         try await settle(controller)
         _ = controller.handlePlaybackEnded()
         controller.choose(try XCTUnwrap(controller.visibleChoices.first))
         try await settle(controller)
         let restored = PiliInteractiveController(defaults: defaults)
         restored.start(context: "graph1", saveKey: "account.1.video.graph1", graphVersion: 1, cid: 10,
-                       loader: { $0 == nil || $0 == 1 ? root : next }, navigator: { _, _ in })
+                       loader: { $0 == nil || $0 == 1 ? root : next }, navigator: { _, _, _ in })
         try await settle(restored)
         restored.restoreSaved()
         try await settle(restored)
         XCTAssertEqual(restored.session.values["score"], 1)
         XCTAssertEqual(restored.history.count, 2)
         restored.start(context: "graph2", saveKey: "account.1.video.graph2", graphVersion: 2, cid: 10,
-                       loader: { _ in root }, navigator: { _, _ in })
+                       loader: { _ in root }, navigator: { _, _, _ in })
         try await settle(restored)
         XCTAssertTrue(restored.savedHistory.isEmpty)
     }
@@ -177,7 +177,7 @@ final class PiliInteractiveControllerTests: XCTestCase {
     func testRewindingDismissesEndingAndChoicesCanAppearAgain() async throws {
         let root = try decode(rootJSON), controller = PiliInteractiveController(defaults: defaults())
         controller.start(context: "a", saveKey: "save", graphVersion: 1, cid: 10,
-                         loader: { _ in root }, navigator: { _, _ in })
+                         loader: { _ in root }, navigator: { _, _, _ in })
         try await settle(controller)
         _ = controller.handlePlaybackEnded()
         XCTAssertTrue(controller.choicesVisible)
@@ -195,14 +195,14 @@ final class PiliInteractiveControllerTests: XCTestCase {
         let defaults = defaults(), first = PiliInteractiveController(defaults: defaults)
         let loader: PiliInteractiveController.Loader = { $0 == nil || $0 == 1 ? root : leaf }
         first.start(context: "a", saveKey: "save", graphVersion: 1, cid: 10,
-                    loader: loader, navigator: { _, _ in })
+                    loader: loader, navigator: { _, _, _ in })
         try await settle(first)
         _ = first.handlePlaybackEnded()
         first.choose(try XCTUnwrap(first.visibleChoices.first))
         try await settle(first)
         let restored = PiliInteractiveController(defaults: defaults)
         restored.start(context: "a", saveKey: "save", graphVersion: 1, cid: 10,
-                       loader: loader, navigator: { _, _ in })
+                       loader: loader, navigator: { _, _, _ in })
         try await settle(restored)
         restored.restoreSaved()
         try await settle(restored)
@@ -223,7 +223,7 @@ final class PiliInteractiveControllerTests: XCTestCase {
         var opened: [Int] = []
         controller.start(context: "a", saveKey: "save", graphVersion: 1, cid: 10,
                          loader: { $0 == nil || $0 == 1 ? root : next },
-                         navigator: { cid, _ in opened.append(cid) })
+                         navigator: { cid, _, _ in opened.append(cid) })
         try await settle(controller)
         _ = controller.handlePlaybackEnded()
         controller.choose(try XCTUnwrap(controller.visibleChoices.first))
@@ -237,5 +237,38 @@ final class PiliInteractiveControllerTests: XCTestCase {
         XCTAssertEqual(controller.session.values["score"], 1)
         XCTAssertEqual(controller.history.count, 2)
         XCTAssertEqual(opened, [20])
+    }
+
+    func testSleepTimerDuringAutomaticBranchLoadPreventsNavigationUntilExplicitRetry() async throws {
+        PiliSleepTimer.shared.cancel()
+        defer { PiliSleepTimer.shared.cancel() }
+        let root = try decode(#"{"edge_id":1,"edges":{"questions":[{"type":0,"choices":[{"id":2,"cid":20}]}]}}"#)
+        let leaf = try decode(#"{"edge_id":2,"is_leaf":1}"#)
+        let controller = PiliInteractiveController(defaults: defaults())
+        var continuation: CheckedContinuation<PiliInteractiveEdge, Error>?
+        var firstLoad = true, opened: [Int] = []
+        controller.start(context: "a", saveKey: "save", graphVersion: 1, cid: 10,
+                         loader: { id in
+            if id == nil { return root }
+            if firstLoad {
+                firstLoad = false
+                return try await withCheckedThrowingContinuation { continuation = $0 }
+            }
+            return leaf
+        }, navigator: { cid, _, _ in opened.append(cid) })
+        try await settle(controller)
+        _ = controller.handlePlaybackEnded()
+        try await waitUntil { continuation != nil }
+        PiliSleepTimer.shared.stopAfterCurrent()
+        continuation?.resume(returning: leaf)
+        try await settle(controller)
+        XCTAssertTrue(opened.isEmpty)
+        XCTAssertEqual(controller.history.count, 1)
+        XCTAssertNotNil(controller.errorMessage)
+        XCTAssertTrue(PiliSleepTimer.shared.policy.preventsAutomaticPlayback)
+        controller.retry()
+        try await settle(controller)
+        XCTAssertEqual(opened, [20])
+        XCTAssertFalse(PiliSleepTimer.shared.policy.preventsAutomaticPlayback)
     }
 }

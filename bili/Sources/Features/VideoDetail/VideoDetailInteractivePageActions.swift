@@ -1,8 +1,9 @@
 import Foundation
+import PiliPlaybackCore
 
 extension VideoDetailViewModel {
     /// Commit the graph transaction only after the destination presents a frame.
-    func openPiliInteractivePage(cid: Int, title: String) async throws {
+    func openPiliInteractivePage(cid: Int, title: String, automatic: Bool) async throws {
         let bvid = detail.bvid, sourceCID = selectedCID
         let version = api.requestSnapshot(purpose: .playback).playbackCredentialVersion
         let oldTime = stablePlayerViewModel?.currentTime ?? 0
@@ -12,6 +13,9 @@ extension VideoDetailViewModel {
         guard !isPlaybackInvalidatedForNavigation, detail.bvid == bvid, selectedCID == sourceCID,
               api.requestSnapshot(purpose: .playback).playbackCredentialVersion == version else { throw CancellationError() }
         guard data.hasPlayableStreamPayload else { throw BiliAPIError.missingPayload }
+        if automatic, PiliSleepTimer.shared.shouldStopAtPlaybackEnd() {
+            throw BiliAPIError.api(code: -1, message: "定时停止已生效，点击重试可继续剧情")
+        }
         piliInteractive.selectingInteractivePage {
             selectPage(VideoPage(cid: cid, page: nil, part: title, duration: nil, dimension: nil))
         }
@@ -23,6 +27,9 @@ extension VideoDetailViewModel {
                 try Task.checkCancellation()
                 guard !isPlaybackInvalidatedForNavigation, detail.bvid == bvid, selectedCID == cid,
                       api.requestSnapshot(purpose: .playback).playbackCredentialVersion == version else { throw CancellationError() }
+                if automatic, PiliSleepTimer.shared.policy.preventsAutomaticPlayback {
+                    throw BiliAPIError.api(code: -1, message: "定时停止已生效，点击重试可继续剧情")
+                }
                 if case let .failed(message) = playURLState { throw BiliAPIError.api(code: -1, message: message) }
                 if let message = stablePlayerViewModel?.errorMessage { throw BiliAPIError.api(code: -1, message: message) }
                 if stablePlayerViewModel?.hasPresentedPlayback == true { return }
@@ -36,7 +43,7 @@ extension VideoDetailViewModel {
                 piliInteractive.selectingInteractivePage {
                     selectPage(VideoPage(cid: sourceCID, page: nil, part: nil, duration: nil, dimension: nil))
                 }
-                pendingVideoListenPlaybackIntent = oldIntent
+                pendingVideoListenPlaybackIntent = oldIntent && !PiliSleepTimer.shared.policy.preventsAutomaticPlayback
                 pendingPlaybackHistoryResumeCID = sourceCID
                 pendingPlaybackHistoryResumeTime = oldTime
                 await pageLoadingTask?.value

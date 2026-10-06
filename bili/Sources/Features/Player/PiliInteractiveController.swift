@@ -5,7 +5,7 @@ import PiliPlaybackCore
 @MainActor
 final class PiliInteractiveController: ObservableObject {
     typealias Loader = @MainActor (Int?) async throws -> PiliInteractiveEdge
-    typealias Navigator = @MainActor (Int, String) async throws -> Void
+    typealias Navigator = @MainActor (Int, String, Bool) async throws -> Void
     @Published private(set) var edge: PiliInteractiveEdge?
     @Published private(set) var choicesVisible = false
     @Published private(set) var isLoading = false
@@ -84,9 +84,9 @@ final class PiliInteractiveController: ObservableObject {
                     guard let viewModel else { throw CancellationError() }
                     return try await viewModel.api.fetchPiliInteractiveEdge(bvid: video.bvid, graphVersion: graph, edgeID: edgeID)
                 }
-                self.navigator = { [weak viewModel] cid, title in
+                self.navigator = { [weak viewModel] cid, title, automatic in
                     guard let viewModel else { throw CancellationError() }
-                    try await viewModel.openPiliInteractivePage(cid: cid, title: title)
+                    try await viewModel.openPiliInteractivePage(cid: cid, title: title, automatic: automatic)
                 }
                 self.pausePlayback = { [weak viewModel] in viewModel?.stablePlayerViewModel?.pause() }
                 try await self.loadInitial(cid: cid, generation: generation)
@@ -139,7 +139,7 @@ final class PiliInteractiveController: ObservableObject {
         var initial = InteractiveSession()
         try initial.merge(node.hiddenVars)
         let rootCID = node.currentCID ?? cid
-        if rootCID != cid { try await navigator?(rootCID, node.title ?? "开始") }
+        if rootCID != cid { try await navigator?(rootCID, node.title ?? "开始", true) }
         guard isCurrent(generation) else { return }
         initialCID = rootCID; edge = node; session = initial
         history = [.init(edgeID: node.edgeID, cid: rootCID, title: node.title ?? "开始",
@@ -209,12 +209,18 @@ final class PiliInteractiveController: ObservableObject {
         guard !isLoading, contextIsCurrent(), plan?.question.choices?.contains(choice) == true,
               session.allows(choice) else { return }
         retryRequest = .choice(choice, automatic)
+        if automatic {
+            guard !PiliSleepTimer.shared.shouldStopAtPlaybackEnd() else {
+                fail(BiliAPIError.api(code: -1, message: "定时停止已生效，点击重试可继续剧情"))
+                return
+            }
+        } else { PiliSleepTimer.shared.resumeManually() }
         do {
             let next = try session.applying(choice.nativeAction)
             var guardState = advanceGuard
             if automatic { try guardState.record(edgeID: choice.id, session: next) } else { guardState.reset() }
             transition(edgeID: choice.id, cid: choice.cid, title: choice.option ?? "分支",
-                       session: next, restore: nil, guardState: guardState)
+                       session: next, restore: nil, guardState: guardState, automatic: automatic)
         } catch { fail(error) }
     }
     func revisit(_ checkpoint: PiliInteractiveCheckpoint) {
@@ -227,6 +233,7 @@ final class PiliInteractiveController: ObservableObject {
     }
     private func restore(_ checkpoint: PiliInteractiveCheckpoint, path: [PiliInteractiveCheckpoint]) {
         guard !isLoading, contextIsCurrent() else { return }
+        PiliSleepTimer.shared.resumeManually()
         retryRequest = .restore(checkpoint, path)
         transition(edgeID: checkpoint.edgeID, cid: checkpoint.cid, title: checkpoint.title,
                    session: checkpoint.session ?? InteractiveSession(), restore: (checkpoint, path),
@@ -234,6 +241,7 @@ final class PiliInteractiveController: ObservableObject {
     }
     func retry() {
         guard !isLoading else { return }
+        PiliSleepTimer.shared.resumeManually()
         switch retryRequest {
         case let .choice(choice, automatic): choose(choice, automatic: automatic)
         case let .restore(checkpoint, path): restore(checkpoint, path: path)
@@ -248,6 +256,7 @@ final class PiliInteractiveController: ObservableObject {
             if let viewModel { context = nil; prepare(viewModel) }
             return
         }
+        PiliSleepTimer.shared.resumeManually()
         retryRequest = .restart
         transition(edgeID: nil, cid: initialCID, title: "开始", session: InteractiveSession(),
                    restore: nil, guardState: InteractiveAdvanceGuard(), restarting: true)
@@ -255,7 +264,7 @@ final class PiliInteractiveController: ObservableObject {
 
     private func transition(edgeID: Int?, cid: Int?, title: String, session candidate: InteractiveSession,
                             restore: (PiliInteractiveCheckpoint, [PiliInteractiveCheckpoint])?,
-                            guardState: InteractiveAdvanceGuard, restarting: Bool = false) {
+                            guardState: InteractiveAdvanceGuard, restarting: Bool = false, automatic: Bool = false) {
         guard !isLoading, let loader, let navigator else { return }
         task?.cancel(); token = UUID(); let generation = token
         isLoading = true; choicesVisible = false; errorMessage = nil; remainingSeconds = nil
@@ -270,7 +279,10 @@ final class PiliInteractiveController: ObservableObject {
                 if let restore {
                     if restore.0.session == nil && !node.hiddenVars.isEmpty { throw InteractiveRuleError.unknownVariable("saved state") }
                 } else { try next.merge(node.hiddenVars) }
-                try await navigator(destinationCID, node.title ?? title)
+                if automatic, PiliSleepTimer.shared.shouldStopAtPlaybackEnd() {
+                    throw BiliAPIError.api(code: -1, message: "定时停止已生效，点击重试可继续剧情")
+                }
+                try await navigator(destinationCID, node.title ?? title, automatic)
                 guard self.isCurrent(generation) else { return }
                 let blocked = node.noBacktracking || (restore?.0.noBacktracking ?? false) || (!restarting && self.isBacktrackingRestricted)
                 let noTutorial = node.noTutorial || (restore?.0.noTutorial ?? false) || (!restarting && self.history.contains { $0.noTutorial })

@@ -44,7 +44,7 @@ struct PiliInteractiveFixture: View {
                 default: throw BiliAPIError.emptyData
                 }
                 return try JSONDecoder().decode(PiliInteractiveEdge.self, from: Data(json.utf8))
-            }, navigator: { _, _ in })
+            }, navigator: { _, _, _ in })
         }
         // Fixture clips finish immediately; branch state and UI remain production code.
         .onChange(of: controller.history.last?.id) { _, _ in _ = controller.handlePlaybackEnded() }
