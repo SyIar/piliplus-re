@@ -133,7 +133,7 @@ final class PiliDanmakuRulesStore: ObservableObject {
         recalled.insert("\(cid):\(id)"); revision &+= 1
     }
     func filter(_ items: [DanmakuItem], identity expected: PiliAccountIdentity) -> [DanmakuItem] {
-        guard identity == expected else { return items }
+        guard identity == expected, !rules.isEmpty || !recalled.isEmpty else { return items }
         return items.filter { !matcher.blocks($0) && !recalled.contains("\($0.cid ?? 0):\($0.serverID ?? "")") }
     }
     private func install(_ values: [PiliDanmakuRule]) { rules = values; matcher = .init(values); revision &+= 1 }

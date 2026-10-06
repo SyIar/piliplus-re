@@ -61,6 +61,7 @@ struct PiliRecommendationFeedbackView: View {
             defer { busy = false }
             do {
                 try await api.piliDislikeVideo(aid: aid, dislike: value, identity: interactionIdentity)
+                guard interactionIdentity.matches(api.requestSnapshot(purpose: .interaction)) else { return }
                 disliked = value
                 if value { onDislike?() }
             } catch { self.error = error.localizedDescription }
