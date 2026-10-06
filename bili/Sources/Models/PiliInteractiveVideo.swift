@@ -1,23 +1,31 @@
 import Foundation
+import PiliPlaybackCore
 
-nonisolated struct PiliInteractiveEdge: Decodable, Sendable {
-    struct Edges: Decodable, Sendable { let questions: [Question]? }
-    struct Question: Decodable, Sendable { let choices: [Choice]? }
-    struct Choice: Codable, Identifiable, Hashable, Sendable {
-        let id: Int
-        let cid: Int?
-        let option: String?
-    }
-    let edgeID: Int?
-    let title: String?
-    let edges: Edges?
-    var choices: [Choice] { (edges?.questions?.first?.choices ?? []).filter { ($0.cid ?? 0) > 0 } }
-    enum CodingKeys: String, CodingKey { case title, edges; case edgeID = "edge_id" }
-}
+typealias PiliInteractiveEdge = InteractiveNode
 
 nonisolated struct PiliInteractiveCheckpoint: Codable, Identifiable, Sendable {
+    let visitID: UUID
     let edgeID: Int?
     let cid: Int
     let title: String
-    var id: String { "\(edgeID ?? 0)|\(cid)" }
+    let session: InteractiveSession?
+    let noBacktracking: Bool
+    let noTutorial: Bool
+    var id: String { visitID.uuidString }
+    init(visitID: UUID = UUID(), edgeID: Int?, cid: Int, title: String,
+         session: InteractiveSession? = nil, noBacktracking: Bool = false, noTutorial: Bool = false) {
+        self.visitID = visitID; self.edgeID = edgeID; self.cid = cid; self.title = title
+        self.session = session; self.noBacktracking = noBacktracking; self.noTutorial = noTutorial
+    }
+    enum CodingKeys: String, CodingKey { case visitID, edgeID, cid, title, session, noBacktracking, noTutorial }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        visitID = try c.decodeIfPresent(UUID.self, forKey: .visitID) ?? UUID()
+        edgeID = try c.decodeIfPresent(Int.self, forKey: .edgeID)
+        cid = try c.decode(Int.self, forKey: .cid)
+        title = try c.decode(String.self, forKey: .title)
+        session = try c.decodeIfPresent(InteractiveSession.self, forKey: .session)
+        noBacktracking = try c.decodeIfPresent(Bool.self, forKey: .noBacktracking) ?? false
+        noTutorial = try c.decodeIfPresent(Bool.self, forKey: .noTutorial) ?? false
+    }
 }

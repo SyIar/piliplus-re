@@ -2,6 +2,38 @@ import XCTest
 
 final class PiliLiquidGlassUITests: XCTestCase {
     @MainActor
+    func testInteractiveChoicesHotspotsAndCheckpointRestore() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "interactive"]
+        app.launch()
+        let start = app.buttons["ui.interactive.choice.2"]
+        XCTAssertTrue(start.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["ui.interactive.choice.3"].exists, "Locked choices must stay hidden")
+        start.tap()
+        let hotspot = app.buttons["ui.interactive.choice.4"]
+        XCTAssertTrue(hotspot.waitForExistence(timeout: 10))
+        XCTAssertTrue(hotspot.isHittable, app.debugDescription)
+        XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "积分：1")
+        app.buttons["ui.interactive.revisit"].tap()
+        XCTAssertTrue(start.waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "积分：0")
+        start.tap()
+        XCTAssertTrue(hotspot.waitForExistence(timeout: 10))
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Interactive video glass hotspot choices"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+        hotspot.tap()
+        XCTAssertTrue(app.staticTexts["ui.interactive.finished"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["ui.interactive.revisit"].isEnabled)
+        app.buttons["重新开始"].tap()
+        XCTAssertTrue(start.waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "积分：0")
+    }
+
+    @MainActor
     func testCommentTreeFoldingPaginationAndLayoutPreference() {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait

@@ -44,3 +44,7 @@ xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-subtitles.pn
 xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture commentTree --ui-test-reset-state
 sleep 3
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-comment-tree.png"
+
+xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture interactive
+sleep 3
+xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-interactive.png"

@@ -12,6 +12,7 @@ extension VideoDetailViewModel {
 
     func selectPage(_ page: VideoPage) {
         guard !isPlaybackTerminatedForNavigation else { return }
+        let reloadInteractive = piliInteractive.willSelectPage()
         captureVideoListenPlaybackIntentForContentSwitch()
         isPlaybackInvalidatedForNavigation = false
         cancelBackgroundTasks()
@@ -36,5 +37,6 @@ extension VideoDetailViewModel {
             else { return }
             await self.loadPlayURL()
         }
+        if reloadInteractive { piliInteractive.prepare(self) }
     }
 }

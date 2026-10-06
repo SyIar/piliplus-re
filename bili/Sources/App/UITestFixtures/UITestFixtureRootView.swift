@@ -23,6 +23,8 @@ struct UITestFixtureRootView: View {
                 PiliGlassPlayerPreviewFixture()
             case .commentTree:
                 PiliCommentTreeFixture()
+            case .interactive:
+                PiliInteractiveFixture()
             }
         }
         .environmentObject(dependencies)
