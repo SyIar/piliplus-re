@@ -1,3 +1,4 @@
+import PiliPlaybackCore
 import SwiftUI
 
 /// Exercises the production controller and choice surface without API accounts.

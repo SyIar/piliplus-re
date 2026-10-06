@@ -1,4 +1,5 @@
 import ChunUI
+import PiliPlaybackCore
 import SwiftUI
 
 /// Keep the paused player's center button from covering a story hotspot.

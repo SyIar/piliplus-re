@@ -1,4 +1,5 @@
 import Foundation
+import PiliPlaybackCore
 
 extension BiliAPIClient {
     func fetchPiliInteractiveEdge(bvid: String, graphVersion: Int, edgeID: Int?) async throws -> PiliInteractiveEdge {
