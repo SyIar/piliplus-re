@@ -45,6 +45,7 @@ private struct PiliCommentActionsContent<Content: View>: View {
     @State private var pending: PiliCommentMutation?
     @State private var showsReport = false
     @State private var showsExport = false
+    @State private var checksVisibility = false
     @State private var errorMessage: String?
     private var state: PiliCommentState { store.state(comment, subject: subject) }
     private var permissions: PiliCommentPermissions { .init(comment: comment, accountMID: subject.identity.mid, ownerMID: ownerMID) }
@@ -64,6 +65,9 @@ private struct PiliCommentActionsContent<Content: View>: View {
                 .contextMenu {
                     Button { CommentCopyAction.copy(comment.content?.message ?? "") } label: { Label("复制评论", systemImage: "doc.on.doc") }
                     Button("保存完整评论", systemImage: "square.and.arrow.down") { showsExport = true }
+                    if comment.member?.numericMID == subject.identity.mid {
+                        Button("检查对外可见性", systemImage: "checkmark.shield") { checksVisibility = true }
+                    }
                     Button { perform(.dislike(state.reaction != 2)) } label: {
                         Label(state.reaction == 2 ? "取消点踩" : "点踩", systemImage: state.reaction == 2 ? "hand.thumbsdown.fill" : "hand.thumbsdown")
                     }
@@ -101,6 +105,9 @@ private struct PiliCommentActionsContent<Content: View>: View {
             }
         }
         .sheet(isPresented: $showsExport) { PiliContentImageExportView(document: .comment(comment, source: target.referer)) }
+        .sheet(isPresented: $checksVisibility) {
+            NavigationStack { PiliVisibilityCheckView(api: api, target: .comment(oid: target.oid, type: target.type, id: comment.rpid, root: comment.rootID ?? 0)) }
+        }
         .alert("评论操作失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
             Button("好", role: .cancel) { errorMessage = nil }
         } message: { Text(errorMessage ?? "") }

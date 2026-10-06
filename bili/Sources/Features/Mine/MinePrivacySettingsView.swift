@@ -5,6 +5,7 @@ struct MinePrivacySettingsView: View {
 
     var body: some View {
         Form {
+            Section { NavigationLink { PiliVisibilitySettingsView() } label: { Label("发布可见性检查", systemImage: "checkmark.shield") } }
             Section {
                 Toggle(isOn: Binding(
                     get: { libraryStore.incognitoModeEnabled },

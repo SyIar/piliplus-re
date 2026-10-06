@@ -4437,6 +4437,34 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testPublishedVisibilityUsesAnonymousReadAndDoesNotRepublish() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/polymer/web-dynamic/v1/detail" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"item":{"id_str":"901"}}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{"root":{"rpid":70},"replies":[{"rpid":71}]}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=private; DedeUserID=1001; bili_jct=private-csrf")
+        let dynamic = try await api.piliCheckVisibility(.dynamic("901"), identity: .init(api.requestSnapshot()))
+        let reply = try await api.piliCheckVisibility(.comment(oid: "100", type: 1, id: 71, root: 70), identity: .init(api.requestSnapshot(purpose: .interaction)))
+        XCTAssertTrue(dynamic.publicRead)
+        XCTAssertTrue(reply.publicRead)
+        XCTAssertEqual(recorder.requests.count, 2)
+        for request in recorder.requests {
+            XCTAssertEqual(request.httpMethod, "GET")
+            XCTAssertTrue((request.value(forHTTPHeaderField: "Cookie") ?? "").isEmpty)
+        }
+        RequestContractURLProtocol.install { request in
+            Self.response(for: request, body: #"{"code":-404,"message":"not found"}"#)
+        }
+        let unknown = try await api.piliCheckVisibility(.dynamic("901"), identity: .init(api.requestSnapshot()))
+        XCTAssertFalse(unknown.publicRead)
+        XCTAssertTrue(unknown.message.contains("审核延迟"), "An anonymous read failure is not proof of moderation")
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

@@ -10,7 +10,11 @@ extension BiliAPIClient {
         }
         let result = try await piliContentWrite(draft.editingID == nil ? "/x/dynamic/feed/create/dyn" : "/x/dynamic/feed/edit/dyn",
             body: draft.payload(mid: identity.mid, uploadID: uploadID), query: query, signed: draft.editingID != nil, identity: identity)
-        return result["dyn_id_str"].piliString
+        let id = result["dyn_id_str"].piliString
+        if !id.isEmpty, !draft.privatePost, draft.scheduledAt == nil {
+            await PiliVisibilityCheckCenter.shared.schedule(.dynamic(id), api: self, identity: identity)
+        }
+        return id
     }
     func managePiliDynamic(id: String, action: String, identity: PiliAccountIdentity) async throws {
         guard Int64(id) ?? 0 > 0, ["remove", "set_top", "rm_top"].contains(action) else { throw BiliAPIError.missingPayload }

@@ -15,7 +15,7 @@ struct MinePlaybackSettingsView: View {
 
     var body: some View {
         Form {
-            Section { NavigationLink("超分辨率", systemImage: "sparkles.tv") { PiliSuperResolutionSettingsView() } }
+            Section { NavigationLink { PiliSuperResolutionSettingsView() } label: { Label("超分辨率", systemImage: "sparkles.tv") } }
             MinePlaybackPreferenceSection(
                 libraryStore: libraryStore,
                 playbackPreferenceSummary: AnyView(playbackPreferenceSummary),

@@ -28,6 +28,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
     @State private var composer: ComposerRoute?
     @State private var showsReport = false
     @State private var showsExport = false
+    @State private var checksVisibility = false
     @State private var confirmDelete = false
     @State private var message: String?
     @State private var busy = false
@@ -40,6 +41,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
             Button("保存完整动态", systemImage: "square.and.arrow.down") { showsExport = true }
             Button("举报动态", systemImage: "exclamationmark.bubble") { showsReport = true }
             if item.author?.mid == api.requestSnapshot(purpose: .main).currentUserMID {
+                Button("检查对外可见性", systemImage: "checkmark.shield") { checksVisibility = true }
                 if ["DYNAMIC_TYPE_WORD", "DYNAMIC_TYPE_DRAW", "DYNAMIC_TYPE_FORWARD"].contains(item.type ?? "") {
                     Button("编辑动态", systemImage: "square.and.pencil") { loadEditingDraft() }.disabled(busy)
                 }
@@ -57,6 +59,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
             NavigationStack { PiliContentReportView(api: api, target: .dynamic(id: item.idStr, author: item.author?.mid ?? 0)) }
         }
         .sheet(isPresented: $showsExport) { PiliContentImageExportView(document: .dynamic(item)) }
+        .sheet(isPresented: $checksVisibility) { NavigationStack { PiliVisibilityCheckView(api: api, target: .dynamic(item.idStr)) } }
         .confirmationDialog("删除这条动态？", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("删除", role: .destructive) { mutate("remove", identity: operationIdentity) }
         }

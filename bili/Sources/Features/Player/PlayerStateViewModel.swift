@@ -5847,6 +5847,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func syncPictureInPictureState() {
+        (engine as? AVPlayerHLSBridgeEngine)?.updateNativePictureInPictureActive(isNativePictureInPictureActive)
         isPictureInPictureActive = isNativePictureInPictureActive
             || pictureInPictureController?.isPictureInPictureActive == true
             || engine.isPictureInPictureActive

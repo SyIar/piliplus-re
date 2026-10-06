@@ -102,7 +102,7 @@ extension BiliAPIClient {
                 as: UTF8.self
             )
         }
-        let response: BiliResponse<EmptyBiliPayload> = try await postForm(
+        let response: BiliResponse<DynamicJSONValue> = try await postForm(
             base: baseURL,
             path: "/x/v2/reply/add",
             body: body,
@@ -112,6 +112,11 @@ extension BiliAPIClient {
         )
         guard response.code == 0 else {
             throw BiliAPIError.api(code: response.code, message: response.displayMessage)
+        }
+        let id = max(response.payload?["rpid"].piliInt ?? 0, response.payload?["reply"]["rpid"].piliInt ?? 0)
+        if id > 0 {
+            await PiliVisibilityCheckCenter.shared.schedule(.comment(oid: oid, type: type, id: id, root: root ?? 0),
+                api: self, identity: PiliAccountIdentity(snapshot))
         }
     }
 

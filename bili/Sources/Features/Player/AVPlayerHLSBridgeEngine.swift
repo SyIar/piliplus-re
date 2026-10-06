@@ -117,8 +117,11 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
         false
     }
 
-    var isPictureInPictureActive: Bool {
-        false
+    private(set) var isPictureInPictureActive = false
+
+    func updateNativePictureInPictureActive(_ active: Bool) {
+        isPictureInPictureActive = active
+        refreshSuperResolution()
     }
 
     var usesNativePlaybackControls: Bool {
@@ -321,7 +324,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
     private func refreshSuperResolution() {
         guard superResolutionMode > 0, !superResolutionUnavailable, !isStopped, let item = player.currentItem,
               source?.playbackContentMode != .audioOnly, source?.dynamicRange == .sdr,
-              !nativeDolbyVideoOverlay.isActive, playerViewController?.isPictureInPictureActive != true,
+              !nativeDolbyVideoOverlay.isActive, !isPictureInPictureActive,
               UIApplication.shared.applicationState == .active, !ProcessInfo.processInfo.isLowPowerModeEnabled,
               ProcessInfo.processInfo.thermalState.rawValue < ProcessInfo.ThermalState.serious.rawValue,
               let container = playerViewController?.contentOverlayView ?? surfaceView else {

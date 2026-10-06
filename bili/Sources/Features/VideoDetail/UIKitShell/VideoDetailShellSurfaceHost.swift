@@ -1563,8 +1563,8 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
     var body: some View {
         NavigationStack {
             List {
-                NavigationLink("原声翻译", systemImage: "waveform") { PiliAudioLanguageView(viewModel: detailViewModel) }
-                NavigationLink("超分辨率", systemImage: "sparkles.tv") { PiliSuperResolutionSettingsView() }
+                NavigationLink { PiliAudioLanguageView(viewModel: detailViewModel) } label: { Label("原声翻译", systemImage: "waveform") }
+                NavigationLink { PiliSuperResolutionSettingsView() } label: { Label("超分辨率", systemImage: "sparkles.tv") }
                 if detailViewModel.isVideoListenModeEnabled,
                    !detailViewModel.videoListenAudioVariants.isEmpty {
                     NavigationLink {
@@ -1644,9 +1644,9 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
 
                 if !detailViewModel.isVideoListenModeEnabled {
                     if let source = detailViewModel.selectedPlayVariant?.videoURL {
-                        NavigationLink("截图与动图", systemImage: "camera") {
+                        NavigationLink {
                             PiliMediaCaptureView(source: source, time: viewModel.currentTime, duration: viewModel.duration ?? 0)
-                        }
+                        } label: { Label("截图与动图", systemImage: "camera") }
                     }
                     NavigationLink {
                         SurfaceOnlyDanmakuSettingsPage(
