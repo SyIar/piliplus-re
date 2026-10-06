@@ -60,7 +60,7 @@ nonisolated enum PiliLANAddress {
             guard name.hasPrefix("en") else { continue }
             var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
             guard getnameinfo(address, socklen_t(address.pointee.sa_len), &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 else { continue }
-            let value = String(cString: host)
+            let value = String(decoding: host.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
             if UPnPNetwork.isLocalIPv4(value) { addresses.append((name, value)) }
         }
         guard let address = addresses.sorted(by: { $0.0 < $1.0 }).first?.1 else {
