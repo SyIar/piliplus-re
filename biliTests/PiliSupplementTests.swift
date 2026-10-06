@@ -4,6 +4,23 @@ import PiliPlaybackCore
 @testable import bili
 
 final class PiliSupplementTests: XCTestCase {
+    func testCommentKeywordsPruneReplyPreviewsWithoutRemovingCleanParent() throws {
+        let comments = try JSONDecoder().decode([Comment].self, from: Data(#"[{"rpid":1,"content":{"message":"正常正文"},"replies":[{"rpid":2,"content":{"message":"BUY now"}},{"rpid":3,"content":{"message":"普通回复"}}]},{"rpid":4,"content":{"message":"广告"}}]"#.utf8))
+        let rules = PiliCommentKeywordRules(" buy \nBUY\n广告\n\n")
+        XCTAssertEqual(rules.words, ["buy", "广告"])
+        let visible = rules.filter(comments, blocksGoods: false)
+        XCTAssertEqual(visible.map(\.id), [1]); XCTAssertEqual(visible[0].replies?.map(\.id), [3])
+        XCTAssertEqual(comments[0].replies?.count, 2, "Filtering must not mutate the source snapshot")
+        XCTAssertEqual(PiliCommentKeywordRules("").filter(comments, blocksGoods: false), comments)
+    }
+    func testServerContentNoticesSurviveVideoDetailMergeAndDynamicDecode() throws {
+        let decoder = JSONDecoder()
+        let partial = try decoder.decode(VideoItem.self, from: Data(#"{"bvid":"BV1test","title":"视频"}"#.utf8))
+        let full = try decoder.decode(VideoItem.self, from: Data(#"{"bvid":"BV1test","title":"视频","argue_info":{"argue_msg":"此内容存在争议"}}"#.utf8))
+        XCTAssertEqual(partial.mergingFilledValues(from: full).piliArgueInfo?["argue_msg"].piliString, "此内容存在争议")
+        let dynamic = try decoder.decode(DynamicFeedItem.self, from: Data(#"{"id_str":"1","modules":{"module_dispute":{"title":"内容提示","desc":"服务端说明","jump_url":"https://www.bilibili.com/"}}}"#.utf8))
+        XCTAssertEqual(dynamic.modules?.moduleDispute?["desc"].piliString, "服务端说明")
+    }
     func testSupplementRoutesUseExactHostsAndPreserveNamespaces() throws {
         XCTAssertEqual(PiliSupplementRoute(url: URL(string: "https://www.bilibili.com/audio/au123?from=share")!), .audio(123))
         XCTAssertEqual(PiliSupplementRoute(url: URL(string: "bilibili://audio/456")!), .audio(456))

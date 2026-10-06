@@ -10,6 +10,7 @@ struct VideoDetailResolvedInfoContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            PiliContentWarningView(title: store.warningText, video: true)
             VideoDetailInfoTitleText(text: presentation.titleText, isExpanded: isExpanded)
                 .commentCopyContextMenu(text: store.titleText, title: "复制标题")
 

@@ -14,6 +14,8 @@ extension HomeViewModel {
             }
             lastUserRefreshDate = now
         }
+        // Refresh the shared snapshot once per TTL, independently of card rendering.
+        async let blacklist: Void = PiliBlacklistedCreators.shared.refresh(api: pageCoordinator.api)
         isUserRefreshing = true
         defer {
             isUserRefreshing = false
@@ -23,5 +25,6 @@ extension HomeViewModel {
         } else {
             await refresh(preservingExistingRecommendations: true)
         }
+        await blacklist
     }
 }

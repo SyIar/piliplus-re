@@ -1,3 +1,5 @@
+> 此文保留 2026-10-05 的 PR/issue 调研与实施排序。后续实现已推进，文中的当时缺口请对照 [当前交付记录](PILIPLUS_FULL_ALIGNMENT.md) 和 [逐项清单](PILIPLUS_FEATURE_INVENTORY.md)，不要当作当前未实现清单。
+
 # 默认蓝色、迁移缺口与上游开放事项评估
 
 > 后续进度：近期八项增强已合入 main 并发布，见 [近期实现记录](NEAR_TERM_IMPLEMENTATION.md)。树状评论、重复弹幕合并和复杂互动视频见 [2026-10-06 增量](COMMENT_DANMAKU_INTERACTIVE.md)；用户已排除 VideoTogether/Chromecast，人像防挡暂不纳入。本文件保留 2026-10-05 的审计快照，其中“待迁移”不覆盖后续实现状态。

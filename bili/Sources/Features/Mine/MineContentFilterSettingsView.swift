@@ -3,12 +3,15 @@ import SwiftUI
 struct MineContentFilterSettingsView: View {
     @EnvironmentObject private var dependencies: AppDependencies
     @AppStorage("piliplus.filter.blacklistedCreators") private var blocksCreators = true
+    @AppStorage("piliplus.display.videoWarnings") private var videoWarnings = true
+    @AppStorage("piliplus.display.dynamicWarnings") private var dynamicWarnings = true
     @ObservedObject private var blacklisted = PiliBlacklistedCreators.shared
     @ObservedObject var libraryStore: LibraryStore
 
     var body: some View {
         Form {
             Section {
+                NavigationLink { PiliCommentKeywordSettingsView() } label: { Label("评论关键词过滤", systemImage: "text.bubble.badge.minus") }
                 Toggle(isOn: Binding(
                     get: { libraryStore.blocksAdDynamics },
                     set: { libraryStore.setBlocksAdDynamics($0) }
@@ -44,6 +47,10 @@ struct MineContentFilterSettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("内容提示") {
+                Toggle("显示视频警告或争议信息", isOn: $videoWarnings)
+                Toggle("显示动态警告或争议信息", isOn: $dynamicWarnings)
+            }
             Section("推荐过滤") {
                 Toggle("屏蔽黑名单用户的视频", isOn: $blocksCreators)
                 Button("同步黑名单（\(blacklisted.ids.count) 位）") { Task { await blacklisted.refresh(api: dependencies.api, force: true) } }

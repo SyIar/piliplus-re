@@ -24,7 +24,7 @@ struct PiliArticleView: View {
                     ForEach(Array(document.operations.enumerated()), id: \.offset) { _, op in PiliNoteOperationView(operation: op) }
                     HStack {
                         if !document.dynamicID.isEmpty { Button(liked ? "取消点赞" : "点赞") { action(favorite: false) } }
-                        if document.commentType == 12 { Button(favorited ? "取消收藏" : "收藏") { action(favorite: true) } }
+                        if document.commentType == 12 || document.route.kind == .opus { Button(favorited ? "取消收藏" : "收藏") { action(favorite: true) } }
                         if document.commentID > 0 { Button("评论") { comments = try? document.commentTarget() } }
                     }.buttonStyle(.bordered).disabled(busy)
                     PiliShareMenu(url: document.route.url, title: document.title) { Label("分享", systemImage: "square.and.arrow.up") }.buttonStyle(.bordered)
@@ -46,7 +46,11 @@ struct PiliArticleView: View {
             defer { busy = false }
             do {
                 if favorite {
-                    try await api.piliContentWrite(favorited ? "/x/article/favorites/del" : "/x/article/favorites/add", fields: ["id": String(document.commentID)], identity: identity)
+                    if document.route.kind == .opus {
+                        try await api.piliOpusFavorite(id: document.route.id, add: !favorited, identity: identity)
+                    } else {
+                        try await api.piliContentWrite(favorited ? "/x/article/favorites/del" : "/x/article/favorites/add", fields: ["id": String(document.commentID)], identity: identity)
+                    }
                     favorited.toggle()
                 } else {
                     try await api.piliContentWrite("/x/dynamic/feed/operate/thumb", body: .object(["dyn_id_str": .string(document.dynamicID), "up": .int(liked ? 2 : 1)]), identity: identity)

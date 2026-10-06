@@ -25,6 +25,7 @@ struct PiliFavoriteItemsView: View {
     var body: some View {
         NavigationStack {
             List {
+                NavigationLink { PiliPublicFavoriteView(api: model.api, folder: model.folder) } label: { Label("浏览全部内容（含音频）", systemImage: "music.note.list") }
                 Section {
                     Picker("显示顺序", selection: $model.order) {
                         ForEach(PiliFavoriteOrder.allCases) { Text($0.title).tag($0) }

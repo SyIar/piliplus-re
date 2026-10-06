@@ -1,6 +1,7 @@
 import Foundation
 
 struct VideoDetailDescriptionRenderSnapshot: Equatable {
+    var warningText = ""
     var titleText = ""
     var owner: VideoOwner?
     var viewCountText = "-"
@@ -22,6 +23,7 @@ struct VideoDetailDescriptionRenderSnapshot: Equatable {
         let detail = viewModel.detail
         let trimmedTitle = detail.title.trimmingCharacters(in: .whitespacesAndNewlines)
 
+        warningText = detail.piliArgueInfo?["argue_msg"].piliString ?? ""
         titleText = detail.title
         owner = detail.owner
         viewCountText = BiliFormatters.compactCount(detail.stat?.view)

@@ -6,6 +6,7 @@ final class VideoDetailDescriptionRenderStore: ObservableObject {
     @Published private var snapshot = VideoDetailDescriptionRenderSnapshot()
     private var deferredSnapshot = VideoDetailDeferredValue<VideoDetailDescriptionRenderSnapshot>()
 
+    var warningText: String { snapshot.warningText }
     var titleText: String { snapshot.titleText }
     var owner: VideoOwner? { snapshot.owner }
     var viewCountText: String { snapshot.viewCountText }

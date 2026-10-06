@@ -143,6 +143,7 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
     let pgcSeasonID: Int?
     let pgcEpisodeID: Int?
     let piliUGCSeason: PiliUGCSeason?
+    let piliArgueInfo: DynamicJSONValue?
     // A local route context, deliberately excluded from the API's CodingKeys.
     var piliPlaybackQueue: PiliPlaybackQueue? = nil
 
@@ -150,6 +151,7 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         case bvid, aid, title, pic, desc, duration, pubdate, owner, stat, cid, pages, dimension
         case historyResumeTime, historyCID, recommendReason, pgcSeasonID, pgcEpisodeID
         case piliUGCSeason = "ugc_season"
+        case piliArgueInfo = "argue_info"
     }
 
     init(
@@ -170,7 +172,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         recommendReason: String? = nil,
         pgcSeasonID: Int? = nil,
         pgcEpisodeID: Int? = nil,
-        piliUGCSeason: PiliUGCSeason? = nil
+        piliUGCSeason: PiliUGCSeason? = nil,
+        piliArgueInfo: DynamicJSONValue? = nil
     ) {
         self.bvid = bvid
         self.aid = aid
@@ -190,6 +193,7 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         self.pgcSeasonID = pgcSeasonID
         self.pgcEpisodeID = pgcEpisodeID
         self.piliUGCSeason = piliUGCSeason
+        self.piliArgueInfo = piliArgueInfo
     }
 
     nonisolated func mergingFilledValues(from fullDetail: VideoItem) -> VideoItem {
@@ -227,7 +231,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
             recommendReason: recommendReason ?? fullDetail.recommendReason,
             pgcSeasonID: pgcSeasonID ?? fullDetail.pgcSeasonID,
             pgcEpisodeID: pgcEpisodeID ?? fullDetail.pgcEpisodeID,
-            piliUGCSeason: fullDetail.piliUGCSeason ?? piliUGCSeason
+            piliUGCSeason: fullDetail.piliUGCSeason ?? piliUGCSeason,
+            piliArgueInfo: fullDetail.piliArgueInfo ?? piliArgueInfo
         ).withPiliPlaybackQueue(piliPlaybackQueue ?? fullDetail.piliPlaybackQueue)
     }
 
@@ -3126,6 +3131,10 @@ nonisolated struct Comment: Identifiable, Decodable, Hashable, Sendable {
 
     var id: Int { rpid }
 
+    func replacingPreviewReplies(_ values: [Comment]?) -> Comment {
+        var copy = self; copy.replies = values; return copy
+    }
+
     func removingReaderReactions() -> Comment {
         var copy = self
         copy.likeState = nil
@@ -5456,11 +5465,13 @@ nonisolated struct DynamicModules: Decodable, Hashable {
     let moduleAuthor: DynamicAuthor?
     let moduleDynamic: DynamicModuleDynamic?
     let moduleStat: DynamicModuleStat?
+    let moduleDispute: DynamicJSONValue?
 
     enum CodingKeys: String, CodingKey {
         case moduleAuthor = "module_author"
         case moduleDynamic = "module_dynamic"
         case moduleStat = "module_stat"
+        case moduleDispute = "module_dispute"
     }
 }
 

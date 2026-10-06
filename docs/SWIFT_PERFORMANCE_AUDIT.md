@@ -13,6 +13,8 @@
 | [Foundation：UserDefaults.synchronize](https://developer.apple.com/documentation/foundation/userdefaults/synchronize()) | Apple 明确说明此方法不必要且不应使用。正常 set 已由系统异步持久化，不应在播放历史保存路径等待同步。 |
 | [Swift 6.2 Released](https://www.swift.org/blog/swift-6.2-released/) | 在新的并发规则下，async 本身不保证离开调用者 actor。明确隔离 CPU/磁盘任务，同时保持可取消性和 Sendable 边界。 |
 
+| [Apple：ProMotion 帧率策略](https://developer.apple.com/documentation/quartzcore/optimizing-iphone-and-ipad-apps-to-support-promotion-displays) | SwiftUI/UIKit 已参与系统帧率调度；CADisplayLink 的帧率是偏好，不能保证 120 Hz。按显示器、温度、电量和前后台条件停止不必要回调。 |
+
 ## 已定位并处理
 
 1. **选图完整解码**：原评论上传用 `UIImage(data:)` 后重新压缩，会先展开大照片。本轮改为 `PiliImagePreparation`，Image I/O 在独立任务里按最长边 2560 像素解码并应用 EXIF 方向，输出大小与输入大小均有限制。动态与评论共用。
@@ -22,6 +24,13 @@
 
 5. **网络切换崩溃**：CI 的真实崩溃栈显示 CDN 探测在旧 URLSession 失效后创建任务。连接池原来只锁住取出 session，取出后与任务创建之间存在竞态。改为同一锁内注册 task 和替换 session；已登记任务正常完成，新任务使用新 session。图片下载同步改用这一机制，并新增并发切换与 120 次请求的回归测试。
 6. **选图任务过期**：动态选图改为随 PhotosPicker 选择绑定的可取消 task；解码完成后检查取消和选择版本，防止快速切换照片时旧任务把图片追加回草稿。
+
+7. **高刷新率回调**：偏好关闭、屏幕最高仅 60 Hz、应用不活跃、低电量或 serious/critical 温控时释放 display link；恢复时仍保留用户偏好。不是宣称让系统一直运行 120 Hz。
+8. **媒体导出资源预算**：GIF 限制 1–10 秒、最多 100 帧和 24 M 总像素，不一次保留无上界帧数组。Live Photo 逐帧编码、处理取消、只在真正写完 JPEG/MOV 后交给系统保存。
+9. **GPU 超分预算**：输入最多 1920、输出最多 2560 像素边长，同步中的 GPU 命令最多两份；HDR/VR/PiP、后台、低电量或温控约束时退回正常视频路径。模拟器/不支持 MetalFX 的设备不会假装启用 GPU 效果。
+10. **长响应与渲染热点**：高能曲线限制响应大小并预采样至最多 400 点，使用 Canvas；SponsorBlock 拉取/解码移到明确并发路径并限制响应/片段数，自动分类集合缓存，播放时钟回调不每帧解析 UserDefaults。
+11. **评论归档**：独立 actor 顺序读写、16 MB 文件上限、最近 2,000 条、原子落盘；坏备份不会覆盖旧数据。发布已在服务端成功时，本机保存失败不把它改为可重试的网络失败，避免重复发评。
+12. **结果过期与账号隔离**：分页加载使用代次标记；旧筛选/旧账号结果不能回填新列表。黑名单在账号内做有限缓存，关系操作后立即更新，不在每个视频卡片里重复读接口。
 
 缩图的收益是可验证的像素数量上界下降。没有在此报告声称实测节省多少 MB；JPEG/HEIF 解码缓冲、色彩空间、操作系统缓存和设备差异均会影响进程峰值。
 

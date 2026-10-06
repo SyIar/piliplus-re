@@ -53,6 +53,7 @@ struct MineContentView: View {
                 }
             }
             Section("数据") {
+                NavigationLink { PiliCollectedContentView() } label: { Label("追番与其他收藏", systemImage: "star.rectangle.on.rectangle") }
                 NavigationLink { PiliCommentArchiveView() } label: { Label("我的评论", systemImage: "text.bubble") }
                 NavigationLink { PiliAccountUtilitiesView() } label: { Label("账号记录与空间隐私", systemImage: "person.text.rectangle") }
                 NavigationLink { PiliCoursesView(api: dependencies.api) } label: { Label("收藏的课程", systemImage: "graduationcap") }

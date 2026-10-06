@@ -21,6 +21,7 @@ struct BiliPlayerSurfaceGestureLayer<Content: View>: View {
     var onSwipeFullscreen: (() -> Void)? = nil
     @AppStorage("piliplus.player.doubleTapSeek") private var doubleTapSeek = false
     @AppStorage("piliplus.player.swipeFullscreen") private var swipeFullscreen = true
+    @AppStorage("piliplus.player.pinchFullscreen") private var pinchFullscreen = true
 
     @State private var horizontalSeekStartProgress: Double?
     @State private var horizontalSeekCurrentProgress: Double?
@@ -65,6 +66,10 @@ struct BiliPlayerSurfaceGestureLayer<Content: View>: View {
                         }
                     }
             )
+            .simultaneousGesture(MagnifyGesture().onEnded { value in
+                guard pinchFullscreen, isFullscreen, value.magnification < 0.75 else { return }
+                onSwipeFullscreen?()
+            })
             .simultaneousGesture(horizontalSeekGesture(size: proxy.size))
             .simultaneousGesture(verticalAdjustmentGesture(size: proxy.size))
         }

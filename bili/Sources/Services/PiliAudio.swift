@@ -88,11 +88,11 @@ extension BiliAPIClient {
         var request = PiliProtoMessage(); request.set(1, message: item); request.set(2, message: PiliAudioCodec.playerArgs)
         return try PiliAudioSource.decode(await piliGRPC("/bilibili.app.listener.v1.Listener/PlayURL", message: request, identity: nil, needsLogin: false, purpose: .playback))
     }
-    func piliAudioAction(_ method: String, item: PiliProtoMessage, liked: Bool = false, identity: PiliAccountIdentity) async throws -> PiliProtoMessage {
-        guard ["ThumbUp", "CoinAdd", "TripleLike"].contains(method), item.integer(1) == 3, item.integer(3) > 0 else { throw BiliAPIError.missingPayload }
+    func piliAudioAction(_ method: String, item: PiliProtoMessage, liked: Bool = false, coins: Int = 1, identity: PiliAccountIdentity) async throws -> PiliProtoMessage {
+        guard ["ThumbUp", "CoinAdd", "TripleLike"].contains(method), item.integer(1) == 3, item.integer(3) > 0, (1...2).contains(coins) else { throw BiliAPIError.missingPayload }
         var request = PiliProtoMessage(); request.set(1, message: item)
         if method == "ThumbUp" { request.set(2, integer: liked ? 1 : 0) }
-        if method == "CoinAdd" { request.set(2, integer: 1); request.set(3, integer: 0) }
+        if method == "CoinAdd" { request.set(2, integer: coins); request.set(3, integer: 0) }
         return try await piliGRPC("/bilibili.app.listener.v1.Listener/" + method, message: request, identity: identity, write: true, purpose: .interaction)
     }
 }

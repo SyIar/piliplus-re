@@ -17,6 +17,7 @@ final class PiliAudioModel: ObservableObject {
     let api: BiliAPIClient
     let anchor: Int
     private var generation = UUID()
+    private var returnPosition = 0.0
     init(api: BiliAPIClient, id: Int) { self.api = api; anchor = id }
 
     func load(reset: Bool = false) async {
@@ -32,7 +33,8 @@ final class PiliAudioModel: ObservableObject {
             if tracks.isEmpty { error = "此音频已失效或当前账号无法查看" }
         } catch { if !Task.isCancelled, generation == ticket { self.error = error.localizedDescription } }
     }
-    func select(_ track: PiliAudioTrack) async {
+    func select(_ track: PiliAudioTrack, resume: Bool = false) async {
+        if !resume { returnPosition = 0 }
         generation = UUID(); let ticket = generation; player?.stop(); player = nil; sources = []; selected = track; liked = track.liked; error = nil
         do {
             let sources = try await api.piliAudioSources(track.item)
@@ -43,7 +45,7 @@ final class PiliAudioModel: ObservableObject {
     }
     func install(_ source: PiliAudioSource) {
         guard let track = selected else { return }
-        let position = player?.currentTime ?? 0; player?.stop(); sourceID = source.id
+        let position = player?.currentTime ?? returnPosition; returnPosition = 0; player?.stop(); sourceID = source.id
         let current = PlayerStateViewModel(videoURL: nil, audioURL: source.url, title: track.title, authorName: track.owner.name,
             referer: "https://www.bilibili.com/audio/au\(track.id)", durationHint: source.duration > 0 ? source.duration : Double(track.duration),
             resumeTime: position, startupResumePolicy: .immediate, artworkURL: URL(string: track.cover.normalizedBiliURL()), playbackContentMode: .audioOnly)
@@ -52,16 +54,8 @@ final class PiliAudioModel: ObservableObject {
         current.onNextTrackRequested = { [weak self] in Task { await self?.navigate(1) } }
         current.onPreviousTrackRequested = { [weak self] in Task { await self?.navigate(-1) } }
         current.onPlaybackEnded = { [weak self, weak current] in
-            guard let self, self.player === current else { return }
-            let action = PlaybackEndPolicy.resolve(order: PiliPlaybackPreferences.shared.order,
-                currentIndex: self.tracks.firstIndex { $0.id == track.id }, count: self.tracks.count,
-                sleepTimerStops: PiliSleepTimer.shared.shouldStopAtPlaybackEnd())
-            switch action {
-            case .stop: current?.pause()
-            case .replay: current?.seek(to: 0); current?.play()
-            case let .advance(index): Task { await self.select(self.tracks[index]) }
-            case .loadRelated: Task { await self.navigate(1, manual: false) }
-            }
+            guard let self, let current else { return }
+            Task { await self.finishPlayback(current) }
         }
         current.play()
     }
@@ -72,7 +66,22 @@ final class PiliAudioModel: ObservableObject {
         guard tracks.indices.contains(index + offset) else { return }
         await select(tracks[index + offset])
     }
-    func leave() { generation = UUID(); player?.stop() }
+    private func finishPlayback(_ current: PlayerStateViewModel) async {
+        guard player === current, let track = selected else { return }
+        if PiliSleepTimer.shared.shouldStopAtPlaybackEnd() { current.pause(); return }
+        let order = PiliPlaybackPreferences.shared.order
+        if order != .stop, order != .repeatOne, tracks.last?.id == track.id, next != nil { await load() }
+        guard player === current else { return }
+        let action = PlaybackEndPolicy.resolve(order: order, currentIndex: tracks.firstIndex { $0.id == track.id }, count: tracks.count,
+            sleepTimerStops: PiliSleepTimer.shared.shouldStopAtPlaybackEnd())
+        switch action {
+        case .stop: current.pause()
+        case .replay: current.seek(to: 0); current.play()
+        case let .advance(index): await select(tracks[index])
+        case .loadRelated: await navigate(1, manual: false)
+        }
+    }
+    func leave() { generation = UUID(); returnPosition = player?.currentTime ?? 0; player?.stop(); player = nil }
 }
 
 struct PiliAudioView: View {
@@ -80,6 +89,7 @@ struct PiliAudioView: View {
     @State private var comments: DynamicFeedItem?
     @State private var actionBusy = false
     @State private var confirmCoin = false
+    @State private var confirmTriple = false
     @State private var favorites = false
     init(api: BiliAPIClient, id: Int) { _model = .init(wrappedValue: PiliAudioModel(api: api, id: id)) }
     var body: some View {
@@ -91,6 +101,7 @@ struct PiliAudioView: View {
                 if !track.description.isEmpty { Text(track.description).font(.subheadline).textSelection(.enabled) }
                 HStack {
                     Button("赞", systemImage: model.liked ? "hand.thumbsup.fill" : "hand.thumbsup") { action("ThumbUp") }
+                        .contextMenu { Button("三连") { confirmTriple = true } }
                     Button("投币", systemImage: "c.circle") { confirmCoin = true }
                     Button("收藏", systemImage: "star") { favorites = true }
                     Button("评论", systemImage: "bubble") { comments = try? piliCommentTarget(oid: String(track.id), type: 14, author: track.owner) }
@@ -118,22 +129,26 @@ struct PiliAudioView: View {
                 if model.busy { ProgressView() }
                 else if model.next != nil { Button("加载更多") { Task { await model.load() } } }
             }
-        }.navigationTitle("音频").task { if model.tracks.isEmpty { await model.load(reset: true) } }
+        }.navigationTitle("音频").task { if model.tracks.isEmpty { await model.load(reset: true) } else if model.player == nil, let track = model.selected { await model.select(track, resume: true) } }
             .onChange(of: model.order) { Task { await model.load(reset: true) } }
             .onDisappear { model.leave() }
             .sheet(item: $comments) { DynamicCommentsSheet(item: $0, api: model.api) }
             .sheet(isPresented: $favorites) { if let track = model.selected { NavigationStack { PiliAudioFavoritesView(api: model.api, id: track.id) } } }
-            .confirmationDialog("投 1 枚硬币？", isPresented: $confirmCoin, titleVisibility: .visible) { Button("投币") { action("CoinAdd") } }
+            .confirmationDialog("选择投币数量", isPresented: $confirmCoin, titleVisibility: .visible) { Button("投 1 枚硬币") { action("CoinAdd", coins: 1) }; Button("投 2 枚硬币") { action("CoinAdd", coins: 2) } }
+            .confirmationDialog("点赞、投币并收藏？", isPresented: $confirmTriple, titleVisibility: .visible) { Button("三连") { action("TripleLike") } }
             .toolbar { Button("播放方式", systemImage: "timer") { PiliPlaybackToolsView.present() } }
     }
-    private func action(_ method: String) {
+    private func action(_ method: String, coins: Int = 1) {
         guard !actionBusy, let track = model.selected else { return }; actionBusy = true
         Task {
             defer { actionBusy = false }
             do {
                 let identity = PiliAccountIdentity(await model.api.requestSnapshot(purpose: .interaction))
-                _ = try await model.api.piliAudioAction(method, item: track.item, liked: model.liked, identity: identity)
-                if model.selected?.id == track.id, method == "ThumbUp" { model.liked.toggle() }
+                let response = try await model.api.piliAudioAction(method, item: track.item, liked: model.liked, coins: coins, identity: identity)
+                if model.selected?.id == track.id {
+                    if method == "ThumbUp" { model.liked.toggle() }
+                    if method == "TripleLike" { if response.integer(2) != 0 { model.liked = true }; model.error = response.string(1).isEmpty ? "已提交三连，请以服务端状态为准" : response.string(1) }
+                }
             } catch { model.error = error.localizedDescription }
         }
     }

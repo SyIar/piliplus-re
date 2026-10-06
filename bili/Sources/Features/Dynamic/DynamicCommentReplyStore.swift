@@ -348,8 +348,7 @@ final class DynamicCommentReplyStore: ObservableObject {
     }
 
     private func filteredComments(_ values: [Comment]) -> [Comment] {
-        guard blocksGoodsComments else { return values }
-        return values.filter { !$0.containsGoodsPromotion }
+        PiliCommentKeywordFilter.filter(values, blocksGoods: blocksGoodsComments)
     }
 
     private func uniqueComments(_ comments: [Comment]) -> [Comment] {

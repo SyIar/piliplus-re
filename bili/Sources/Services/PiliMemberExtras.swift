@@ -22,7 +22,7 @@ extension BiliAPIClient {
         let data: DynamicJSONValue, listKey: String, pageSize: Int
         switch section {
         case .audio:
-            data = try await piliContentRead("/audio/music-service/web/song/upper", query: ["uid": String(mid), "pn": String(page), "ps": "20", "order": "1", "web_location": "333.1387"], base: URL(string: "https://www.bilibili.com")!)
+            data = try await piliContentRead("/audio/music-service/web/song/upper", query: ["uid": String(mid), "pn": String(page), "ps": "20", "order": "1", "web_location": "333.1387"])
             listKey = "data"; pageSize = 20
         case .coin, .like, .comic, .bangumi, .charging:
             let suffix: String
@@ -58,8 +58,8 @@ extension BiliAPIClient {
         return .init(items: items, more: section == .courses ? data["page"]["next"].piliInt != 0 : items.count >= pageSize && (total == 0 || page * pageSize < total))
     }
     private func piliMemberShop(mid: Int) async throws -> DynamicJSONValue {
-        let context = await requestSnapshot(), profile = BiliAppSigner.Profile.androidLogin
-        var query = ["actionKey": "appkey", "build": "8430300", "mVersion": "309", "mallVersion": "8430300", "statistics": profile.statistics]
+        let context = await requestSnapshot(), profile = BiliAppSigner.Profile.androidHD
+        var query = ["actionKey": "appkey", "build": "8430300", "mVersion": "309", "mallVersion": "8430300", "statistics": BiliAppSigner.Profile.androidLogin.statistics]
         if let key = context.appAccessKey { query["access_key"] = key }
         query = BiliAppSigner.sign(query, profile: profile)
         var request = try await makeRequest(base: URL(string: "https://mall.bilibili.com")!, path: "/community-hub/small_shop/feed/tab/item", query: query,

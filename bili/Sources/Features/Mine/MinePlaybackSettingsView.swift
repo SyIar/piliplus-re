@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MinePlaybackSettingsView: View {
     @AppStorage("piliplus.player.doubleTapSeek") private var doubleTapSeek = false
+    @AppStorage("piliplus.player.pinchFullscreen") private var pinchFullscreen = true
     @AppStorage("piliplus.player.swipeFullscreen") private var swipeFullscreen = true
     @AppStorage("piliplus.player.skipPGC") private var skipsPGC = false
     @AppStorage("piliplus.player.energy") private var showsEnergy = true
@@ -30,6 +31,7 @@ struct MinePlaybackSettingsView: View {
                 Toggle("震动反馈", isOn: $hapticsEnabled)
                 Toggle("两侧双击快退/快进 10 秒", isOn: $doubleTapSeek)
                 Toggle("中部上滑全屏、下滑退出", isOn: $swipeFullscreen)
+                Toggle("双指捏合退出全屏", isOn: $pinchFullscreen)
             }
             Section { NavigationLink { PiliSuperResolutionSettingsView() } label: { Label("超分辨率", systemImage: "sparkles.tv") } }
             MinePlaybackPreferenceSection(

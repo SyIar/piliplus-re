@@ -4838,7 +4838,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let api = try makeAPI(cookieHeader: "SESSDATA=s; bili_jct=csrf; DedeUserID=1001")
         let audio = try await api.piliMemberExtras(.audio, mid: 17, page: 1)
         XCTAssertEqual(audio.items.first?["id"].piliInt, 123); XCTAssertFalse(audio.more)
-        XCTAssertEqual(recorder.request?.url?.host, "www.bilibili.com")
+        XCTAssertEqual(recorder.request?.url?.host, "api.bilibili.com")
         let match = try await api.piliMatch(123); XCTAssertEqual(match["away_score"].piliInt, 2)
         _ = try await api.piliBubble(id: "6", category: "7", sort: 2, page: 3)
         let query = URLComponents(url: try XCTUnwrap(recorder.request?.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
@@ -4848,6 +4848,42 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         try await api.piliMusicWish("MA10", selected: false, identity: .init(api.requestSnapshot()))
         XCTAssertEqual(formValues(in: try XCTUnwrap(recorder.request))["state"], "1")
         XCTAssertEqual(formValues(in: try XCTUnwrap(recorder.request))["csrf"], "csrf")
+    }
+
+    @MainActor
+    func testCollectedLibrariesUseOriginalPagingAndOpusNumericAction() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            switch request.url?.path {
+            case "/x/space/bangumi/follow/list":
+                return Self.response(for: request, body: #"{"code":0,"data":{"total":31,"list":[{"season_id":123,"title":"测试番剧"}]}}"#)
+            case "/x/topic/web/fav/list":
+                return Self.response(for: request, body: #"{"code":0,"data":{"topic_list":{"page_info":{"total":1},"topic_items":[{"id":7,"name":"测试话题"}]}}}"#)
+            case "/x/polymer/web-dynamic/v1/opus/feed/fav":
+                return Self.response(for: request, body: #"{"code":0,"data":{"has_more":true,"items":[{"opus_id":"999","content":"收藏图文"}]}}"#)
+            default: return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
+            }
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=s; bili_jct=csrf; DedeUserID=1001"), identity = PiliAccountIdentity(api.requestSnapshot())
+        let anime = try await api.piliCollectedContent(.anime, page: 2, status: 3, identity: identity)
+        XCTAssertTrue(anime.more); XCTAssertEqual(anime.items.first?["season_id"].piliInt, 123)
+        let query = URLComponents(url: try XCTUnwrap(recorder.request?.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        for (name, value) in ["vmid": "1001", "type": "1", "pn": "2", "ps": "15", "follow_status": "3"] { XCTAssertTrue(query.contains(.init(name: name, value: value))) }
+        let articles = try await api.piliCollectedContent(.articles, page: 1, identity: identity); XCTAssertTrue(articles.more)
+        let topics = try await api.piliCollectedContent(.topics, page: 1, identity: identity); XCTAssertFalse(topics.more)
+        try await api.piliOpusFavorite(id: "999", add: false, identity: identity)
+        let request = try XCTUnwrap(recorder.request)
+        XCTAssertEqual(request.url?.path, "/x/community/cosmo/interface/simple_action")
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: try XCTUnwrap(requestBodyData(from: request))) as? [String: Any])
+        XCTAssertEqual(json["action"] as? Int, 4)
+        let entity = try XCTUnwrap(json["entity"] as? [String: Any]); XCTAssertEqual(entity["object_id_str"] as? String, "999")
+        XCTAssertEqual((entity["type"] as? [String: Any])?["biz"] as? Int, 2)
+        try await api.piliFollowStatus(ids: [3,1], status: 2, identity: identity)
+        XCTAssertEqual(formValues(in: try XCTUnwrap(recorder.request))["season_id"], "1,3")
+        let count = recorder.requests.count
+        do { try await api.piliFollowStatus(ids: [-1], status: 2, identity: identity); XCTFail("Invalid season") } catch {}
+        XCTAssertEqual(recorder.requests.count, count)
     }
 
     @MainActor

@@ -37,6 +37,9 @@ struct DynamicFeedCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if let dispute = item.modules?.moduleDispute {
+                PiliContentWarningView(title: dispute["title"].piliString, detail: dispute["desc"].piliString, url: URL(string: dispute["jump_url"].piliString))
+            }
             if let video = display.video, display.usesHomeVideoCardStyle {
                 DynamicHomeVideoFeedCard(
                     video: video,

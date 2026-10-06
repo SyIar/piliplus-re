@@ -1,10 +1,12 @@
 import SwiftUI
 
 struct MinePrivacySettingsView: View {
+    @AppStorage("piliplus.comments.record") private var recordsComments = true
     @ObservedObject var libraryStore: LibraryStore
 
     var body: some View {
         Form {
+            Section { Toggle("在本机记录已发送评论", isOn: $recordsComments) }
             Section { NavigationLink { PiliVisibilitySettingsView() } label: { Label("发布可见性检查", systemImage: "checkmark.shield") } }
             Section {
                 Toggle(isOn: Binding(

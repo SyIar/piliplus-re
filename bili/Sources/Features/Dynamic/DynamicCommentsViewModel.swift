@@ -260,8 +260,7 @@ final class DynamicCommentsViewModel: ObservableObject {
     }
 
     private func filteredComments(_ values: [Comment]) -> [Comment] {
-        guard blocksGoodsComments else { return values }
-        return values.filter { !$0.containsGoodsPromotion }
+        PiliCommentKeywordFilter.filter(values, blocksGoods: blocksGoodsComments)
     }
 
     func refilterLoadedComments() {

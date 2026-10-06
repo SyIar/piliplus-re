@@ -1,7 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-private struct PiliCommentDocument: FileDocument {
+nonisolated private struct PiliCommentDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.json] }
     var data: Data
     init(data: Data) { self.data = data }
