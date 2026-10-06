@@ -94,7 +94,6 @@ struct PiliInteractiveChoicesView: View {
                     }
                 }
                 .foregroundStyle(.white)
-                .accessibilityIdentifier("ui.interactive.overlay")
             }
         }
         .allowsHitTesting(controller.isOverlayVisible)

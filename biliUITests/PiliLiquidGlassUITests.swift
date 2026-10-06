@@ -13,7 +13,7 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertFalse(app.buttons["ui.interactive.choice.3"].exists, "Locked choices must stay hidden")
         start.tap()
         let hotspot = app.buttons["ui.interactive.choice.4"]
-        XCTAssertTrue(hotspot.waitForExistence(timeout: 10))
+        XCTAssertTrue(hotspot.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertTrue(hotspot.isHittable, app.debugDescription)
         XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "积分：1")
         app.buttons["ui.interactive.revisit"].tap()
