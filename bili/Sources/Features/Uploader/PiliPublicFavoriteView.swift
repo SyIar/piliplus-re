@@ -63,7 +63,7 @@ struct PiliPublicFavoriteView: View {
         Task {
             defer { busy = false }
             do { try await api.piliContentWrite((seasonID == nil ? "/x/v3/fav/folder/" : "/x/v3/fav/season/") + (favorited ? "unfav" : "fav"), fields: [seasonID == nil ? "media_id" : "season_id": String(folder.id), "platform": "web"], identity: identity); favorited.toggle() }
-            catch { error = error.localizedDescription }
+            catch { self.error = error.localizedDescription }
         }
     }
 }

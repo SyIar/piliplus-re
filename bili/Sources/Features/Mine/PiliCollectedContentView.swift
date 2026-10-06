@@ -91,7 +91,7 @@ struct PiliCollectedContentView: View {
             do {
                 try await dependencies.api.piliCollectedRemove(current, item: item, identity: identity)
                 if ticket == generation { items.removeAll { $0 == item }; selected.remove(item["season_id"].piliInt) }
-            } catch { error = error.localizedDescription }
+            } catch { self.error = error.localizedDescription }
         }
     }
     private func updateStatus(_ status: Int) {
@@ -100,7 +100,7 @@ struct PiliCollectedContentView: View {
         Task {
             defer { mutating = false }
             do { try await dependencies.api.piliFollowStatus(ids: ids, status: status, identity: identity); await load(reset: true) }
-            catch { error = error.localizedDescription }
+            catch { self.error = error.localizedDescription }
         }
     }
 }
