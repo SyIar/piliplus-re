@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct DanmakuSettingsSheetContent: View {
+    @EnvironmentObject private var dependencies: AppDependencies
     @ObservedObject var store: VideoDetailDanmakuSettingsRenderStore
     let summary: String
     let displayAreaBinding: Binding<DanmakuDisplayArea>
@@ -13,7 +14,10 @@ struct DanmakuSettingsSheetContent: View {
     let updateExtendedSettings: (DanmakuSettings) -> Void
 
     var body: some View {
-        Form {
+        PiliForm {
+            Section {
+                NavigationLink("视频弹幕屏蔽规则") { PiliDanmakuRulesView(api: dependencies.api) }
+            }
             DanmakuSettingsHeaderFormSection(
                 store: store,
                 summary: summary,

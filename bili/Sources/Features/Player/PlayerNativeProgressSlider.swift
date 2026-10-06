@@ -1,3 +1,4 @@
+import ChunUI
 import SwiftUI
 
 enum PlayerNativeProgressStyle: Equatable {
@@ -84,7 +85,7 @@ struct PlayerNativeProgressSlider: View {
                     .frame(width: width * CGFloat(displayProgress), height: trackHeight)
             } else {
                 Capsule()
-                    .fill(style == .liquidGlass ? Color(red: 1, green: 0.18, blue: 0.32) : .white.opacity(0.96))
+                    .fill(style == .liquidGlass ? Color.cc.primary : .white.opacity(0.96))
                     .frame(width: width * CGFloat(displayProgress), height: trackHeight)
             }
         }

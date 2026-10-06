@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct SearchLoadingList: View {
     var body: some View {
@@ -12,7 +13,7 @@ struct SearchLoadingList: View {
         .contentMargins(.top, 0, for: .scrollContent)
         .scrollDismissesKeyboard(.immediately)
         .scrollBounceBehavior(.always, axes: .vertical)
-        .background(Color(.systemBackground))
+        .background(Color.cc.background)
         .nativeTopScrollEdgeEffect()
     }
 }

@@ -31,7 +31,7 @@ struct DynamicFeedAuthorHeader: View {
     private var authorIdentity: some View {
         HStack(spacing: 9) {
             AvatarRemoteImage(urlString: avatarURLString, pixelSize: 96) {
-                Image(systemName: "person.crop.circle.fill")
+                PiliIcon(systemName: "person.crop.circle.fill")
                     .foregroundStyle(.secondary)
             }
             .frame(width: 36, height: 36)

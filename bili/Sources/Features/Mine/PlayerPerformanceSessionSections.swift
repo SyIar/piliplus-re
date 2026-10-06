@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceSessionHeader: View {
     let session: PlayerPerformanceSession
@@ -6,13 +7,13 @@ struct PlayerPerformanceSessionHeader: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(session.title ?? session.metricsID)
-                .font(.subheadline.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .lineLimit(2)
 
             Spacer(minLength: 8)
 
             Text(session.lastUpdatedAt, style: .time)
-                .font(.caption.monospacedDigit())
+                .piliFont(.sm).monospacedDigit()
                 .foregroundStyle(.secondary)
         }
     }
@@ -23,14 +24,14 @@ struct PlayerPerformanceSessionSummary: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Label("\(session.bufferCount) 次缓冲", systemImage: "hourglass")
+            PiliLabel("\(session.bufferCount) 次缓冲", systemImage: "hourglass")
 
             if session.resumeRecoveryCount > 0 {
-                Label("\(session.resumeRecoveryCount) 次续播验证", systemImage: "checkmark.circle")
+                PiliLabel("\(session.resumeRecoveryCount) 次续播验证", systemImage: "checkmark.circle")
             }
 
             if session.seekRecoveryCount > 0 {
-                Label("\(session.seekRecoveryCount) 次 Seek 恢复", systemImage: "speedometer")
+                PiliLabel("\(session.seekRecoveryCount) 次 Seek 恢复", systemImage: "speedometer")
             }
 
             if let detailSourceMessage = session.detailSourceMessage {
@@ -43,7 +44,7 @@ struct PlayerPerformanceSessionSummary: View {
                     .lineLimit(1)
             }
         }
-        .font(.caption)
+        .piliFont(.sm)
         .foregroundStyle(summaryColor)
     }
 
@@ -51,7 +52,7 @@ struct PlayerPerformanceSessionSummary: View {
         session.bufferCount > 0
             || session.resumeRecoverySlowCount > 0
             || session.seekRecoverySlowCount > 0
-            || (session.accessLogStallCount ?? 0) > 0 ? .orange : .secondary
+            || (session.accessLogStallCount ?? 0) > 0 ? Color.cc.warning : .secondary
     }
 }
 
@@ -62,12 +63,12 @@ struct PlayerPerformanceSessionTimeline: View {
         if !session.timeline.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
                 Text("时间线")
-                    .font(.caption2.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
 
                 ForEach(session.timeline.suffix(6)) { entry in
                     Text(entry.compactDescription)
-                        .font(.caption2.monospacedDigit())
+                        .piliFont(.sm).monospacedDigit()
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -81,9 +82,9 @@ struct PlayerPerformanceSessionFailureLabel: View {
 
     var body: some View {
         if let failureMessage = session.failureMessage {
-            Label(failureMessage, systemImage: "exclamationmark.triangle")
-                .font(.caption)
-                .foregroundStyle(.red)
+            PiliLabel(failureMessage, systemImage: "exclamationmark.triangle")
+                .piliFont(.sm)
+                .foregroundStyle(Color.cc.destructive)
                 .lineLimit(2)
         }
     }

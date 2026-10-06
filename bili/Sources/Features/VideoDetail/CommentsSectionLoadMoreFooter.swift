@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct CommentsSectionLoadMoreFooter: View {
     @ObservedObject var store: VideoDetailCommentsRenderStore
@@ -30,7 +31,7 @@ struct CommentsSectionLoadMoreFooter: View {
                 }
         } else {
             Text("没有更多评论了")
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)

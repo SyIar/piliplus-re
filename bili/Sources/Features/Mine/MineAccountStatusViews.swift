@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct MineLoggedInHeaderView: View {
     let avatarURLString: String?
@@ -8,7 +9,7 @@ struct MineLoggedInHeaderView: View {
     var body: some View {
         HStack(spacing: 12) {
             AvatarRemoteImage(urlString: avatarURLString, pixelSize: 128) {
-                Image(systemName: "person.crop.circle.fill")
+                PiliIcon(systemName: "person.crop.circle.fill")
                     .resizable()
                     .foregroundStyle(.secondary)
             }
@@ -17,9 +18,9 @@ struct MineLoggedInHeaderView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(username)
-                    .font(.headline)
+                    .piliFont(.baseBold)
                 Text(uidText)
-                    .font(.caption)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
         }
@@ -37,12 +38,12 @@ struct MineLoginPanelView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "person.crop.circle.badge.checkmark")
-                .font(.system(size: 42, weight: .semibold))
+            PiliIcon(systemName: "person.crop.circle.badge.checkmark", size: 42)
+                .piliFont(.lgBold)
                 .foregroundStyle(appTintColor)
 
             Text(message.isEmpty ? "想让 App 端首页推荐更接近官方，优先用短信验证码；想稳定登录可用扫码。" : message)
-                .font(.subheadline)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -62,7 +63,7 @@ struct MineLoginPanelView: View {
                     subtitle: "更稳定；当前更适合配合网页端推荐",
                     badge: "稳定",
                     systemImage: "qrcode",
-                    tint: .blue,
+                    tint: Color.cc.primary,
                     isProminent: false,
                     action: onQRCodeLogin
                 )
@@ -95,19 +96,19 @@ private struct LoginOptionButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                Image(systemName: systemImage)
-                    .font(.title3.weight(.semibold))
+                PiliIcon(systemName: systemImage)
+                    .piliFont(.baseBold).fontWeight(.semibold)
                     .foregroundStyle(tint)
                     .frame(width: 26)
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(title)
-                            .font(.subheadline.weight(.semibold))
+                            .piliFont(.base).fontWeight(.semibold)
                             .foregroundStyle(.primary)
 
                         Text(badge)
-                            .font(.caption2.weight(.semibold))
+                            .piliFont(.sm).fontWeight(.semibold)
                             .foregroundStyle(isProminent ? .white : tint)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -118,15 +119,15 @@ private struct LoginOptionButton: View {
                     }
 
                     Text(subtitle)
-                        .font(.caption)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
 
                 Spacer(minLength: 8)
 
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
+                PiliIcon(systemName: "chevron.right")
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.tertiary)
             }
             .padding(12)

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct MineHomeRecommendDiagnosticsView: View {
     @EnvironmentObject private var diagnosticsStore: HomeRecommendDiagnosticsStore
@@ -11,7 +12,7 @@ struct MineHomeRecommendDiagnosticsView: View {
     }
 
     var body: some View {
-        Form {
+        PiliForm {
             Section("最近一次请求") {
                 LabeledContent("状态", value: snapshot.status.title)
                 LabeledContent("来源", value: snapshot.source.title)
@@ -93,7 +94,7 @@ struct MineHomeRecommendDiagnosticsView: View {
                     LabeledContent("时间", value: Self.formattedDate(snapshot.fallbackAt))
                     if let errorMessage = snapshot.fallbackErrorMessage, !errorMessage.isEmpty {
                         Text(errorMessage)
-                            .font(.footnote)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                             .textSelection(.enabled)
                     }
@@ -114,9 +115,9 @@ struct MineHomeRecommendDiagnosticsView: View {
                    snapshot.isLoggedIn,
                    !snapshot.guestModeEnabled,
                    !snapshot.hasAccessKey {
-                    Label("缺少移动端 access_key，App 推荐会弱于 PiliPlus/PiliPod。请优先用“App 短信验证码登录”。", systemImage: "exclamationmark.triangle")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
+                    PiliLabel("缺少移动端 access_key，App 推荐会弱于 PiliPlus/PiliPod。请优先用“App 短信验证码登录”。", systemImage: "exclamationmark.triangle")
+                        .piliFont(.sm)
+                        .foregroundStyle(Color.cc.warning)
                 }
             }
 
@@ -139,7 +140,7 @@ struct MineHomeRecommendDiagnosticsView: View {
                     LabeledContent("网络", value: snapshot.network ?? "-")
                     if let requestProfile = snapshot.requestProfile, !requestProfile.isEmpty {
                         Text(requestProfile)
-                            .font(.footnote)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                             .textSelection(.enabled)
                     }
@@ -158,7 +159,7 @@ struct MineHomeRecommendDiagnosticsView: View {
             if let errorMessage = snapshot.errorMessage, !errorMessage.isEmpty {
                 Section("错误") {
                     Text(errorMessage)
-                        .font(.footnote)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                 }
@@ -177,7 +178,7 @@ struct MineHomeRecommendDiagnosticsView: View {
                 LabeledContent("基线", value: StageOneBaselineMetricsStore.latestSnapshotURL.lastPathComponent)
                 LabeledContent("历史", value: StageOneBaselineMetricsStore.historyURL.lastPathComponent)
                 ShareLink(item: StageOneBaselineMetricsStore.historyURL) {
-                    Label("导出性能历史", systemImage: "square.and.arrow.up")
+                    PiliLabel("导出性能历史", systemImage: "square.and.arrow.up")
                 }
             }
         }

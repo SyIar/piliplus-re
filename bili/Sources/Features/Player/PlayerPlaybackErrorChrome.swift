@@ -1,13 +1,14 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPlaybackErrorChrome: View {
     let message: String
 
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle")
+            PiliIcon(systemName: "exclamationmark.triangle")
             Text(message)
-                .font(.footnote)
+                .piliFont(.sm)
                 .multilineTextAlignment(.center)
         }
         .padding()

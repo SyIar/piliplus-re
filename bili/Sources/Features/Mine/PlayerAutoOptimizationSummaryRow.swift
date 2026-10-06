@@ -1,16 +1,17 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerAutoOptimizationSummaryRow: View {
     let profile: PlayerPlaybackAdaptationProfile
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(profileTitle, systemImage: "wand.and.stars")
-                .font(.subheadline.weight(.semibold))
+            PiliLabel(profileTitle, systemImage: "wand.and.stars")
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(profileColor)
 
             Text(profileMessage)
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
@@ -54,13 +55,13 @@ struct PlayerAutoOptimizationSummaryRow: View {
         }
         switch profile.level {
         case .normal:
-            return .green
+            return Color.cc.success
         case .fallback:
-            return .blue
+            return Color.cc.primary
         case .cautious:
-            return .orange
+            return Color.cc.warning
         case .slow:
-            return .red
+            return Color.cc.destructive
         }
     }
 }

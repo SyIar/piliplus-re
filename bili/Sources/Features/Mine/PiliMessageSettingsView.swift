@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 import PiliPlaybackCore
 
 struct PiliMessageSettingsView: View {
@@ -11,9 +12,9 @@ struct PiliMessageSettingsView: View {
     @State private var loading = false
     @State private var mutating = false
     var body: some View {
-        List {
+        PiliList {
             if loading { ProgressView() }
-            if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load() } } }
+            if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load() } } }
             ForEach(items) { item in
                 if item.kind == 1 {
                     Toggle(isOn: Binding(get: { item.isOn }, set: { save(item.toggled($0)) })) { label(item) }
@@ -21,7 +22,7 @@ struct PiliMessageSettingsView: View {
                     Section(item.title) {
                         ForEach(Array(item.choices.enumerated()), id: \.offset) { index, choice in
                             Button { save(item.selecting(index)) } label: {
-                                HStack { Text(choice.string(2)); Spacer(); if choice.integer(3) == 1 { Image(systemName: "checkmark") } }
+                                HStack { Text(choice.string(2)); Spacer(); if choice.integer(3) == 1 { PiliIcon(systemName: "checkmark") } }
                             }
                         }
                     }
@@ -40,7 +41,7 @@ struct PiliMessageSettingsView: View {
             .refreshable { await load() }
     }
     private func label(_ item: PiliIMSetting) -> some View {
-        VStack(alignment: .leading) { Text(item.title); if !item.subtitle.isEmpty { Text(item.subtitle).font(.caption).foregroundStyle(.secondary) } }
+        VStack(alignment: .leading) { Text(item.title); if !item.subtitle.isEmpty { Text(item.subtitle).piliFont(.sm).foregroundStyle(.secondary) } }
     }
     private func load() async {
         guard let identity, !loading else { return }; loading = true; defer { loading = false }
@@ -73,21 +74,22 @@ struct PiliMessageKeywordView: View {
     @State private var error: String?
     @State private var removal: String?
     var body: some View {
-        Form {
+        PiliForm {
             Section("新关键词") {
                 TextField("屏蔽词", text: $input)
                 Button("添加") { mutate("KeywordBlockingAdd", word: input.trimmingCharacters(in: .whitespacesAndNewlines)) }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                     .disabled(input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || input.count > characterLimit || words.count >= limit)
-                Text("最多 \(limit) 个，每个最多 \(characterLimit) 字").font(.caption).foregroundStyle(.secondary)
+                Text("最多 \(limit) 个，每个最多 \(characterLimit) 字").piliFont(.sm).foregroundStyle(.secondary)
             }
             Section("已屏蔽") {
                 ForEach(words, id: \.self) { word in HStack { Text(word); Spacer(); Button("删除", role: .destructive) { removal = word } } }
             }
-            if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load() } } }
+            if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load() } } }
         }.disabled(busy).navigationTitle("私信关键词屏蔽")
             .task { identity = .init(api.requestSnapshot(purpose: .main)); await load() }
-            .confirmationDialog("删除这个屏蔽词？", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } })) {
-                if let word = removal { Button("删除 \(word)", role: .destructive) { removal = nil; mutate("KeywordBlockingDelete", word: word) } }
+            .piliConfirmation("删除这个屏蔽词？", isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } })) {
+                if let word = removal { PiliAlertButton("删除 \(word)", role: .destructive) { removal = nil; mutate("KeywordBlockingDelete", word: word) } }
             }
     }
     private func load() async {

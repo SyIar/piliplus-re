@@ -10,7 +10,7 @@ struct PiliCollectionDownloadView: View {
     @State private var request: PiliBatchDownloadRequest?
     @State private var loadID = UUID()
     var body: some View {
-        List {
+        PiliList {
             if loading { ProgressView("读取全部分集") }
             if let error { Text(error); Button("重试") { loadID = UUID() } }
             if !videos.isEmpty {
@@ -38,7 +38,7 @@ struct PiliCollectionDownloadView: View {
                     videos = values; selected = Set(values.map(key))
                 } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
             }
-            .sheet(item: $request) { request in PiliBatchDownloadSheet(api: api, request: request) }
+            .piliSheet(item: $request) { request in PiliBatchDownloadSheet(api: api, request: request) }
     }
     private func key(_ video: VideoItem) -> String { "\(video.bvid)|\(video.pgcEpisodeID ?? 0)" }
 }

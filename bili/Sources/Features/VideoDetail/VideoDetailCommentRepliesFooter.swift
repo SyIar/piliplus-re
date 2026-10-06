@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct CommentRepliesFooter: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -29,8 +30,8 @@ struct CommentRepliesFooter: View {
             Button {
                 actions.performLoadMoreReplies()
             } label: {
-                Label("查看更多回复", systemImage: "chevron.down")
-                    .font(.caption.weight(.semibold))
+                PiliLabel("查看更多回复", systemImage: "chevron.down")
+                    .piliFont(.sm).fontWeight(.semibold)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 9)
             }

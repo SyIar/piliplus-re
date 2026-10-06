@@ -18,7 +18,7 @@ struct PiliWatchLaterToolsView: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 Section {
                     HStack {
                         Button("全选已加载") {
@@ -38,7 +38,7 @@ struct PiliWatchLaterToolsView: View {
                         if let aid = item.aid, aid > 0 {
                             Button { toggle(aid) } label: {
                                 HStack(spacing: 12) {
-                                    Image(systemName: selected.contains(aid) ? "checkmark.circle.fill" : "circle")
+                                    PiliIcon(systemName: selected.contains(aid) ? "checkmark.circle.fill" : "circle")
                                         .foregroundStyle(Color.cc.primary)
                                     LibraryVideoRow(item: item, timestampTitle: "添加时间")
                                 }
@@ -88,30 +88,30 @@ struct PiliWatchLaterToolsView: View {
                         Button("移入收藏夹") { showTargets(.move) }
                         Spacer()
                         Button("移除", role: .destructive) { confirmRemove = true }
-                    }.buttonStyle(.glass).padding(16).background(.ultraThinMaterial).disabled(busy)
+                    }.buttonStyle(.glass).padding(16).piliGlassCard(radius: 24).disabled(busy)
                 }
             }
             .refreshable { await viewModel.refreshWatchLater(applyingFilter: false) }
             .onChange(of: viewModel.watchLaterGeneration) { _, _ in
                 selected = []; folders = []; targetMode = nil; downloadRequest = nil; confirmRemove = false; confirmCleanup = false
             }
-            .alert("移除所选的 \(selected.count) 个视频？", isPresented: $confirmRemove) {
-                Button("取消", role: .cancel) {}
-                Button("移除", role: .destructive) { mutate() }
-            } message: { Text("从稍后再看列表中移除这些记录。") }
-            .alert(cleanupTitle, isPresented: $confirmCleanup) {
-                Button("取消", role: .cancel) {}
-                Button("确认", role: .destructive) {
+            .piliAlert("移除所选的 \(selected.count) 个视频？", isPresented: $confirmRemove) {
+                PiliAlertButton("取消", role: .cancel) {}
+                PiliAlertButton("移除", role: .destructive) { mutate() }
+            } message: { "从稍后再看列表中移除这些记录。" }
+            .piliAlert(cleanupTitle, isPresented: $confirmCleanup) {
+                PiliAlertButton("取消", role: .cancel) {}
+                PiliAlertButton("确认", role: .destructive) {
                     let mode = cleanup
                     Task {
                         do { try await viewModel.cleanWatchLater(mode); errorMessage = nil }
                         catch { errorMessage = error.localizedDescription }
                     }
                 }
-            } message: { Text("操作会同步到当前历史账号，不能撤销。") }
-            .sheet(item: $targetMode) { mode in
+            } message: { "操作会同步到当前历史账号，不能撤销。" }
+            .piliSheet(item: $targetMode) { mode in
                 NavigationStack {
-                    List {
+                    PiliList {
                         ForEach(folders) { folder in
                             Button(folder.displayTitle) {
                                 targetMode = nil
@@ -124,7 +124,7 @@ struct PiliWatchLaterToolsView: View {
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button("取消") { targetMode = nil } } }
                 }
             }
-            .sheet(item: $downloadRequest) { request in
+            .piliSheet(item: $downloadRequest) { request in
                 PiliBatchDownloadSheet(api: viewModel.offlineDownloadAPI, request: request)
             }
         }

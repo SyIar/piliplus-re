@@ -18,7 +18,7 @@ private struct CommentCopyContextMenu: ViewModifier {
                 Button {
                     CommentCopyAction.copy(copyText)
                 } label: {
-                    Label(title, systemImage: "doc.on.doc")
+                    PiliLabel(title, systemImage: "doc.on.doc")
                 }
             }
         } else {

@@ -13,6 +13,8 @@ extension HomeFeedCachedVideo {
         stat = video.stat.map(HomeFeedCachedStat.init(stat:))
         cid = video.cid
         recommendReason = video.recommendReason
+        piliRecommendation = video.piliRecommendation
+        piliZoneName = video.piliZoneName
     }
 
     @MainActor var videoItem: VideoItem {
@@ -29,7 +31,9 @@ extension HomeFeedCachedVideo {
             cid: cid,
             pages: nil,
             dimension: nil,
-            recommendReason: recommendReason
+            recommendReason: recommendReason,
+            piliRecommendation: piliRecommendation,
+            piliZoneName: piliZoneName
         )
     }
 }

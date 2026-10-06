@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 extension VideoDetailViewModel {
     func resetPiliAudioLanguage() {
@@ -36,21 +37,21 @@ struct PiliAudioLanguageView: View {
     @ObservedObject var viewModel: VideoDetailViewModel
     @State private var task: Task<Void, Never>?
     var body: some View {
-        List {
+        PiliList {
             Section {
                 choice("原声", language: nil)
                 ForEach(viewModel.piliAudioLanguages) { language in choice(language.displayTitle, language: language.id) }
             }.disabled(viewModel.piliAudioLanguageBusy || viewModel.isSwitchingPlayQuality)
             if viewModel.piliAudioLanguageBusy || viewModel.isSwitchingPlayQuality { ProgressView("正在切换音轨") }
             if let message = viewModel.piliAudioLanguageError { Text(message).foregroundStyle(.secondary) }
-            Text("仅显示当前视频提供的语言。切换会保留播放位置和倍速，需要登录播放账号。").font(.footnote).foregroundStyle(.secondary)
+            Text("仅显示当前视频提供的语言。切换会保留播放位置和倍速，需要登录播放账号。").piliFont(.sm).foregroundStyle(.secondary)
         }.navigationTitle("原声翻译").onDisappear { task?.cancel() }
     }
     private func choice(_ title: String, language: String?) -> some View {
         Button {
             task?.cancel(); task = Task { await viewModel.selectPiliAudioLanguage(language) }
         } label: {
-            HStack { Text(title); Spacer(); if viewModel.piliAudioLanguage == language { Image(systemName: "checkmark") } }
+            HStack { Text(title); Spacer(); if viewModel.piliAudioLanguage == language { PiliIcon(systemName: "checkmark") } }
         }
     }
 }

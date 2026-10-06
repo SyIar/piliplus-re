@@ -1,10 +1,11 @@
 import SwiftUI
+import ChunUI
 import Translation
 
 struct PiliLiveChatView: View {
     @ObservedObject var viewModel: LiveRoomViewModel
     @ObservedObject var store: PiliLiveChatStore
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var composer = false
     @State private var report: DanmakuItem?
     @State private var identity: PiliAccountIdentity?
@@ -15,47 +16,47 @@ struct PiliLiveChatView: View {
     @State private var liking = false
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 Section {
-                    NavigationLink { PiliLiveShieldView(api: viewModel.api, roomID: viewModel.roomID, store: store) } label: { Label("弹幕屏蔽规则", systemImage: "line.3.horizontal.decrease") }
-                    NavigationLink { PiliLiveRankView(api: viewModel.api, roomID: viewModel.roomID, ownerID: viewModel.anchorOwner.mid) } label: { Label("贡献榜", systemImage: "chart.bar") }
-                    Button(liked ? "已点赞" : "为直播点赞", systemImage: liked ? "hand.thumbsup.fill" : "hand.thumbsup") { like() }.disabled(liking)
+                    NavigationLink { PiliLiveShieldView(api: viewModel.api, roomID: viewModel.roomID, store: store) } label: { PiliLabel("弹幕屏蔽规则", systemImage: "line.3.horizontal.decrease") }
+                    NavigationLink { PiliLiveRankView(api: viewModel.api, roomID: viewModel.roomID, ownerID: viewModel.anchorOwner.mid) } label: { PiliLabel("贡献榜", systemImage: "chart.bar") }
+                    PiliIconButton(liked ? "已点赞" : "为直播点赞", systemImage: liked ? "hand.thumbsup.fill" : "hand.thumbsup") { like() }.disabled(liking)
                 }
-                if let error { Text(error).foregroundStyle(.red) }
+                if let error { Text(error).foregroundStyle(Color.cc.destructive) }
                 Section("最近聊天") {
                     if store.messages.isEmpty { Text("等待直播弹幕…").foregroundStyle(.secondary) }
                     ForEach(store.messages.reversed()) { item in
                         VStack(alignment: .leading, spacing: 5) {
                             HStack {
-                                Text(item.senderName ?? "观众").font(.subheadline.bold())
-                                if let meta = item.liveMetadata, !meta.medal.isEmpty { Text("\(meta.medal) \(meta.medalLevel)").font(.caption2).foregroundStyle(.secondary) }
+                                Text(item.senderName ?? "观众").font(.cc.base.bold())
+                                if let meta = item.liveMetadata, !meta.medal.isEmpty { Text("\(meta.medal) \(meta.medalLevel)").piliFont(.sm).foregroundStyle(.secondary) }
                             }
-                            if let meta = item.liveMetadata, meta.replyUID > 0 { Text("回复 @\(meta.replyName)").font(.caption).foregroundStyle(.secondary) }
-                            Text(item.text).font(.body).textSelection(.enabled)
+                            if let meta = item.liveMetadata, meta.replyUID > 0 { Text("回复 @\(meta.replyName)").piliFont(.sm).foregroundStyle(.secondary) }
+                            Text(item.text).piliFont(.base).textSelection(.enabled)
                         }.contextMenu { actions(item) }
                     }
                 }
             }.navigationTitle("直播聊天").navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("完成") { dismiss() } }
-                    ToolbarItem(placement: .primaryAction) { Button("发弹幕", systemImage: "square.and.pencil") { composer = true } }
+                    ToolbarItem(placement: .primaryAction) { PiliIconButton("发弹幕", systemImage: "square.and.pencil") { composer = true } }
                 }
                 .onAppear { viewModel.isLiveChatOpen = true; viewModel.resumeLiveDanmakuIfNeeded() }
                 .onDisappear { viewModel.isLiveChatOpen = false; if !viewModel.isDanmakuEnabled && viewModel.superChatStore.mode == 0 { viewModel.stopLiveDanmaku(clearItems: false) } }
                 .task { identity = .init(viewModel.api.requestSnapshot()); store.load(roomID: viewModel.roomID, api: viewModel.api) }
-                .sheet(isPresented: $composer) { PiliLiveComposer(viewModel: viewModel) }
-                .sheet(item: $report) { PiliLiveReportView(api: viewModel.api, roomID: viewModel.roomID, item: $0) }
+                .piliSheet(isPresented: $composer) { PiliLiveComposer(viewModel: viewModel) }
+                .piliSheet(item: $report) { PiliLiveReportView(api: viewModel.api, roomID: viewModel.roomID, item: $0) }
                 .translationPresentation(isPresented: $translates, text: translated)
                 .videoDestinations()
         }
     }
     @ViewBuilder private func actions(_ item: DanmakuItem) -> some View {
-        Button("复制", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.text }
-        Button("翻译", systemImage: "translate") { translated = item.text; translates = true }
+        PiliIconButton("复制", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.text }
+        PiliIconButton("翻译", systemImage: "translate") { translated = item.text; translates = true }
         if let meta = item.liveMetadata, meta.uid > 0 {
-            NavigationLink(value: VideoOwner(mid: meta.uid, name: item.senderName ?? "观众", face: nil)) { Label("个人主页", systemImage: "person.crop.circle") }
-            if !meta.id.isEmpty { Button("回复", systemImage: "arrowshape.turn.up.left") { viewModel.liveReplyTarget = item; composer = true } }
-            Button("屏蔽用户", systemImage: "person.slash") {
+            NavigationLink(value: VideoOwner(mid: meta.uid, name: item.senderName ?? "观众", face: nil)) { PiliLabel("个人主页", systemImage: "person.crop.circle") }
+            if !meta.id.isEmpty { PiliIconButton("回复", systemImage: "arrowshape.turn.up.left") { viewModel.liveReplyTarget = item; composer = true } }
+            PiliIconButton("屏蔽用户", systemImage: "person.slash") {
                 guard let identity else { return }
                 Task {
                     do {
@@ -65,7 +66,7 @@ struct PiliLiveChatView: View {
                     } catch { self.error = error.localizedDescription }
                 }
             }
-            if meta.canReport { Button("举报弹幕", systemImage: "exclamationmark.bubble") { report = item } }
+            if meta.canReport { PiliIconButton("举报弹幕", systemImage: "exclamationmark.bubble") { report = item } }
         }
     }
     private func like() {
@@ -86,7 +87,7 @@ private struct PiliLiveReportView: View {
     let api: BiliAPIClient
     let roomID: Int
     let item: DanmakuItem
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var identity: PiliAccountIdentity?
     @State private var reasonID = 1
     private let reasons = [(1, "违法违规"), (2, "低俗色情"), (3, "垃圾广告"), (4, "辱骂引战"), (5, "政治敏感"), (6, "青少年不良信息"), (0, "其他")]
@@ -94,10 +95,10 @@ private struct PiliLiveReportView: View {
     @State private var error: String?
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 Text(item.text)
                 Picker("举报原因", selection: $reasonID) { ForEach(reasons, id: \.0) { Text($0.1).tag($0.0) } }
-                if let error { Text(error).foregroundStyle(.red) }
+                if let error { Text(error).foregroundStyle(Color.cc.destructive) }
                 Button("提交举报") {
                     guard let identity else { return }; busy = true
                     Task {
@@ -108,7 +109,7 @@ private struct PiliLiveReportView: View {
                 }.disabled(busy)
             }.navigationTitle("举报弹幕").task { if identity == nil { identity = .init(api.requestSnapshot()) } }
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.disabled(busy) } }
-        }.interactiveDismissDisabled(busy)
+        }.piliInteractiveDismissDisabled(busy)
     }
 }
 
@@ -122,9 +123,9 @@ struct PiliLiveShieldView: View {
     @State private var busy = false
     @State private var error: String?
     var body: some View {
-        Form {
+        PiliForm {
             if store.loading { ProgressView("加载屏蔽规则") }
-            if let message = error ?? store.error { Text(message).foregroundStyle(.red); Button("刷新") { store.load(roomID: roomID, api: api, force: true) } }
+            if let message = error ?? store.error { Text(message).foregroundStyle(Color.cc.destructive); Button("刷新") { store.load(roomID: roomID, api: api, force: true) } }
             Section("关键词") {
                 HStack { TextField("屏蔽词", text: $word); Button("添加") { change { identity in try await api.piliLiveShieldKeyword(word, remove: false, roomID: roomID, identity: identity) } }.disabled(word.isEmpty) }
                 ForEach(store.shield.keywords, id: \.self) { value in
@@ -166,7 +167,7 @@ struct PiliLiveRankView: View {
     @State private var token = UUID()
     private let choices = [("online_rank", "在线"), ("daily_rank", "日榜"), ("weekly_rank", "周榜"), ("monthly_rank", "月榜")]
     var body: some View {
-        List {
+        PiliList {
             Picker("贡献榜", selection: $type) { ForEach(choices, id: \.0) { Text($0.1).tag($0.0) } }.pickerStyle(.segmented)
             if let error { Text(error); Button("重试") { Task { await load(reset: values.isEmpty) } } }
             ForEach(values, id: \.self) { value in

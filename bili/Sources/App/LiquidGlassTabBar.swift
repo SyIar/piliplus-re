@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct RootNavigationTitleHiddenKey: EnvironmentKey {
     static let defaultValue = Binding<Bool>.constant(false)
@@ -265,6 +266,7 @@ struct TopScrollEdgeEffect: ViewModifier {
     static let defaultNavigationTitleHideDistance: CGFloat = 18
 
     @Environment(\.isPresented) private var isPresented
+    @Environment(\.piliPresentedPage) private var piliPresentedPage
     @Environment(\.rootNavigationTitleHidden) private var rootNavigationTitleHidden
     @State private var scrollState = TopScrollEdgeEffectScrollState()
     let hidesRootNavigationTitle: Bool
@@ -292,7 +294,7 @@ struct TopScrollEdgeEffect: ViewModifier {
     }
 
     private func updateNavigationTitleVisibility() {
-        guard !isPresented else { return }
+        guard !isPresented, !piliPresentedPage else { return }
         let isHidden = scrollState.contentOffsetY > navigationTitleHideDistance
         guard rootNavigationTitleHidden.wrappedValue != isHidden else { return }
         withAnimation(.smooth(duration: 0.18)) {
@@ -366,7 +368,7 @@ private struct RootFloatingNavigationTitle<Accessory: View>: View {
 
     private var titleView: some View {
         Text(title)
-            .font(.largeTitle.weight(.bold))
+            .piliFont(.lgBold).fontWeight(.bold)
             .lineLimit(1)
             .minimumScaleFactor(0.82)
             .opacity(isTitleHidden ? 0 : 1)

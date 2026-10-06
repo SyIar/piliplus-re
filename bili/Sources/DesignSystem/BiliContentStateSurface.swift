@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct BiliContentStateSurface<Actions: View>: View {
     let title: String
@@ -23,20 +24,20 @@ struct BiliContentStateSurface<Actions: View>: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 28, weight: .semibold))
+            PiliIcon(systemName: systemImage, size: 28)
+                .piliFont(.lgBold)
                 .foregroundStyle(tint)
                 .frame(width: 46, height: 46)
                 .background(Color(.tertiarySystemFill), in: Circle())
 
             VStack(spacing: 5) {
                 Text(title)
-                    .font(.headline)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
 
                 Text(message)
-                    .font(.subheadline)
+                    .piliFont(.base)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -47,7 +48,7 @@ struct BiliContentStateSurface<Actions: View>: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 20)
         .padding(.vertical, 24)
-        .background(Color(.secondarySystemGroupedBackground).opacity(0.78))
+        .piliGlassCard()
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)

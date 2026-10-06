@@ -4,6 +4,7 @@ import ImageIO
 import Photos
 import PhotosUI
 import SwiftUI
+import ChunUI
 import UIKit
 
 nonisolated struct ZoomyViewerInitialImageLayout: Equatable {
@@ -161,7 +162,7 @@ struct ZoomyFullScreenImageViewer: View {
                 syncSelectedItemContext()
                 prewarmNeighborImages()
             }
-            .sheet(item: $sharePayload) { payload in
+            .piliSheet(item: $sharePayload) { payload in
                 ZoomyActivityView(activityItems: payload.activityItems)
             }
             .onDisappear {
@@ -213,7 +214,7 @@ struct ZoomyFullScreenImageViewer: View {
 
             if let toastMessage {
                 Text(toastMessage)
-                    .font(.caption.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.white)
                     .lineLimit(1)
                     .padding(.horizontal, 14)
@@ -259,8 +260,8 @@ struct ZoomyFullScreenImageViewer: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 16, weight: .semibold))
+            PiliIcon(systemName: systemImage, size: 16)
+                .piliFont(.baseBold)
                 .frame(width: 34, height: 30)
                 .contentShape(Rectangle())
         }
@@ -702,8 +703,8 @@ private struct ZoomyViewerImagePage: View {
             HStack {
                 Spacer()
                 Button(action: retryLoading) {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 15, weight: .semibold))
+                    PiliIcon(systemName: "arrow.clockwise", size: 15)
+                        .piliFont(.baseBold)
                         .frame(width: 38, height: 38)
                 }
                 .buttonStyle(.plain)
@@ -719,15 +720,15 @@ private struct ZoomyViewerImagePage: View {
 
     private var failureIndicator: some View {
         VStack(spacing: 12) {
-            Image(systemName: "photo.badge.exclamationmark")
-                .font(.system(size: 30, weight: .medium))
+            PiliIcon(systemName: "photo.badge.exclamationmark", size: 30)
+                .piliFont(.lg)
 
             Text("图片加载失败")
-                .font(.subheadline.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
 
             Button(action: retryLoading) {
-                Label("重新加载", systemImage: "arrow.clockwise")
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel("重新加载", systemImage: "arrow.clockwise")
+                    .piliFont(.base).fontWeight(.semibold)
                     .padding(.horizontal, 14)
                     .frame(height: 38)
             }

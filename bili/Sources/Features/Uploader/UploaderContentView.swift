@@ -48,7 +48,7 @@ struct UploaderContentView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
                         PiliAccountWebView(api: dependencies.api, url: URL(string: "https://account.bilibili.com/h5/account-h5/gr/report?navhide=1&targetmid=\(owner.mid)")!, title: "举报用户")
-                    } label: { Image(systemName: "exclamationmark.bubble") }
+                    } label: { PiliIcon(systemName: "exclamationmark.bubble") }
                         .accessibilityLabel("举报用户")
                 }
             }
@@ -184,7 +184,7 @@ struct UploaderContentView: View {
                     ProgressView()
                         .controlSize(.small)
                 } else {
-                    Image(systemName: "arrow.clockwise")
+                    PiliIcon(systemName: "arrow.clockwise")
                 }
             }
             .frame(width: 32, height: 32)

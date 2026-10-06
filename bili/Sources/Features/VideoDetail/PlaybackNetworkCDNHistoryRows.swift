@@ -18,7 +18,7 @@ struct PlaybackNetworkCDNHistoryRows: View {
                     PlaybackNetworkURLPreferenceRow(snapshot: snapshot)
                 }
             } label: {
-                Label("真实播放排行", systemImage: "list.bullet.rectangle")
+                PiliLabel("真实播放排行", systemImage: "list.bullet.rectangle")
             }
         }
     }

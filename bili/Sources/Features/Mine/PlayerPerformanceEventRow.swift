@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceEventRow: View {
     let event: PlayerPerformanceEvent
@@ -6,30 +7,30 @@ struct PlayerPerformanceEventRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
-                Label(event.kind.title, systemImage: systemImage(for: event.kind))
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel(event.kind.title, systemImage: systemImage(for: event.kind))
+                    .piliFont(.base).fontWeight(.semibold)
                 Spacer(minLength: 8)
                 Text(event.date, style: .time)
-                    .font(.caption.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
             }
 
             if let title = event.title, !title.isEmpty {
                 Text(title)
-                    .font(.caption)
+                    .piliFont(.sm)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
             }
 
             HStack(spacing: 8) {
                 Text(event.metricsID)
-                    .font(.caption2.monospaced())
+                    .piliFont(.sm).monospaced()
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
 
                 if let message = event.message, !message.isEmpty {
                     Text(message)
-                        .font(.caption2.monospacedDigit())
+                        .piliFont(.sm).monospacedDigit()
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }

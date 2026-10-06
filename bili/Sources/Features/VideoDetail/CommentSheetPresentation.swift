@@ -17,13 +17,13 @@ extension EnvironmentValues {
 }
 
 private struct CommentSheetPresentation: ViewModifier {
-    @State private var selectedDetent: PresentationDetent = .medium
+    @State private var selectedDetent: PiliSheetDetent = .medium
     let onDismiss: () -> Void
     let onRefresh: () -> Void
 
     func body(content: Content) -> some View {
         content
-            .presentationDetents([.medium, .large], selection: $selectedDetent)
+            .piliPresentationDetents([.medium, .large], selection: $selectedDetent)
             .presentationContentInteraction(.resizes)
             .presentationDragIndicator(.visible)
             .environment(

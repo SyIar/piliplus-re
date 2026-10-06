@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct UploaderDynamicsSection: View {
     let api: BiliAPIClient
@@ -16,13 +17,13 @@ struct UploaderDynamicsSection: View {
 
     var body: some View {
         LazyVStack(spacing: 0) {
-            NavigationLink { PiliCoursesView(api: api, ownerMID: viewModel.seedOwner.mid) } label: { Label("用户课程", systemImage: "graduationcap").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }
+            NavigationLink { PiliCoursesView(api: api, ownerMID: viewModel.seedOwner.mid) } label: { PiliLabel("用户课程", systemImage: "graduationcap").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }
             NavigationLink {
                 PiliUserArticlesView(api: api, mid: viewModel.seedOwner.mid)
-            } label: { Label("用户图文", systemImage: "doc.richtext").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }
+            } label: { PiliLabel("用户图文", systemImage: "doc.richtext").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }
             NavigationLink {
                 PiliDynamicSearchView(api: api, mid: viewModel.seedOwner.mid)
-            } label: { Label("搜索用户动态", systemImage: "magnifyingglass").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }
+            } label: { PiliLabel("搜索用户动态", systemImage: "magnifyingglass").frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12) }
             if viewModel.dynamicItems.isEmpty && viewModel.dynamicState.isLoading {
                 DynamicFeedSkeletonList()
                     .padding(.horizontal, 16)
@@ -87,18 +88,18 @@ struct UploaderDynamicsSection: View {
             Button {
                 Task { await viewModel.loadMoreDynamics() }
             } label: {
-                Label("加载更多", systemImage: "chevron.down")
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel("加载更多", systemImage: "chevron.down")
+                    .piliFont(.base).fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .foregroundStyle(.primary)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
         } else {
             Text("没有更多动态了")
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)

@@ -128,6 +128,9 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var recommendMinimumViewCount: Int
     @Published private(set) var recommendMinimumLikeRatioPercent: Int
     @Published private(set) var blockedRecommendKeywords: [String]
+    @Published private(set) var advancedRecommendFilter: PiliAdvancedRecommendFilter
+    @Published private(set) var quickFavoriteFolders: [String: Int]
+    @Published private(set) var livePlaybackPreferences: PiliLivePlaybackPreferences
     @Published private(set) var appliesRecommendFiltersToRelatedVideos: Bool
     @Published private(set) var danmakuEnabled: Bool
     @Published private(set) var danmakuSettings: DanmakuSettings
@@ -204,6 +207,9 @@ final class LibraryStore: ObservableObject {
     private static let recommendMinimumViewCountKey = "cc.bili.content.recommendMinimumViewCount.v1"
     private static let recommendMinimumLikeRatioPercentKey = "cc.bili.content.recommendMinimumLikeRatioPercent.v1"
     private static let blockedRecommendKeywordsKey = "cc.bili.content.blockedRecommendKeywords.v1"
+    private static let advancedRecommendFilterKey = "cc.bili.content.advancedRecommendFilter.v1"
+    private static let quickFavoriteFoldersKey = "cc.bili.content.quickFavoriteFolders.v1"
+    private static let livePlaybackPreferencesKey = "cc.bili.playback.livePreferences.v1"
     private static let appliesRecommendFiltersToRelatedVideosKey =
         "cc.bili.content.appliesRecommendFiltersToRelatedVideos.v1"
     private static let danmakuEnabledKey = "cc.bili.playback.danmakuEnabled.v1"
@@ -360,6 +366,7 @@ final class LibraryStore: ObservableObject {
     private static let visibleRootTabsKey = "cc.bili.display.visibleRootTabs.v1"
     private static let homeRefreshTriggerDistanceKey = "cc.bili.home.refreshTriggerDistance.v1"
     private static let homeFeedLayoutKey = "cc.bili.home.feedLayout.v1"
+    private static let homeFeedDensityMigrationKey = "cc.bili.home.twoColumnDefaultApplied.v1"
     private static let homeRecommendFeedSourcePreferenceKey = "cc.bili.home.recommendFeedSourcePreference.v1"
     private static let showsHotSearchesKey = "cc.bili.search.showsHotSearches.v1"
     private static let supportedPlaybackRates = [0.75, 1.0, 1.25, 1.5, 2.0]
@@ -368,7 +375,7 @@ final class LibraryStore: ObservableObject {
     nonisolated static let defaultAppTintColorHex = AppThemeTintColor.defaultHex
     nonisolated static let defaultPlaybackStreamSourcePreference: PlaybackStreamSourcePreference = .app
     nonisolated static let defaultHomeRecommendFeedSourcePreference: HomeRecommendFeedSourcePreference = .app
-    nonisolated static let defaultHomeFeedLayout: HomeFeedLayout = .singleColumn
+    nonisolated static let defaultHomeFeedLayout: HomeFeedLayout = .doubleColumn
     nonisolated static let defaultPlaybackHistorySyncThresholdSeconds = 5
     nonisolated static let supportedPlaybackHistorySyncThresholdSeconds = [5, 10, 30]
     nonisolated static let supportedVideoQualities = BiliVideoQuality.supportedQualities
@@ -593,6 +600,11 @@ final class LibraryStore: ObservableObject {
         self.blockedRecommendKeywords = Self.normalizedBlockedRecommendKeywords(
             userDefaults.stringArray(forKey: Self.blockedRecommendKeywordsKey) ?? []
         )
+        self.advancedRecommendFilter = userDefaults.data(forKey: Self.advancedRecommendFilterKey)
+            .flatMap { try? JSONDecoder().decode(PiliAdvancedRecommendFilter.self, from: $0) } ?? .init()
+        self.quickFavoriteFolders = userDefaults.dictionary(forKey: Self.quickFavoriteFoldersKey) as? [String: Int] ?? [:]
+        self.livePlaybackPreferences = userDefaults.data(forKey: Self.livePlaybackPreferencesKey)
+            .flatMap { try? JSONDecoder().decode(PiliLivePlaybackPreferences.self, from: $0) } ?? .init()
         self.appliesRecommendFiltersToRelatedVideos =
             userDefaults.object(forKey: Self.appliesRecommendFiltersToRelatedVideosKey) as? Bool ?? false
         self.danmakuEnabled = userDefaults.object(forKey: Self.danmakuEnabledKey) as? Bool ?? true
@@ -697,10 +709,7 @@ final class LibraryStore: ObservableObject {
             userDefaults.object(forKey: Self.homeRefreshTriggerDistanceKey) as? Double
                 ?? Self.defaultHomeRefreshTriggerDistance
         )
-        self.homeFeedLayout =
-            HomeFeedLayout(
-                rawValue: userDefaults.string(forKey: Self.homeFeedLayoutKey) ?? ""
-            ) ?? Self.defaultHomeFeedLayout
+        self.homeFeedLayout = Self.loadHomeFeedLayout(from: userDefaults)
         self.homeRecommendFeedSourcePreference =
             HomeRecommendFeedSourcePreference(
                 rawValue: userDefaults.string(forKey: Self.homeRecommendFeedSourcePreferenceKey) ?? ""
@@ -1145,6 +1154,26 @@ final class LibraryStore: ObservableObject {
         userDefaults.set(recommendMinimumDurationSeconds, forKey: Self.recommendMinimumDurationSecondsKey)
     }
 
+    func setAdvancedRecommendFilter(_ value: PiliAdvancedRecommendFilter) throws {
+        try value.validate()
+        let data = try JSONEncoder().encode(value)
+        advancedRecommendFilter = value
+        userDefaults.set(data, forKey: Self.advancedRecommendFilterKey)
+    }
+
+    func quickFavoriteFolder(account: Int) -> Int { account > 0 ? quickFavoriteFolders[String(account)] ?? 0 : 0 }
+    func setQuickFavoriteFolder(_ id: Int, account: Int) {
+        guard account > 0, id >= 0 else { return }
+        quickFavoriteFolders[String(account)] = id > 0 ? id : nil
+        userDefaults.set(quickFavoriteFolders, forKey: Self.quickFavoriteFoldersKey)
+    }
+    func setLivePlaybackPreferences(_ value: PiliLivePlaybackPreferences) throws {
+        try value.validate()
+        let data = try JSONEncoder().encode(value)
+        livePlaybackPreferences = value
+        userDefaults.set(data, forKey: Self.livePlaybackPreferencesKey)
+    }
+
     func setRecommendMinimumViewCount(_ count: Int) {
         recommendMinimumViewCount = Self.normalizedRecommendFilterValue(
             count,
@@ -1445,6 +1474,23 @@ final class LibraryStore: ObservableObject {
         userDefaults.set(layout.rawValue, forKey: Self.homeFeedLayoutKey)
     }
 
+    private static func loadHomeFeedLayout(from defaults: UserDefaults) -> HomeFeedLayout {
+        var layout = HomeFeedLayout(rawValue: defaults.string(forKey: homeFeedLayoutKey) ?? "")
+            ?? defaultHomeFeedLayout
+        // Apply the requested denser home once to existing installations too.
+        // A later explicit choice in settings remains persistent.
+        if !defaults.bool(forKey: homeFeedDensityMigrationKey) {
+            switch layout {
+            case .singleColumn: layout = .doubleColumn
+            case .borderedSingleColumn: layout = .borderedDoubleColumn
+            case .doubleColumn, .borderedDoubleColumn: break
+            }
+            defaults.set(layout.rawValue, forKey: homeFeedLayoutKey)
+            defaults.set(true, forKey: homeFeedDensityMigrationKey)
+        }
+        return layout
+    }
+
     func setShowsHotSearches(_ isEnabled: Bool) {
         showsHotSearches = isEnabled
         userDefaults.set(isEnabled, forKey: Self.showsHotSearchesKey)
@@ -1609,9 +1655,9 @@ enum VideoDetailSegmentedPickerGlassStyle: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .clear:
-            return "Clear"
+            return "清透"
         case .regular:
-            return "Regular"
+            return "柔和"
         }
     }
 }
@@ -1695,6 +1741,9 @@ extension LibraryStore {
         recommendMinimumViewCount = restored.recommendMinimumViewCount
         recommendMinimumLikeRatioPercent = restored.recommendMinimumLikeRatioPercent
         blockedRecommendKeywords = restored.blockedRecommendKeywords
+        advancedRecommendFilter = restored.advancedRecommendFilter
+        quickFavoriteFolders = restored.quickFavoriteFolders
+        livePlaybackPreferences = restored.livePlaybackPreferences
         appliesRecommendFiltersToRelatedVideos = restored.appliesRecommendFiltersToRelatedVideos
         danmakuEnabled = restored.danmakuEnabled
         danmakuSettings = restored.danmakuSettings

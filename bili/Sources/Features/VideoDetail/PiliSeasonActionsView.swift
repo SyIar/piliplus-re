@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliSeasonActionsView: View {
     let api: BiliAPIClient
@@ -14,14 +15,14 @@ struct PiliSeasonActionsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Button(following ? "取消\(actionTitle)" : actionTitle, systemImage: following ? "checkmark.circle.fill" : "plus.circle") { change(follow: !following) }
+                PiliIconButton(following ? "取消\(actionTitle)" : actionTitle, systemImage: following ? "checkmark.circle.fill" : "plus.circle") { change(follow: !following) }
                 if following && !isCourse && collectionBVID == nil {
                     Menu(status == 1 ? "想看" : status == 3 ? "看过" : "在看") {
                         Button("想看") { change(status: 1) }; Button("在看") { change(status: 2) }; Button("看过") { change(status: 3) }
                     }
                 }
-            }.buttonStyle(.bordered).disabled(!loaded || busy)
-            if let error { Text(error).font(.caption).foregroundStyle(.red); if !loaded { Button("重新加载状态") { Task { await load() } } } }
+            }.buttonStyle(.glass).disabled(!loaded || busy)
+            if let error { Text(error).piliFont(.sm).foregroundStyle(Color.cc.destructive); if !loaded { Button("重新加载状态") { Task { await load() } } } }
         }.task(id: "\(seasonID):\(isCourse):\(collectionBVID ?? "")") { identity = .init(api.requestSnapshot(purpose: .main)); await load() }
     }
     private var actionTitle: String { collectionBVID != nil ? "订阅合集" : isCourse ? "收藏课程" : "追番" }

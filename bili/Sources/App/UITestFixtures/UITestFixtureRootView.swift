@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import ChunUI
 
 /// A network-free host for production UI components used by XCUITest.
 struct UITestFixtureRootView: View {
@@ -29,10 +30,19 @@ struct UITestFixtureRootView: View {
                 PiliSuperChatFixture(api: dependencies.api)
             case .contentExport:
                 PiliContentExportFixture()
+            case .glassAudit:
+                PiliGlassAuditFixture()
+            case .glassFeed:
+                PiliGlassFeedFixture()
+            case .glassSettings:
+                NavigationStack { MineInterfaceSettingsView(libraryStore: dependencies.libraryStore) }
             case .dynamicComposer:
                 PiliDynamicComposerFixture()
             }
         }
+        .modifier(PiliAppChrome())
+        .environment(\.piliReduceTransparencyPreview, ProcessInfo.processInfo.arguments.contains("--glass-reduce-transparency"))
+        .environmentObject(dependencies.homeRecommendDiagnosticsStore)
         .environmentObject(dependencies)
         .environmentObject(dependencies.libraryStore)
         .environmentObject(dependencies.sessionStore)
@@ -487,13 +497,13 @@ private struct UITestDanmakuFixtureView: View {
             }
             synchronizeRenderStore()
         }
-        .sheet(isPresented: $isShowingSettings) {
+        .piliSheet(isPresented: $isShowingSettings) {
             DanmakuSettingsSheet(
                 store: store,
                 toggleDanmaku: toggleDanmaku,
                 updateDanmakuSettings: updateDanmakuSettings
             )
-            .presentationDetents([.medium])
+            .piliPresentationDetents([.medium])
         }
     }
 
@@ -554,7 +564,7 @@ private struct UITestPlayerFixtureView: View {
                     }
 
                     Text(isFullscreen ? "Fullscreen Player" : "Player Ready")
-                        .font(.caption2)
+                        .piliFont(.sm)
                         .accessibilityIdentifier(
                             isFullscreen ? "ui.player.fullscreenSurface" : "ui.player.ready"
                         )

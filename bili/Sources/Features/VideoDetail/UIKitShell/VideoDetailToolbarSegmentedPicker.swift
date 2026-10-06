@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailToolbarSegmentedPickerView: View {
     static let compactWidth: CGFloat = 144
@@ -27,7 +28,7 @@ struct VideoDetailToolbarSegmentedPickerView: View {
             }
         } label: {
             Text(title)
-                .font(.subheadline.weight(.medium))
+                .piliFont(.base).fontWeight(.medium)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Capsule())
                 .background {

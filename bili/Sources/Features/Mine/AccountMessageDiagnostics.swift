@@ -130,7 +130,7 @@ final class AccountMessageDiagnosticsStore: ObservableObject {
 
 struct AccountMessageDiagnosticsView: View {
     @ObservedObject var store: AccountMessageDiagnosticsStore
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var didCopy = false
 
     var body: some View {
@@ -151,7 +151,7 @@ struct AccountMessageDiagnosticsView: View {
                     Button {
                         store.reset()
                     } label: {
-                        Image(systemName: "trash")
+                        PiliIcon(systemName: "trash")
                     }
                     .disabled(store.events.isEmpty)
                     .accessibilityLabel("清空诊断")
@@ -160,7 +160,7 @@ struct AccountMessageDiagnosticsView: View {
                         UIPasteboard.general.string = store.report
                         didCopy = true
                     } label: {
-                        Image(systemName: didCopy ? "checkmark" : "doc.on.doc")
+                        PiliIcon(systemName: didCopy ? "checkmark" : "doc.on.doc")
                     }
                     .accessibilityLabel("复制诊断")
                 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 enum AccountLibraryKind: Hashable, Identifiable {
     case history
@@ -122,8 +123,8 @@ struct AccountLibraryButtonRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 16, weight: .semibold))
+            PiliIcon(systemName: systemImage, size: 16)
+                .piliFont(.baseBold)
                 .foregroundStyle(appTintColor)
                 .frame(width: 28, height: 28)
 
@@ -140,7 +141,7 @@ struct AccountLibraryButtonRow: View {
                     .monospacedDigit()
                     .padding(.horizontal, 6)
                     .frame(minWidth: 20, minHeight: 20)
-                    .background(.red, in: Capsule())
+                    .background(Color.cc.destructive, in: Capsule())
                     .accessibilityLabel("\(badgeText) 条未读")
             }
         }

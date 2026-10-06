@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailPageMenu: View {
     @ObservedObject var store: VideoDetailPageSelectorRenderStore
@@ -29,7 +30,7 @@ struct VideoDetailPageMenu: View {
                 .contentMargins(.horizontal, 16, for: .scrollContent)
                 .frame(height: 54)
             }
-            .sheet(isPresented: $isPageSheetPresented) {
+            .piliSheet(isPresented: $isPageSheetPresented) {
                 VideoDetailPageSelectionSheet(
                     pages: store.pages,
                     selectedCID: store.selectedCID,
@@ -47,10 +48,10 @@ private struct VideoDetailPageMenuHeader: View {
     var body: some View {
         HStack(spacing: 10) {
             Text("分P")
-                .font(.headline)
+                .piliFont(.baseBold)
 
             Text("\(pageCount) P")
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
 
             Spacer()
@@ -58,8 +59,8 @@ private struct VideoDetailPageMenuHeader: View {
             Button {
                 showsPageSheet = true
             } label: {
-                Image(systemName: "triangle.fill")
-                    .font(.caption.weight(.bold))
+                PiliIcon(systemName: "triangle.fill")
+                    .piliFont(.sm).fontWeight(.bold)
                     .rotationEffect(.degrees(180))
                     .frame(width: 28, height: 28)
                     .contentShape(Circle())
@@ -133,8 +134,8 @@ private struct VideoDetailPageTile: View {
                         .frame(maxWidth: .infinity, alignment: .topLeading)
 
                     if usesGlassBackground, isSelected {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.caption.weight(.bold))
+                        PiliIcon(systemName: "checkmark.circle.fill")
+                            .piliFont(.sm).fontWeight(.bold)
                             .foregroundStyle(appTintColor)
                             .accessibilityHidden(true)
                     }
@@ -173,7 +174,7 @@ private struct VideoDetailPageTile: View {
                 .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
         } else {
             content()
-                .background(Color(.secondarySystemGroupedBackground), in: shape)
+                .background(Color.cc.card, in: shape)
                 .overlay {
                     shape.strokeBorder(borderColor, lineWidth: borderWidth)
                 }
@@ -194,7 +195,7 @@ private struct VideoDetailPageTile: View {
     }
 
     private var glassFill: Color {
-        isSelected ? appTintColor.opacity(0.14) : Color(.systemBackground).opacity(0.58)
+        isSelected ? appTintColor.opacity(0.14) : Color.cc.background.opacity(0.58)
     }
 
     private var borderColor: Color {
@@ -259,7 +260,7 @@ private struct VideoDetailPageSelectionSheet: View {
             .scrollContentBackground(.hidden)
             .background(.clear)
         }
-        .presentationDetents([.fraction(0.7)])
+        .piliPresentationDetents([.fraction(0.7)])
         .presentationDragIndicator(.visible)
         .presentationBackground(.clear)
     }
@@ -272,10 +273,10 @@ private struct VideoDetailPageSheetHeader: View {
         GlassEffectContainer(spacing: 8) {
             HStack(spacing: 10) {
                 Text("全部分P")
-                    .font(.headline)
+                    .piliFont(.baseBold)
 
                 Text("\(pageCount) P")
-                    .font(.caption)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
 
                 Spacer()
@@ -288,7 +289,7 @@ private struct VideoDetailPageSheetHeader: View {
 }
 
 private struct VideoDetailPageSheetRoute: View {
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     let page: VideoPage
     let isSelected: Bool
     let selectPage: (VideoPage) -> Void

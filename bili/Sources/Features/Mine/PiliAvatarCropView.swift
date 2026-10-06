@@ -7,7 +7,7 @@ struct PiliAvatarCropView: View {
     let identity: PiliAccountIdentity
     let image: UIImage
     let onSaved: () -> Void
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var scale: CGFloat = 1
     @State private var previousScale: CGFloat = 1
     @State private var offset = CGSize.zero
@@ -51,7 +51,7 @@ struct PiliAvatarCropView: View {
         }
         .disabled(busy)
         .navigationTitle("裁剪头像")
-        .interactiveDismissDisabled(busy)
+        .piliInteractiveDismissDisabled(busy)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.disabled(busy) }
             ToolbarItem(placement: .confirmationAction) { Button("保存头像") { save() }.disabled(busy) }

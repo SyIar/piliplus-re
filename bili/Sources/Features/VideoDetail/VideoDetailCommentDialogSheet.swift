@@ -2,7 +2,7 @@ import SwiftUI
 
 struct CommentDialogSheet: View {
     @EnvironmentObject private var dependencies: AppDependencies
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     let rootComment: Comment
     let focusReply: Comment
     @ObservedObject var store: VideoDetailCommentThreadRenderStore

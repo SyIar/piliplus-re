@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LiveDanmakuDiagnosticsHUD: View {
     let snapshot: LiveDanmakuDiagnosticSnapshot
@@ -27,7 +28,7 @@ struct LiveDanmakuDiagnosticsHUD: View {
             LiveDanmakuDiagnosticsHeader(snapshot: snapshot)
 
             Text(snapshot.conclusion)
-                .font(.caption2.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.white.opacity(0.9))
                 .lineLimit(isExpanded ? 2 : 3)
                 .fixedSize(horizontal: false, vertical: true)
@@ -36,7 +37,7 @@ struct LiveDanmakuDiagnosticsHUD: View {
 
             if isExpanded, let lastCommandName = snapshot.lastCommandName {
                 Text("最后命令 \(lastCommandName)")
-                    .font(.caption2)
+                    .piliFont(.sm)
                     .foregroundStyle(.white.opacity(0.58))
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
@@ -44,7 +45,7 @@ struct LiveDanmakuDiagnosticsHUD: View {
 
             if isExpanded, let lastEndpointError = snapshot.lastEndpointError {
                 Text("节点失败 \(lastEndpointError)")
-                    .font(.caption2)
+                    .piliFont(.sm)
                     .foregroundStyle(.white.opacity(0.58))
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -53,7 +54,7 @@ struct LiveDanmakuDiagnosticsHUD: View {
         .padding(10)
         .frame(width: isExpanded ? 360 : 292, alignment: .leading)
         .background(.black.opacity(0.36), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .piliGlassCard(radius: 14)
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(.white.opacity(0.16), lineWidth: 0.8)
@@ -67,19 +68,19 @@ private struct LiveDanmakuDiagnosticsHeader: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: snapshot.phase.systemImage)
-                .font(.caption.weight(.bold))
+            PiliIcon(systemName: snapshot.phase.systemImage)
+                .piliFont(.sm).fontWeight(.bold)
                 .foregroundStyle(snapshot.phase.tintColor)
                 .frame(width: 18, height: 18)
 
             Text("弹幕诊断")
-                .font(.caption.weight(.bold))
+                .piliFont(.sm).fontWeight(.bold)
                 .foregroundStyle(.white)
 
             Spacer(minLength: 8)
 
             Text(snapshot.phase.title)
-                .font(.caption2.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .monospacedDigit()
                 .foregroundStyle(snapshot.phase.tintColor)
                 .padding(.horizontal, 7)
@@ -108,12 +109,12 @@ private struct LiveDanmakuDiagnosticsRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(title)
-                .font(.caption2)
+                .piliFont(.sm)
                 .foregroundStyle(.white.opacity(0.58))
                 .frame(width: 44, alignment: .leading)
 
             Text(value)
-                .font(.caption2.weight(.medium))
+                .piliFont(.sm).fontWeight(.medium)
                 .monospacedDigit()
                 .foregroundStyle(.white.opacity(0.86))
                 .lineLimit(1)
@@ -128,13 +129,13 @@ private extension LiveDanmakuDiagnosticPhase {
     var tintColor: Color {
         switch self {
         case .rendering:
-            return .green
+            return Color.cc.success
         case .receiving, .waitingForPackets:
             return .cyan
         case .fetchingConfig, .connecting, .authenticating, .reconnecting:
-            return .yellow
+            return Color.cc.warning
         case .failed:
-            return .red
+            return Color.cc.destructive
         case .idle, .stopped:
             return .white.opacity(0.72)
         }

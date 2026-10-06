@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 extension EnvironmentValues {
     @Entry var piliVideoTools: PiliVideoToolsController? = nil
@@ -14,7 +15,7 @@ struct PiliVideoToolsOverlay: View {
             if let clip = store.currentClip {
                 HStack {
                     Spacer()
-                    Button("跳过\(clip.title)", systemImage: "forward.end") { store.skip(clip, model: model) }
+                    PiliIconButton("跳过\(clip.title)", systemImage: "forward.end") { store.skip(clip, model: model) }
                         .buttonStyle(.glass).padding(.trailing, 18).padding(.bottom, 105)
                 }
             }
@@ -51,7 +52,7 @@ private struct PiliEnergyGraph: View, Equatable {
                 path.addLine(to: CGPoint(x: Double(index) / Double(values.count - 1) * size.width, y: (1 - value) * size.height))
             }
             path.addLine(to: CGPoint(x: size.width, y: size.height)); path.closeSubpath()
-            context.fill(path, with: .linearGradient(Gradient(colors: [.blue.opacity(0.7), .blue.opacity(0.1)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+            context.fill(path, with: .linearGradient(Gradient(colors: [Color.cc.primary.opacity(0.7), Color.cc.primary.opacity(0.1)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
         }.allowsHitTesting(false)
     }
 }
@@ -59,28 +60,29 @@ private struct PiliEnergyGraph: View, Equatable {
 struct PiliVideoToolsView: View {
     let model: VideoDetailViewModel
     @ObservedObject var store: PiliVideoToolsController
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 Section("画面") { PiliVideoAspectPicker() }
                 if store.loading { ProgressView("加载视频信息") }
                 if let error = store.error { Text(error); Button("重试") { Task { await store.retry(model) } } }
                 if store.energy != nil {
-                    Section("高能进度") { PiliEnergyStrip(store: store).frame(height: 54); Text("由弹幕密度生成，曲线与当前分 P 对应。").font(.caption) }
+                    Section("高能进度") { PiliEnergyStrip(store: store).frame(height: 54); Text("由弹幕密度生成，曲线与当前分 P 对应。").piliFont(.sm) }
                 }
                 Section("视频章节") {
                     if store.chapters.isEmpty { Text("此视频未提供章节") }
                     ForEach(store.chapters) { chapter in
                         Button {
-                            model.stablePlayerViewModel?.seek(to: chapter.start); dismiss()
+                            if let player = model.stablePlayerViewModel { player.seek(by: chapter.start - player.currentTime) }
+                            dismiss()
                         } label: {
                             HStack {
                                 if !chapter.image.isEmpty {
                                     CachedRemoteImage(url: URL(string: chapter.image), targetPixelSize: 240) { $0.resizable().scaledToFill() }
                                         placeholder: { Color.gray.opacity(0.1) }.frame(width: 80, height: 45).clipped()
                                 }
-                                VStack(alignment: .leading) { Text(chapter.title); Text(BiliFormatters.duration(Int(chapter.start))).font(.caption).foregroundStyle(.secondary) }
+                                VStack(alignment: .leading) { Text(chapter.title); Text(BiliFormatters.duration(Int(chapter.start))).piliFont(.sm).foregroundStyle(.secondary) }
                             }
                         }
                     }
@@ -97,7 +99,7 @@ struct PiliVideoToolsView: View {
                 if !store.tags.isEmpty {
                     Section("标签") {
                         ForEach(store.tags) { tag in
-                            NavigationLink { PiliKeywordSearchView(api: model.api, keyword: tag.title) } label: { Label(tag.title, systemImage: "number") }
+                            NavigationLink { PiliKeywordSearchView(api: model.api, keyword: tag.title) } label: { PiliLabel(tag.title, systemImage: "number") }
                         }
                     }
                 }

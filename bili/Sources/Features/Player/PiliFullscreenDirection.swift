@@ -15,7 +15,7 @@ nonisolated enum PiliFullscreenDirection: String, CaseIterable, Identifiable, Se
 struct PiliFullscreenDirectionPicker: View {
     @AppStorage(PiliFullscreenDirection.key) private var direction = "automatic"
     var body: some View {
-        Picker("横屏全屏方向", selection: $direction) {
+        PiliSettingPicker("全屏方向", selection: $direction) {
             ForEach(PiliFullscreenDirection.allCases) { Text($0.title).tag($0.rawValue) }
         }
     }

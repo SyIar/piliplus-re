@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct RootMineNavigationDestination: View {
     let route: MineOverlayRoute
@@ -11,13 +12,13 @@ struct RootMineNavigationDestination: View {
         Group {
             if route.isSettingsRoute {
                 destinationContent
-                    .labelStyle(.titleOnly)
+                    .labelStyle(.titleAndIcon)
             } else {
                 destinationContent
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(uiColor: .systemBackground).ignoresSafeArea())
+        .background(Color.cc.background.ignoresSafeArea())
         .background(
             VideoDetailSystemBackGestureBridge(
                 onNavigationGestureBegan: {},

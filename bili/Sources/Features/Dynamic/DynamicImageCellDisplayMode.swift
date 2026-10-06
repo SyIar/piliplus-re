@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 nonisolated enum DynamicImageCellDisplayMode {
     case single
@@ -168,7 +169,7 @@ struct DynamicImageMediaBadge: View {
 
     var body: some View {
         Text(title)
-            .font(.caption2.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .videoCoverBadgeForeground(opacity: 0)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
@@ -179,8 +180,8 @@ struct DynamicImageMediaBadge: View {
 
 private struct DynamicImageLongBadgeContent: View {
     var body: some View {
-        Label("长图", systemImage: "scroll")
-            .font(.caption2.weight(.semibold))
+        PiliLabel("长图", systemImage: "scroll")
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .videoCoverBadgeForeground(opacity: 0)
             .padding(.horizontal, 8)

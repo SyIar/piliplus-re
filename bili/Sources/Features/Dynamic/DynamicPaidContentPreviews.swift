@@ -29,7 +29,7 @@ struct DynamicPaidContentPreview: View {
             .padding(.horizontal, 10)
             .padding(.bottom, 10)
         }
-        .background(Color(.secondarySystemGroupedBackground))
+        .piliGlassCard()
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -51,7 +51,7 @@ struct DynamicPaidContentPreview: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(8)
-        .background(Color(.secondarySystemGroupedBackground))
+        .piliGlassCard()
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(content.badgeText) \(content.title)")

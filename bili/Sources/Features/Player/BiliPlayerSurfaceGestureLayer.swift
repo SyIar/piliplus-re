@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct BiliPlayerSurfaceGestureLayer<Content: View>: View {
     let content: Content
@@ -362,10 +363,10 @@ struct PlayerSurfaceVerticalAdjustmentIndicator: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Image(systemName: systemImage)
-                .font(.title3.weight(.semibold))
+            PiliIcon(systemName: systemImage)
+                .piliFont(.baseBold).fontWeight(.semibold)
             Text("\(Int((value * 100).rounded()))%")
-                .font(.caption.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .monospacedDigit()
             ProgressView(value: Double(value), total: 1)
                 .tint(.white)

@@ -26,7 +26,12 @@ extension VideoDetailViewModel {
     }
 
     func updateDanmakuItems(_ items: [DanmakuItem]) {
-        danmakuItems = items
+        unfilteredDanmakuItems = items
+        applyDanmakuRules()
+    }
+
+    func applyDanmakuRules() {
+        danmakuItems = PiliDanmakuRulesStore.shared.filter(unfilteredDanmakuItems, identity: PiliAccountIdentity(api.requestSnapshot()))
         danmakuItemsRevision &+= 1
         syncDanmakuRenderStore()
     }

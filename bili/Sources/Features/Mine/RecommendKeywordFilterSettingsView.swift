@@ -2,12 +2,12 @@ import SwiftUI
 
 struct RecommendKeywordFilterSettingsView: View {
     @ObservedObject var libraryStore: LibraryStore
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var draftKeyword = ""
     @FocusState private var isDraftFocused: Bool
 
     var body: some View {
-        List {
+        PiliList {
             Section {
                 TextField("输入关键词", text: $draftKeyword)
                     .textInputAutocapitalization(.never)
@@ -19,7 +19,7 @@ struct RecommendKeywordFilterSettingsView: View {
                 Button {
                     addKeyword()
                 } label: {
-                    MineSettingsLabel("添加关键词", systemImage: "plus.circle")
+                    Text("添加").frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .disabled(normalizedDraftKeyword == nil)
             } header: {
@@ -43,7 +43,7 @@ struct RecommendKeywordFilterSettingsView: View {
                             Button(role: .destructive) {
                                 libraryStore.removeBlockedRecommendKeyword(keyword)
                             } label: {
-                                Image(systemName: "minus.circle")
+                                PiliIcon(systemName: "minus.circle")
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("删除 \(keyword)")
@@ -53,7 +53,7 @@ struct RecommendKeywordFilterSettingsView: View {
                     Button(role: .destructive) {
                         libraryStore.clearBlockedRecommendKeywords()
                     } label: {
-                        MineSettingsLabel("清空全部", systemImage: "trash")
+                        Text("清空").frame(maxWidth: .infinity, alignment: .trailing)
                     }
                 }
             } header: {

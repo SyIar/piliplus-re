@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicInitialFeedContent: View {
     let isLoggedIn: Bool
@@ -12,7 +13,7 @@ struct DynamicInitialFeedContent: View {
             }
         }
         .rootFloatingTabBarContentPadding()
-        .background(Color(.systemBackground))
+        .background(Color.cc.background)
     }
 }
 
@@ -34,7 +35,7 @@ struct DynamicFeedScreenContent: View {
                 pullRefreshTriggerDistance: pullRefreshTriggerDistance
             )
         }
-        .background(Color(.systemBackground))
+        .background(Color.cc.background)
         .onReceive(NotificationCenter.default.publisher(for: .piliDynamicChanged)) { _ in Task { await viewModel.refresh() } }
     }
 }

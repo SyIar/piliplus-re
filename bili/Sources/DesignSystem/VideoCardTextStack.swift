@@ -1,6 +1,19 @@
 import SwiftUI
+import ChunUI
+
+private struct VideoCardHasTrailingMenuKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var videoCardHasTrailingMenu: Bool {
+        get { self[VideoCardHasTrailingMenuKey.self] }
+        set { self[VideoCardHasTrailingMenuKey.self] = newValue }
+    }
+}
 
 struct VideoCardTextStack: View {
+    @Environment(\.videoCardHasTrailingMenu) private var hasTrailingMenu
     let display: VideoCardDisplayModel
     let showsPublishTimeInAuthorRow: Bool
     let showsAuthorIdentity: Bool
@@ -9,7 +22,7 @@ struct VideoCardTextStack: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             titleLabel
-            authorRow
+            authorRow.padding(.trailing, hasTrailingMenu ? 26 : 0)
         }
     }
 
@@ -51,8 +64,8 @@ struct VideoCardTextStack: View {
             BilibiliUPBadge(size: 14)
         } else {
             AvatarRemoteImage(urlString: display.avatarURLString, pixelSize: 48) {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 13, weight: .medium))
+                PiliIcon(systemName: "person.crop.circle.fill", size: 13)
+                    .piliFont(.sm)
                     .foregroundStyle(.tertiary)
             }
             .frame(width: 14, height: 14)

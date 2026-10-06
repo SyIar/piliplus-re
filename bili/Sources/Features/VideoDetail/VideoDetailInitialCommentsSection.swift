@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct InitialCommentsSection: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -7,20 +8,20 @@ struct InitialCommentsSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center, spacing: 8) {
                 Text("评论")
-                    .font(.headline)
+                    .piliFont(.baseBold)
 
                 Spacer()
 
                 HStack(spacing: 4) {
                     Text("最热")
-                        .font(.caption.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 5)
                         .background(appTintColor.opacity(0.14))
                         .foregroundStyle(appTintColor)
                         .clipShape(Capsule())
                     Text("最新")
-                        .font(.caption.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 5)
                         .foregroundStyle(.secondary)

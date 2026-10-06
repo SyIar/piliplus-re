@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicPaidArticleTextPreview: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -27,7 +28,7 @@ struct DynamicPaidArticleTextPreview: View {
                     Text("需解锁")
                 }
             }
-            .font(.caption.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .foregroundStyle(appTintColor)
             .lineLimit(1)
         }

@@ -11,6 +11,9 @@ enum UITestFixtureScenario: String {
     case interactive
     case superChat
     case contentExport
+    case glassAudit
+    case glassFeed
+    case glassSettings
     case dynamicComposer
 
     static var current: Self? {

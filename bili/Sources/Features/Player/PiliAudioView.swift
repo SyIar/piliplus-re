@@ -1,5 +1,6 @@
 import Combine
 import SwiftUI
+import ChunUI
 import PiliPlaybackCore
 
 @MainActor
@@ -93,18 +94,18 @@ struct PiliAudioView: View {
     @State private var favorites = false
     init(api: BiliAPIClient, id: Int) { _model = .init(wrappedValue: PiliAudioModel(api: api, id: id)) }
     var body: some View {
-        List {
+        PiliList {
             if let track = model.selected {
                 if let player = model.player { PiliOfflineAudioControls(player: player, title: track.title, author: track.owner.name).listRowBackground(Color.clear) }
                 else if model.error == nil { ProgressView("正在获取音轨") }
-                VideoOwnerRouteLink(owner: track.owner) { Label(track.owner.name, systemImage: "person.crop.circle") }
-                if !track.description.isEmpty { Text(track.description).font(.subheadline).textSelection(.enabled) }
+                VideoOwnerRouteLink(owner: track.owner) { PiliLabel(track.owner.name, systemImage: "person.crop.circle") }
+                if !track.description.isEmpty { Text(track.description).piliFont(.base).textSelection(.enabled) }
                 HStack {
-                    Button("赞", systemImage: model.liked ? "hand.thumbsup.fill" : "hand.thumbsup") { action("ThumbUp") }
+                    PiliIconButton("赞", systemImage: model.liked ? "hand.thumbsup.fill" : "hand.thumbsup") { action("ThumbUp") }
                         .contextMenu { Button("三连") { confirmTriple = true } }
-                    Button("投币", systemImage: "c.circle") { confirmCoin = true }
-                    Button("收藏", systemImage: "star") { favorites = true }
-                    Button("评论", systemImage: "bubble") { comments = try? piliCommentTarget(oid: String(track.id), type: 14, author: track.owner) }
+                    PiliIconButton("投币", systemImage: "c.circle") { confirmCoin = true }
+                    PiliIconButton("收藏", systemImage: "star") { favorites = true }
+                    PiliIconButton("评论", systemImage: "bubble") { comments = try? piliCommentTarget(oid: String(track.id), type: 14, author: track.owner) }
                 }.buttonStyle(.borderless).disabled(actionBusy)
                 if model.sources.count > 1 {
                     Picker("音质", selection: Binding(get: { model.sourceID }, set: { id in if let source = model.sources.first(where: { $0.id == id }) { model.install(source) } })) {
@@ -118,12 +119,12 @@ struct PiliAudioView: View {
                 }
                 ShareLink(item: URL(string: "https://www.bilibili.com/audio/au\(track.id)")!)
             }
-            if let error = model.error { Text(error).foregroundStyle(.red); Button("重试") { Task { if let track = model.selected { await model.select(track) } else { await model.load(reset: true) } } } }
+            if let error = model.error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { if let track = model.selected { await model.select(track) } else { await model.load(reset: true) } } } }
             Section("播放列表") {
                 Picker("排序", selection: $model.order) { ForEach(VideoListenPlaylistSortOrder.allCases) { Text($0.title).tag($0) } }.disabled(model.busy)
                 ForEach(model.tracks) { track in
                     Button { Task { await model.select(track) } } label: {
-                        Label(track.title, systemImage: track.id == model.selected?.id ? "speaker.wave.2.fill" : "music.note")
+                        PiliLabel(track.title, systemImage: track.id == model.selected?.id ? "speaker.wave.2.fill" : "music.note")
                     }.disabled(model.busy)
                 }
                 if model.busy { ProgressView() }
@@ -132,11 +133,11 @@ struct PiliAudioView: View {
         }.navigationTitle("音频").task { if model.tracks.isEmpty { await model.load(reset: true) } else if model.player == nil, let track = model.selected { await model.select(track, resume: true) } }
             .onChange(of: model.order) { Task { await model.load(reset: true) } }
             .onDisappear { model.leave() }
-            .sheet(item: $comments) { DynamicCommentsSheet(item: $0, api: model.api) }
-            .sheet(isPresented: $favorites) { if let track = model.selected { NavigationStack { PiliAudioFavoritesView(api: model.api, id: track.id) } } }
-            .confirmationDialog("选择投币数量", isPresented: $confirmCoin, titleVisibility: .visible) { Button("投 1 枚硬币") { action("CoinAdd", coins: 1) }; Button("投 2 枚硬币") { action("CoinAdd", coins: 2) } }
-            .confirmationDialog("点赞、投币并收藏？", isPresented: $confirmTriple, titleVisibility: .visible) { Button("三连") { action("TripleLike") } }
-            .toolbar { Button("播放方式", systemImage: "timer") { PiliPlaybackToolsView.present() } }
+            .piliSheet(item: $comments) { DynamicCommentsSheet(item: $0, api: model.api) }
+            .piliSheet(isPresented: $favorites) { if let track = model.selected { NavigationStack { PiliAudioFavoritesView(api: model.api, id: track.id) } } }
+            .piliConfirmation("选择投币数量", isPresented: $confirmCoin, titleVisibility: .visible) { PiliAlertButton("投 1 枚硬币") { action("CoinAdd", coins: 1) }; PiliAlertButton("投 2 枚硬币") { action("CoinAdd", coins: 2) } }
+            .piliConfirmation("点赞、投币并收藏？", isPresented: $confirmTriple, titleVisibility: .visible) { PiliAlertButton("三连") { action("TripleLike") } }
+            .toolbar { PiliIconButton("播放方式", systemImage: "timer") { PiliPlaybackToolsView.present() } }
     }
     private func action(_ method: String, coins: Int = 1) {
         guard !actionBusy, let track = model.selected else { return }; actionBusy = true
@@ -157,7 +158,7 @@ struct PiliAudioView: View {
 private struct PiliAudioFavoritesView: View {
     let api: BiliAPIClient
     let id: Int
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var folders: [DynamicJSONValue] = []
     @State private var initial = Set<Int>()
     @State private var selection = Set<Int>()
@@ -165,13 +166,13 @@ private struct PiliAudioFavoritesView: View {
     @State private var busy = false
     @State private var error: String?
     var body: some View {
-        List {
+        PiliList {
             ForEach(folders, id: \.self) { folder in
                 Toggle(folder["title"].piliString, isOn: Binding(get: { selection.contains(folder["id"].piliInt) }, set: { on in
                     if on { selection.insert(folder["id"].piliInt) } else { selection.remove(folder["id"].piliInt) }
                 }))
             }
-            if let error { Text(error).foregroundStyle(.red) }
+            if let error { Text(error).foregroundStyle(Color.cc.destructive) }
             if busy { ProgressView() }
             Button("保存") { Task { await save() } }.disabled(busy || identity == nil || initial == selection)
         }.navigationTitle("收藏音频").task {

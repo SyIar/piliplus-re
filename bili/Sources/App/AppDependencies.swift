@@ -38,17 +38,21 @@ final class AppDependencies: ObservableObject {
         self.api = api
         self.accountMessageService = AccountMessageService(sessionStore: sessionStore, api: api)
         self.sponsorBlockService = SponsorBlockService()
+        PiliPresentation.dependencies = self
         PiliOfflineStore.shared.configure(api: api)
+        PiliDanmakuRulesStore.shared.synchronize(api: api)
         sessionStore.$playbackCredentialVersion
             .dropFirst()
             .sink { [weak self] _ in
                 Task {
+                    if let self { PiliDanmakuRulesStore.shared.synchronize(api: self.api) }
                     await PlayURLCache.shared.invalidateForLoginStateChange()
                     await VideoPreloadCenter.shared.clearPlayURLCache()
                     await self?.api.resetPlaybackAuthorizationState()
                     await self?.api.resetHomeRecommendState()
                     self?.homeRecommendDiagnosticsStore.reset()
                     HomeRecommendFeedbackCenter.shared.reset()
+                    PiliFeedDismissals.shared.reset()
                     HomeFeedSnapshotCache.clearAll()
                 }
             }

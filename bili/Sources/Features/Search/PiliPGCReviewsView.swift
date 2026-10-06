@@ -1,10 +1,11 @@
 import SwiftUI
+import ChunUI
 
 struct PiliPGCReviewsView: View {
     let api: BiliAPIClient
     let mediaID: Int
     let title: String
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var isLong = false
     @State private var latest = false
     @State private var reviews: [PiliPGCReview] = []
@@ -22,11 +23,11 @@ struct PiliPGCReviewsView: View {
         let review: PiliPGCReview?
     }
     var body: some View {
-        List {
+        PiliList {
             Section {
                 Picker("类型", selection: $isLong) { Text("短评").tag(false); Text("长评").tag(true) }.pickerStyle(.segmented)
                 Toggle("最新优先", isOn: $latest)
-                if !isLong { Button("写短评与评分", systemImage: "square.and.pencil") { editor = .init(review: nil) }.disabled(identity?.mid == 0 || identity == nil) }
+                if !isLong { PiliIconButton("写短评与评分", systemImage: "square.and.pencil") { editor = .init(review: nil) }.disabled(identity?.mid == 0 || identity == nil) }
             }
             if let error { Text(error); Button("重试") { Task { await load(reset: reviews.isEmpty) } } }
             ForEach(reviews) { review in row(review) }
@@ -36,27 +37,27 @@ struct PiliPGCReviewsView: View {
         }.disabled(busy).navigationTitle(title + " · 点评").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.disabled(busy) } }
             .task(id: "\(isLong)-\(latest)") { if identity == nil { identity = .init(api.requestSnapshot()) }; await load(reset: true) }
-            .sheet(item: $editor) { draft in
+            .piliSheet(item: $editor) { draft in
                 if let identity {
                     PiliPGCReviewEditor(api: api, mediaID: mediaID, identity: identity, review: draft.review) { Task { await load(reset: true) } }
                 }
             }
-            .confirmationDialog("删除短评，同时删除评分？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
-                if let review = deleting { Button("删除", role: .destructive) { mutate(.delete(review.id)) }; Button("取消", role: .cancel) { deleting = nil } }
+            .piliConfirmation("删除短评，同时删除评分？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
+                if let review = deleting { PiliAlertButton("删除", role: .destructive) { mutate(.delete(review.id)) }; PiliAlertButton("取消", role: .cancel) { deleting = nil } }
             }
     }
     private func row(_ review: PiliPGCReview) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            VideoOwnerRouteLink(owner: review.author) { Text(review.author.name).font(.headline) }
-            Text("\(review.score) 分 · \(review.date)").font(.caption).foregroundStyle(.secondary)
-            if !review.title.isEmpty { Text(review.title).font(.headline) }
+            VideoOwnerRouteLink(owner: review.author) { Text(review.author.name).piliFont(.baseBold) }
+            Text("\(review.score) 分 · \(review.date)").piliFont(.sm).foregroundStyle(.secondary)
+            if !review.title.isEmpty { Text(review.title).piliFont(.baseBold) }
             Text(review.text).textSelection(.enabled)
             if isLong, review.articleID > 0, let url = URL(string: "https://www.bilibili.com/read/cv\(review.articleID)") {
-                AppLinkButton(url: url) { Label("阅读长评", systemImage: "doc.text") }
+                AppLinkButton(url: url) { PiliLabel("阅读长评", systemImage: "doc.text") }
             } else if !isLong {
                 HStack {
-                    Button("\(review.likes)", systemImage: review.liked ? "hand.thumbsup.fill" : "hand.thumbsup") { mutate(.like(review.id)) }
-                    Button("点踩", systemImage: review.disliked ? "hand.thumbsdown.fill" : "hand.thumbsdown") { mutate(.dislike(review.id)) }
+                    PiliIconButton("\(review.likes)", systemImage: review.liked ? "hand.thumbsup.fill" : "hand.thumbsup") { mutate(.like(review.id)) }
+                    PiliIconButton("点踩", systemImage: review.disliked ? "hand.thumbsdown.fill" : "hand.thumbsdown") { mutate(.dislike(review.id)) }
                     Spacer()
                     Menu("更多", systemImage: "ellipsis") {
                         if review.author.mid == identity?.mid {
@@ -67,7 +68,7 @@ struct PiliPGCReviewsView: View {
                             PiliAccountWebView(api: api, url: URL(string: "https://www.bilibili.com/appeal/?reviewId=\(review.id)&type=shortComment&mediaId=\(mediaID)")!, title: "举报点评")
                         } label: { Text("举报") }
                     }
-                }.buttonStyle(.borderless).font(.caption)
+                }.buttonStyle(.borderless).piliFont(.sm)
             }
         }.padding(.vertical, 6)
     }
@@ -117,7 +118,7 @@ private struct PiliPGCReviewEditor: View {
     let identity: PiliAccountIdentity
     let review: PiliPGCReview?
     let onSave: () -> Void
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var score = 10
     @State private var content = ""
     @State private var share = false
@@ -125,10 +126,10 @@ private struct PiliPGCReviewEditor: View {
     @State private var error: String?
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 Picker("评分", selection: $score) { ForEach([2, 4, 6, 8, 10], id: \.self) { Text("\($0) 分").tag($0) } }
                 TextEditor(text: $content).frame(minHeight: 120)
-                Text("\(content.count) / 100 字").font(.caption).foregroundStyle(content.count > 100 ? .red : .secondary)
+                Text("\(content.count) / 100 字").piliFont(.sm).foregroundStyle(content.count > 100 ? Color.cc.destructive : .secondary)
                 if review == nil { Toggle("同时分享到动态", isOn: $share) }
                 if let error { Text(error) }
             }.disabled(saving).navigationTitle(review == nil ? "写短评" : "编辑短评")
@@ -137,7 +138,7 @@ private struct PiliPGCReviewEditor: View {
                     ToolbarItem(placement: .confirmationAction) { Button("发布") { save() }.disabled(saving || content.count > 100) }
                 }
                 .onAppear { if let review { score = max(2, review.score); content = review.text } }
-        }.interactiveDismissDisabled(saving)
+        }.piliInteractiveDismissDisabled(saving)
     }
     private func save() {
         guard !saving else { return }; saving = true; error = nil

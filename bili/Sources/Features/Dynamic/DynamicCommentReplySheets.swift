@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DynamicCommentRepliesSheet: View {
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     let rootComment: Comment
     @ObservedObject var replyStore: DynamicCommentReplyStore
     let api: BiliAPIClient
@@ -49,7 +49,7 @@ struct DynamicCommentRepliesSheet: View {
             onDismiss: { dismiss() },
             onRefresh: { Task { await replyStore.reloadReplies(for: rootComment) } }
         )
-        .sheet(item: $dialogReply) { reply in
+        .piliSheet(item: $dialogReply) { reply in
             DynamicCommentDialogSheet(
                 rootComment: rootComment,
                 focusReply: reply,
@@ -81,7 +81,7 @@ struct DynamicCommentRepliesSheet: View {
 }
 
 private struct DynamicCommentDialogSheet: View {
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     let rootComment: Comment
     let focusReply: Comment
     let replyStore: DynamicCommentReplyStore

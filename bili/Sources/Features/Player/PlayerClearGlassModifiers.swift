@@ -60,12 +60,15 @@ struct BiliPlayerGlassSheetBackground: View {
 }
 
 private struct BiliPlayerClearGlassModifier<GlassShape: Shape>: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     let interactive: Bool
     let shape: GlassShape
 
     @ViewBuilder
     func body(content: Content) -> some View {
-        if #available(iOS 26, *) {
+        if reduceTransparency {
+            content.background(Color(white: 0.12), in: shape)
+        } else if #available(iOS 26, *) {
             content.glassEffect(
                 .clear
                     .interactive(interactive),

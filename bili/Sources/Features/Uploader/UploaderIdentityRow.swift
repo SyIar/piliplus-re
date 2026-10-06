@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct UploaderIdentityRow: View {
     let owner: VideoOwner
@@ -8,7 +9,7 @@ struct UploaderIdentityRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
             AvatarRemoteImage(urlString: card?.face ?? owner.face, pixelSize: 160) {
-                Image(systemName: "person.crop.circle.fill")
+                PiliIcon(systemName: "person.crop.circle.fill")
                     .resizable()
                     .foregroundStyle(.secondary)
             }
@@ -17,7 +18,7 @@ struct UploaderIdentityRow: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(card?.name ?? owner.name)
-                    .font(.title3.weight(.bold))
+                    .piliFont(.baseBold).fontWeight(.bold)
 
                 UploaderFollowButton(owner: owner, viewModel: viewModel)
                     .padding(.top, 2)

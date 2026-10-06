@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct CompactDynamicImageTileContext {
     let imageCount: Int
@@ -53,7 +54,7 @@ struct CompactDynamicImageTile: View {
             ZStack {
                 Color.clear
                 Text("+\(context.imageCount - 9)")
-                    .font(.headline.weight(.semibold))
+                    .piliFont(.baseBold).fontWeight(.semibold)
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)

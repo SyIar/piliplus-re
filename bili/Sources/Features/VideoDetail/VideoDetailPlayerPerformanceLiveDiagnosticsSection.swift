@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 private struct PlayerPerformanceOverlayDiagnosticRow: Identifiable, Equatable {
     let id: String
@@ -70,11 +71,11 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Image(systemName: isFailure ? "exclamationmark.triangle.fill" : "stethoscope")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(isFailure ? .orange : .secondary)
+                PiliIcon(systemName: isFailure ? "exclamationmark.triangle.fill" : "stethoscope")
+                    .piliFont(.sm).fontWeight(.semibold)
+                    .foregroundStyle(isFailure ? Color.cc.warning : .secondary)
                 Text("现场诊断")
-                    .font(.caption2.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                 Spacer(minLength: 0)
             }
 
@@ -88,7 +89,7 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
                         .lineLimit(nil)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.caption2.monospacedDigit())
+                .piliFont(.sm).monospacedDigit()
             }
         }
         .padding(8)
@@ -99,7 +100,7 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
         )
         .overlay {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(isFailure ? Color.orange.opacity(0.35) : Color(uiColor: .separator).opacity(0.55), lineWidth: 0.7)
+                .stroke(isFailure ? Color.cc.warning.opacity(0.35) : Color(uiColor: .separator).opacity(0.55), lineWidth: 0.7)
         }
     }
 
@@ -108,9 +109,9 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
         case .normal:
             return .primary
         case .warning:
-            return .orange
+            return Color.cc.warning
         case .failure:
-            return .red
+            return Color.cc.destructive
         case .secondary:
             return .secondary
         }

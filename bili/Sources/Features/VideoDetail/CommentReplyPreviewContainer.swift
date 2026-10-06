@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct CommentReplyPreviewContainer<Content: View>: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -45,8 +46,8 @@ struct CommentInlineActionLabel: View {
     let systemImage: String
 
     var body: some View {
-        Label(title, systemImage: systemImage)
-            .font(.caption.weight(.semibold))
+        PiliLabel(title, systemImage: systemImage)
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .lineLimit(1)
             .minimumScaleFactor(0.82)

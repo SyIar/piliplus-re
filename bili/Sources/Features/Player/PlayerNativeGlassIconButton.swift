@@ -32,7 +32,7 @@ struct PlayerNativeGlassIconButton: View {
 
     private var button: some View {
         Button(action: action) {
-            Image(systemName: systemName)
+            PiliIcon(systemName: systemName, size: iconSize)
                 .font(.system(size: iconSize, weight: .semibold))
                 .frame(
                     width: metrics.controlHeight,

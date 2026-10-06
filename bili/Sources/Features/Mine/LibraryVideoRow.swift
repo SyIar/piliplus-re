@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LibraryVideoRow: View {
     let item: AccountVideoEntry
@@ -38,20 +39,20 @@ private struct LibraryVideoInfo: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(item.title)
-                .font(.subheadline.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .lineLimit(2)
 
             if let ownerName = item.owner?.name, !ownerName.isEmpty {
                 Text(ownerName)
-                    .font(.caption)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
 
             HStack(spacing: 8) {
-                Label(BiliFormatters.compactCount(item.stat?.view), systemImage: "play.rectangle")
+                PiliLabel(BiliFormatters.compactCount(item.stat?.view), systemImage: "play.rectangle")
                 Text("\(timestampTitle) \(item.savedAt.formatted(date: .numeric, time: .shortened))")
             }
-            .font(.caption2)
+            .piliFont(.sm)
             .foregroundStyle(.secondary)
             .lineLimit(1)
 
@@ -71,7 +72,7 @@ private struct LibraryVideoProgress: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("看到 \(BiliFormatters.duration(Int(resumeTime)))")
-                .font(.caption2.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(appTintColor)
 
             if let progress {

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayEmptyContent: View {
     @ObservedObject var diagnosticsStore: VideoDetailNetworkDiagnosticsRenderStore
@@ -13,7 +14,7 @@ struct PlayerPerformanceOverlayEmptyContent: View {
         PlayerPerformanceOverlayExperimentSection(snapshot: experimentSnapshot)
 
         Text("等待播放事件")
-            .font(.caption2)
+            .piliFont(.sm)
             .foregroundStyle(.secondary)
     }
 }

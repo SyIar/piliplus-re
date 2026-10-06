@@ -5,53 +5,19 @@ struct ResourceCacheCleanupSection: View {
 
     var body: some View {
         Section("清理") {
-            Button {
-                performClear {
-                    await ResourceCacheCenter.clearPlayURL()
-                }
-            } label: {
-                MineSettingsLabel("清理播放源缓存", systemImage: "link.badge.minus")
-            }
+            row("播放源") { await ResourceCacheCenter.clearPlayURL() }
+            row("图片") { await ResourceCacheCenter.clearImages(includeDisk: true) }
+            row("接口数据") { await ResourceCacheCenter.clearAPI() }
+            row("播放片段") { await ResourceCacheCenter.clearProgressiveMedia() }
+            row("字幕与弹幕") { await ResourceCacheCenter.clearSubtitlesAndDanmaku() }
+            row("全部缓存") { await ResourceCacheCenter.clearAll() }
+        }
+    }
 
-            Button {
-                performClear {
-                    await ResourceCacheCenter.clearImages(includeDisk: true)
-                }
-            } label: {
-                MineSettingsLabel("清理图片缓存", systemImage: "photo.badge.arrow.down")
-            }
-
-            Button {
-                performClear {
-                    await ResourceCacheCenter.clearAPI()
-                }
-            } label: {
-                MineSettingsLabel("清理 API 缓存", systemImage: "network")
-            }
-
-            Button {
-                performClear {
-                    await ResourceCacheCenter.clearProgressiveMedia()
-                }
-            } label: {
-                MineSettingsLabel("清理播放片段缓存", systemImage: "externaldrive.badge.minus")
-            }
-
-            Button {
-                performClear {
-                    await ResourceCacheCenter.clearSubtitlesAndDanmaku()
-                }
-            } label: {
-                MineSettingsLabel("清理字幕/弹幕缓存", systemImage: "text.bubble")
-            }
-
-            Button(role: .destructive) {
-                performClear {
-                    await ResourceCacheCenter.clearAll()
-                }
-            } label: {
-                MineSettingsLabel("清理全部资源缓存", systemImage: "trash")
-            }
+    private func row(_ title: String, action: @escaping () async -> Void) -> some View {
+        PiliSettingAction(title: title) {
+            Button("清理", role: .destructive) { performClear(action) }
+                .accessibilityLabel("清理\(title)")
         }
     }
 }

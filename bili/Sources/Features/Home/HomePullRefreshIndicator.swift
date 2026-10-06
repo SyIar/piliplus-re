@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct HomePullRefreshIndicator: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -26,8 +27,8 @@ struct HomePullRefreshIndicator: View {
         TimelineView(.animation(minimumInterval: 1 / 30, paused: !isRefreshing)) { timeline in
             ZStack {
                 if isVisible {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 15, weight: .semibold))
+                    PiliIcon(systemName: "arrow.clockwise", size: 15)
+                        .piliFont(.baseBold)
                         .foregroundStyle(appTintColor)
                         .rotationEffect(
                             .degrees(

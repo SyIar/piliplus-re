@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayDetailAndEngineLines: View {
     let session: PlayerPerformanceSession
@@ -7,7 +8,7 @@ struct PlayerPerformanceOverlayDetailAndEngineLines: View {
     var body: some View {
         Group {
             if let detailSource = session.detailSourceMessage {
-                Label(detailSource, systemImage: "doc.text.magnifyingglass")
+                PiliLabel(detailSource, systemImage: "doc.text.magnifyingglass")
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -15,16 +16,16 @@ struct PlayerPerformanceOverlayDetailAndEngineLines: View {
 
             if let diagnostics = playerViewModel?.engineDiagnostics {
                 Text(diagnostics.compactDescription)
-                    .font(.caption2.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             if let decodeLogMessage = session.decodeLogMessage {
-                Label(decodeLogMessage, systemImage: "cpu")
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(decodeLogMessage.localizedCaseInsensitiveContains("success") ? .green : .orange)
+                PiliLabel(decodeLogMessage, systemImage: "cpu")
+                    .piliFont(.sm).monospacedDigit()
+                    .foregroundStyle(decodeLogMessage.localizedCaseInsensitiveContains("success") ? Color.cc.success : Color.cc.warning)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
             }

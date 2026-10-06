@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct SettingsNavigationRow: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -8,8 +9,8 @@ struct SettingsNavigationRow: View {
 
     var body: some View {
         HStack(spacing: 13) {
-            Image(systemName: systemImage)
-                .font(.system(size: 19, weight: .regular))
+            PiliIcon(systemName: systemImage, size: 19)
+                .piliFont(.base)
                 .symbolRenderingMode(.monochrome)
                 .foregroundStyle(appTintColor)
                 .frame(width: 30, height: 30)
@@ -73,10 +74,61 @@ struct MinePlaybackPreferenceChip: View {
             .foregroundStyle(.secondary)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(Color(uiColor: .secondarySystemGroupedBackground), in: Capsule())
+            .ccGlassEffect(.capsule)
             .overlay {
                 Capsule()
                     .stroke(Color(uiColor: .separator).opacity(0.10), lineWidth: 0.5)
             }
+    }
+}
+
+/// Keep a menu picker in the trailing column even when its explanation wraps.
+/// Native Form pickers move the value below a multiline label on narrow screens.
+struct PiliSettingPicker<Selection: Hashable, Options: View, Label: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Binding private var selection: Selection
+    private let options: Options
+    private let label: Label
+
+    init(selection: Binding<Selection>, @ViewBuilder content: () -> Options, @ViewBuilder label: () -> Label) {
+        _selection = selection; options = content(); self.label = label()
+    }
+
+    init(_ title: String, selection: Binding<Selection>, @ViewBuilder content: () -> Options) where Label == Text {
+        _selection = selection; options = content(); label = Text(title)
+    }
+
+    var body: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            // Preserve whole titles at large sizes; the action keeps the same
+            // trailing edge on its own line instead of squeezing Chinese text
+            // into a one-character-wide column.
+            VStack(alignment: .leading, spacing: 8) {
+                label.fixedSize(horizontal: false, vertical: true)
+                picker.frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        } else {
+            HStack(spacing: 16) {
+                label.frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                picker.layoutPriority(1)
+            }
+        }
+    }
+
+    private var picker: some View {
+        Picker(selection: $selection) { options } label: { label }
+            .labelsHidden().pickerStyle(.menu).lineLimit(1)
+    }
+}
+
+struct PiliSettingAction<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: () -> Content
+    var body: some View {
+        HStack(spacing: 16) {
+            Text(title).frame(maxWidth: .infinity, alignment: .leading)
+            content()
+        }
     }
 }

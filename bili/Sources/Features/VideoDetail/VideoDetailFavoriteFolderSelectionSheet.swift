@@ -4,12 +4,12 @@ struct FavoriteFolderSelectionSheet: View {
     @ObservedObject var store: VideoDetailFavoriteFolderRenderStore
     let loadFavoriteFolders: (Bool) async -> Void
     let saveFavoriteFolders: (Set<Int>) async -> Bool
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var presentationState = FavoriteFolderSelectionPresentationState()
 
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 FavoriteFolderSelectionContent(
                     folders: store.favoriteFolders,
                     state: store.favoriteFolderState,
@@ -31,7 +31,7 @@ struct FavoriteFolderSelectionSheet: View {
                 actions: sheetActions
             )
         }
-        .presentationDetents([.medium, .large])
+        .piliPresentationDetents([.medium, .large])
         .onDisappear {
             viewActions.cancelPendingTasks()
         }

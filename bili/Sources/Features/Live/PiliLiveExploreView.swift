@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 extension BiliAPIClient {
     func piliFollowedLiveRooms(page: Int, identity: PiliAccountIdentity) async throws -> (rooms: [LiveRoom], more: Bool) {
@@ -16,9 +17,10 @@ struct PiliLiveExploreView: View {
     @State private var loading = false
     @State private var query = ""
     var body: some View {
-        List {
+        PiliList {
             Section {
-                NavigationLink { PiliLiveAreaRoomsView(api: api, title: "我关注的直播", parentID: nil, areaID: 0) } label: { Label("我关注的直播", systemImage: "heart") }
+                NavigationLink("常用分区") { PiliLiveFavoriteAreasView(api: api) }
+                NavigationLink { PiliLiveAreaRoomsView(api: api, title: "我关注的直播", parentID: nil, areaID: 0) } label: { PiliLabel("我关注的直播", systemImage: "heart") }
             }
             if loading { ProgressView() }
             if let error { Text(error); Button("重试") { Task { await load() } } }
@@ -40,7 +42,7 @@ struct PiliLiveExploreView: View {
     }
 }
 
-private struct PiliLiveAreaRoomsView: View {
+struct PiliLiveAreaRoomsView: View {
     let api: BiliAPIClient
     let title: String
     let parentID: Int?
@@ -58,7 +60,7 @@ private struct PiliLiveAreaRoomsView: View {
                 if let error { Text(error); Button("重试") { Task { await load() } } }
                 if busy { ProgressView() }
                 else if hasMore { Button("加载更多") { Task { await load() } } }
-                else if rooms.isEmpty { ContentUnavailableView("暂无直播", systemImage: "dot.radiowaves.left.and.right") }
+                else if rooms.isEmpty { PiliUnavailableView("暂无直播", systemImage: "dot.radiowaves.left.and.right") }
             }.padding()
         }.navigationTitle(title).task { if identity == nil { identity = .init(api.requestSnapshot()); await load() } }
     }
@@ -91,17 +93,17 @@ struct PiliMedalWallView: View {
     @State private var loaded = false
     @State private var error: String?
     var body: some View {
-        List {
+        PiliList {
             if let error { Text(error); Button("重试") { Task { await load() } } }
             if !loaded && error == nil { ProgressView() }
             if loaded && medals.isEmpty { Text("暂无公开的粉丝勋章") }
             ForEach(medals, id: \.self) { medal in
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("\(medal["uinfo_medal"]["name"].piliString) · Lv\(medal["uinfo_medal"]["level"].piliInt)").font(.headline)
+                    Text("\(medal["uinfo_medal"]["name"].piliString) · Lv\(medal["uinfo_medal"]["level"].piliInt)").piliFont(.baseBold)
                     Text(medal["target_name"].piliString).foregroundStyle(.secondary)
-                    if medal["medal_info"]["wearing_status"].piliInt == 1 { Text("正在佩戴").font(.caption) }
+                    if medal["medal_info"]["wearing_status"].piliInt == 1 { Text("正在佩戴").piliFont(.sm) }
                     if let url = URL(string: medal["link"].piliString), ["https", "http", "bilibili"].contains(url.scheme ?? "") {
-                        AppLinkButton(url: url) { Label("进入直播间", systemImage: "dot.radiowaves.left.and.right") }
+                        AppLinkButton(url: url) { PiliLabel("进入直播间", systemImage: "dot.radiowaves.left.and.right") }
                     }
                 }
             }

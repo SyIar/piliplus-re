@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PgcSeasonPlaybackRouteView: View {
     let route: PgcSeasonRoute
@@ -80,25 +81,25 @@ private struct PgcSeasonPlaybackRouteLoadingView: View {
     var body: some View {
         VStack(spacing: 12) {
             if case .failed(let message) = state {
-                Image(systemName: "exclamationmark.triangle")
-                    .font(.title2)
+                PiliIcon(systemName: "exclamationmark.triangle")
+                    .piliFont(.lgBold)
                     .foregroundStyle(.secondary)
                 Text(message)
-                    .font(.footnote)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                 Button("重试", action: retry)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.glassProminent)
             } else {
                 ProgressView()
                 Text(route.title)
-                    .font(.subheadline)
+                    .piliFont(.base)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .background(Color.cc.background)
         .accessibilityLabel("正在打开番剧")
     }
 }

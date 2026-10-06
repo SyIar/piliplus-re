@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct ErrorStateView: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -11,14 +12,14 @@ struct ErrorStateView: View {
             title: title,
             message: message,
             systemImage: "exclamationmark.triangle",
-            tint: .orange
+            tint: Color.cc.warning
         ) {
             if let retry {
                 Button(action: retry) {
-                    Label("重试", systemImage: "arrow.clockwise")
+                    PiliLabel("重试", systemImage: "arrow.clockwise")
                 }
-                .font(.subheadline.weight(.semibold))
-                .buttonStyle(.bordered)
+                .piliFont(.base).fontWeight(.semibold)
+                .buttonStyle(.glass)
                 .buttonBorderShape(.capsule)
                 .tint(appTintColor)
             }
@@ -50,9 +51,9 @@ struct InlineLoadingStateView: View {
             ProgressView()
                 .controlSize(.small)
 
-            Label(title, systemImage: systemImage)
+            PiliLabel(title, systemImage: systemImage)
                 .labelStyle(.titleOnly)
-                .font(.caption.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)

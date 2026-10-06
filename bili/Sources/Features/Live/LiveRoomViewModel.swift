@@ -63,6 +63,7 @@ final class LiveRoomViewModel: ObservableObject {
         self.seedRoom = seedRoom
         self.api = api
         self.libraryStore = libraryStore
+        self.selectedQualityQN = libraryStore.livePlaybackPreferences.preferredQuality(cellular: NetworkPathSnapshot.shared.usesCellular)
         self.isDanmakuEnabled = libraryStore.danmakuEnabled
         self.danmakuSettings = libraryStore.danmakuSettings
         self.isLiveDanmakuDiagnosticsEnabled = ProcessInfo.processInfo.arguments.contains(
@@ -140,7 +141,7 @@ final class LiveRoomViewModel: ObservableObject {
         availableQualities = []
         streamHTTPHeaders = [:]
         currentCandidateIndex = 0
-        selectedQualityQN = LiveStreamQuality.defaultPreferredQN
+        selectedQualityQN = libraryStore.livePlaybackPreferences.preferredQuality(cellular: NetworkPathSnapshot.shared.usesCellular)
         updateStreamMenuItems()
         updateQualityMenuItems()
         streamFallbackMessage = nil
@@ -154,7 +155,7 @@ final class LiveRoomViewModel: ObservableObject {
         availableQualities = []
         streamHTTPHeaders = [:]
         currentCandidateIndex = 0
-        selectedQualityQN = LiveStreamQuality.defaultPreferredQN
+        selectedQualityQN = libraryStore.livePlaybackPreferences.preferredQuality(cellular: NetworkPathSnapshot.shared.usesCellular)
         updateStreamMenuItems()
         updateQualityMenuItems()
         streamFallbackMessage = nil
@@ -244,8 +245,8 @@ final class LiveRoomViewModel: ObservableObject {
             async let streamHTTPHeadersTask = api.livePlaybackHTTPHeaders(roomID: resolvedRoomID)
             let (streamResult, streamHTTPHeaders) = try await (streamResultTask, streamHTTPHeadersTask)
             guard !Task.isCancelled, isCurrentLoad(generation) else { return }
-            let candidates = LiveStreamStartupHealthMemory.shared
-                .orderedStartupCandidates(streamResult.candidates)
+            let candidates = libraryStore.livePlaybackPreferences.candidates(
+                LiveStreamStartupHealthMemory.shared.orderedStartupCandidates(streamResult.candidates))
             guard let firstCandidate = candidates.first else {
                 state = .failed("没有获取到可播放的直播流")
                 return

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct InitialPageMenuPlaceholder: View {
     let pageCount: Int?
@@ -7,12 +8,12 @@ struct InitialPageMenuPlaceholder: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 Text("分P")
-                    .font(.headline)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
 
                 if let pageCount {
                     Text("\(pageCount) P")
-                        .font(.caption)
+                        .piliFont(.sm)
                         .foregroundStyle(.tertiary)
                 }
 

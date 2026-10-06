@@ -1,5 +1,6 @@
 import Combine
 import SwiftUI
+import ChunUI
 
 struct UploaderSeasonSeriesDetailView: View {
     @EnvironmentObject private var dependencies: AppDependencies
@@ -36,14 +37,14 @@ struct UploaderSeasonSeriesDetailView: View {
                     Button {
                         Task { await viewModel.changeSort(sort, api: dependencies.api) }
                     } label: {
-                        Label(sort.title, systemImage: sort == viewModel.sort ? "checkmark" : "circle")
+                        PiliLabel(sort.title, systemImage: sort == viewModel.sort ? "checkmark" : "circle")
                     }
                 }
             } label: {
-                Label(viewModel.sort.title, systemImage: "arrow.up.arrow.down.circle")
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel(viewModel.sort.title, systemImage: "arrow.up.arrow.down.circle")
+                    .piliFont(.base).fontWeight(.semibold)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
 
@@ -51,7 +52,7 @@ struct UploaderSeasonSeriesDetailView: View {
 
             if let totalCount = viewModel.totalCount ?? viewModel.item.total {
                 Text("\(totalCount) 个视频")
-                    .font(.caption)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
         }
@@ -123,19 +124,19 @@ struct UploaderSeasonSeriesDetailView: View {
             Button {
                 Task { await viewModel.loadMore(api: dependencies.api) }
             } label: {
-                Label("加载更多", systemImage: "chevron.down")
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel("加载更多", systemImage: "chevron.down")
+                    .piliFont(.base).fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .foregroundStyle(.primary)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
             .padding(.vertical, 10)
         } else {
             Text("没有更多视频了")
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)

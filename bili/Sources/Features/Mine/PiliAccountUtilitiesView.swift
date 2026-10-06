@@ -1,10 +1,11 @@
 import SwiftUI
+import ChunUI
 
 struct PiliAccountUtilitiesView: View {
     @EnvironmentObject private var dependencies: AppDependencies
     var body: some View {
-        List {
-            NavigationLink { PiliSpacePrivacyView(api: dependencies.api) } label: { Label("空间隐私设置", systemImage: "lock.shield") }
+        PiliList {
+            NavigationLink { PiliSpacePrivacyView(api: dependencies.api) } label: { PiliLabel("空间隐私设置", systemImage: "lock.shield") }
             ForEach(PiliAccountLog.allCases) { kind in NavigationLink(kind.title) { PiliAccountLogView(api: dependencies.api, kind: kind) } }
         }.navigationTitle("账号记录与隐私")
     }
@@ -17,26 +18,26 @@ private struct PiliAccountLogView: View {
     @State private var loading = false
     @State private var identity: PiliAccountIdentity?
     var body: some View {
-        List {
+        PiliList {
             if loading { ProgressView() }
             if let error { Text(error); Button("重试") { Task { await load() } } }
             ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                 VStack(alignment: .leading, spacing: 6) {
                     switch kind {
                     case .devices:
-                        Text(item["device_name"].piliString).font(.headline)
-                        Text([item["source"].piliString, item["latest_login_at"].piliString].joined(separator: " · ")).font(.caption)
-                        if item["is_current_device"].piliInt == 1 { Text("服务端标记的当前设备").font(.caption).foregroundStyle(.secondary) }
+                        Text(item["device_name"].piliString).piliFont(.baseBold)
+                        Text([item["source"].piliString, item["latest_login_at"].piliString].joined(separator: " · ")).piliFont(.sm)
+                        if item["is_current_device"].piliInt == 1 { Text("服务端标记的当前设备").piliFont(.sm).foregroundStyle(.secondary) }
                     case .logins:
-                        Text(item["time_at"].piliString).font(.headline)
-                        Text(item["geo"].piliString); Text(item["ip"].piliString).font(.caption).foregroundStyle(.secondary)
+                        Text(item["time_at"].piliString).piliFont(.baseBold)
+                        Text(item["geo"].piliString); Text(item["ip"].piliString).piliFont(.sm).foregroundStyle(.secondary)
                     default:
                         HStack { Text(item["reason"].piliString); Spacer(); Text(item["delta"].piliString).monospacedDigit() }
-                        Text(item["time"].piliString).font(.caption).foregroundStyle(.secondary)
+                        Text(item["time"].piliString).piliFont(.sm).foregroundStyle(.secondary)
                     }
                 }.textSelection(.enabled)
             }
-            if !loading, error == nil, items.isEmpty { ContentUnavailableView("暂无记录", systemImage: "list.bullet.rectangle") }
+            if !loading, error == nil, items.isEmpty { PiliUnavailableView("暂无记录", systemImage: "list.bullet.rectangle") }
         }.navigationTitle(kind.title).task { identity = .init(api.requestSnapshot()); await load() }.refreshable { await load() }
     }
     private func load() async {
@@ -54,7 +55,7 @@ private struct PiliSpacePrivacyView: View {
     @State private var loading = false
     @State private var error: String?
     var body: some View {
-        Form {
+        PiliForm {
             if loading { ProgressView() }
             if let error { Text(error); if values.isEmpty { Button("重试") { Task { await load() } } } }
             ForEach(PiliSpacePrivacyField.all.filter { values[$0.id] != nil }) { field in

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct CommentErrorView: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -8,22 +9,22 @@ struct CommentErrorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                Image(systemName: "exclamationmark.circle")
-                    .foregroundStyle(.orange)
+                PiliIcon(systemName: "exclamationmark.circle")
+                    .foregroundStyle(Color.cc.warning)
                 Text("评论加载失败")
-                    .font(.subheadline.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
             }
 
             Text(message)
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
             Button(action: retry) {
-                Label("重试", systemImage: "arrow.clockwise")
-                    .font(.caption.weight(.semibold))
+                PiliLabel("重试", systemImage: "arrow.clockwise")
+                    .piliFont(.sm).fontWeight(.semibold)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .tint(appTintColor)
         }

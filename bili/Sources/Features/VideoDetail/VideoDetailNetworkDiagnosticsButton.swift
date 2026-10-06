@@ -1,15 +1,16 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailNetworkDiagnosticsButton: View {
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Label("网络诊断", systemImage: "waveform.path.ecg.rectangle")
-                .font(.caption.weight(.semibold))
+            PiliLabel("网络诊断", systemImage: "waveform.path.ecg.rectangle")
+                .piliFont(.sm).fontWeight(.semibold)
                 .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
         .controlSize(.regular)
         .accessibilityLabel("打开网络诊断")
     }

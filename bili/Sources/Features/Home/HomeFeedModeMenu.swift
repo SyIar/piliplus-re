@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct HomeFeedModeMenu: View {
     let currentMode: HomeFeedMode
@@ -10,16 +11,16 @@ struct HomeFeedModeMenu: View {
                 Button {
                     onSelectMode(mode)
                 } label: {
-                    Label(mode.title, systemImage: currentMode == mode ? "checkmark" : mode.systemImage)
+                    PiliLabel(mode.title, systemImage: currentMode == mode ? "checkmark" : mode.systemImage)
                 }
             }
             Divider()
-            NavigationLink { PiliDiscoveryView() } label: { Label("每周必看与排行榜", systemImage: "chart.bar.xaxis") }
-            NavigationLink { PiliPGCCatalogueView() } label: { Label("番剧与影视", systemImage: "film") }
+            NavigationLink { PiliDiscoveryView() } label: { PiliLabel("每周必看与排行榜", systemImage: "chart.bar.xaxis") }
+            NavigationLink { PiliPGCCatalogueView() } label: { PiliLabel("番剧与影视", systemImage: "film") }
         } label: {
             HStack(spacing: 6) {
-                Text(currentMode.title).font(.system(size: 22, weight: .bold))
-                Image(systemName: "chevron.down").font(.system(size: 10, weight: .semibold))
+                Text(currentMode.title).piliFont(.lgBold)
+                PiliIcon(systemName: "chevron.down", size: 10).piliFont(.smBold)
             }
             .foregroundStyle(.primary)
         }

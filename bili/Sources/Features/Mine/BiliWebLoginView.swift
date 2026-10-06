@@ -3,7 +3,7 @@ import WebKit
 
 struct BiliWebLoginView: View {
     @EnvironmentObject private var dependencies: AppDependencies
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     var usesIsolatedSession = false
     let onLoginCookies: ([HTTPCookie]) -> Void
 

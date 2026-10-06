@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliChatSettingsView: View {
     let api: BiliAPIClient
@@ -21,7 +22,7 @@ struct PiliChatSettingsView: View {
     private var isCurrent: Bool { identity.matches(api.requestSnapshot(purpose: .main)) }
 
     var body: some View {
-        Form {
+        PiliForm {
             if !isCurrent {
                 Text("账号已切换，请重新打开聊天设置").foregroundStyle(.secondary)
             } else if let settings {
@@ -40,16 +41,16 @@ struct PiliChatSettingsView: View {
             if loading || saving { ProgressView(loading ? "正在加载" : "正在保存") }
             if let errorMessage {
                 Section {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(Color.cc.destructive)
                     if settings == nil { Button("重试") { Task { await load() } }.disabled(loading) }
                 }
             }
         }
         .navigationTitle("聊天设置").navigationBarTitleDisplayMode(.inline)
         .task { await load() }
-        .confirmationDialog("关闭这个账号的内容推送？", isPresented: $confirmsDisablePush, titleVisibility: .visible) {
-            Button("关闭推送", role: .destructive) { save(push: false) }
-            Button("取消", role: .cancel) {}
+        .piliConfirmation("关闭这个账号的内容推送？", isPresented: $confirmsDisablePush, titleVisibility: .visible) {
+            PiliAlertButton("关闭推送", role: .destructive) { save(push: false) }
+            PiliAlertButton("取消", role: .cancel) {}
         }
     }
 

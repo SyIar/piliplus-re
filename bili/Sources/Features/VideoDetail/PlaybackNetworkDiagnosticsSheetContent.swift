@@ -6,7 +6,7 @@ struct PlaybackNetworkDiagnosticsSheetContent: View {
     @ObservedObject var libraryStore: LibraryStore
     let formConfiguration: PlaybackNetworkDiagnosticsFormConfiguration
     let lifecycleConfiguration: PlaybackNetworkDiagnosticsLifecycleConfiguration
-    let dismiss: DismissAction
+    let dismiss: @MainActor () -> Void
 
     var body: some View {
         PlaybackNetworkDiagnosticsFormContent(

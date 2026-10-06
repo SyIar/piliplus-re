@@ -1,7 +1,8 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailCoinSheetHost: View {
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @Environment(\.appThemeTintColor) private var appTintColor
     @ObservedObject var viewModel: VideoDetailViewModel
     @State private var selectedCoinCount = 1
@@ -12,11 +13,11 @@ struct VideoDetailCoinSheetHost: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 8) {
-                Image(systemName: "bitcoinsign.circle.fill")
-                    .font(.system(size: 32)).foregroundStyle(appTintColor)
+                PiliIcon(systemName: "bitcoinsign.circle.fill", size: 32)
+                    .piliFont(.lg).foregroundStyle(appTintColor)
                     .symbolEffect(.bounce, options: .nonRepeating, value: reduceMotion ? false : didSucceed)
                 Text("已投 \(viewModel.interactionState.coinCount) / 2 枚")
-                    .font(.subheadline)
+                    .piliFont(.base)
                     .foregroundStyle(.secondary)
 
                 Picker("投币数量", selection: $selectedCoinCount) {
@@ -32,8 +33,8 @@ struct VideoDetailCoinSheetHost: View {
 
                 if let message = viewModel.interactionMessage, !message.isEmpty {
                     Text(message)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
+                        .piliFont(.sm)
+                        .foregroundStyle(Color.cc.destructive)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
                 }
@@ -43,12 +44,12 @@ struct VideoDetailCoinSheetHost: View {
                         if isSubmitting {
                             ProgressView()
                         } else {
-                            Label("投 \(selectedCoinCount) 枚", systemImage: "bitcoinsign.circle.fill")
+                            PiliLabel("投 \(selectedCoinCount) 枚", systemImage: "bitcoinsign.circle.fill")
                         }
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
                 .tint(appTintColor)
                 .controlSize(.large)
                 .disabled(isSubmitting || availableCoinCounts.isEmpty)
@@ -66,9 +67,9 @@ struct VideoDetailCoinSheetHost: View {
                 }
             }
         }
-        .presentationDetents([.height(330)])
+        .piliPresentationDetents([.height(330)])
         .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(isSubmitting)
+        .piliInteractiveDismissDisabled(isSubmitting)
         .onAppear {
             viewModel.interactionMessage = nil
             normalizeSelection()

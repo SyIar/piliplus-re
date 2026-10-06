@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 import WebKit
 
 struct PiliArticleView: View {
@@ -16,8 +17,8 @@ struct PiliArticleView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 18) {
                 if let document {
-                    Text(document.title).font(.title2.bold()).textSelection(.enabled)
-                    if let author = document.author { NavigationLink(value: author) { Text(author.name).font(.subheadline) } }
+                    Text(document.title).font(.cc.lgBold.bold()).textSelection(.enabled)
+                    if let author = document.author { NavigationLink(value: author) { Text(author.name).piliFont(.base) } }
                     if !document.blockedText.isEmpty { Text(document.blockedText).foregroundStyle(.secondary) }
                     ForEach(Array(document.paragraphs.enumerated()), id: \.offset) { _, paragraph in PiliArticleParagraph(value: paragraph, api: api) }
                     if !document.html.isEmpty { PiliArticleHTML(html: document.html) }
@@ -26,15 +27,15 @@ struct PiliArticleView: View {
                         if !document.dynamicID.isEmpty { Button(liked ? "取消点赞" : "点赞") { action(favorite: false) } }
                         if document.commentType == 12 || document.route.kind == .opus { Button(favorited ? "取消收藏" : "收藏") { action(favorite: true) } }
                         if document.commentID > 0 { Button("评论") { comments = try? document.commentTarget() } }
-                    }.buttonStyle(.bordered).disabled(busy)
-                    PiliShareMenu(url: document.route.url, title: document.title) { Label("分享", systemImage: "square.and.arrow.up") }.buttonStyle(.bordered)
+                    }.buttonStyle(.glass).disabled(busy)
+                    PiliShareMenu(url: document.route.url, title: document.title) { PiliLabel("分享", systemImage: "square.and.arrow.up") }.buttonStyle(.glass)
                     Link("查看原文", destination: document.route.url).environment(\.openURL, OpenURLAction { _ in .systemAction })
                 } else if error == nil { ProgressView("加载正文") }
-                if let error { Text(error).foregroundStyle(.red); Button("重新加载") { Task { await load() } } }
+                if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重新加载") { Task { await load() } } }
             }.padding(20)
         }.navigationTitle("图文").navigationBarTitleDisplayMode(.inline)
             .task(id: route) { identity = .init(api.requestSnapshot(purpose: .main)); await load() }
-            .sheet(item: $comments) { DynamicCommentsSheet(item: $0, api: api) }
+            .piliSheet(item: $comments) { DynamicCommentsSheet(item: $0, api: api) }
     }
     private func load() async {
         do { let value = try await api.piliArticle(route); document = value; liked = value.liked; favorited = value.favorited; error = nil }
@@ -85,11 +86,11 @@ struct PiliArticleParagraph: View {
             let cards = card.piliObject.isEmpty ? value["link_card"]["cards"].piliArray : [card]
             ForEach(cards, id: \.self) { card in
                 if card["vote"]["vote_id"].piliInt > 0 {
-                    NavigationLink { PiliVoteView(api: api, id: card["vote"]["vote_id"].piliInt) } label: { Label(card["vote"]["desc"].piliString, systemImage: "chart.bar") }
+                    NavigationLink { PiliVoteView(api: api, id: card["vote"]["vote_id"].piliInt) } label: { PiliLabel(card["vote"]["desc"].piliString, systemImage: "chart.bar") }
                 } else { cardView(card) }
             }
         case 7:
-            ScrollView(.horizontal) { Text(value["code"]["content"].piliString).font(.system(.body, design: .monospaced)).textSelection(.enabled) }.padding().background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
+            ScrollView(.horizontal) { Text(value["code"]["content"].piliString).piliFont(.base).monospaced().textSelection(.enabled) }.padding().piliGlassCard(radius: 12)
         default:
             if !value.dynamicDisplayText.orEmpty.isEmpty { Text(value.dynamicDisplayText.orEmpty).textSelection(.enabled) }
         }
@@ -107,7 +108,7 @@ struct PiliArticleParagraph: View {
         let content = ["ugc", "opus", "live", "common", "music"].map { card[$0] }.first { !$0.piliObject.isEmpty } ?? card
         if let url = URL(string: content["jump_url"].piliString.normalizedBiliURL()), !content["jump_url"].piliString.isEmpty {
             Link(destination: url) {
-                VStack(alignment: .leading) { Text(content["title"].piliString).font(.headline); Text(content["desc"].piliString).font(.caption) }.frame(maxWidth: .infinity, alignment: .leading).padding().background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading) { Text(content["title"].piliString).piliFont(.baseBold); Text(content["desc"].piliString).piliFont(.sm) }.frame(maxWidth: .infinity, alignment: .leading).padding().piliGlassCard(radius: 12)
             }
         } else if !content["title"].piliString.isEmpty { Text(content["title"].piliString) }
     }

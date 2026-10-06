@@ -1,12 +1,15 @@
 import SwiftUI
 
 struct MineSettingsSection: View {
+    @EnvironmentObject private var dependencies: AppDependencies
     @ObservedObject var libraryStore: LibraryStore
     let onOpenRoute: (MineOverlayRoute) -> Void
 
     var body: some View {
         Section("设置") {
-            NavigationLink { PiliSettingsSearchView(onOpenRoute: onOpenRoute) } label: { Label("搜索设置", systemImage: "magnifyingglass") }
+            NavigationLink("快速收藏") { PiliQuickFavoriteSettingsView(api: dependencies.api, libraryStore: libraryStore) }
+            NavigationLink("直播播放偏好") { PiliLivePlaybackSettingsView(libraryStore: libraryStore) }
+            NavigationLink { PiliSettingsSearchView(onOpenRoute: onOpenRoute) } label: { PiliLabel("搜索设置", systemImage: "magnifyingglass") }
             MineOverlayNavigationButton {
                 onOpenRoute(.interfaceSettings)
             } label: {

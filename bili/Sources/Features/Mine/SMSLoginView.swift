@@ -1,7 +1,8 @@
 import SwiftUI
+import ChunUI
 
 struct SMSLoginView: View {
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @ObservedObject var viewModel: MineViewModel
 
     @State private var countryCode = "86"
@@ -16,7 +17,7 @@ struct SMSLoginView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 Section {
                     HStack(spacing: 8) {
                         Text("+")
@@ -49,8 +50,8 @@ struct SMSLoginView: View {
                 if !message.isEmpty {
                     Section {
                         Text(message)
-                            .font(.footnote)
-                            .foregroundStyle(message == "登录成功" ? .green : .secondary)
+                            .piliFont(.sm)
+                            .foregroundStyle(message == "登录成功" ? Color.cc.success : .secondary)
                     }
                 }
 
@@ -60,7 +61,7 @@ struct SMSLoginView: View {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                         } else {
-                            Label("登录", systemImage: "checkmark.circle")
+                            PiliLabel("登录", systemImage: "checkmark.circle")
                                 .frame(maxWidth: .infinity)
                         }
                     }

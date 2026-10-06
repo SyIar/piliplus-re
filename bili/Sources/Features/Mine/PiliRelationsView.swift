@@ -19,7 +19,7 @@ struct PiliRelationsView: View {
     }
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 controls
                 if let message = model.errorMessage {
                     Section {
@@ -32,7 +32,7 @@ struct PiliRelationsView: View {
                     if model.loading { ProgressView("加载中") }
                     else if model.hasMore { Button("加载更多") { Task { await model.load() } } }
                     else if model.users.isEmpty, model.errorMessage == nil {
-                        ContentUnavailableView("暂无用户", systemImage: "person.2", description: Text("可尝试其他分组或搜索条件"))
+                        PiliUnavailableView("暂无用户", systemImage: "person.2", description: Text("可尝试其他分组或搜索条件"))
                     }
                 } header: {
                     if let total = model.total { Text("共 \(total) 人") }
@@ -46,7 +46,7 @@ struct PiliRelationsView: View {
                     ToolbarItem(placement: .primaryAction) { Button("管理分组") { managingGroups = true }.disabled(!model.isCurrent || model.mutating) }
                 }
             }
-            .interactiveDismissDisabled(model.mutating)
+            .piliInteractiveDismissDisabled(model.mutating)
             .task { await model.start() }
             .refreshable { await model.start() }
             .onChange(of: model.kind) { _, _ in model.groupID = nil; model.keyword = ""; reload() }
@@ -55,12 +55,11 @@ struct PiliRelationsView: View {
             .onChange(of: session.playbackCredentialVersion) { _, _ in
                 if !model.isCurrent { pending = nil; assigning = nil; managingGroups = false; model.invalidate() }
             }
-            .sheet(isPresented: $managingGroups) { NavigationStack { PiliFollowGroupsView(model: model) } }
-            .sheet(item: $assigning) { user in NavigationStack { PiliUserGroupsView(model: model, user: user) } }
-            .alert(item: $pending) { value in
-                Alert(title: Text(value.title), message: Text(value.message),
-                      primaryButton: .destructive(Text("确认")) { Task { await model.perform(value.action) } }, secondaryButton: .cancel(Text("取消")))
-            }
+            .piliSheet(isPresented: $managingGroups) { NavigationStack { PiliFollowGroupsView(model: model) } }
+            .piliSheet(item: $assigning) { user in NavigationStack { PiliUserGroupsView(model: model, user: user) } }
+            .piliConfirmation(pending?.title ?? "确认操作", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } })) {
+                if let value = pending { PiliAlertButton("确认", role: .destructive) { Task { await model.perform(value.action) } } }
+            } message: { pending?.message ?? "" }
             .videoDestinations()
         }
     }
@@ -74,8 +73,8 @@ struct PiliRelationsView: View {
             if model.kind == .following {
                 HStack {
                     TextField("搜索全部关注", text: $model.keyword).submitLabel(.search).onSubmit { reload() }
-                    Button { reload() } label: { Image(systemName: "magnifyingglass") }.accessibilityLabel("搜索关注")
-                    if !model.keyword.isEmpty { Button { model.keyword = ""; reload() } label: { Image(systemName: "xmark.circle.fill") }.accessibilityLabel("清除搜索") }
+                    Button { reload() } label: { PiliIcon(systemName: "magnifyingglass") }.accessibilityLabel("搜索关注")
+                    if !model.keyword.isEmpty { Button { model.keyword = ""; reload() } label: { PiliIcon(systemName: "xmark.circle.fill") }.accessibilityLabel("清除搜索") }
                 }
                 if model.isOwn {
                     Picker("分组", selection: $model.groupID) {
@@ -93,7 +92,7 @@ struct PiliRelationsView: View {
         HStack(spacing: 12) {
             VideoOwnerRouteLink(owner: user.owner) {
                 HStack(spacing: 12) {
-                    AvatarRemoteImage(urlString: user.face, pixelSize: 100) { Image(systemName: "person.crop.circle").resizable() }
+                    AvatarRemoteImage(urlString: user.face, pixelSize: 100) { PiliIcon(systemName: "person.crop.circle").resizable() }
                         .frame(width: 46, height: 46).clipShape(Circle())
                     VStack(alignment: .leading, spacing: 4) {
                         Text(user.name).ccText(font: .cc.base, color: .cc.foreground)
@@ -103,7 +102,7 @@ struct PiliRelationsView: View {
                 }.contentShape(Rectangle())
             }
             if model.isOwn, user.id != model.identity.mid {
-                Menu { actions(user) } label: { Image(systemName: "ellipsis").frame(width: 36, height: 36) }
+                Menu { actions(user) } label: { PiliIcon(systemName: "ellipsis").frame(width: 36, height: 36) }
                     .buttonStyle(.glass).disabled(model.mutating || !model.isCurrent).accessibilityLabel("管理 \(user.name)")
             }
         }

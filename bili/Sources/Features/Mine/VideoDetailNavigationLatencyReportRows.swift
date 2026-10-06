@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailNavigationLatencySnapshotRow: View {
     let snapshot: PlaybackDetailPerformanceSnapshot
@@ -6,11 +7,11 @@ struct VideoDetailNavigationLatencySnapshotRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(snapshot.context.title ?? snapshot.context.mediaID)
-                .font(.subheadline.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .lineLimit(1)
 
             Text(snapshot.navigationExperimentSummary)
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
 
             ForEach(Array(reportEvents.enumerated()), id: \.offset) { _, event in
@@ -22,9 +23,9 @@ struct VideoDetailNavigationLatencySnapshotRow: View {
                         in: snapshot
                     )
                     Text(timing.displayText)
-                        .foregroundStyle(timing.isSlow ? .orange : .secondary)
+                        .foregroundStyle(timing.isSlow ? Color.cc.warning : .secondary)
                 }
-                .font(.caption.monospacedDigit())
+                .piliFont(.sm).monospacedDigit()
             }
         }
         .padding(.vertical, 3)

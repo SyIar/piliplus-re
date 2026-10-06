@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct RelatedVideoRetryState: View {
     let message: String
@@ -6,12 +7,12 @@ struct RelatedVideoRetryState: View {
 
     var body: some View {
         VStack(spacing: VideoDetailRelatedStyle.retrySpacing) {
-            Label("相关推荐加载失败", systemImage: "rectangle.stack.badge.exclamationmark")
-                .font(.subheadline.weight(.semibold))
+            PiliLabel("相关推荐加载失败", systemImage: "rectangle.stack.badge.exclamationmark")
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
 
             Text(message)
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
@@ -19,10 +20,10 @@ struct RelatedVideoRetryState: View {
             Button {
                 retry()
             } label: {
-                Label("重新加载", systemImage: "arrow.clockwise")
-                    .font(.caption.weight(.semibold))
+                PiliLabel("重新加载", systemImage: "arrow.clockwise")
+                    .piliFont(.sm).fontWeight(.semibold)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .controlSize(.small)
         }
         .frame(maxWidth: .infinity)

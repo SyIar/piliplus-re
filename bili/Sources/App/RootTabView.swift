@@ -46,7 +46,7 @@ struct RootTabView: View {
             return .handled
         })
         .preferredColorScheme(runtimeSettings.appearanceMode.preferredColorScheme)
-        .sheet(item: $inAppBrowserItem) { item in
+        .piliSheet(item: $inAppBrowserItem) { item in
             InAppBrowserView(url: item.url)
                 .ignoresSafeArea()
         }

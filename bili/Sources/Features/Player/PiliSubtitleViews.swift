@@ -77,11 +77,11 @@ struct PiliSubtitleSettingsView: View {
     @AppStorage("piliplus.subtitle.secondaryColor") private var secondaryColor = "#FFE080"
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 Section("字幕语言") {
                     if controller.isLoading { ProgressView("加载字幕") }
                     if let error = controller.errorMessage { Text(error).ccText(font: .cc.sm, color: .cc.mutedForeground) }
-                    Button("关闭字幕") { controller.select(nil) }
+                    Button("关闭字幕") { controller.select(nil) }.frame(maxWidth: .infinity, alignment: .trailing)
                     ForEach(controller.tracks) { track in
                         Button { controller.select(track.id) } label: {
                             HStack {
@@ -92,7 +92,7 @@ struct PiliSubtitleSettingsView: View {
                         }
                     }
                     if controller.tracks.isEmpty && !controller.isLoading { Text("暂无在线字幕，可导入本地 SRT 或 VTT 文件").ccText(font: .cc.sm, color: .cc.mutedForeground) }
-                    Picker("后续视频默认字幕", selection: $mode) {
+                    PiliSettingPicker("默认字幕", selection: $mode) {
                         Text("关闭").tag("off")
                         Text("开启").tag("on")
                         Text("仅非 AI 字幕").tag("withoutAI")
@@ -100,16 +100,16 @@ struct PiliSubtitleSettingsView: View {
                     }.onChange(of: mode) { _, _ in controller.selectPreferred() }
                 }
                 Section("双语字幕") {
-                    Toggle("同时显示两种语言", isOn: Binding(get: { controller.dualEnabled }, set: { controller.setDualEnabled($0) }))
+                    Toggle("双语字幕", isOn: Binding(get: { controller.dualEnabled }, set: { controller.setDualEnabled($0) }))
                         .accessibilityIdentifier("ui.subtitle.dual")
                     if controller.dualEnabled {
-                        Picker("第二语言", selection: Binding(get: { controller.secondaryID ?? "" }, set: { controller.selectSecondary($0) })) {
+                        PiliSettingPicker("第二语言", selection: Binding(get: { controller.secondaryID ?? "" }, set: { controller.selectSecondary($0) })) {
                             Text("未选择").tag("")
                             ForEach(controller.tracks.filter { $0.id != controller.selectedID }) { Text($0.title).tag($0.id) }
                         }.disabled(controller.selectedID == nil)
                         if controller.isSecondaryLoading { ProgressView("加载第二语言") }
                         if let error = controller.secondaryError { Text(error).foregroundStyle(.secondary) }
-                        if controller.secondaryID == nil { Text("先开启主字幕，并选择另一条语言轨道；也可导入本地字幕。").font(.footnote).foregroundStyle(.secondary) }
+                        if controller.secondaryID == nil { Text("先开启主字幕，并选择另一条语言轨道；也可导入本地字幕。").piliFont(.sm).foregroundStyle(.secondary) }
                     }
                 }
                 Section("显示") {
@@ -119,7 +119,7 @@ struct PiliSubtitleSettingsView: View {
                         Button("白色") { textColor = "#FFFFFF" }
                         Button("暖黄色") { textColor = "#FFE080" }.accessibilityIdentifier("ui.subtitle.yellow")
                         Button("重置颜色") { textColor = "#FFFFFF"; secondaryColor = "#FFE080" }
-                    }.buttonStyle(.borderless)
+                    }.buttonStyle(.borderless).frame(maxWidth: .infinity, alignment: .trailing)
                     VStack(spacing: 4) {
                         Text("字幕颜色预览").foregroundStyle(Color(hexRGB: textColor) ?? .white)
                         if controller.dualEnabled { Text("Subtitle preview").foregroundStyle(Color(hexRGB: secondaryColor) ?? .white) }
@@ -135,17 +135,18 @@ struct PiliSubtitleSettingsView: View {
                 }
                 Section("字幕文件") {
                     CCNeoButton("导入 SRT / VTT", variant: .secondary, icon: PikaIcon.Name.filePlus) { importsFile = true }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     HStack {
                         CCNeoButton("导出 SRT", variant: .ghost, disabled: controller.timeline.cues.isEmpty) { export(vtt: false) }
                         CCNeoButton("导出 VTT", variant: .ghost, disabled: controller.timeline.cues.isEmpty) { export(vtt: true) }
-                    }
+                    }.frame(maxWidth: .infinity, alignment: .trailing)
                     if controller.secondaryID != nil {
                         Menu("导出第二语言") {
                             Button("SRT") { export(vtt: false, secondary: true) }
                             Button("VTT") { export(vtt: true, secondary: true) }
-                        }.disabled(controller.secondaryTimeline.cues.isEmpty)
+                        }.disabled(controller.secondaryTimeline.cues.isEmpty).frame(maxWidth: .infinity, alignment: .trailing)
                     }
-                    if let exportURL { ShareLink("分享字幕文件", item: exportURL) }
+                    if let exportURL { ShareLink("分享字幕文件", item: exportURL).frame(maxWidth: .infinity, alignment: .trailing) }
                     if let message { Text(message).ccText(font: .cc.sm, color: .cc.mutedForeground) }
                 }
                 if let seek, !controller.timeline.cues.isEmpty {
@@ -195,6 +196,6 @@ struct PiliSubtitleSettingsView: View {
         catch { message = error.localizedDescription }
     }
     static func present(controller: PiliSubtitleController, seek: ((Double) -> Void)? = nil) {
-        AppHelper.shared.presentSheet(.sheet) { Self(controller: controller, seek: seek) }
+        PiliPresentation.present(.sheet) { Self(controller: controller, seek: seek) }
     }
 }

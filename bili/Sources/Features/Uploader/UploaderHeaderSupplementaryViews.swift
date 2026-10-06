@@ -7,7 +7,7 @@ struct UploaderSignatureText: View {
     var body: some View {
         if let sign, !sign.isEmpty {
             Text(sign)
-                .font(.subheadline)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -20,9 +20,9 @@ struct UploaderFollowMessage: View {
 
     var body: some View {
         if let message, !message.isEmpty {
-            Label(message, systemImage: isFollowing ? "checkmark.circle" : "info.circle")
-                .font(.caption)
-                .foregroundStyle(isFollowing ? Color.pink : Color.secondary)
+            PiliLabel(message, systemImage: isFollowing ? "checkmark.circle" : "info.circle")
+                .piliFont(.sm)
+                .foregroundStyle(isFollowing ? Color.cc.primary : Color.secondary)
         }
     }
 }
@@ -32,8 +32,8 @@ struct UploaderProfileStatusMessage: View {
 
     var body: some View {
         if case .failed(let message) = state {
-            Label(message, systemImage: "exclamationmark.triangle")
-                .font(.caption)
+            PiliLabel(message, systemImage: "exclamationmark.triangle")
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
     }
@@ -64,7 +64,7 @@ struct UploaderStatsRow: View {
     }
 
     private func openRelations(_ kind: PiliRelationList) {
-        AppHelper.shared.presentSheet(.sheet) {
+        PiliPresentation.present(.sheet) {
             PiliRelationsView(api: dependencies.api, ownerMID: owner.mid, kind: kind)
                 .environmentObject(dependencies)
                 .environmentObject(libraryStore)
@@ -80,10 +80,10 @@ private struct UploaderStatItem: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(BiliFormatters.compactCount(value))
-                .font(.subheadline.weight(.bold))
+                .piliFont(.base).fontWeight(.bold)
 
             Text(title)
-                .font(.caption2)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

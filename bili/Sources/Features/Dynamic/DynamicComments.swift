@@ -4,7 +4,7 @@ struct DynamicCommentsSheet: View {
     let item: DynamicFeedItem
     @EnvironmentObject private var dependencies: AppDependencies
     @EnvironmentObject private var libraryStore: LibraryStore
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @StateObject private var viewModel: DynamicCommentsViewModel
     @StateObject private var runtimeSettings = DynamicCommentsRuntimeSettingsStore()
     @State private var replySheetComment: Comment?
@@ -62,7 +62,7 @@ struct DynamicCommentsSheet: View {
             onDismiss: { dismiss() },
             onRefresh: { Task { await viewModel.reload() } }
         )
-        .sheet(item: $replySheetComment) { comment in
+        .piliSheet(item: $replySheetComment) { comment in
             DynamicCommentRepliesSheet(
                 rootComment: comment,
                 replyStore: viewModel.replyStore,

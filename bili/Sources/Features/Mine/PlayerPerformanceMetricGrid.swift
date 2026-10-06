@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceMetricGrid: View {
     let group: PlayerPerformanceSampleGroup
@@ -60,9 +61,9 @@ private struct PlayerPerformanceSeekCoverageMetric: View {
     private var coverageColor: Color {
         guard let coverage else { return .secondary }
         if coverage < 70 {
-            return .orange
+            return Color.cc.warning
         }
-        return .green
+        return Color.cc.success
     }
 }
 
@@ -89,9 +90,9 @@ private struct PlayerPerformanceBitrateMetric: View {
     private var bitrateColor: Color {
         guard let kbps = kilobitsPerSecond, kbps > 0 else { return .secondary }
         if kbps < 900 {
-            return .orange
+            return Color.cc.warning
         }
-        return .green
+        return Color.cc.success
     }
 }
 
@@ -103,18 +104,18 @@ private struct PlayerPerformanceMetricCell: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.caption2.weight(.semibold))
+            PiliIcon(systemName: icon)
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
                 .frame(width: 14)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.caption2)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
 
                 Text(value)
-                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .piliFont(.sm).monospacedDigit().fontWeight(.semibold)
                     .foregroundStyle(color)
             }
         }

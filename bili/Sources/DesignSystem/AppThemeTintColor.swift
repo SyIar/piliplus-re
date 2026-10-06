@@ -23,11 +23,11 @@ enum AppThemeTintColor {
     }
 
     static func color(for hex: String) -> Color {
-        Color(hexRGB: normalizedHex(hex) ?? defaultHex) ?? .pink
+        Color(hexRGB: normalizedHex(hex) ?? defaultHex) ?? Color(red: 50.0 / 255, green: 100.0 / 255, blue: 240.0 / 255)
     }
 
     static func uiColor(for hex: String) -> UIColor {
-        UIColor(Color(hexRGB: normalizedHex(hex) ?? defaultHex) ?? .pink)
+        UIColor(Color(hexRGB: normalizedHex(hex) ?? defaultHex) ?? Color(red: 50.0 / 255, green: 100.0 / 255, blue: 240.0 / 255))
     }
 
     static func hexString(from color: Color) -> String? {

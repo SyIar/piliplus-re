@@ -56,7 +56,7 @@ struct DynamicInlineCommentEmotePicker: View {
         ZStack(alignment: .topTrailing) {
             VStack(spacing: 0) {
                 if emotes.isEmpty {
-                    ContentUnavailableView("暂无可用表情", systemImage: "face.smiling")
+                    PiliUnavailableView("暂无可用表情", systemImage: "face.smiling")
                 } else {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 6) {
@@ -67,7 +67,7 @@ struct DynamicInlineCommentEmotePicker: View {
                                     CachedRemoteImage(url: emote.displayURL.flatMap(URL.init(string:)), targetPixelSize: 96) { image in
                                         image.resizable().scaledToFit()
                                     } placeholder: {
-                                        Image(systemName: "face.smiling")
+                                        PiliIcon(systemName: "face.smiling")
                                             .foregroundStyle(.secondary)
                                     }
                                     .frame(width: 36, height: 36)
@@ -86,7 +86,7 @@ struct DynamicInlineCommentEmotePicker: View {
 
             if let onDelete {
                 Button(action: onDelete) {
-                    Image(systemName: "delete.left")
+                    PiliIcon(systemName: "delete.left")
                         .frame(width: 32, height: 32)
                 }
                 .buttonStyle(.glass)

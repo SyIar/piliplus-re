@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 import UIKit
 
 struct QRCodeLoginContent: View {
@@ -46,7 +47,7 @@ private struct QRCodeLoginLoadingState: View {
         VStack(spacing: 14) {
             ProgressView()
             Text(message)
-                .font(.subheadline)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
         }
     }
@@ -91,8 +92,8 @@ private struct QRCodeLoginActiveState: View {
                 .background(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-            Label(state.message, systemImage: statusIcon)
-                .font(.subheadline.weight(.semibold))
+            PiliLabel(state.message, systemImage: statusIcon)
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(statusColor)
                 .multilineTextAlignment(.center)
 
@@ -102,24 +103,24 @@ private struct QRCodeLoginActiveState: View {
                         UIApplication.shared.open(bilibiliOpenURL)
                     }
                 } label: {
-                    Label("用 B 站打开", systemImage: "arrow.up.forward.app")
+                    PiliLabel("用 B 站打开", systemImage: "arrow.up.forward.app")
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.pink)
+                .buttonStyle(.glassProminent)
+                .tint(Color.cc.primary)
 
                 Button(action: refresh) {
-                    Label("刷新", systemImage: "arrow.clockwise")
+                    PiliLabel("刷新", systemImage: "arrow.clockwise")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
             }
 
             Button {
                 UIPasteboard.general.string = info.url
                 copiedURL = true
             } label: {
-                Label(copiedURL ? "已复制链接" : "复制登录链接", systemImage: copiedURL ? "checkmark" : "doc.on.doc")
+                PiliLabel(copiedURL ? "已复制链接" : "复制登录链接", systemImage: copiedURL ? "checkmark" : "doc.on.doc")
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
         }
     }
 }
@@ -133,22 +134,22 @@ private struct QRCodeLoginRetryState: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Image(systemName: systemImage)
-                .font(.system(size: 48, weight: .semibold))
+            PiliIcon(systemName: systemImage, size: 48)
+                .piliFont(.lgBold)
                 .foregroundStyle(.secondary)
 
             Text(title)
-                .font(.headline)
+                .piliFont(.baseBold)
 
             Text(message)
-                .font(.subheadline)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             Button(action: refresh) {
-                Label("重新生成", systemImage: "arrow.clockwise")
+                PiliLabel("重新生成", systemImage: "arrow.clockwise")
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
             .tint(appTintColor)
         }
     }
@@ -159,11 +160,11 @@ private struct QRCodeLoginSucceededState: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 54, weight: .semibold))
-                .foregroundStyle(.green)
+            PiliIcon(systemName: "checkmark.circle.fill", size: 54)
+                .piliFont(.lgBold)
+                .foregroundStyle(Color.cc.success)
             Text(message)
-                .font(.headline)
+                .piliFont(.baseBold)
         }
     }
 }

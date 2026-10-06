@@ -1,3 +1,4 @@
+import ChunUI
 import SwiftUI
 
 struct SearchMediaResultRow: View {
@@ -39,7 +40,7 @@ private struct SearchMediaMetaLine: View {
         HStack(spacing: 8) {
             SearchSoftPill(media.typeName ?? kind)
             if let rating = media.rating, !rating.isEmpty {
-                SearchSoftPill("\(rating)分", tint: .pink)
+                SearchSoftPill("\(rating)分", tint: Color.cc.primary)
             }
             if let indexShow = media.indexShow, !indexShow.isEmpty {
                 Text(indexShow)

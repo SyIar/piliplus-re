@@ -22,7 +22,8 @@ struct VideoFeedSkeletonCard: View {
 
     private var singleColumnBody: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SkeletonAspectBlock(cornerRadius: 18)
+            SkeletonAspectBlock(cornerRadius: 0)
+                .videoCardTopCover()
 
             HStack(alignment: .center, spacing: 9) {
                 SkeletonBlock(width: 34, height: 34, shape: .circle)
@@ -43,7 +44,8 @@ struct VideoFeedSkeletonCard: View {
 
     private var gridBody: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SkeletonAspectBlock(cornerRadius: 15)
+            SkeletonAspectBlock(cornerRadius: 0)
+                .videoCardTopCover(cornerRadius: 15)
 
             VStack(alignment: .leading, spacing: 4) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -57,9 +59,11 @@ struct VideoFeedSkeletonCard: View {
                     SkeletonBlock(width: 92, height: 11, shape: .capsule)
                 }
             }
-            .padding(.horizontal, 2)
+            .padding(.horizontal, 10)
+            .padding(.bottom, 10)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+        .piliGlassCard(radius: 15)
         .accessibilityLabel("正在加载视频")
     }
 
@@ -138,8 +142,8 @@ struct DynamicFeedSkeletonCard: View {
 struct LiveRoomSkeletonCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SkeletonAspectBlock(aspectRatio: 16 / 10, cornerRadius: 14)
-                .videoCardBorderedCover()
+            SkeletonAspectBlock(aspectRatio: 16 / 10, cornerRadius: 0)
+                .videoCardTopCover(cornerRadius: 18)
 
             VStack(alignment: .leading, spacing: 4) {
                 VStack(alignment: .leading, spacing: 4) {

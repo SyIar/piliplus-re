@@ -1,5 +1,6 @@
 import Combine
 import SwiftUI
+import ChunUI
 
 struct MineView: View {
     @EnvironmentObject private var dependencies: AppDependencies
@@ -30,8 +31,8 @@ struct MineView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
-        .sheet(item: $loginSheet) { sheet in
+        .background(Color.cc.background)
+        .piliSheet(item: $loginSheet) { sheet in
             if let viewModel = holder.viewModel {
                 switch sheet {
                 case .web:

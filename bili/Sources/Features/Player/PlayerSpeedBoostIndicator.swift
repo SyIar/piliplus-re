@@ -1,12 +1,13 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerSpeedBoostIndicator: View {
     let phase: PlayerSpeedBoostPhase
     let displayedRate: BiliPlaybackRate
 
     var body: some View {
-        Label(displayedRate.title, systemImage: systemImage)
-            .font(.caption.weight(.bold))
+        PiliLabel(displayedRate.title, systemImage: systemImage)
+            .piliFont(.sm).fontWeight(.bold)
             .labelStyle(.titleAndIcon)
             .contentTransition(.numericText())
             .biliLiquidGlassForeground(shadowOpacity: 0.20)

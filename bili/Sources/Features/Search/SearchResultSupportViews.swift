@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct SearchMetadataLabel: View {
     let text: String
@@ -7,7 +8,7 @@ struct SearchMetadataLabel: View {
     @ViewBuilder
     var body: some View {
         if !text.isEmpty, text != "-" {
-            Label(text, systemImage: systemImage)
+            PiliLabel(text, systemImage: systemImage)
                 .labelStyle(.titleAndIcon)
                 .lineLimit(1)
         }
@@ -25,12 +26,12 @@ struct SearchSoftPill: View {
 
     var body: some View {
         Text(text)
-            .font(.caption2.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .foregroundStyle(tint)
             .lineLimit(1)
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .background(Color(.tertiarySystemFill), in: Capsule())
+            .ccGlassEffect(.capsule)
     }
 }
 
@@ -41,8 +42,8 @@ struct SearchImagePlaceholder: View {
         RoundedRectangle(cornerRadius: 12, style: .continuous)
             .fill(Color(.tertiarySystemFill))
             .overlay {
-                Image(systemName: systemImage)
-                    .font(.title3)
+                PiliIcon(systemName: systemImage)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
             }
     }

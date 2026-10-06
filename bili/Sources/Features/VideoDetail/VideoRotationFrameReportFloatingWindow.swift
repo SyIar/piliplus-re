@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 import UIKit
 
 struct VideoRotationFrameReportFloatingWindow: View {
@@ -30,8 +31,8 @@ struct VideoRotationFrameReportFloatingWindow: View {
     private func panel(for report: VideoRotationFrameReport) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Label("旋转报告", systemImage: "rotate.right")
-                    .font(.caption.weight(.semibold))
+                PiliLabel("旋转报告", systemImage: "rotate.right")
+                    .piliFont(.sm).fontWeight(.semibold)
 
                 Spacer(minLength: 8)
 
@@ -39,8 +40,8 @@ struct VideoRotationFrameReportFloatingWindow: View {
                     UIPasteboard.general.string = report.copyText
                     didCopy = true
                 } label: {
-                    Image(systemName: didCopy ? "checkmark" : "doc.on.doc")
-                        .font(.caption.weight(.semibold))
+                    PiliIcon(systemName: didCopy ? "checkmark" : "doc.on.doc")
+                        .piliFont(.sm).fontWeight(.semibold)
                         .frame(width: 28, height: 24)
                 }
                 .buttonStyle(.plain)
@@ -49,8 +50,8 @@ struct VideoRotationFrameReportFloatingWindow: View {
                 Button {
                     dismissedReportID = report.id
                 } label: {
-                    Image(systemName: "xmark")
-                        .font(.caption.weight(.semibold))
+                    PiliIcon(systemName: "xmark")
+                        .piliFont(.sm).fontWeight(.semibold)
                         .frame(width: 24, height: 24)
                 }
                 .buttonStyle(.plain)
@@ -63,17 +64,17 @@ struct VideoRotationFrameReportFloatingWindow: View {
                 metric("Hitch", value("hitch", in: report.message))
                 metric("Drop", value("drop", in: report.message))
             }
-            .font(.caption2.monospacedDigit())
+            .piliFont(.sm).monospacedDigit()
 
             Text(didCopy ? "已复制完整日志" : "点复制可发送完整日志")
-                .font(.caption2)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
         .foregroundStyle(.primary)
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(width: 260, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .piliGlassCard(radius: 12)
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(.white.opacity(0.16), lineWidth: 0.5)

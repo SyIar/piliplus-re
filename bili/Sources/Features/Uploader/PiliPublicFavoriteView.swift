@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliPublicFavoriteView: View {
     let api: BiliAPIClient
@@ -17,9 +18,9 @@ struct PiliPublicFavoriteView: View {
     @State private var error: String?
     @State private var generation = UUID()
     var body: some View {
-        List {
+        PiliList {
             if seasonID == nil { Picker("排序", selection: $order) { ForEach(PiliFavoriteOrder.allCases) { Text($0.title).tag($0) } }.disabled(busy) }
-            if loadedInfo && !ownsFolder { Button(favorited ? "取消订阅收藏夹" : "订阅收藏夹", systemImage: favorited ? "star.fill" : "star") { subscribe() }.disabled(busy) }
+            if loadedInfo && !ownsFolder { PiliIconButton(favorited ? "取消订阅收藏夹" : "订阅收藏夹", systemImage: favorited ? "star.fill" : "star") { subscribe() }.disabled(busy) }
             ForEach(items, id: \.self) { item in
                 if let url = resourceURL(item) {
                     AppLinkButton(url: url) {
@@ -31,7 +32,7 @@ struct PiliPublicFavoriteView: View {
                 } else { Text(item["title"].piliString).foregroundStyle(.secondary) }
             }
             if busy { ProgressView() }
-            else if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load() } } }
+            else if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load() } } }
             else if more { Button("加载更多") { Task { await load() } } }
             else if items.isEmpty { Text("没有匹配的内容") }
         }.navigationTitle(folder.displayTitle).searchable(text: $keyword, prompt: "搜索收藏夹")

@@ -8,7 +8,7 @@ struct FavoriteFolderContentPage: View {
     @EnvironmentObject private var sessionStore: SessionStore
 
     var body: some View {
-        List {
+        PiliList {
             Section {
                 content
             } header: {
@@ -22,16 +22,17 @@ struct FavoriteFolderContentPage: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button("整理") {
-                    AppHelper.shared.presentSheet(.sheet) {
+                    PiliPresentation.present(.sheet) {
                         PiliFavoriteItemsView(api: dependencies.api, folder: folder) { Task { await reload() } }
                     }
-                }.disabled(!sessionStore.isLoggedIn || state.isLoading)
+                }.accessibilityLabel("刷新")
+                .disabled(!sessionStore.isLoggedIn || state.isLoading)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Task { await reload() }
                 } label: {
-                    Image(systemName: "arrow.clockwise")
+                    PiliIcon(systemName: "arrow.clockwise")
                 }
                 .disabled(!sessionStore.isLoggedIn || state.isLoading)
             }

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoCompactListRow: View, Equatable {
     enum AuthorStyle: Equatable {
@@ -58,7 +59,7 @@ struct VideoCompactListRow: View, Equatable {
 
 struct VideoCompactListPlaceholderRow: View {
     let coverSize: CGSize
-    var fill: Color = Color(.secondarySystemGroupedBackground)
+    var fill: Color = Color.cc.card
     var cornerRadius: CGFloat = 10
     var titleMinHeight: CGFloat = 36
     var authorStyle: VideoCompactListRow.AuthorStyle = .plain

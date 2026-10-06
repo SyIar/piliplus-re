@@ -14,7 +14,7 @@ struct VideoFeedStoryMediaContainer: View {
                 .padding(.vertical, 12)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground))
+        .piliGlassCard()
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -58,7 +58,7 @@ struct VideoFeedStoryMediaContainer: View {
         HStack(spacing: 8) {
             if !display.viewText.isEmpty {
                 VideoCoverGlassBadge {
-                    Label(display.viewText, systemImage: "play.fill")
+                    PiliLabel(display.viewText, systemImage: "play.fill")
                         .labelStyle(.titleAndIcon)
                 }
             }

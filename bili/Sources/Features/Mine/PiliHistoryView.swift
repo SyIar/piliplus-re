@@ -18,7 +18,7 @@ struct PiliHistoryView: View {
         _library = ObservedObject(wrappedValue: api.libraryStore)
     }
     var body: some View {
-        List {
+        PiliList {
             if session.isLoggedIn {
                 Section {
                     Picker("历史分类", selection: $model.selectedType) {
@@ -28,7 +28,7 @@ struct PiliHistoryView: View {
                         Text("搜索范围：全部历史分类").ccText(font: .cc.sm, color: .cc.mutedForeground)
                     }
                     if model.paused == true {
-                        Label("已暂停云端观看记录", systemImage: "pause.circle")
+                        PiliLabel("已暂停云端观看记录", systemImage: "pause.circle")
                             .ccText(font: .cc.sm, color: .cc.mutedForeground)
                     }
                     if model.isSelecting {
@@ -53,7 +53,7 @@ struct PiliHistoryView: View {
                             if model.isSelecting {
                                 Button { model.toggle(item) } label: {
                                     HStack(spacing: 12) {
-                                        Image(systemName: model.selection.contains(item.deletionKey ?? "") ? "checkmark.circle.fill" : "circle")
+                                        PiliIcon(systemName: model.selection.contains(item.deletionKey ?? "") ? "checkmark.circle.fill" : "circle")
                                             .foregroundStyle(Color.cc.primary)
                                         PiliHistoryRow(item: item)
                                     }
@@ -75,9 +75,9 @@ struct PiliHistoryView: View {
                     }
                     if model.isLoading { ProgressView("加载历史记录") }
                     else if model.hasMore { Button("加载更多") { Task { await model.load() } } }
-                    else if model.items.isEmpty { ContentUnavailableView("暂无历史记录", systemImage: "clock") }
+                    else if model.items.isEmpty { PiliUnavailableView("暂无历史记录", systemImage: "clock") }
                 }
-            } else { ContentUnavailableView("登录后查看观看历史", systemImage: "clock") }
+            } else { PiliUnavailableView("登录后查看观看历史", systemImage: "clock") }
         }
         .disabled(model.isMutating)
         .nativeTopScrollEdgeEffect()
@@ -116,16 +116,16 @@ struct PiliHistoryView: View {
         .safeAreaInset(edge: .bottom) {
             if model.isSelecting && !model.selection.isEmpty {
                 Button("删除所选的 \(model.selection.count) 条记录", role: .destructive) { confirmDelete(Array(model.selection)) }
-                    .buttonStyle(.glass).padding(16).frame(maxWidth: .infinity).background(.ultraThinMaterial)
+                    .buttonStyle(.glass).padding(16).frame(maxWidth: .infinity).piliGlassCard(radius: 24)
                     .disabled(model.isMutating || model.isLoadingPause)
             }
         }
-        .alert(confirmation?.title ?? "确认操作", isPresented: $confirmsAction) {
-            Button("取消", role: .cancel) { confirmation = nil }
-            Button("确认", role: .destructive) {
+        .piliAlert(confirmation?.title ?? "确认操作", isPresented: $confirmsAction) {
+            PiliAlertButton("取消", role: .cancel) { confirmation = nil }
+            PiliAlertButton("确认", role: .destructive) {
                 if let action = confirmation?.action { Task { await model.mutate(action) } }
             }
-        } message: { Text(confirmation?.message ?? "") }
+        } message: { confirmation?.message ?? "" }
     }
     private func confirmDelete(_ keys: [String]) {
         guard !keys.isEmpty else { return }

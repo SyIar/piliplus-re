@@ -21,6 +21,7 @@ struct JKBiliApp: App {
     var body: some Scene {
         WindowGroup {
             MainInterfaceHost()
+                .modifier(PiliAppChrome())
                 .background(LaunchWindowBackgroundInstaller())
         }
     }

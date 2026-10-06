@@ -170,11 +170,11 @@ struct LiveDanmakuOverlay: View {
 
 struct LiveDanmakuSettingsSheet: View {
     @ObservedObject var viewModel: LiveRoomViewModel
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
 
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 Section {
                     DanmakuSettingsHeaderSectionContent(
                         isDanmakuEnabled: viewModel.isDanmakuEnabled,

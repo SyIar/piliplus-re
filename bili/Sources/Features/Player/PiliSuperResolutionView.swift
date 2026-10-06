@@ -2,6 +2,7 @@ import AVFoundation
 import CoreImage
 import MetalKit
 import SwiftUI
+import ChunUI
 #if canImport(MetalFX)
 import MetalFX
 #endif
@@ -29,13 +30,13 @@ struct PiliSuperResolutionSettingsView: View {
 #endif
     }
     var body: some View {
-        Form {
-            Picker("超分辨率", selection: $mode) { Text("关闭").tag(0); Text("效率 · 最高 1.5 倍").tag(1); Text("画质 · 最高 2 倍").tag(2) }
+        PiliForm {
+            PiliSettingPicker("超分辨率", selection: $mode) { Text("关闭").tag(0); Text("效率 · 1.5 倍").tag(1); Text("画质 · 2 倍").tag(2) }
                 .disabled(!supported)
-            Text(supported ? "使用 MetalFX 空间超分放大低分辨率画面。只在放大 SDR 视频时运行；HDR、画中画、低电量模式和设备发热时使用原始画面。" : "当前设备不支持 MetalFX 空间超分。")
-                .font(.footnote).foregroundStyle(.secondary)
-            Text("开启会增加 GPU 耗电。效率模式限制放大倍率和刷新率，画质模式适合性能充足的设备。")
-                .font(.footnote).foregroundStyle(.secondary)
+            Text(supported ? "使用 MetalFX 放大 SDR 画面。HDR、画中画、低电量或发热时暂停。" : "当前设备不支持 MetalFX 空间超分。")
+                .piliFont(.sm).foregroundStyle(.secondary)
+            Text("开启后可能增加耗电。效率模式限制放大倍率与刷新率。")
+                .piliFont(.sm).foregroundStyle(.secondary)
         }.navigationTitle("超分辨率")
             .onChange(of: mode) { _, _ in NotificationCenter.default.post(name: PiliSuperResolutionPolicy.changed, object: nil) }
     }

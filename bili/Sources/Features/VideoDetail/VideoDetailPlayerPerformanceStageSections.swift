@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayStartupWaterfallSection: View {
     let session: PlayerPerformanceSession
@@ -10,7 +11,7 @@ struct PlayerPerformanceOverlayStartupWaterfallSection: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("First frame")
-                    .font(.caption2.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
 
                 ForEach(stages) { stage in

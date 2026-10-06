@@ -4,14 +4,15 @@ struct MineInterfaceSettingsView: View {
     @ObservedObject var libraryStore: LibraryStore
 
     var body: some View {
-        Form {
+        PiliForm {
             MineDisplaySettingsSection(libraryStore: libraryStore)
 
         }
         .tint(libraryStore.appTintColor)
         .formStyle(.grouped)
         .nativeTopScrollEdgeEffect()
-        .hiddenInlineNavigationTitle()
+        .navigationTitle("界面设置")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -19,13 +20,14 @@ struct MineHomeAndSearchSettingsView: View {
     @ObservedObject var libraryStore: LibraryStore
 
     var body: some View {
-        Form {
+        PiliForm {
             MineHomeSettingsSection(libraryStore: libraryStore)
             MineSearchSettingsSection(libraryStore: libraryStore)
         }
         .tint(libraryStore.appTintColor)
         .formStyle(.grouped)
         .nativeTopScrollEdgeEffect()
-        .hiddenInlineNavigationTitle()
+        .navigationTitle("首页与搜索")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

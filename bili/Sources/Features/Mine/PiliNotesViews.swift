@@ -20,7 +20,7 @@ struct PiliNotesLibraryView: View {
     }
     var body: some View {
         NavigationStack {
-            List(selection: $selection) {
+            PiliSelectionList(selection: $selection) {
                 if let video, let aid = video.aid {
                     NavigationLink {
                         PiliNoteEditorView(api: api, aid: aid, initialTitle: video.title, noteID: nil, initialText: "", time: nil)
@@ -87,9 +87,9 @@ struct PiliNotesLibraryView: View {
     private func confirmDelete() {
         let records = items.filter { selection.contains($0.id) }, mode = published
         guard let version = loadedVersion else { return }
-        CCAlertCenter.shared.present(title: "删除 \(records.count) 条笔记？", message: "云端笔记将被删除。", actions: [
-            CCAlertAction(title: "取消", role: .secondary),
-            CCAlertAction(title: "删除", role: .destructive) {
+        PiliAlertSession.present(title: "删除 \(records.count) 条笔记？", message: "云端笔记将被删除。", actions: [
+            PiliAlertButton("取消", role: .cancel),
+            PiliAlertButton("删除", role: .destructive) {
                 Task {
                     loading = true
                     do {
@@ -144,7 +144,7 @@ struct PiliNoteOperationView: View {
         let attributes = object["attributes"]?.objectValueForDynamicParsing ?? [:]
         if let text = object["insert"]?.textValue {
             Text(text)
-                .font(.cc.base)
+                .piliFont(.base)
                 .bold(attributes["bold"] == .bool(true))
                 .italic(attributes["italic"] == .bool(true))
                 .underline(attributes["underline"] == .bool(true))
@@ -182,10 +182,10 @@ struct PiliNoteEditorView: View {
         _text = State(initialValue: draft?["text"] as? String ?? initialText)
     }
     var body: some View {
-        Form {
+        PiliForm {
             PiliFullNoteEditorLink(api: api, aid: aid)
             TextField("笔记标题", text: $title)
-            TextEditor(text: $text).font(.cc.base).frame(minHeight: 260)
+            TextEditor(text: $text).piliFont(.base).frame(minHeight: 260)
             if let time {
                 Button("插入当前时间 \(Int(time) / 60):\(String(format: "%02d", Int(time) % 60))") {
                     text += "\n[\(Int(time) / 60):\(String(format: "%02d", Int(time) % 60))] "
@@ -194,9 +194,9 @@ struct PiliNoteEditorView: View {
             Toggle("公开笔记", isOn: $published)
             CCNeoButton(published ? "公开发布" : "保存到云端", variant: .primary, fullWidth: true, disabled: saving || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
                 if published {
-                    CCAlertCenter.shared.present(title: "公开发布这条笔记？", message: "其他用户可以查看笔记内容。", actions: [
-                        CCAlertAction(title: "取消", role: .secondary),
-                        CCAlertAction(title: "发布", role: .destructive) { Task { await save() } },
+                    PiliAlertSession.present(title: "公开发布这条笔记？", message: "其他用户可以查看笔记内容。", actions: [
+                        PiliAlertButton("取消", role: .cancel),
+                        PiliAlertButton("发布", role: .destructive) { Task { await save() } },
                     ])
                 } else { await save() }
             }

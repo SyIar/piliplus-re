@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliDynamicAttachments: View {
     let item: DynamicFeedItem
@@ -11,12 +12,12 @@ struct PiliDynamicAttachments: View {
         let topic = item.modules?.moduleDynamic?.topic ?? .null
         if topic["id"].piliInt > 0 {
             NavigationLink { PiliTopicView(api: api, id: topic["id"].piliInt, name: topic["name"].piliString) }
-                label: { Label(topic["name"].piliString, systemImage: "number").font(.subheadline) }
+                label: { PiliLabel(topic["name"].piliString, systemImage: "number").piliFont(.base) }
         }
         if vote["vote_id"].piliInt > 0 {
-            Button { showsVote = true } label: { Label(vote["desc"].piliString.isEmpty ? "查看投票" : vote["desc"].piliString, systemImage: "chart.bar.xaxis").frame(maxWidth: .infinity, alignment: .leading) }
-                .buttonStyle(.bordered)
-                .sheet(isPresented: $showsVote) { NavigationStack { PiliVoteView(api: api, id: vote["vote_id"].piliInt, dynamicID: item.idStr) } }
+            Button { showsVote = true } label: { PiliLabel(vote["desc"].piliString.isEmpty ? "查看投票" : vote["desc"].piliString, systemImage: "chart.bar.xaxis").frame(maxWidth: .infinity, alignment: .leading) }
+                .buttonStyle(.glass)
+                .piliSheet(isPresented: $showsVote) { NavigationStack { PiliVoteView(api: api, id: vote["vote_id"].piliInt, dynamicID: item.idStr) } }
         }
     }
 }
@@ -31,14 +32,14 @@ struct PiliVoteView: View {
     @State private var busy = false
     @State private var error: String?
     @State private var identity: PiliAccountIdentity?
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     var body: some View {
-        Form {
-            if let error { Text(error).foregroundStyle(.red) }
+        PiliForm {
+            if let error { Text(error).foregroundStyle(Color.cc.destructive) }
             if case .null = info { ProgressView() }
             else {
                 Section {
-                    Text(info["title"].piliString.isEmpty ? info["desc"].piliString : info["title"].piliString).font(.headline)
+                    Text(info["title"].piliString.isEmpty ? info["desc"].piliString : info["title"].piliString).piliFont(.baseBold)
                     Text("\(info["join_num"].piliInt) 人参与 · 最多选择 \(max(1, info["choice_cnt"].piliInt)) 项").foregroundStyle(.secondary)
                     if info["end_time"].piliInt > 0 { Text(Date(timeIntervalSince1970: Double(info["end_time"].piliInt)), style: .relative) }
                 }
@@ -54,7 +55,7 @@ struct PiliVoteView: View {
                             }
                             Text(option["opt_desc"].piliString); Spacer()
                             if !info["my_votes"].piliArray.isEmpty || ended { Text("\(option["cnt"].piliInt) 票").foregroundStyle(.secondary) }
-                            Image(systemName: selection.contains(key) ? "checkmark.circle.fill" : "circle")
+                            PiliIcon(systemName: selection.contains(key) ? "checkmark.circle.fill" : "circle")
                         }
                     }.disabled(ended || busy)
                 }
@@ -97,17 +98,17 @@ struct PiliTopicView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 16) {
-                Text(info["name"].piliString.isEmpty ? name : info["name"].piliString).font(.title2.bold())
+                Text(info["name"].piliString.isEmpty ? name : info["name"].piliString).font(.cc.lgBold.bold())
                 if !info["description"].piliString.isEmpty { Text(info["description"].piliString) }
                 HStack {
                     Button(info["is_fav"].piliInt == 1 ? "取消收藏" : "收藏话题") { action(favorite: info["is_fav"].piliInt != 1) }
                     Button(info["is_like"].piliInt == 1 ? "取消点赞" : "点赞") { action(like: info["is_like"].piliInt != 1) }
                     Button("参与讨论") { composer = true }
-                }.buttonStyle(.bordered).disabled(mutating)
+                }.buttonStyle(.glass).disabled(mutating)
                 if !sorts.isEmpty {
                     Picker("排序", selection: $sort) { ForEach(sorts, id: \.self) { Text($0["sort_name"].piliString).tag($0["sort_by"].piliInt) } }.pickerStyle(.segmented)
                 }
-                if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load(reset: items.isEmpty) } } }
+                if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load(reset: items.isEmpty) } } }
                 ForEach(items) { DynamicFeedCard(item: $0, api: api) }
                 if loading { ProgressView() }
                 else if hasMore { Button("加载更多") { Task { await load(reset: false) } } }
@@ -121,7 +122,7 @@ struct PiliTopicView: View {
                 await load(reset: true)
             }
             .onChange(of: sort) { _, _ in Task { await load(reset: true) } }
-            .sheet(isPresented: $composer) {
+            .piliSheet(isPresented: $composer) {
                 let draft = { var d = PiliDynamicDraft(); d.topicID = id; d.topicName = info["name"].piliString.isEmpty ? name : info["name"].piliString; return d }()
                 PiliDynamicComposer(api: api, initial: draft) { Task { await load(reset: true) } }
             }

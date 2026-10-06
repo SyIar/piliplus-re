@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailPlayURLFailedNotice: View {
     let message: String
@@ -13,7 +14,7 @@ struct VideoDetailPlayURLFailedNotice: View {
             )
 
             Text(message)
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
     }

@@ -1,5 +1,6 @@
 import PiliPlaybackCore
 import SwiftUI
+import ChunUI
 
 /// Exercises the production controller and choice surface without API accounts.
 struct PiliInteractiveFixture: View {
@@ -10,11 +11,11 @@ struct PiliInteractiveFixture: View {
                 ZStack {
                     LinearGradient(colors: [Color(red: 0.05, green: 0.12, blue: 0.28), .black],
                                    startPoint: .topLeading, endPoint: .bottomTrailing)
-                    Image(systemName: "sparkles").font(.system(size: 110)).foregroundStyle(.white.opacity(0.12))
+                    PiliIcon(systemName: "sparkles", size: 110).piliFont(.lg).foregroundStyle(.white.opacity(0.12))
                     PiliInteractiveChoicesView(controller: controller)
                 }
                 .frame(height: 340).clipShape(RoundedRectangle(cornerRadius: 24))
-                Text(controller.edge?.title ?? "加载剧情").font(.title3.bold())
+                Text(controller.edge?.title ?? "加载剧情").font(.cc.baseBold.bold())
                     .accessibilityIdentifier("ui.interactive.nodeTitle")
                 Text("剧情路径 · \(controller.history.count) 段")
                     .foregroundStyle(.secondary)
@@ -25,7 +26,7 @@ struct PiliInteractiveFixture: View {
                 .disabled(controller.isLoading || controller.isBacktrackingRestricted || controller.history.count < 2)
                 .accessibilityIdentifier("ui.interactive.revisit")
                 if controller.isBacktrackingRestricted {
-                    Label("作者已限制本段剧情回溯", systemImage: "lock").font(.caption)
+                    PiliLabel("作者已限制本段剧情回溯", systemImage: "lock").piliFont(.sm)
                 }
                 Spacer(minLength: 0)
             }

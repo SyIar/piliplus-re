@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoFeedStoryHeader: View {
     let display: VideoCardDisplayModel
@@ -6,8 +7,8 @@ struct VideoFeedStoryHeader: View {
     var body: some View {
         HStack(spacing: 9) {
             AvatarRemoteImage(urlString: display.avatarURLString, pixelSize: 64) {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 26, weight: .medium))
+                PiliIcon(systemName: "person.crop.circle.fill", size: 26)
+                    .piliFont(.lg)
                     .foregroundStyle(.tertiary)
             }
             .frame(width: 32, height: 32)
@@ -22,7 +23,7 @@ struct VideoFeedStoryHeader: View {
             Spacer(minLength: 10)
 
             Text(display.publishTimeText)
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }

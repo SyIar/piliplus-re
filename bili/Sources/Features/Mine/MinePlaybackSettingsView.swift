@@ -21,7 +21,7 @@ struct MinePlaybackSettingsView: View {
     @State var playbackCustomCDNHostDraft = ""
 
     var body: some View {
-        Form {
+        PiliForm {
             Section("播放与交互") {
                 PiliVideoAspectPicker()
                 PiliFullscreenDirectionPicker()
@@ -33,7 +33,7 @@ struct MinePlaybackSettingsView: View {
                 Toggle("中部上滑全屏、下滑退出", isOn: $swipeFullscreen)
                 Toggle("双指捏合退出全屏", isOn: $pinchFullscreen)
             }
-            Section { NavigationLink { PiliSuperResolutionSettingsView() } label: { Label("超分辨率", systemImage: "sparkles.tv") } }
+            Section { NavigationLink { PiliSuperResolutionSettingsView() } label: { PiliLabel("超分辨率", systemImage: "sparkles.tv") } }
             MinePlaybackPreferenceSection(
                 libraryStore: libraryStore,
                 playbackPreferenceSummary: AnyView(playbackPreferenceSummary),
@@ -59,7 +59,8 @@ struct MinePlaybackSettingsView: View {
         .tint(libraryStore.appTintColor)
         .formStyle(.grouped)
         .nativeTopScrollEdgeEffect()
-        .hiddenInlineNavigationTitle()
+        .navigationTitle("播放设置")
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             playbackCustomCDNHostDraft = libraryStore.playbackCustomCDNHost ?? ""
             refreshPlaybackURLPreferenceSnapshots()

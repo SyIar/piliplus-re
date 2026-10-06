@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicOriginalAuthorIdentity: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -7,17 +8,17 @@ struct DynamicOriginalAuthorIdentity: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: "quote.opening")
-                .font(.caption2.weight(.bold))
+            PiliIcon(systemName: "quote.opening")
+                .piliFont(.sm).fontWeight(.bold)
                 .foregroundStyle(appTintColor)
 
             Text("转发自")
-                .font(.caption.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
             Text("@\(author.name ?? "Unknown")")
-                .font(.caption.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
         }

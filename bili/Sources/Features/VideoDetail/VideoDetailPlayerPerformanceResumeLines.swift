@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayResumeLines: View {
     let session: PlayerPerformanceSession
@@ -6,17 +7,17 @@ struct PlayerPerformanceOverlayResumeLines: View {
     var body: some View {
         Group {
             if let resumeDecisionMessage = session.resumeDecisionMessage {
-                Label(resumeDecisionMessage, systemImage: "clock.arrow.circlepath")
-                    .font(.caption2.monospacedDigit())
+                PiliLabel(resumeDecisionMessage, systemImage: "clock.arrow.circlepath")
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             if let resumeRecoveryMessage = session.resumeRecoveryMessage {
-                Label(resumeRecoveryMessage, systemImage: "checkmark.circle")
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(session.resumeRecoverySlowCount > 0 ? .orange : .secondary)
+                PiliLabel(resumeRecoveryMessage, systemImage: "checkmark.circle")
+                    .piliFont(.sm).monospacedDigit()
+                    .foregroundStyle(session.resumeRecoverySlowCount > 0 ? Color.cc.warning : .secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
             }

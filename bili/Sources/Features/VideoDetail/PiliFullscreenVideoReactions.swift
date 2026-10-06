@@ -23,8 +23,8 @@ struct PiliFullscreenVideoReactions: View {
             .disabled(store.isMutatingFavorite)
         }
         .piliLiquidGlass(in: Capsule(), overVideo: true, interactive: true)
-        .alert("操作失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-            Button("好", role: .cancel) { errorMessage = nil }
-        } message: { Text(errorMessage ?? "") }
+        .piliAlert("操作失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            PiliAlertButton("好", role: .cancel) { errorMessage = nil }
+        } message: { errorMessage ?? "" }
     }
 }

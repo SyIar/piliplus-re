@@ -10,6 +10,7 @@ struct VideoDetailActionStripButtonRow: View {
     let onCoin: () -> Void
     let onFavorite: () -> Void
     let onShareTap: () -> Void
+    var onChooseFavorite: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: layout.columnSpacing) {
@@ -49,6 +50,10 @@ struct VideoDetailActionStripButtonRow: View {
                 isDisabled: model.isMutatingFavorite || !model.canFavorite,
                 action: onFavorite
             )
+            .highPriorityGesture(LongPressGesture().onEnded { _ in
+                guard !model.isMutatingFavorite, model.canFavorite else { return }
+                (onChooseFavorite ?? onFavorite)()
+            })
             .frame(width: layout.columnWidth, height: layout.rowHeight)
 
             VideoDetailActionStripShareButton(

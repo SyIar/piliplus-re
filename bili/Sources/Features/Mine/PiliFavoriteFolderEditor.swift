@@ -8,7 +8,7 @@ struct PiliFavoriteFolderEditor: View {
     let folder: FavoriteFolder?
     let credentialVersion: Int
     let onSaved: () -> Void
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var loaded = false
     @State private var busy = false
     @State private var loadingPhoto = false
@@ -22,7 +22,7 @@ struct PiliFavoriteFolderEditor: View {
     @State private var error: String?
 
     var body: some View {
-        Form {
+        PiliForm {
             if !loaded, error == nil { ProgressView("读取收藏夹") }
             if !loaded, error != nil { Button("重新读取") { Task { await prepare() } } }
             if let error { Text(error).ccText(font: .cc.sm, color: .cc.destructive) }

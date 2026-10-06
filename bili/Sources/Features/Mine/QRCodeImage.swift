@@ -1,5 +1,6 @@
 import CoreImage.CIFilterBuiltins
 import SwiftUI
+import ChunUI
 import UIKit
 
 struct QRCodeImage: View {
@@ -12,8 +13,8 @@ struct QRCodeImage: View {
                 .resizable()
                 .scaledToFit()
         } else {
-            Image(systemName: "qrcode")
-                .font(.system(size: 96, weight: .regular))
+            PiliIcon(systemName: "qrcode", size: 96)
+                .piliFont(.lg)
                 .foregroundStyle(.secondary)
         }
     }

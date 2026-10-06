@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct UploaderHeaderView: View {
     let owner: VideoOwner
@@ -15,8 +16,8 @@ struct UploaderHeaderView: View {
             UploaderFollowMessage(message: viewModel.followMessage, isFollowing: viewModel.isFollowing)
             UploaderProfileStatusMessage(state: viewModel.profileState)
             UploaderStatsRow(owner: owner, viewModel: viewModel, card: card)
-            NavigationLink { PiliMemberExtrasView(owner: owner) } label: { Label("更多空间内容", systemImage: "square.grid.2x2") }.font(.subheadline)
-            NavigationLink { PiliMedalWallView(mid: owner.mid) } label: { Label("粉丝勋章", systemImage: "medal") }.font(.subheadline)
+            NavigationLink { PiliMemberExtrasView(owner: owner) } label: { PiliLabel("更多空间内容", systemImage: "square.grid.2x2") }.piliFont(.base)
+            NavigationLink { PiliMedalWallView(mid: owner.mid) } label: { PiliLabel("粉丝勋章", systemImage: "medal") }.piliFont(.base)
         }
         .padding()
         .biliGlassEffect(

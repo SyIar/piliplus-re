@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LibraryLoadingRow: View {
     let title: String
@@ -8,7 +9,7 @@ struct LibraryLoadingRow: View {
             ProgressView()
                 .controlSize(.small)
             Text(title)
-                .font(.subheadline)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 6)
@@ -21,10 +22,10 @@ struct LibraryLoadMoreTriggerRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: "arrow.down.circle")
+            PiliIcon(systemName: "arrow.down.circle")
             Text(title)
         }
-        .font(.caption)
+        .piliFont(.sm)
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
@@ -39,20 +40,20 @@ struct LibraryErrorRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(title, systemImage: "exclamationmark.circle")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.orange)
+            PiliLabel(title, systemImage: "exclamationmark.circle")
+                .piliFont(.base).fontWeight(.semibold)
+                .foregroundStyle(Color.cc.warning)
 
             Text(message)
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
             Button(action: retry) {
-                Label("重试", systemImage: "arrow.clockwise")
-                    .font(.caption.weight(.semibold))
+                PiliLabel("重试", systemImage: "arrow.clockwise")
+                    .piliFont(.sm).fontWeight(.semibold)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
         }
         .padding(.vertical, 6)
     }

@@ -2,6 +2,157 @@ import XCTest
 
 final class PiliLiquidGlassUITests: XCTestCase {
     @MainActor
+    func testGlassSheetsNestReopenReplaceAndProtectBusyWork() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "glassAudit"]
+        app.launch()
+        let open = app.buttons["glass.open"]
+        XCTAssertTrue(open.waitForExistence(timeout: 15))
+        open.tap()
+        let nested = app.buttons["glass.nested"]
+        XCTAssertTrue(nested.waitForExistence(timeout: 10), app.debugDescription)
+        nested.tap()
+        let innerClose = app.buttons["glass.inner.close"]
+        XCTAssertTrue(innerClose.waitForExistence(timeout: 10), app.debugDescription)
+        innerClose.tap()
+        XCTAssertTrue(nested.waitForExistence(timeout: 10))
+        app.buttons["glass.close"].tap()
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+        open.tap()
+        XCTAssertTrue(nested.waitForExistence(timeout: 10))
+        app.buttons["glass.replace"].tap()
+        XCTAssertTrue(app.navigationBars["播放设置 2"].waitForExistence(timeout: 10), app.debugDescription)
+        app.buttons["glass.busy"].tap()
+        app.navigationBars["播放设置 2"].swipeDown()
+        XCTAssertTrue(app.buttons["glass.busy"].exists)
+        XCTAssertFalse(app.buttons["glass.close"].isEnabled)
+        app.buttons["glass.busy"].tap()
+        app.buttons["glass.expand"].tap()
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "ChunUI nested glass sheet"; screenshot.lifetime = .keepAlways; add(screenshot)
+        let note = app.textFields["glass.note"]
+        XCTAssertTrue(note.waitForExistence(timeout: 10))
+        note.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10))
+        note.typeText("glass")
+        XCTAssertEqual(note.value as? String, "glass")
+        XCTAssertLessThanOrEqual(note.frame.maxY, app.keyboards.firstMatch.frame.minY + 1,
+                                 "The full-height sheet must still keep its editor above the keyboard")
+        app.buttons["glass.close"].tap()
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+    }
+
+    @MainActor
+    func testGlassConfirmationPreservesTargetAndExecutesOnce() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "glassAudit"]
+        app.launch()
+        let remove = app.buttons["glass.delete"]
+        XCTAssertTrue(remove.waitForExistence(timeout: 15))
+        app.buttons["glass.settings"].tap()
+        let swatches = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "选择颜色 #"))
+        XCTAssertTrue(swatches.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertEqual(swatches.count, 8)
+        let rowY = swatches.firstMatch.frame.midY
+        for swatch in swatches.allElementsBoundByIndex {
+            XCTAssertTrue(swatch.isHittable)
+            XCTAssertEqual(swatch.frame.midY, rowY, accuracy: 1, "All eight colors must fit one row")
+        }
+        app.buttons["选择颜色 #AF52DE"].tap()
+        app.navigationBars.buttons.firstMatch.tap()
+        remove.tap()
+        XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["取消"].firstMatch.tap()
+        XCTAssertTrue(remove.waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 0 次")
+        remove.tap()
+        XCTAssertTrue(app.buttons["确认删除"].waitForExistence(timeout: 10))
+        let themedAlert = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        themedAlert.name = "Confirmation follows the selected purple theme"
+        themedAlert.lifetime = .keepAlways
+        add(themedAlert)
+        app.buttons["确认删除"].tap()
+        let once = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "已删除 1 次"), object: app.staticTexts["glass.deleted"])
+        XCTAssertEqual(XCTWaiter.wait(for: [once], timeout: 10), .completed)
+        remove.tap()
+        XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["取消"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 1 次")
+        remove.tap()
+        XCTAssertTrue(app.buttons["确认删除"].waitForExistence(timeout: 10))
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.buttons["确认删除"])
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 10), .completed)
+        remove.tap()
+        XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["取消"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 1 次")
+        app.buttons["glass.settings"].tap()
+        XCTAssertTrue(app.buttons["选择颜色 #3264F0"].waitForExistence(timeout: 10))
+        app.buttons["选择颜色 #3264F0"].tap()
+    }
+
+    @MainActor
+    func testRecommendationMenuDoesNotStartPlaybackAndOpensExistingActions() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "glassFeed"]
+        app.launch()
+        let menu = app.buttons["video.menu.BV1fixture001"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 15), app.debugDescription)
+        let second = app.buttons["video.menu.BV1fixture002"]
+        XCTAssertEqual(menu.frame.midY, second.frame.midY, accuracy: 1)
+        XCTAssertLessThan(menu.frame.maxX, second.frame.minX)
+        menu.tap()
+        XCTAssertTrue(app.buttons["复制 BV 号"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(app.buttons["不感兴趣"].exists)
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Recommendation card overflow menu"; screenshot.lifetime = .keepAlways; add(screenshot)
+        app.buttons["复制 BV 号"].tap()
+        XCTAssertEqual(app.staticTexts["glass.feed.activity"].label, "播放 0 · 预热 0")
+        menu.tap()
+        app.buttons["访问 UP 主"].tap()
+        XCTAssertTrue(app.staticTexts["glass.feed.owner"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.staticTexts["glass.feed.activity"].label, "播放 0 · 预热 0")
+        menu.tap()
+        app.buttons["不感兴趣"].tap()
+        XCTAssertTrue(app.navigationBars["推荐与视频反馈"].waitForExistence(timeout: 10))
+        app.buttons["完成"].tap()
+        XCTAssertTrue(menu.waitForExistence(timeout: 10))
+        app.buttons["video.open.BV1fixture001"].tap()
+        XCTAssertTrue(app.staticTexts["glass.feed.activity"].label.hasPrefix("播放 1"))
+    }
+
+    @MainActor
+    func testGlassSelectionAndAccessibleSettingsNavigation() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "glassAudit", "--glass-reduce-transparency",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        let list = app.buttons["多选列表"]
+        XCTAssertTrue(list.waitForExistence(timeout: 15), app.debugDescription)
+        list.tap()
+        app.staticTexts["下载一"].tap()
+        XCTAssertTrue(app.navigationBars["已选择 1 项"].waitForExistence(timeout: 10), app.debugDescription)
+        app.navigationBars.buttons.firstMatch.tap()
+        app.buttons["glass.settings"].tap()
+        XCTAssertTrue(app.navigationBars["界面设置"].waitForExistence(timeout: 10))
+        let iconTitle = app.staticTexts["应用图标"].firstMatch
+        XCTAssertTrue(iconTitle.waitForExistence(timeout: 10))
+        XCTAssertGreaterThan(iconTitle.frame.width, iconTitle.frame.height,
+                             "Large text must not force a short setting title into a vertical column")
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Settings with large text and reduced transparency"; screenshot.lifetime = .keepAlways; add(screenshot)
+    }
+
+    @MainActor
     func testLiveSuperChatRetainsExpiredMessagesInHistory() {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait

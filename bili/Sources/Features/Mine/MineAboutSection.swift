@@ -10,7 +10,7 @@ struct MineAboutSection: View {
     var body: some View {
         Section("关于") {
             HStack {
-                Label("版本", systemImage: "info.circle")
+                PiliLabel("版本", systemImage: "info.circle")
                 Spacer(minLength: 12)
                 Text(versionText)
                     .foregroundStyle(.secondary)
@@ -27,20 +27,20 @@ struct MineAboutSection: View {
                 }
             Link("GPL-3.0 与开源来源", destination: Self.projectURL.appending(path: "blob/main/THIRD_PARTY_NOTICES.md"))
             Button("查看开源许可证") {
-                AppHelper.shared.presentSheet(.half) { PiliLicensesView() }
+                PiliPresentation.present(.half) { PiliLicensesView() }
             }
         }
     }
 
     private var projectRow: some View {
         HStack {
-            Label("项目地址", systemImage: "arrow.up.right.square")
+            PiliLabel("项目地址", systemImage: "arrow.up.right.square")
             Spacer(minLength: 12)
             Text("SyIar/piliplus-re")
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-            Image(systemName: "arrow.up.right")
-                .font(.footnote.weight(.semibold))
+            PiliIcon(systemName: "arrow.up.right")
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.tertiary)
         }
     }

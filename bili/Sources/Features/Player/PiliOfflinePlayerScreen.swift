@@ -7,6 +7,8 @@ struct PiliOfflinePlayerScreen: View {
     @EnvironmentObject private var libraryStore: LibraryStore
     @StateObject private var subtitles = PiliSubtitleController()
     @State private var danmaku: [DanmakuItem] = []
+    @State private var unfilteredDanmaku: [DanmakuItem] = []
+    @EnvironmentObject private var dependencies: AppDependencies
     @State private var showsDanmaku = true
 
     init(item: OfflineDownloadItem, url: URL) {
@@ -29,11 +31,11 @@ struct PiliOfflinePlayerScreen: View {
                            onToggleDanmaku: { showsDanmaku.toggle() })
                 .id(model.item.id)
             CCNeoButton("投屏", variant: .ghost, icon: "screen-check") {
-                AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .offline(model) }) }
+                PiliPresentation.present(.sheet) { PiliDLNAView(source: { try .offline(model) }) }
             }
-            Button("截图与动图", systemImage: "camera") {
+            PiliIconButton("截图与动图", systemImage: "camera") {
                 if let file = try? PiliOfflineStorage.playbackURL(model.item) {
-                    AppHelper.shared.presentSheet(.sheet) {
+                    PiliPresentation.present(.sheet) {
                         PiliMediaCaptureView(source: file, time: model.player.currentTime, duration: model.item.duration)
                     }
                 }
@@ -58,13 +60,18 @@ struct PiliOfflinePlayerScreen: View {
             if isAudio { model.player.play() }
             let values = await Task.detached(priority: .utility) { isAudio ? [] : PiliOfflineDanmaku.load(id) }.value
             guard !Task.isCancelled, model.item.id == id else { return }
-            danmaku = values
+            unfilteredDanmaku = values
+            applyRules()
             let cached = await Task.detached(priority: .utility) { PiliCachedSubtitle.load(id) }.value
             guard !Task.isCancelled, model.item.id == id else { return }
             subtitles.loadOffline(cached)
         }
         .onAppear { PiliSleepTimer.shared.resumeManually() }
+        .onReceive(PiliDanmakuRulesStore.shared.$revision) { _ in applyRules() }
         .onDisappear { model.leave() }
+    }
+    private func applyRules() {
+        danmaku = PiliDanmakuRulesStore.shared.filter(unfilteredDanmaku, identity: PiliAccountIdentity(dependencies.api.requestSnapshot()))
     }
 }
 
@@ -84,13 +91,13 @@ struct PiliOfflineAudioControls: View {
     }
     var body: some View {
         VStack(spacing: 24) {
-            Image(systemName: "music.note")
-                .font(.system(size: 68, weight: .light)).foregroundStyle(.tint)
-                .frame(width: 180, height: 180).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 36))
+            PiliIcon(systemName: "music.note", size: 68)
+                .piliFont(.lg).foregroundStyle(.tint)
+                .frame(width: 180, height: 180).piliGlassCard(radius: 36)
                 .accessibilityHidden(true)
-            Text(title).font(.title3.bold()).multilineTextAlignment(.center)
-            Text(author).font(.subheadline).foregroundStyle(.secondary)
-            if let error = player.errorMessage { Text(error).font(.footnote).foregroundStyle(.secondary) }
+            Text(title).font(.cc.baseBold.bold()).multilineTextAlignment(.center)
+            Text(author).piliFont(.base).foregroundStyle(.secondary)
+            if let error = player.errorMessage { Text(error).piliFont(.sm).foregroundStyle(.secondary) }
             VStack {
                 Slider(value: Binding(get: { isScrubbing ? scrubTime : min(duration, max(0, clock.currentTime)) },
                                       set: { scrubTime = $0 }), in: 0...duration) { editing in
@@ -102,17 +109,17 @@ struct PiliOfflineAudioControls: View {
                     Text(time(isScrubbing ? scrubTime : clock.currentTime))
                     Spacer()
                     Text(time(duration))
-                }.font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                }.piliFont(.sm).monospacedDigit().foregroundStyle(.secondary)
             }
             HStack(spacing: 32) {
-                Button { player.seek(by: -10) } label: { Image(systemName: "gobackward.10") }
+                Button { player.seek(by: -10) } label: { PiliIcon(systemName: "gobackward.10") }
                     .accessibilityLabel("后退十秒")
                 Button { player.isPlaying ? player.pause() : player.play() } label: {
-                    Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").frame(width: 48, height: 48)
+                    PiliIcon(systemName: player.isPlaying ? "pause.fill" : "play.fill").frame(width: 48, height: 48)
                 }.buttonStyle(.glassProminent).accessibilityLabel(player.isPlaying ? "暂停音频" : "播放音频")
-                Button { player.seek(by: 10) } label: { Image(systemName: "goforward.10") }
+                Button { player.seek(by: 10) } label: { PiliIcon(systemName: "goforward.10") }
                     .accessibilityLabel("前进十秒")
-            }.font(.title2)
+            }.piliFont(.lgBold)
         }.padding(24)
     }
     private func time(_ seconds: Double) -> String {

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDescriptionOwnerIdentity: View {
     let owner: VideoOwner?
@@ -8,7 +9,7 @@ struct VideoDescriptionOwnerIdentity: View {
     var body: some View {
         HStack(spacing: 10) {
             AvatarRemoteImage(urlString: owner?.face, pixelSize: 96) {
-                Image(systemName: "person.crop.circle.fill")
+                PiliIcon(systemName: "person.crop.circle.fill")
                     .foregroundStyle(.secondary)
             }
             .frame(width: 40, height: 40)
@@ -25,8 +26,8 @@ struct VideoDescriptionOwnerIdentity: View {
             }
 
             if showsChevron {
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
+                PiliIcon(systemName: "chevron.right")
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.tertiary)
             }
         }

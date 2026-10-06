@@ -5,7 +5,7 @@ struct PlaybackNetworkDiagnosticsSheet: View {
     @ObservedObject var diagnosticsStore: VideoDetailNetworkDiagnosticsRenderStore
     @ObservedObject var relatedStore: VideoDetailRelatedRenderStore
     @ObservedObject var libraryStore: LibraryStore
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @StateObject var performanceObserver: PlayerPerformanceSessionObserver
     @State var sheetState = PlaybackNetworkDiagnosticsSheetState()
 

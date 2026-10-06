@@ -20,6 +20,7 @@ final class HomeViewModel: ObservableObject {
     var retainedRecommendVideos = [VideoItem]()
     var retainedRecommendLastSeenMarkerIndex: Int?
     private var recommendContextCancellable: AnyCancellable?
+    private var advancedFilterCancellable: AnyCancellable?
     let pageCoordinator: HomeFeedPageCoordinator
     let snapshotCoordinator: HomeFeedSnapshotCoordinator
     let mediaPreloadCoordinator: HomeFeedMediaPreloadCoordinator
@@ -49,6 +50,12 @@ final class HomeViewModel: ObservableObject {
         )
         exposureRecorder = HomeFeedExposureRecorder(pageCoordinator: pageCoordinator)
         mode = initialMode
+        advancedFilterCancellable = libraryStore.$advancedRecommendFilter.dropFirst().sink { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.updateFeed(self.videos, lastSeenMarkerIndex: self.lastSeenMarkerIndex)
+            }
+        }
         recommendContextCancellable = Publishers.CombineLatest4(
             libraryStore.$guestModeEnabled,
             libraryStore.$homeRecommendFeedSourcePreference,
@@ -78,7 +85,9 @@ final class HomeViewModel: ObservableObject {
         // Recheck at the commit boundary, including retained cards from older requests.
         var configuration = libraryStore.videoRecommendationFilterConfiguration
         if let blockedUserIDs { configuration.blockedUserIDs = blockedUserIDs }
+        let dismissed = PiliFeedDismissals.shared.ids(account: pageCoordinator.api.requestSnapshot().currentUserMID ?? 0)
         let filtered = VideoRecommendationFilter.filtered(newVideos, configuration: configuration, context: .feed)
+            .filter { !dismissed.contains($0.bvid) }
         let filteredMarker = markerIndex.flatMap { index -> Int? in
             guard index > 0, index < newVideos.count else { return nil }
             let retainedIDs = Set(filtered.map(\.id))

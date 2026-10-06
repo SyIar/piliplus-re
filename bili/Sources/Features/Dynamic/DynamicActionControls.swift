@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicActionButton: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -9,8 +10,8 @@ struct DynamicActionButton: View {
 
     var body: some View {
         Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.caption.weight(.semibold))
+            PiliLabel(title, systemImage: systemImage)
+                .piliFont(.sm).fontWeight(.semibold)
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(isSelected ? appTintColor : .secondary)
                 .frame(maxWidth: .infinity)
@@ -31,8 +32,8 @@ struct DynamicActionPill: View {
 
     var body: some View {
         Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.caption.weight(.semibold))
+            PiliLabel(title, systemImage: systemImage)
+                .piliFont(.sm).fontWeight(.semibold)
                 .labelStyle(.titleAndIcon)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
@@ -52,8 +53,8 @@ struct DynamicActionPillLabel: View {
     let systemImage: String
 
     var body: some View {
-        Label(title, systemImage: systemImage)
-            .font(.caption.weight(.semibold))
+        PiliLabel(title, systemImage: systemImage)
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .lineLimit(1)
             .minimumScaleFactor(0.78)
@@ -68,7 +69,7 @@ struct DynamicActionFeedbackToast: View {
 
     var body: some View {
         Text(message)
-            .font(.caption.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .foregroundStyle(.primary)
             .lineLimit(1)
             .padding(.horizontal, 12)

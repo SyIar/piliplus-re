@@ -10,7 +10,7 @@ struct DynamicCopyableTextModifier: ViewModifier {
                 Button {
                     UIPasteboard.general.string = copyText
                 } label: {
-                    Label("复制", systemImage: "doc.on.doc")
+                    PiliLabel("复制", systemImage: "doc.on.doc")
                 }
             }
         } else {

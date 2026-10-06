@@ -394,10 +394,10 @@ private struct LiveRoomSurfaceRoot: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)
         .ignoresSafeArea()
-        .sheet(isPresented: $viewModel.isShowingLivePlaybackDiagnostics) {
+        .piliSheet(isPresented: $viewModel.isShowingLivePlaybackDiagnostics) {
             LivePlaybackDiagnosticsSheet(viewModel: viewModel)
         }
-        .sheet(isPresented: $viewModel.isShowingLiveDanmakuSettings) {
+        .piliSheet(isPresented: $viewModel.isShowingLiveDanmakuSettings) {
             LiveDanmakuSettingsSheet(viewModel: viewModel)
         }
     }

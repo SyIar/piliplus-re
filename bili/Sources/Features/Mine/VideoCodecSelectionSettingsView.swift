@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoCodecSelectionSettingsView: View {
     @ObservedObject var libraryStore: LibraryStore
@@ -10,7 +11,7 @@ struct VideoCodecSelectionSettingsView: View {
     }
 
     var body: some View {
-        List {
+        PiliList {
             Section {
                 ForEach(codecOrder) { codec in
                     MineSettingsLabel(codec.title, systemImage: codec.systemImage)
@@ -28,7 +29,7 @@ struct VideoCodecSelectionSettingsView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             MineSettingsLabel(codec.title, systemImage: codec.systemImage)
                             Text(codec.detail)
-                                .font(.caption)
+                                .piliFont(.sm)
                                 .foregroundStyle(.secondary)
                         }
                     }

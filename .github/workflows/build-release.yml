@@ -57,7 +57,9 @@ jobs:
       - name: Test playback policy
         run: swift test --package-path Packages/PiliPlaybackCore
       - name: Validate repository
-        run: python3 Scripts/validate-project.py
+        run: |
+          python3 Scripts/validate-project.py
+          python3 Scripts/validate-ui.py
       - name: Build iOS test bundle
         run: bash Scripts/test-ios.sh build
       - name: Run iOS tests
@@ -69,6 +71,22 @@ jobs:
           name: PiliPlusSwift-previews-${{ github.run_number }}
           path: dist/preview-*.png
           if-no-files-found: error
+      - name: Export failed UI screenshots
+        if: failure()
+        run: |
+          result=build/tests/PiliPlusSwift.xcresult
+          if [ -d "$result" ]; then
+            xcrun xcresulttool export attachments --path "$result" --output-path build/ui-attachments
+          fi
+      - name: Upload failed UI screenshots
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: iOS-failed-ui-screenshots
+          path: |
+            build/ui-attachments/*.png
+            build/ui-attachments/manifest.json
+          if-no-files-found: ignore
       - name: Upload failed test results
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -86,7 +104,9 @@ jobs:
       - name: Select Xcode
         run: bash Scripts/select-xcode.sh
       - name: Validate repository
-        run: python3 Scripts/validate-project.py
+        run: |
+          python3 Scripts/validate-project.py
+          python3 Scripts/validate-ui.py
       - name: Build unsigned IPA
         run: bash Scripts/build-ipa.sh
       - name: Include license and source provenance

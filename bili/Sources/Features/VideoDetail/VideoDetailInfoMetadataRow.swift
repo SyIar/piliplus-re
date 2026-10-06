@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailInfoMetadataRow: View {
     let metadataText: String
@@ -18,8 +19,8 @@ struct VideoDetailInfoMetadataRow: View {
 
             if hasDescriptionContent {
                 Button(action: toggleExpansion) {
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
+                    PiliIcon(systemName: isExpanded ? "chevron.up" : "chevron.down", size: 12)
+                        .piliFont(.smBold)
                         .frame(width: 24, height: 24)
                         .contentShape(Rectangle())
                 }

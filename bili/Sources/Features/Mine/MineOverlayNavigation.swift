@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 enum MineOverlayRoute: Hashable {
     case accountMessages
@@ -37,8 +38,8 @@ struct MineOverlayNavigationButton<Label: View>: View {
             HStack(spacing: 8) {
                 label()
                 Spacer(minLength: 8)
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
+                PiliIcon(systemName: "chevron.right")
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.tertiary)
                     .accessibilityHidden(true)
             }

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicFeedScrollContent: View {
     @EnvironmentObject private var libraryStore: LibraryStore
@@ -28,7 +29,7 @@ struct DynamicFeedScrollContent: View {
         .contentMargins(.top, 0, for: .scrollContent)
         .scrollBounceBehavior(.always, axes: .vertical)
         .defersRemoteImageLoadsDuringFastScroll()
-        .background(Color(.systemBackground))
+        .background(Color.cc.background)
         .nativeTopScrollEdgeEffect()
         .customPullRefreshTracking(
             isEnabled: libraryStore.usesCustomPullRefresh,

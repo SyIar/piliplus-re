@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlaybackNetworkLoadingMetricsSection: View {
     let detailLoadElapsedMilliseconds: Int?
@@ -27,9 +28,9 @@ struct PlaybackNetworkLoadingMetricsSection: View {
             )
 
             if didRelatedLoadTimeOut {
-                Label("相关推荐最近一次加载超时，已停止等待并保留主播放优先。", systemImage: "clock.badge.exclamationmark")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
+                PiliLabel("相关推荐最近一次加载超时，已停止等待并保留主播放优先。", systemImage: "clock.badge.exclamationmark")
+                    .piliFont(.sm)
+                    .foregroundStyle(Color.cc.warning)
             }
         }
     }

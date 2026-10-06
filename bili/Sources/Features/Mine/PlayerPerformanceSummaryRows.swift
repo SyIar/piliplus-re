@@ -1,3 +1,4 @@
+import ChunUI
 import SwiftUI
 
 enum PlayerPerformanceMetricText {
@@ -12,11 +13,11 @@ enum PlayerPerformanceMetricText {
     static func metricColor(_ value: Int?) -> Color {
         guard let value else { return .secondary }
         if value >= 2500 {
-            return .red
+            return Color.cc.destructive
         }
         if value >= 1400 {
-            return .orange
+            return Color.cc.warning
         }
-        return .green
+        return Color.cc.success
     }
 }

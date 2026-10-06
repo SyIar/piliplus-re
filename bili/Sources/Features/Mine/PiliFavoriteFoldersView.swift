@@ -21,7 +21,7 @@ struct PiliFavoriteFoldersView: View {
     }
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 if isLoading || isMutating { ProgressView("加载中") }
                 if let error { Text(error).ccText(font: .cc.sm, color: .cc.destructive) }
                 Section {
@@ -65,17 +65,17 @@ struct PiliFavoriteFoldersView: View {
             }
             .task(id: session.interactionAccountCredentialVersion) { await reload() }
             .refreshable { if !sorting { await reload() } }
-            .sheet(item: $editor) { target in
+            .piliSheet(item: $editor) { target in
                 NavigationStack {
                     PiliFavoriteFolderEditor(api: api, folder: target.folder, credentialVersion: target.version) {
                         onChanged(); Task { await reload() }
                     }
                 }
             }
-            .alert("删除收藏夹？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
-                Button("取消", role: .cancel) { deleting = nil }
-                Button("删除", role: .destructive) { if let folder = deleting { remove(folder) }; deleting = nil }
-            } message: { Text("“\(deleting?.displayTitle ?? "")”及其中的收藏记录将被移除，原视频不受影响。") }
+            .piliAlert("删除收藏夹？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+                PiliAlertButton("取消", role: .cancel) { deleting = nil }
+                PiliAlertButton("删除", role: .destructive) { if let folder = deleting { remove(folder) }; deleting = nil }
+            } message: { "“\(deleting?.displayTitle ?? "")”及其中的收藏记录将被移除，原视频不受影响。" }
         }
     }
     private func reload() async {

@@ -7,7 +7,7 @@ struct ResourceLoadingDiagnosticsView: View {
     @State private var didCopy = false
 
     var body: some View {
-        Form {
+        PiliForm {
             experimentSection
             firstScreenSection
             imageSection
@@ -26,7 +26,7 @@ struct ResourceLoadingDiagnosticsView: View {
                 Button {
                     reload()
                 } label: {
-                    Image(systemName: "arrow.clockwise")
+                    PiliIcon(systemName: "arrow.clockwise")
                 }
                 .accessibilityLabel("刷新资源加载诊断")
 
@@ -34,7 +34,7 @@ struct ResourceLoadingDiagnosticsView: View {
                     ResourceLoadingDiagnostics.shared.reset()
                     reload()
                 } label: {
-                    Image(systemName: "trash")
+                    PiliIcon(systemName: "trash")
                 }
                 .disabled(snapshot.events.isEmpty)
                 .accessibilityLabel("清空资源加载诊断")
@@ -145,7 +145,7 @@ struct ResourceLoadingDiagnosticsView: View {
                     didCopy = false
                 }
             } label: {
-                Label(didCopy ? "已复制" : "复制测试数据", systemImage: didCopy ? "checkmark" : "doc.on.doc")
+                PiliLabel(didCopy ? "已复制" : "复制测试数据", systemImage: didCopy ? "checkmark" : "doc.on.doc")
             }
         } footer: {
             Text("仅包含次数、耗时、缓存大小和功能状态，不包含链接、图片内容、账号、Cookie 或视频标题。")

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayPrepareStagesSection: View {
     let message: String
@@ -6,7 +7,7 @@ struct PlayerPerformanceOverlayPrepareStagesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Prepare stages")
-                .font(.caption2.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
 
             LazyVGrid(

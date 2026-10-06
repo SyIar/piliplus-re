@@ -144,6 +144,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
     let pgcEpisodeID: Int?
     let piliUGCSeason: PiliUGCSeason?
     let piliArgueInfo: DynamicJSONValue?
+    let piliRecommendation: PiliRecommendationMetadata?
+    let piliZoneName: String?
     // A local route context, deliberately excluded from the API's CodingKeys.
     var piliPlaybackQueue: PiliPlaybackQueue? = nil
 
@@ -152,6 +154,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         case historyResumeTime, historyCID, recommendReason, pgcSeasonID, pgcEpisodeID
         case piliUGCSeason = "ugc_season"
         case piliArgueInfo = "argue_info"
+        case piliRecommendation
+        case piliZoneName = "tname"
     }
 
     init(
@@ -173,7 +177,9 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         pgcSeasonID: Int? = nil,
         pgcEpisodeID: Int? = nil,
         piliUGCSeason: PiliUGCSeason? = nil,
-        piliArgueInfo: DynamicJSONValue? = nil
+        piliArgueInfo: DynamicJSONValue? = nil,
+        piliRecommendation: PiliRecommendationMetadata? = nil,
+        piliZoneName: String? = nil
     ) {
         self.bvid = bvid
         self.aid = aid
@@ -194,6 +200,8 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
         self.pgcEpisodeID = pgcEpisodeID
         self.piliUGCSeason = piliUGCSeason
         self.piliArgueInfo = piliArgueInfo
+        self.piliRecommendation = piliRecommendation
+        self.piliZoneName = piliZoneName
     }
 
     nonisolated func mergingFilledValues(from fullDetail: VideoItem) -> VideoItem {
@@ -232,7 +240,9 @@ nonisolated struct VideoItem: Identifiable, Decodable, Hashable, Sendable {
             pgcSeasonID: pgcSeasonID ?? fullDetail.pgcSeasonID,
             pgcEpisodeID: pgcEpisodeID ?? fullDetail.pgcEpisodeID,
             piliUGCSeason: fullDetail.piliUGCSeason ?? piliUGCSeason,
-            piliArgueInfo: fullDetail.piliArgueInfo ?? piliArgueInfo
+            piliArgueInfo: fullDetail.piliArgueInfo ?? piliArgueInfo,
+            piliRecommendation: piliRecommendation ?? fullDetail.piliRecommendation,
+            piliZoneName: fullDetail.piliZoneName ?? piliZoneName
         ).withPiliPlaybackQueue(piliPlaybackQueue ?? fullDetail.piliPlaybackQueue)
     }
 
@@ -1345,6 +1355,8 @@ nonisolated struct RecommendFeedItem: Identifiable, Decodable, Hashable, Sendabl
     let topRecommendReasonStyle: RecommendFeedReason?
     let stat: VideoStat?
     let dimension: VideoDimension?
+    let threePoint: DynamicJSONValue?
+    let isFollowed: Bool
 
     nonisolated var resolvedCardKind: String {
         goto ?? cardGoto ?? "-"
@@ -1373,6 +1385,8 @@ nonisolated struct RecommendFeedItem: Identifiable, Decodable, Hashable, Sendabl
         case coverLeftText2 = "cover_left_text_2"
         case coverRightText = "cover_right_text"
         case playerArgs = "player_args"
+        case threePoint = "three_point_v2"
+        case isFollowed = "is_followed"
     }
 
     enum PlayerArgsCodingKeys: String, CodingKey {
@@ -1384,6 +1398,8 @@ nonisolated struct RecommendFeedItem: Identifiable, Decodable, Hashable, Sendabl
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let playerArgs = try? container.nestedContainer(keyedBy: PlayerArgsCodingKeys.self, forKey: .playerArgs)
+        threePoint = try container.decodeIfPresent(DynamicJSONValue.self, forKey: .threePoint)
+        isFollowed = container.decodeLossyBoolIfPresent(forKey: .isFollowed) ?? false
         idValue = container.decodeLossyIntIfPresent(forKey: .idValue)
         aid = container.decodeLossyIntIfPresent(forKey: .aid)
             ?? playerArgs?.decodeLossyIntIfPresent(forKey: .aid)
@@ -1441,7 +1457,13 @@ nonisolated struct RecommendFeedItem: Identifiable, Decodable, Hashable, Sendabl
             cid: cid,
             pages: nil,
             dimension: dimension,
-            recommendReason: sanitizedRecommendReason
+            recommendReason: sanitizedRecommendReason,
+            piliRecommendation: .init(
+                targetID: param ?? String(idValue ?? aid ?? 0), targetKind: goto ?? cardGoto ?? "av",
+                reasons: PiliRecommendationMetadata.reasons(threePoint),
+                followed: isFollowed || [recommendReason, bottomRecommendReason, topRecommendReason, recommendReasonStyle,
+                    bottomRecommendReasonStyle, topRecommendReasonStyle].contains { Self.hiddenRecommendReasons.contains($0?.content ?? "") },
+                zone: [args?.tname, args?.rname].compactMap { $0 }.joined(separator: " "))
         )
     }
 
@@ -1537,11 +1559,14 @@ nonisolated struct RecommendFeedItem: Identifiable, Decodable, Hashable, Sendabl
 }
 
 nonisolated struct RecommendFeedItemArgs: Decodable, Hashable, Sendable {
+    let tname: String?
+    let rname: String?
     let upID: Int?
     let upName: String?
     let upFace: String?
 
     enum CodingKeys: String, CodingKey {
+        case tname, rname
         case upID = "up_id"
         case upMID = "up_mid"
         case mid
@@ -1557,6 +1582,8 @@ nonisolated struct RecommendFeedItemArgs: Decodable, Hashable, Sendable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        tname = container.decodeLossyStringIfPresent(forKey: .tname)
+        rname = container.decodeLossyStringIfPresent(forKey: .rname)
         upID = container.decodeLossyIntIfPresent(forKey: .upID)
             ?? container.decodeLossyIntIfPresent(forKey: .upMID)
             ?? container.decodeLossyIntIfPresent(forKey: .mid)

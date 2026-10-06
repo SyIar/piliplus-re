@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct CommentsSectionPreviewFooter: View {
     @ObservedObject var store: VideoDetailCommentsRenderStore
@@ -11,8 +12,8 @@ struct CommentsSectionPreviewFooter: View {
             Button {
                 showAllComments?()
             } label: {
-                Label("查看全部评论", systemImage: "bubble.left.and.bubble.right")
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel("查看全部评论", systemImage: "bubble.left.and.bubble.right")
+                    .piliFont(.base).fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .commentPlayerGlassRoundedRectangle()

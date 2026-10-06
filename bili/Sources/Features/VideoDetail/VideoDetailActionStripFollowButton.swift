@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailActionStripFollowControl: View {
     let isFollowing: Bool
@@ -38,7 +39,7 @@ private struct VideoDetailActionStripFollowLabel: View {
 
     var body: some View {
         Text(isFollowing ? "已关注" : "关注")
-            .font(.caption2.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .lineLimit(1)
             .minimumScaleFactor(0.78)
             .frame(maxWidth: .infinity)

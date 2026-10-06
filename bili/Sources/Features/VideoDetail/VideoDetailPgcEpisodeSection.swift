@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailPgcEpisodeSection<ActionContent: View>: View {
     let detail: VideoItem
@@ -51,7 +52,7 @@ struct VideoDetailPgcEpisodeSection<ActionContent: View>: View {
         .task(id: loadID) {
             await load(force: false)
         }
-        .sheet(isPresented: $isEpisodeSheetPresented) {
+        .piliSheet(isPresented: $isEpisodeSheetPresented) {
             if let season {
                 VideoDetailPgcEpisodeSelectionSheet(
                     detail: detail,
@@ -135,11 +136,11 @@ private struct VideoDetailPgcEpisodeHeader: View {
     var body: some View {
         HStack(spacing: 10) {
             Text("分集")
-                .font(.headline)
+                .piliFont(.baseBold)
 
             if episodeCount > 0 {
                 Text("\(episodeCount) 集")
-                    .font(.caption)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
 
@@ -148,8 +149,8 @@ private struct VideoDetailPgcEpisodeHeader: View {
             Button {
                 order.toggle()
             } label: {
-                Label(order.title, systemImage: "arrow.up.arrow.down")
-                    .font(.caption.weight(.semibold))
+                PiliLabel(order.title, systemImage: "arrow.up.arrow.down")
+                    .piliFont(.sm).fontWeight(.semibold)
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
@@ -157,8 +158,8 @@ private struct VideoDetailPgcEpisodeHeader: View {
             Button {
                 showsEpisodeSheet = true
             } label: {
-                Image(systemName: "triangle.fill")
-                    .font(.caption.weight(.bold))
+                PiliIcon(systemName: "triangle.fill")
+                    .piliFont(.sm).fontWeight(.bold)
                     .rotationEffect(.degrees(180))
                     .frame(width: 28, height: 28)
                     .contentShape(Circle())
@@ -210,7 +211,7 @@ private struct VideoDetailPgcEpisodeSheetRoute: View {
     let selectEpisode: (VideoItem) -> Void
     let isSelected: Bool
 
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @Environment(\.prewarmVideoRouteAction) private var prewarmVideoRoute
 
     var body: some View {
@@ -293,8 +294,8 @@ private struct VideoDetailPgcEpisodeTile: View {
                         .frame(maxWidth: .infinity, alignment: .topLeading)
 
                     if usesGlassBackground, isSelected {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.caption.weight(.bold))
+                        PiliIcon(systemName: "checkmark.circle.fill")
+                            .piliFont(.sm).fontWeight(.bold)
                             .foregroundStyle(appTintColor)
                             .accessibilityHidden(true)
                     }
@@ -336,7 +337,7 @@ private struct VideoDetailPgcEpisodeTile: View {
                 .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
         } else {
             content()
-                .background(Color(.secondarySystemGroupedBackground), in: shape)
+                .background(Color.cc.card, in: shape)
                 .overlay {
                     shape.strokeBorder(borderColor, lineWidth: borderWidth)
                 }
@@ -351,7 +352,7 @@ private struct VideoDetailPgcEpisodeTile: View {
         if isSelected {
             return appTintColor.opacity(0.14)
         }
-        return Color(.systemBackground).opacity(0.58)
+        return Color.cc.background.opacity(0.58)
     }
 
     private var borderColor: Color {
@@ -425,7 +426,7 @@ private struct VideoDetailPgcEpisodeSelectionSheet: View {
             .scrollContentBackground(.hidden)
             .background(.clear)
         }
-        .presentationDetents([.fraction(0.7)])
+        .piliPresentationDetents([.fraction(0.7)])
         .presentationDragIndicator(.visible)
         .presentationBackground(.clear)
     }
@@ -439,10 +440,10 @@ private struct VideoDetailPgcEpisodeSheetHeader: View {
         GlassEffectContainer(spacing: 8) {
             HStack(spacing: 10) {
                 Text("全部分集")
-                    .font(.headline)
+                    .piliFont(.baseBold)
 
                 Text("\(episodeCount) 集")
-                    .font(.caption)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
 
                 Spacer()
@@ -450,8 +451,8 @@ private struct VideoDetailPgcEpisodeSheetHeader: View {
                 Button {
                     order.toggle()
                 } label: {
-                    Label(order.title, systemImage: "arrow.up.arrow.down")
-                        .font(.caption.weight(.semibold))
+                    PiliLabel(order.title, systemImage: "arrow.up.arrow.down")
+                        .piliFont(.sm).fontWeight(.semibold)
                         .padding(.horizontal, 10)
                         .frame(height: 30)
                 }
@@ -471,7 +472,7 @@ private struct VideoDetailPgcEpisodeLoadingSection: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("分集")
-                    .font(.headline)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
 
                 Spacer()
@@ -502,16 +503,16 @@ private struct VideoDetailPgcEpisodeFailedSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("分集")
-                    .font(.headline)
+                    .piliFont(.baseBold)
                 Spacer()
                 Button("重试", action: retry)
-                    .font(.caption.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .buttonStyle(.plain)
                     .foregroundStyle(appTintColor)
             }
 
             Text(message)
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
         }

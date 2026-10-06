@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct SearchUserResultRow: View {
     let user: SearchUserItem
@@ -29,7 +30,7 @@ private struct SearchUserAvatar: View {
 
     var body: some View {
         AvatarRemoteImage(urlString: urlString, pixelSize: 112) {
-            Image(systemName: "person.crop.circle.fill")
+            PiliIcon(systemName: "person.crop.circle.fill")
                 .resizable()
                 .foregroundStyle(.secondary)
         }
@@ -53,9 +54,9 @@ private struct SearchUserNameLine: View {
                 .lineLimit(1)
 
             if user.isFollowing == true {
-                Label("已关注", systemImage: "checkmark.circle.fill")
+                PiliLabel("已关注", systemImage: "checkmark.circle.fill")
                     .appTypography(.badge, fallback: .caption2.weight(.semibold))
-                    .foregroundStyle(.pink)
+                    .foregroundStyle(Color.cc.primary)
             }
         }
     }

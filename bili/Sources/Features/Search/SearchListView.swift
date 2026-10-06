@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct SearchListView: View {
     @ObservedObject var viewModel: SearchViewModel
@@ -30,10 +31,10 @@ struct SearchListView: View {
         .scrollDismissesKeyboard(.immediately)
         .scrollBounceBehavior(.always, axes: .vertical)
         .defersRemoteImageLoadsDuringFastScroll()
-        .background(Color(.systemGroupedBackground))
+        .background(Color.cc.background)
         .nativeTopScrollEdgeEffect()
-        .confirmationDialog("清空搜索历史？", isPresented: $confirmsClearHistory, titleVisibility: .visible) {
-            Button("清空", role: .destructive) { viewModel.clearHistory() }
+        .piliConfirmation("清空搜索历史？", isPresented: $confirmsClearHistory, titleVisibility: .visible) {
+            PiliAlertButton("清空", role: .destructive) { viewModel.clearHistory() }
         }
     }
 
@@ -52,19 +53,19 @@ struct SearchListView: View {
         } else {
             if let word = viewModel.defaultSearch {
                 Button { Task { await viewModel.search(word.keyword) } } label: {
-                    Label(word.display, systemImage: "magnifyingglass").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    PiliLabel(word.display, systemImage: "magnifyingglass").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 }.buttonStyle(.plain).accessibilityLabel("默认搜索：\(word.display)")
             }
             if !viewModel.searchHistory.isEmpty {
                 SearchContentSection(title: "搜索历史", systemImage: "clock") {
-                    HStack { Spacer(); Button("清空", role: .destructive) { confirmsClearHistory = true }.font(.caption) }
+                    HStack { Spacer(); Button("清空", role: .destructive) { confirmsClearHistory = true }.piliFont(.sm) }
                     LazyVGrid(columns: discoveryColumns, alignment: .leading, spacing: 10) {
                         ForEach(viewModel.searchHistory, id: \.self) { term in
                             Button { Task { await viewModel.search(term) } } label: {
-                                Text(term).font(.subheadline).lineLimit(1).frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
-                                    .padding(.horizontal, 12).background(.quaternary, in: Capsule())
+                                Text(term).piliFont(.base).lineLimit(1).frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+                                    .padding(.horizontal, 12).ccGlassEffect(.capsule)
                             }.buttonStyle(.plain)
-                                .contextMenu { Button("删除记录", systemImage: "trash", role: .destructive) { viewModel.removeHistory(term) } }
+                                .contextMenu { PiliIconButton("删除记录", systemImage: "trash", role: .destructive) { viewModel.removeHistory(term) } }
                         }
                     }
                 }
@@ -93,8 +94,8 @@ struct SearchListView: View {
     private var resultsContent: some View {
         ForEach(viewModel.results) { result in
             if shouldShowSectionHeader(for: result) {
-                Label(result.sectionTitle, systemImage: result.sectionSystemImage)
-                    .font(.headline)
+                PiliLabel(result.sectionTitle, systemImage: result.sectionSystemImage)
+                    .piliFont(.baseBold)
                     .padding(.top, result == viewModel.results.first ? 0 : 8)
             }
 
@@ -145,13 +146,13 @@ private struct SearchSuggestionRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
+                PiliIcon(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
                 Text(item.value)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 Spacer(minLength: 8)
-                Image(systemName: "arrow.up.left")
+                PiliIcon(systemName: "arrow.up.left")
                     .foregroundStyle(.tertiary)
             }
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -175,8 +176,8 @@ private struct SearchContentSection<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label(title, systemImage: systemImage)
-                .font(.headline)
+            PiliLabel(title, systemImage: systemImage)
+                .piliFont(.baseBold)
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(.primary)
 
@@ -194,7 +195,7 @@ private struct SearchDiscoveryChip: View {
         Button(action: action) {
             HStack {
                 Text(item.showName ?? item.keyword)
-                    .font(.subheadline.weight(.medium))
+                    .piliFont(.base).fontWeight(.medium)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -203,7 +204,7 @@ private struct SearchDiscoveryChip: View {
             }
             .padding(.horizontal, 12)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .background(Color(.secondarySystemGroupedBackground))
+            .piliGlassCard()
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -275,8 +276,8 @@ struct SearchLoadingContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: showsTitle ? 16 : 12) {
             if showsTitle {
-                Label("正在搜索", systemImage: "magnifyingglass")
-                    .font(.headline)
+                PiliLabel("正在搜索", systemImage: "magnifyingglass")
+                    .piliFont(.baseBold)
                     .labelStyle(.titleAndIcon)
             }
 

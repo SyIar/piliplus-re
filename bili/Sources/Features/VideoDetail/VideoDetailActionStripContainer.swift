@@ -9,6 +9,7 @@ struct VideoDetailActionStripContainer: View {
     let onCoin: () -> Void
     let onFavorite: () -> Void
     let onShareTap: () -> Void
+    var onChooseFavorite: (() -> Void)? = nil
 
     var body: some View {
         VideoDetailActionStrip(
@@ -17,7 +18,8 @@ struct VideoDetailActionStripContainer: View {
             onLike: onLike,
             onCoin: onCoin,
             onFavorite: onFavorite,
-            onShareTap: onShareTap
+            onShareTap: onShareTap,
+            onChooseFavorite: onChooseFavorite
         )
         .equatable()
     }

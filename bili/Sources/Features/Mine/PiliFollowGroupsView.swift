@@ -3,18 +3,18 @@ import SwiftUI
 
 struct PiliFollowGroupsView: View {
     @ObservedObject var model: PiliRelationsModel
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var editor: Editor?
     @State private var deleting: PiliFollowGroup?
     @State private var order: [PiliFollowGroup] = []
     @State private var changedOrder = false
     private struct Editor: Identifiable { let id = UUID(); let group: PiliFollowGroup? }
     var body: some View {
-        List {
+        PiliList {
             if let message = model.errorMessage { Text(message).foregroundStyle(Color.cc.destructive) }
             Section("系统分组") {
                 ForEach(model.groups.filter { !$0.isCustom }) { group in
-                    Label("\(group.name)（\(group.count)）", systemImage: "lock").foregroundStyle(Color.cc.mutedForeground)
+                    PiliLabel("\(group.name)（\(group.count)）", systemImage: "lock").foregroundStyle(Color.cc.mutedForeground)
                 }
             }
             Section("自定义分组") {
@@ -26,7 +26,7 @@ struct PiliFollowGroupsView: View {
                         Menu {
                             Button("重命名") { editor = Editor(group: group) }
                             Button("删除分组", role: .destructive) { deleting = group }
-                        } label: { Image(systemName: "ellipsis") }.disabled(changedOrder)
+                        } label: { PiliIcon(systemName: "ellipsis") }.disabled(changedOrder)
                     }
                 }.onMove { offsets, destination in
                     order.move(fromOffsets: offsets, toOffset: destination); changedOrder = true
@@ -34,7 +34,7 @@ struct PiliFollowGroupsView: View {
                 if order.isEmpty { Text("还没有自定义分组").foregroundStyle(Color.cc.mutedForeground) }
             }
             Section {
-                Button("新建分组", systemImage: "plus") { editor = Editor(group: nil) }.disabled(changedOrder)
+                PiliIconButton("新建分组", systemImage: "plus") { editor = Editor(group: nil) }.disabled(changedOrder)
                 if changedOrder {
                     Button("保存排序") {
                         let ids = order.map(\.id)
@@ -50,14 +50,13 @@ struct PiliFollowGroupsView: View {
             ToolbarItem(placement: .cancellationAction) { Button("完成") { dismiss() }.disabled(model.mutating || changedOrder) }
             ToolbarItem(placement: .primaryAction) { EditButton().disabled(model.mutating) }
         }
-        .interactiveDismissDisabled(model.mutating || changedOrder)
+        .piliInteractiveDismissDisabled(model.mutating || changedOrder)
         .task { await model.refreshGroups(); synchronize() }
         .onChange(of: model.groups) { _, _ in synchronize() }
-        .sheet(item: $editor) { value in NavigationStack { PiliFollowGroupEditor(model: model, group: value.group) } }
-        .alert(item: $deleting) { group in
-            Alert(title: Text("删除“\(group.name)”？"), message: Text("删除的是分组，关注关系会保留。"),
-                  primaryButton: .destructive(Text("删除")) { Task { await model.perform(.deleteGroup(group.id)) } }, secondaryButton: .cancel(Text("取消")))
-        }
+        .piliSheet(item: $editor) { value in NavigationStack { PiliFollowGroupEditor(model: model, group: value.group) } }
+        .piliConfirmation("删除“\(deleting?.name ?? "")”？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
+            if let group = deleting { PiliAlertButton("删除", role: .destructive) { Task { await model.perform(.deleteGroup(group.id)) } } }
+        } message: { "删除的是分组，关注关系会保留。" }
     }
     private func synchronize() { if !changedOrder { order = model.groups.filter(\.isCustom) } }
 }
@@ -65,18 +64,18 @@ struct PiliFollowGroupsView: View {
 private struct PiliFollowGroupEditor: View {
     @ObservedObject var model: PiliRelationsModel
     let group: PiliFollowGroup?
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var name = ""
     @State private var initialized = false
     var body: some View {
-        Form {
+        PiliForm {
             TextField("分组名称", text: $name)
             Text("\(name.count)/16 字").foregroundStyle(Color.cc.mutedForeground)
             if let message = model.errorMessage { Text(message).foregroundStyle(Color.cc.destructive) }
         }
         .navigationTitle(group == nil ? "新建分组" : "重命名分组")
         .disabled(model.mutating || !model.isCurrent)
-        .interactiveDismissDisabled(model.mutating)
+        .piliInteractiveDismissDisabled(model.mutating)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.disabled(model.mutating) }
             ToolbarItem(placement: .confirmationAction) {
@@ -94,13 +93,13 @@ private struct PiliFollowGroupEditor: View {
 struct PiliUserGroupsView: View {
     @ObservedObject var model: PiliRelationsModel
     let user: PiliRelationUser
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var selected = Set<Int>()
     @State private var loading = false
     @State private var loaded = false
     @State private var errorMessage: String?
     var body: some View {
-        List {
+        PiliList {
             Section {
                 Text(user.name).ccText(font: .cc.lg, color: .cc.foreground)
                 Text("可以选择多个分组。全部取消后保存至默认分组。").ccText(font: .cc.sm, color: .cc.mutedForeground)
@@ -121,7 +120,7 @@ struct PiliUserGroupsView: View {
         }
         .navigationTitle("设置关注分组")
         .disabled(model.mutating || !model.isCurrent)
-        .interactiveDismissDisabled(model.mutating)
+        .piliInteractiveDismissDisabled(model.mutating)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.disabled(model.mutating) }
             ToolbarItem(placement: .confirmationAction) {

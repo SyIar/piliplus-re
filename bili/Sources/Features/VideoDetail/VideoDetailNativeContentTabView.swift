@@ -535,7 +535,7 @@ private struct VideoDetailToolbarCommentComposerButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "square.and.pencil")
+            PiliIcon(systemName: "square.and.pencil")
                 .frame(width: Self.size, height: Self.size)
         }
         .tint(.primary)
@@ -549,7 +549,7 @@ private struct VideoDetailToolbarCommentRefreshButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "arrow.clockwise")
+            PiliIcon(systemName: "arrow.clockwise")
                 .frame(
                     width: VideoDetailToolbarCommentComposerButton.size,
                     height: VideoDetailToolbarCommentComposerButton.size

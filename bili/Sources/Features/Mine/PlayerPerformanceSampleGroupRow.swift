@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceSampleGroupRow: View {
     let group: PlayerPerformanceSampleGroup
@@ -13,7 +14,7 @@ struct PlayerPerformanceSampleGroupRow: View {
             )
 
             Text(group.subtitle)
-                .font(.caption)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
@@ -21,7 +22,7 @@ struct PlayerPerformanceSampleGroupRow: View {
 
             if group.issueCount > 0 {
                 Text(issueSummary)
-                    .font(.caption2)
+                    .piliFont(.sm)
                     .foregroundStyle(issueColor)
                     .lineLimit(2)
             }
@@ -31,13 +32,13 @@ struct PlayerPerformanceSampleGroupRow: View {
 
     private var headerColor: Color {
         if group.failedCount > 0 || group.slowStartupCount > 1 || group.accessLogStallCount > 0 {
-            return .orange
+            return Color.cc.warning
         }
-        return isRecommended ? .green : .primary
+        return isRecommended ? Color.cc.success : .primary
     }
 
     private var issueColor: Color {
-        group.failedCount > 0 ? .red : .orange
+        group.failedCount > 0 ? Color.cc.destructive : Color.cc.warning
     }
 
     private var issueSummary: String {
@@ -71,8 +72,8 @@ private struct PlayerPerformanceSampleGroupHeader: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Label(title, systemImage: isRecommended ? "checkmark.seal.fill" : "chart.bar.xaxis")
-                .font(.subheadline.weight(.semibold))
+            PiliLabel(title, systemImage: isRecommended ? "checkmark.seal.fill" : "chart.bar.xaxis")
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(headerColor)
                 .lineLimit(1)
 
@@ -80,8 +81,8 @@ private struct PlayerPerformanceSampleGroupHeader: View {
 
             if isRecommended {
                 Text("样本较优")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.green)
+                    .piliFont(.sm).fontWeight(.semibold)
+                    .foregroundStyle(Color.cc.success)
             }
         }
     }

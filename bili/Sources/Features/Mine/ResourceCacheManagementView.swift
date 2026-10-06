@@ -8,7 +8,7 @@ struct ResourceCacheManagementView: View {
     @State private var isWorking = false
 
     var body: some View {
-        List {
+        PiliList {
             ResourceCacheSummarySection(
                 summary: summary,
                 cacheLimitSubtitle: cacheLimitSubtitle

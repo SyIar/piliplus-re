@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 private struct CommentContentOwnerMIDKey: EnvironmentKey {
     static let defaultValue: Int? = nil
@@ -44,7 +45,7 @@ struct CommentAvatar: View {
             pixelSize: pixelSize,
             displayCachePolicy: .transient
         ) {
-            Image(systemName: "person.crop.circle.fill")
+            PiliIcon(systemName: "person.crop.circle.fill", size: size * 0.9)
                 .font(.system(size: size * 0.9))
                 .foregroundStyle(.tertiary)
         }
@@ -73,14 +74,14 @@ struct CommentAuthorIdentity: View {
                 .lineLimit(1)
 
             if let level = member?.levelInfo?.currentLevel, (1...7).contains(level) {
-                Text("LV\(level)").font(.system(size: 9, weight: .bold, design: .rounded))
+                Text("LV\(level)").piliFont(.smBold)
                     .foregroundStyle(.secondary).accessibilityLabel("等级 \(level)")
             }
             if member?.isVIP == true {
-                Text("大会员").font(.system(size: 9, weight: .medium)).foregroundStyle(.pink)
+                Text("大会员").piliFont(.sm).foregroundStyle(Color.cc.primary)
             }
             if let type = member?.verificationType {
-                Image(systemName: "checkmark.seal.fill").font(.system(size: 11)).foregroundStyle(type == 0 ? .orange : .blue)
+                PiliIcon(systemName: "checkmark.seal.fill", size: 11).piliFont(.sm).foregroundStyle(type == 0 ? Color.cc.warning : Color.cc.primary)
                     .accessibilityLabel(type == 0 ? "个人认证" : "机构认证")
             }
             if showsUPBadge {

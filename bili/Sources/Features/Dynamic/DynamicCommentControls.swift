@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 typealias DynamicCommentAvatar = CommentAvatar
 typealias DynamicCommentMetricBadge = CommentMetricBadge
@@ -13,7 +14,7 @@ struct DynamicCommentImageGrid: View {
             CompactDynamicImageMosaicGrid(
                 images: images,
                 accessibilityName: "评论图片",
-                placeholderFill: Color(.secondarySystemGroupedBackground)
+                placeholderFill: Color.cc.card
             )
             .dynamicCommentHitArea(.control)
         }

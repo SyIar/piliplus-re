@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicFeedCard: View {
     @Environment(\.dynamicDetailNavigationPath) private var detailNavigationPath
@@ -76,7 +77,8 @@ struct DynamicFeedCard: View {
             }
             PiliDynamicAttachments(item: item, api: api)
         }
-        .sheet(item: $commentsTarget) { target in
+        .piliGlassCard()
+        .piliSheet(item: $commentsTarget) { target in
             DynamicCommentsSheet(item: target, api: api)
         }
         .modifier(PiliDynamicManagementModifier(item: item, api: api))
@@ -121,7 +123,7 @@ private struct PreloadedOriginalDynamicDetailsKey: EnvironmentKey {
     static let defaultValue = [String: DynamicFeedItem]()
 }
 
-private extension EnvironmentValues {
+extension EnvironmentValues {
     var dynamicDetailNavigationPath: Binding<NavigationPath>? {
         get { self[DynamicDetailNavigationPathKey.self] }
         set { self[DynamicDetailNavigationPathKey.self] = newValue }
@@ -337,7 +339,7 @@ private struct DynamicDetailView: View {
             isRefreshing: isPullRefreshing,
             isEnabled: libraryStore.usesCustomPullRefresh
         )
-        .background(Color(.systemBackground))
+        .background(Color.cc.background)
         .toolbar {
             if richCommentComposerTarget == nil {
                 DynamicDetailBottomInteractionBar(
@@ -389,7 +391,7 @@ private struct DynamicDetailView: View {
         .onChange(of: libraryStore.blocksGoodsComments) { _, isEnabled in
             commentsViewModel.setBlocksGoodsComments(isEnabled)
         }
-        .sheet(item: $replySheetComment) { comment in
+        .piliSheet(item: $replySheetComment) { comment in
             DynamicCommentRepliesSheet(
                 rootComment: comment,
                 replyStore: commentsViewModel.replyStore,

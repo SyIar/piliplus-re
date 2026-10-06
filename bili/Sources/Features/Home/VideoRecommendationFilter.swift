@@ -12,6 +12,7 @@ nonisolated struct VideoRecommendationFilterConfiguration: Equatable, Sendable {
     let blockedKeywords: [String]
     let appliesToRelatedVideos: Bool
     var blockedUserIDs: Set<Int> = []
+    var advanced: PiliAdvancedRecommendFilter = .init()
 
     var isActive: Bool {
         minimumDurationSeconds > 0
@@ -19,6 +20,7 @@ nonisolated struct VideoRecommendationFilterConfiguration: Equatable, Sendable {
             || minimumLikeRatioPercent > 0
             || !blockedKeywords.isEmpty
             || !blockedUserIDs.isEmpty
+            || !advanced.titlePattern.isEmpty || !advanced.zonePattern.isEmpty
     }
 }
 
@@ -32,14 +34,31 @@ nonisolated enum VideoRecommendationFilter {
         guard context == .feed || configuration.appliesToRelatedVideos else {
             return videos.filter { !configuration.blockedUserIDs.contains($0.owner?.mid ?? 0) }
         }
-        return videos.filter { includes($0, configuration: configuration) }
+        let title = regex(configuration.advanced.titlePattern), zone = regex(configuration.advanced.zonePattern)
+        return videos.filter { includes($0, configuration: configuration, context: context, title: title, zone: zone) }
     }
 
     static func includes(
         _ video: VideoItem,
         configuration: VideoRecommendationFilterConfiguration
     ) -> Bool {
+        includes(video, configuration: configuration, context: .feed,
+                 title: regex(configuration.advanced.titlePattern), zone: regex(configuration.advanced.zonePattern))
+    }
+
+    private static func regex(_ pattern: String) -> NSRegularExpression? {
+        guard !pattern.isEmpty else { return nil }
+        return try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive])
+    }
+
+    private static func includes(_ video: VideoItem, configuration: VideoRecommendationFilterConfiguration,
+                                 context: VideoRecommendationFilterContext, title: NSRegularExpression?, zone: NSRegularExpression?) -> Bool {
         if configuration.blockedUserIDs.contains(video.owner?.mid ?? 0) { return false }
+        if context == .feed, configuration.advanced.exemptsFollowed, video.piliRecommendation?.followed == true { return true }
+        let zoneName = [video.piliZoneName, video.piliRecommendation?.zone].compactMap { $0 }.joined(separator: " ")
+        for (pattern, text) in [(title, video.title), (zone, zoneName)] {
+            if let pattern, pattern.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil { return false }
+        }
         if configuration.minimumDurationSeconds > 0,
            let duration = video.duration,
            duration > 0,
@@ -92,7 +111,8 @@ extension LibraryStore {
             minimumLikeRatioPercent: recommendMinimumLikeRatioPercent,
             blockedKeywords: blockedRecommendKeywords,
             appliesToRelatedVideos: appliesRecommendFiltersToRelatedVideos,
-            blockedUserIDs: PiliBlacklistedCreators.shared.effectiveIDs
+            blockedUserIDs: PiliBlacklistedCreators.shared.effectiveIDs,
+            advanced: advancedRecommendFilter
         )
     }
 }

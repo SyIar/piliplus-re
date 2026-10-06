@@ -1,3 +1,4 @@
+import ChunUI
 import SwiftUI
 import UIKit
 
@@ -30,7 +31,7 @@ struct BiliEmoteText: View {
         textColor: Color = .primary,
         emoteSize: CGFloat = 22,
         leadingName: String? = nil,
-        leadingNameColor: Color = .pink,
+        leadingNameColor: Color = Color.cc.primary,
         showsLinkButtons: Bool = true,
         fillsAvailableWidth: Bool = true,
         typographyRole: AppTypography.Role? = nil,
