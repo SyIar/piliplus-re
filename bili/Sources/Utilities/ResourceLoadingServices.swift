@@ -958,6 +958,10 @@ nonisolated struct BiliNetworkRetryPolicy: Sendable {
     }
 }
 
+extension BiliNetworkRetryPolicy {
+    static let piliSingleRead = BiliNetworkRetryPolicy(label: "mediaRange", attempts: 1, baseDelayNanoseconds: 0, maxDelayNanoseconds: 0, jitterNanoseconds: 0)
+}
+
 nonisolated enum BiliNetworkRetry {
     static func data(
         session: URLSession,
@@ -982,6 +986,21 @@ nonisolated enum BiliNetworkRetry {
         priorityHandle: BiliNetworkTaskPriorityHandle? = nil,
         policy: BiliNetworkRetryPolicy
     ) async throws -> (Data, URLResponse) {
+        try await data(taskFactory: { request, completion in
+            sessionProvider().dataTask(with: request, completionHandler: completion)
+        }, request: request, priority: priority, priorityHandle: priorityHandle, policy: policy)
+    }
+
+    typealias TaskCompletion = @Sendable (Data?, URLResponse?, (any Error)?) -> Void
+    typealias TaskFactory = @Sendable (URLRequest, @escaping TaskCompletion) -> URLSessionDataTask
+
+    static func data(
+        taskFactory: @escaping TaskFactory,
+        request: URLRequest,
+        priority: Float = URLSessionTask.defaultPriority,
+        priorityHandle: BiliNetworkTaskPriorityHandle? = nil,
+        policy: BiliNetworkRetryPolicy
+    ) async throws -> (Data, URLResponse) {
         let canRetryRequest = policy.canRetry(request)
         var lastError: Error?
         let startedAt = Date()
@@ -990,7 +1009,7 @@ nonisolated enum BiliNetworkRetry {
             try Task.checkCancellation()
             do {
                 let (data, response) = try await dataOnce(
-                    session: sessionProvider(),
+                    taskFactory: taskFactory,
                     request: request,
                     priority: priority,
                     priorityHandle: priorityHandle
@@ -1046,7 +1065,7 @@ nonisolated enum BiliNetworkRetry {
     }
 
     private static func dataOnce(
-        session: URLSession,
+        taskFactory: TaskFactory,
         request: URLRequest,
         priority: Float,
         priorityHandle: BiliNetworkTaskPriorityHandle?
@@ -1054,7 +1073,7 @@ nonisolated enum BiliNetworkRetry {
         let taskBox = BiliNetworkURLSessionTaskBox()
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
-                let task = session.dataTask(with: request) { data, response, error in
+                let task = taskFactory(request) { data, response, error in
                     priorityHandle?.unbind()
                     if let error {
                         continuation.resume(throwing: error)
@@ -1309,41 +1328,36 @@ private nonisolated final class BiliNetworkURLSessionTaskBox: @unchecked Sendabl
     }
 }
 
-nonisolated final class BiliPlaybackNetworkSessionPool: @unchecked Sendable {
-    static let shared = BiliPlaybackNetworkSessionPool()
-
+/// Creating a task and retiring its session must be serialized. Returning a raw session
+/// leaves a race between lookup and dataTask creation when the network path changes.
+nonisolated final class BiliNetworkSessionSource: @unchecked Sendable {
     private let lock = NSLock()
-    private var dataSession = BiliURLSessionFactory.makePlaybackDataSession()
-    private var probeSession = BiliURLSessionFactory.makePlaybackProbeSession()
+    private var session: URLSession
+    init(_ session: URLSession) { self.session = session }
+    deinit { session.finishTasksAndInvalidate() }
+    func task(for request: URLRequest, completion: @escaping BiliNetworkRetry.TaskCompletion) -> URLSessionDataTask {
+        lock.lock()
+        defer { lock.unlock() }
+        return session.dataTask(with: request, completionHandler: completion)
+    }
+    func replace(with replacement: URLSession) {
+        lock.lock()
+        let previous = session
+        session = replacement
+        lock.unlock()
+        // Tasks already registered on previous may finish. Every new task uses replacement.
+        previous.finishTasksAndInvalidate()
+    }
+}
 
+nonisolated final class BiliPlaybackNetworkSessionPool: Sendable {
+    static let shared = BiliPlaybackNetworkSessionPool()
+    let data = BiliNetworkSessionSource(BiliURLSessionFactory.makePlaybackDataSession())
+    let probe = BiliNetworkSessionSource(BiliURLSessionFactory.makePlaybackProbeSession())
     private init() {}
-
-    func playbackDataSession() -> URLSession {
-        lock.lock()
-        let session = dataSession
-        lock.unlock()
-        return session
-    }
-
-    func playbackProbeSession() -> URLSession {
-        lock.lock()
-        let session = probeSession
-        lock.unlock()
-        return session
-    }
-
     func refreshForNetworkPathChange() {
-        let oldDataSession: URLSession
-        let oldProbeSession: URLSession
-        lock.lock()
-        oldDataSession = dataSession
-        oldProbeSession = probeSession
-        dataSession = BiliURLSessionFactory.makePlaybackDataSession()
-        probeSession = BiliURLSessionFactory.makePlaybackProbeSession()
-        lock.unlock()
-
-        oldDataSession.finishTasksAndInvalidate()
-        oldProbeSession.finishTasksAndInvalidate()
+        data.replace(with: BiliURLSessionFactory.makePlaybackDataSession())
+        probe.replace(with: BiliURLSessionFactory.makePlaybackProbeSession())
     }
 }
 

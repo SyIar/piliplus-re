@@ -4736,7 +4736,10 @@ struct LocalHLSBridge: Sendable {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await BiliPlaybackNetworkSessionPool.shared.playbackDataSession().data(for: request)
+            (data, response) = try await BiliNetworkRetry.data(
+                taskFactory: { BiliPlaybackNetworkSessionPool.shared.data.task(for: $0, completion: $1) },
+                request: request, policy: .piliSingleRead
+            )
         } catch let error as URLError {
             throw HLSBridgeRemoteFailure.urlSession(error, url: url, range: range)
         } catch {
@@ -5842,7 +5845,7 @@ nonisolated private final class LocalLiveHLSProxy: @unchecked Sendable {
         request.networkServiceType = .video
         headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
         let (data, response) = try await BiliNetworkRetry.data(
-            sessionProvider: { BiliPlaybackNetworkSessionPool.shared.playbackDataSession() },
+            taskFactory: { BiliPlaybackNetworkSessionPool.shared.data.task(for: $0, completion: $1) },
             request: request,
             policy: .playbackShortResource
         )

@@ -55,7 +55,7 @@ final class PiliSocialContentTests: XCTestCase {
         try FileManager.default.setAttributes([.modificationDate: originalDate], ofItemAtPath: file.path)
         draft.tokens.append(.init(text: "变更"))
         try await store.save(draft, images: [image], key: "1.dynamic.new")
-        XCTAssertEqual(try file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate, originalDate)
+        XCTAssertEqual(try FileManager.default.attributesOfItem(atPath: file.path)[.modificationDate] as? Date, originalDate)
         let own = try await store.load(key: "1.dynamic.new"), other = try await store.load(key: "2.dynamic.new")
         XCTAssertEqual(own?.0.plainText, "草稿变更"); XCTAssertEqual(own?.1.first?.data, image.data); XCTAssertNil(other)
         try await store.remove(key: "1.dynamic.new")

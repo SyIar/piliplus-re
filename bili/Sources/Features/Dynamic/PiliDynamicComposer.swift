@@ -22,6 +22,7 @@ struct PiliDynamicComposer: View {
     @State private var picker: PickerKind?
     @State private var restored = false
     @State private var loadingPhotos = false
+    @State private var photoGeneration = UUID()
     @State private var sending = false
     @State private var published = false
     @State private var needsDraftRecovery = false
@@ -131,7 +132,7 @@ struct PiliDynamicComposer: View {
             .onChange(of: content) { _, _ in if restored { revision += 1 } }
             .onChange(of: timed) { _, value in content.scheduledAt = value ? publishDate : nil }
             .onChange(of: publishDate) { _, value in if timed { content.scheduledAt = value } }
-            .onChange(of: photos) { _, selected in Task { await loadPhotos(selected) } }
+            .task(id: photos) { await loadPhotos(photos) }
             .onDisappear { if restored && !published && !needsDraftRecovery { Task { try? await saveDraft() } } }
         }
     }
@@ -183,16 +184,19 @@ struct PiliDynamicComposer: View {
         try await PiliDraftStorage.shared.save(content, images: rich.images.map { .init(id: $0.id, data: $0.data) }, key: draftKey)
     }
     private func loadPhotos(_ selected: [PhotosPickerItem]) async {
-        guard !loadingPhotos, !selected.isEmpty else { return }
-        loadingPhotos = true; defer { loadingPhotos = false; photos = [] }
+        guard !selected.isEmpty else { return }
+        let generation = UUID(); photoGeneration = generation
+        loadingPhotos = true
+        defer { if photoGeneration == generation { loadingPhotos = false; if !Task.isCancelled { photos = [] } } }
         do {
             for item in selected.prefix(max(0, 9 - content.pictures.count - rich.images.count)) {
                 try Task.checkCancellation()
                 guard let data = try await item.loadTransferable(type: Data.self), let jpeg = await PiliImagePreparation.jpeg(data) else { throw PiliOfflineError.message("无法读取图片，单张原图需小于 40 MB") }
+                try Task.checkCancellation()
                 rich.images.append(.init(sourceIdentifier: item.itemIdentifier, data: jpeg))
             }
             revision += 1
-        } catch { self.error = error.localizedDescription }
+        } catch is CancellationError {} catch { self.error = error.localizedDescription }
     }
     private func publish() async {
         guard !sending, accountValid else { return }

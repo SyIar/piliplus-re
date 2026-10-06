@@ -4402,13 +4402,13 @@ actor RemoteImageCache {
     private var failedLoads: [ImageCacheKey: Date] = [:]
     private var appliedBudget: RemoteImageAdaptiveBudget?
     private var diskTrimTask: Task<Void, Never>?
-    private var session: URLSession
+    private let session: BiliNetworkSessionSource
     private let maximumInFlightLoads = 18
     private let failedLoadTTL: TimeInterval = 2
     private let diskTrimDelayNanoseconds: UInt64 = 1_500_000_000
 
     private init() {
-        session = BiliURLSessionFactory.makeImageSession()
+        session = BiliNetworkSessionSource(BiliURLSessionFactory.makeImageSession())
         let initialBudget = RemoteImageAdaptiveBudget.current
         appliedBudget = initialBudget
         cache.countLimit = initialBudget.memoryEntryLimit
@@ -4445,9 +4445,7 @@ actor RemoteImageCache {
         inFlight.removeAll()
         inFlightOrder.removeAll()
         failedLoads.removeAll()
-        let oldSession = session
-        session = BiliURLSessionFactory.makeImageSession()
-        oldSession.finishTasksAndInvalidate()
+        session.replace(with: BiliURLSessionFactory.makeImageSession())
     }
 
     func image(
@@ -4803,7 +4801,7 @@ actor RemoteImageCache {
         let task = Task(priority: priority.taskPriority) { () -> UIImage? in
             do {
                 let (data, response) = try await BiliNetworkRetry.data(
-                    session: session,
+                    taskFactory: { session.task(for: $0, completion: $1) },
                     request: request,
                     priority: networkPriority,
                     priorityHandle: priorityHandle,
