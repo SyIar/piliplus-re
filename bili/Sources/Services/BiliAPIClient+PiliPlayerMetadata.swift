@@ -4,7 +4,7 @@ import PiliPlaybackCore
 extension BiliAPIClient {
     func fetchPiliSubtitleTracks(bvid: String, aid: Int? = nil, cid: Int,
                                  seasonID: Int? = nil, episodeID: Int? = nil) async throws -> [PiliSubtitleTrack] {
-        let context = await requestSnapshot(purpose: .playback)
+        let context = requestSnapshot(purpose: .playback)
         let metadata = try await fetchPiliPlayerMetadata(bvid: bvid, cid: cid, seasonID: seasonID, episodeID: episodeID)
         let tracks = metadata.subtitle?.subtitles ?? []
         guard tracks.isEmpty, !context.isLoggedIn, !bvid.hasPrefix("pugv-") else { return tracks }
@@ -16,7 +16,7 @@ extension BiliAPIClient {
         request.set(1, integer: resolvedAID); request.set(2, integer: cid); request.set(3, integer: 1)
         let response = try await piliGRPC("/bilibili.community.service.dm.v1.DM/DmView", message: request,
             identity: nil, needsLogin: false, purpose: .playback)
-        guard await requestSnapshot(purpose: .playback).playbackCredentialVersion == context.playbackCredentialVersion else {
+        guard requestSnapshot(purpose: .playback).playbackCredentialVersion == context.playbackCredentialVersion else {
             throw PiliOfflineError.message("播放账号已切换")
         }
         return try Self.piliGuestSubtitleTracks(response)

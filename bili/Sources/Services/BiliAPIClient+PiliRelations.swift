@@ -56,7 +56,7 @@ nonisolated enum PiliRelationMutation: Sendable {
 
 extension BiliAPIClient {
     func fetchPiliFollowGroups(identity: PiliAccountIdentity) async throws -> [PiliFollowGroup] {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开关注管理") }
         let response: BiliResponse<DynamicJSONValue> = try await get(base: baseURL, path: "/x/relation/tags", query: [:],
             cookieHeader: context.cookieHeader, cachePolicy: .reloadIgnoringLocalCacheData)
@@ -67,7 +67,7 @@ extension BiliAPIClient {
     }
 
     func fetchPiliRelationGroups(mid: Int, identity: PiliAccountIdentity) async throws -> Set<Int> {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context), mid > 0 else { throw PiliOfflineError.message("账号已切换，请重新打开关注管理") }
         let response: BiliResponse<DynamicJSONValue> = try await get(base: baseURL, path: "/x/relation", query: ["fid": String(mid)],
             cookieHeader: context.cookieHeader, cachePolicy: .reloadIgnoringLocalCacheData)
@@ -82,7 +82,7 @@ extension BiliAPIClient {
 
     func fetchPiliRelations(kind: PiliRelationList, ownerMID: Int, page: Int, group: Int?, frequent: Bool,
                            keyword: String, identity: PiliAccountIdentity) async throws -> PiliRelationPage {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard ownerMID > 0, page > 0, identity.mid == (context.currentUserMID ?? 0), identity.version == context.playbackCredentialVersion else {
             throw PiliOfflineError.message("账号已切换，请重新打开关注管理")
         }
@@ -123,7 +123,7 @@ extension BiliAPIClient {
 
     @discardableResult
     func mutatePiliRelation(_ action: PiliRelationMutation, identity: PiliAccountIdentity) async throws -> Int? {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开关注管理") }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }
         var body = ["csrf": csrf]

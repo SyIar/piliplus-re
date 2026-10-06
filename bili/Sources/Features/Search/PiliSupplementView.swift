@@ -75,7 +75,7 @@ struct PiliMusicView: View {
     private func load() async {
         guard !busy else { return }; busy = true; defer { busy = false }
         do {
-            identity = PiliAccountIdentity(await api.requestSnapshot())
+            identity = PiliAccountIdentity(api.requestSnapshot())
             async let info = api.piliMusic(id)
             async let related = api.piliMusicRecommendations(id)
             detail = try await info; wished = detail["wish_listen"].piliInt != 0

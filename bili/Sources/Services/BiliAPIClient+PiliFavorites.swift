@@ -26,7 +26,7 @@ extension FavoriteFolder {
 
 extension BiliAPIClient {
     func fetchPiliFavoriteFolder(id: Int) async throws -> FavoriteFolder {
-        let context = await requestSnapshot(purpose: .interaction)
+        let context = requestSnapshot(purpose: .interaction)
         let response: BiliResponse<FavoriteFolder> = try await get(base: baseURL, path: "/x/v3/fav/folder/info",
                                                                  query: ["media_id": String(id)], cookieHeader: context.cookieHeader,
                                                                  cachePolicy: .reloadIgnoringLocalCacheData)
@@ -35,7 +35,7 @@ extension BiliAPIClient {
         return folder
     }
     func fetchPiliFavoriteItems(folderID: Int, page: Int, keyword: String = "", order: PiliFavoriteOrder = .favoriteTime) async throws -> AccountVideoEntryPage {
-        let context = await requestSnapshot(purpose: .interaction)
+        let context = requestSnapshot(purpose: .interaction)
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         let response: BiliResponse<DynamicJSONValue> = try await get(
             base: baseURL, path: "/x/v3/fav/resource/list",
@@ -94,7 +94,7 @@ extension BiliAPIClient {
             guard target > 0, target != folderID else { throw PiliOfflineError.message("请选择另一个收藏夹") }
             fields["src_media_id"] = String(folderID); fields["tar_media_id"] = String(target)
             if case .copy = action { path = "/x/v3/fav/resource/copy" } else { path = "/x/v3/fav/resource/move" }
-            let context = await requestSnapshot(purpose: .interaction)
+            let context = requestSnapshot(purpose: .interaction)
             if let mid = context.currentUserMID { fields["mid"] = String(mid) }
         }
         try await mutatePiliFavorites(path: path, fields: fields, credentialVersion: credentialVersion)
@@ -111,7 +111,7 @@ extension BiliAPIClient {
         return url
     }
     private func piliFavoriteContext(_ credentialVersion: Int) async throws -> RequestSnapshot {
-        let context = await requestSnapshot(purpose: .interaction)
+        let context = requestSnapshot(purpose: .interaction)
         guard context.playbackCredentialVersion == credentialVersion else { throw PiliOfflineError.message("账号已切换，请重新打开收藏管理") }
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }

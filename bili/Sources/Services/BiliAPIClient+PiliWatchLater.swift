@@ -8,7 +8,7 @@ nonisolated struct PiliWatchLaterFilter: Hashable, Sendable {
 
 extension BiliAPIClient {
     func fetchPiliWatchLaterPage(page: Int, filter: PiliWatchLaterFilter) async throws -> AccountVideoEntryPage {
-        let context = await requestSnapshot(purpose: .historyRead)
+        let context = requestSnapshot(purpose: .historyRead)
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         let query = try await signedWBIQuery([
             "pn": String(page), "ps": "20", "viewed": filter.unfinished ? "2" : "0",
@@ -23,7 +23,7 @@ extension BiliAPIClient {
         return AccountVideoEntryPage(entries: entries, hasMore: count.map { page * 20 < $0 } ?? (entries.count >= 20), nextHistoryCursor: nil)
     }
     func fetchPiliFavoriteDestinations(purpose: BiliAccountPurpose) async throws -> [FavoriteFolder] {
-        let context = await requestSnapshot(purpose: purpose)
+        let context = requestSnapshot(purpose: purpose)
         guard context.isLoggedIn, let mid = context.currentUserMID else { throw BiliAPIError.missingSESSDATA }
         let response: BiliResponse<FavoriteFolderListData> = try await get(base: baseURL, path: "/x/v3/fav/folder/created/list-all",
                                                                         query: ["up_mid": String(mid), "type": "2"],
@@ -32,7 +32,7 @@ extension BiliAPIClient {
         return response.payload?.list?.filter { $0.id > 0 } ?? []
     }
     func mutatePiliWatchLater(aids: [Int], targetFolder: Int? = nil, move: Bool = false, credentialVersion: Int) async throws {
-        let context = await requestSnapshot(purpose: .historyRead)
+        let context = requestSnapshot(purpose: .historyRead)
         guard context.playbackCredentialVersion == credentialVersion else { throw PiliOfflineError.message("账号已切换，请重新打开稍后再看") }
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }

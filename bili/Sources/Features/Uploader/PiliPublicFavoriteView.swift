@@ -35,7 +35,7 @@ struct PiliPublicFavoriteView: View {
             else if more { Button("加载更多") { Task { await load() } } }
             else if items.isEmpty { Text("没有匹配的内容") }
         }.navigationTitle(folder.displayTitle).searchable(text: $keyword, prompt: "搜索收藏夹")
-            .task { identity = PiliAccountIdentity(await api.requestSnapshot()); await load(reset: true) }
+            .task { identity = PiliAccountIdentity(api.requestSnapshot()); await load(reset: true) }
             .onSubmit(of: .search) { Task { await load(reset: true) } }.onChange(of: order) { Task { await load(reset: true) } }
             .refreshable { await load(reset: true) }
     }

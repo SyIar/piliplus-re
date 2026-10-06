@@ -32,7 +32,7 @@ extension BiliAPIClient {
     private func mutateWatchLater(path: String, values: [String: String], credentialVersion: Int? = nil) async throws {
         // Use the same account purpose as fetchAccountWatchLater; never mix
         // one account's CSRF token with another account's Cookie header.
-        let context = await requestSnapshot(purpose: .historyRead)
+        let context = requestSnapshot(purpose: .historyRead)
         if let credentialVersion, credentialVersion != context.playbackCredentialVersion {
             throw PiliOfflineError.message("账号已切换，请重新打开稍后再看")
         }

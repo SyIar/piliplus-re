@@ -47,7 +47,7 @@ extension BiliAPIClient {
     }
     func piliCastVote(id: Int, options: Set<Int>, anonymous: Bool, dynamicID: String?, identity: PiliAccountIdentity) async throws -> DynamicJSONValue {
         guard id > 0, !options.isEmpty else { throw BiliAPIError.missingPayload }
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context), let csrf = context.csrfToken else { throw BiliAPIError.missingCSRF }
         return try await piliContentWrite("/x/vote/do_vote", body: .object([
             "vote_id": .int(id), "votes": .array(options.sorted().map(PiliJSON.int)), "voter_uid": .int(identity.mid),

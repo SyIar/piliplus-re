@@ -74,7 +74,7 @@ struct PiliCollectedContentView: View {
         else if busy || !more { return }
         let ticket = generation; busy = true; error = nil; defer { if ticket == generation { busy = false } }
         do {
-            let context = await dependencies.api.requestSnapshot()
+            let context = dependencies.api.requestSnapshot()
             if identity == nil { identity = .init(context) }
             guard let identity, identity.matches(context) else { throw BiliAPIError.missingSESSDATA }
             let result = try await dependencies.api.piliCollectedContent(kind, page: page, status: status, identity: identity)

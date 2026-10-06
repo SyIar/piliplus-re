@@ -46,14 +46,14 @@ extension BiliAPIClient {
     func piliContentRead(_ path: String, query: [String: String] = [:], signed: Bool = false,
                          purpose: BiliAccountPurpose = .main, identity: PiliAccountIdentity? = nil,
                          base: URL? = nil, referer: String = "https://www.bilibili.com/") async throws -> DynamicJSONValue {
-        let context = await requestSnapshot(purpose: purpose)
+        let context = requestSnapshot(purpose: purpose)
         if let identity, !identity.matches(context) { throw PiliOfflineError.message("账号已切换，请重新打开页面") }
         let parameters = signed ? try await signedWBIQuery(query) : query
         let response: BiliResponse<DynamicJSONValue> = try await get(
             base: base ?? baseURL, path: path, query: parameters, referer: referer,
             cookieHeader: context.isLoggedIn ? context.cookieHeader : context.anonymousCookieHeader,
             cachePolicy: .reloadIgnoringLocalCacheData)
-        if let identity, !(await identity.matches(requestSnapshot(purpose: purpose))) {
+        if let identity, !(identity.matches(requestSnapshot(purpose: purpose))) {
             throw PiliOfflineError.message("账号已切换，请重新打开页面")
         }
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
@@ -65,13 +65,13 @@ extension BiliAPIClient {
                           query: [String: String] = [:], signed: Bool = false,
                           identity: PiliAccountIdentity, purpose: BiliAccountPurpose = .main,
                           base: URL? = nil, referer: String = "https://www.bilibili.com/") async throws -> DynamicJSONValue {
-        let context = await requestSnapshot(purpose: purpose)
+        let context = requestSnapshot(purpose: purpose)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开页面") }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }
         var parameters = query; parameters["csrf"] = csrf
         if signed { parameters = try await signedWBIQuery(parameters) }
         try Task.checkCancellation()
-        guard await identity.matches(requestSnapshot(purpose: purpose)) else { throw PiliOfflineError.message("账号已切换") }
+        guard identity.matches(requestSnapshot(purpose: purpose)) else { throw PiliOfflineError.message("账号已切换") }
         let response: BiliResponse<DynamicJSONValue>
         if var fields {
             fields["csrf"] = csrf
@@ -92,7 +92,7 @@ extension BiliAPIClient {
     }
 
     func uploadPiliContentImage(_ bytes: Data, identity: PiliAccountIdentity, biz: String = "new_dyn") async throws -> DynamicCommentImage {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开编辑器") }
         guard let csrf = context.csrfToken else { throw BiliAPIError.missingCSRF }
         guard !bytes.isEmpty, bytes.count <= 10 * 1024 * 1024 else { throw PiliOfflineError.message("图片需小于 10 MB") }

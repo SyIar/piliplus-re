@@ -8,7 +8,7 @@ nonisolated struct PiliChatSettings: Equatable, Sendable {
 
 extension BiliAPIClient {
     func fetchPiliChatSettings(talkerID: Int, identity: PiliAccountIdentity) async throws -> PiliChatSettings {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context), talkerID > 0 else { throw PiliOfflineError.message("账号已切换，请重新打开聊天设置") }
         let base = URL(string: "https://api.vc.bilibili.com")!
         let common = ["build": "0", "mobi_app": "web", "csrf": context.csrfToken ?? "", "csrf_token": context.csrfToken ?? ""]
@@ -37,7 +37,7 @@ extension BiliAPIClient {
     }
 
     func setPiliChatSetting(talkerID: Int, receivesPush: Bool? = nil, muted: Bool? = nil, identity: PiliAccountIdentity) async throws {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context), talkerID > 0 else { throw PiliOfflineError.message("账号已切换，请重新打开聊天设置") }
         guard (receivesPush != nil) != (muted != nil) else { throw BiliAPIError.missingPayload }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }

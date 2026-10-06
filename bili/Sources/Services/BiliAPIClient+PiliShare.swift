@@ -38,7 +38,7 @@ extension BiliAPIClient {
     }
     func piliSendCard(_ card: PiliShareCard, recipient: Int, identity: PiliAccountIdentity) async throws {
         guard recipient > 0 else { throw BiliAPIError.missingPayload }
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context), let csrf = context.csrfToken else { throw BiliAPIError.missingCSRF }
         let device = UUID().uuidString, content = String(decoding: try JSONEncoder().encode(card.body), as: UTF8.self)
         let query = try await signedWBIQuery(["w_sender_uid": String(identity.mid), "w_receiver_id": String(recipient), "w_dev_id": device])

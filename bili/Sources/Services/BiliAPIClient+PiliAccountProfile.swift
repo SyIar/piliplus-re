@@ -45,7 +45,7 @@ nonisolated struct PiliOwnProfile: Sendable {
 
 extension BiliAPIClient {
     func fetchPiliOwnProfile(identity: PiliAccountIdentity) async throws -> PiliOwnProfile {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开个人资料") }
         let response: BiliResponse<DynamicJSONValue>
         if let key = context.appAccessKey, !key.isEmpty {
@@ -63,7 +63,7 @@ extension BiliAPIClient {
         return result
     }
     func updatePiliProfile(_ field: PiliProfileField, value: String, identity: PiliAccountIdentity) async throws {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开个人资料") }
         guard let accessKey = context.appAccessKey, !accessKey.isEmpty else {
             throw PiliOfflineError.message("修改此项需要 App 登录，请在登录页使用 App 扫码或短信登录")
@@ -94,7 +94,7 @@ extension BiliAPIClient {
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
     }
     func updatePiliAvatar(jpeg: Data, identity: PiliAccountIdentity) async throws {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开个人资料") }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }
         guard !jpeg.isEmpty, jpeg.count <= 5 * 1024 * 1024 else { throw PiliOfflineError.message("头像图片需小于 5 MB") }

@@ -23,7 +23,7 @@ nonisolated struct PiliCommentReportReason: Identifiable, Hashable, Sendable {
 extension BiliAPIClient {
     func mutatePiliComment(_ action: PiliCommentMutation, oid: String, type: Int, rpid: Int,
                            identity: PiliAccountIdentity, referer: String) async throws {
-        let context = await requestSnapshot(purpose: .interaction)
+        let context = requestSnapshot(purpose: .interaction)
         guard identity.matches(context) else { throw PiliOfflineError.message("互动账号已切换，请重新打开评论菜单") }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }
         guard let numericOID = Int64(oid), numericOID > 0, type > 0, rpid > 0 else { throw BiliAPIError.missingPayload }

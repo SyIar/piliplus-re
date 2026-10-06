@@ -74,7 +74,7 @@ nonisolated enum PiliHistoryMutation: Sendable {
 extension BiliAPIClient {
     func fetchPiliHistoryPage(type: String = "all", keyword: String = "", page: Int = 1,
                              max: Int = 0, viewedAt: Int = 0, credentialVersion: Int) async throws -> PiliHistoryPage {
-        let context = await requestSnapshot(purpose: .historyRead)
+        let context = requestSnapshot(purpose: .historyRead)
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         guard context.playbackCredentialVersion == credentialVersion else { throw PiliOfflineError.message("账号已切换，请重新加载历史记录") }
         let searching = !keyword.isEmpty
@@ -105,19 +105,19 @@ extension BiliAPIClient {
     }
 
     func fetchPiliHistoryPaused(credentialVersion: Int) async throws -> Bool {
-        let context = await requestSnapshot(purpose: .historyRead)
+        let context = requestSnapshot(purpose: .historyRead)
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         guard context.playbackCredentialVersion == credentialVersion else { throw CancellationError() }
         let response: BiliResponse<Bool> = try await get(base: baseURL, path: "/x/v2/history/shadow", query: ["jsonp": "jsonp"],
                                                        cookieHeader: context.cookieHeader, cachePolicy: .reloadIgnoringLocalCacheData)
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
         guard let paused = response.payload else { throw BiliAPIError.missingPayload }
-        await libraryStore.setPiliCloudHistoryPaused(paused, mid: context.currentUserMID)
+        libraryStore.setPiliCloudHistoryPaused(paused, mid: context.currentUserMID)
         return paused
     }
 
     func mutatePiliHistory(_ action: PiliHistoryMutation, credentialVersion: Int) async throws {
-        let context = await requestSnapshot(purpose: .historyRead)
+        let context = requestSnapshot(purpose: .historyRead)
         guard context.playbackCredentialVersion == credentialVersion else { throw PiliOfflineError.message("账号已切换，请重新加载历史记录") }
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }
@@ -138,6 +138,6 @@ extension BiliAPIClient {
             cookieHeader: context.cookieHeader,
             retryPolicy: .init(label: "historyMutation", attempts: 1, baseDelayNanoseconds: 0, maxDelayNanoseconds: 0, jitterNanoseconds: 0))
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
-        if case let .pause(paused) = action { await libraryStore.setPiliCloudHistoryPaused(paused, mid: context.currentUserMID) }
+        if case let .pause(paused) = action { libraryStore.setPiliCloudHistoryPaused(paused, mid: context.currentUserMID) }
     }
 }

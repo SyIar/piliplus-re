@@ -12,7 +12,7 @@ extension BiliAPIClient {
             body: draft.payload(mid: identity.mid, uploadID: uploadID), query: query, signed: draft.editingID != nil, identity: identity)
         let id = result["dyn_id_str"].piliString
         if !id.isEmpty, !draft.privatePost, draft.scheduledAt == nil {
-            await PiliVisibilityCheckCenter.shared.schedule(.dynamic(id), api: self, identity: identity)
+            PiliVisibilityCheckCenter.shared.schedule(.dynamic(id), api: self, identity: identity)
         }
         return id
     }
@@ -51,7 +51,7 @@ extension BiliAPIClient {
             duration: days * 86400, options: options.map { ($0, "") }, identity: identity)
     }
     func fetchPiliDynamicSearch(mid: Int, keyword: String, offset: String = "", page: Int = 1) async throws -> DynamicFeedData {
-        let context = await requestSnapshot(purpose: .dynamicFeed)
+        let context = requestSnapshot(purpose: .dynamicFeed)
         let query = ["host_mid": String(mid), "keyword": keyword, "offset": offset, "page": String(page), "web_location": "333.1387", "features": "itemOpusStyle"]
         let response: BiliResponse<DynamicFeedData> = try await get(base: baseURL, path: "/x/polymer/web-dynamic/v1/feed/space/search", query: query,
             cookieHeader: context.isLoggedIn ? context.cookieHeader : context.anonymousCookieHeader, cachePolicy: .reloadIgnoringLocalCacheData)

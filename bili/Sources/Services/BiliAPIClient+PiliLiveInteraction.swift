@@ -75,7 +75,7 @@ extension BiliAPIClient {
     func piliSendLive(roomID: Int, message: String, emote: Bool, identity: PiliAccountIdentity, reply: PiliLiveMessageMetadata? = nil) async throws {
         let text = message.trimmingCharacters(in: .whitespacesAndNewlines)
         guard roomID > 0, !text.isEmpty, text.utf16.count <= 1000 else { throw PiliOfflineError.message("请输入弹幕，最多 1000 字；直播间实际字数限制以平台返回为准") }
-        let context = await requestSnapshot()
+        let context = requestSnapshot()
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开输入框") }
         var fields = ["bubble": "0", "msg": text, "color": "16777215", "mode": "1", "fontsize": "25",
             "rnd": String(Int(Date().timeIntervalSince1970)), "roomid": String(roomID), "csrf_token": context.csrfToken ?? ""]
@@ -92,7 +92,7 @@ extension BiliAPIClient {
     }
     func piliReportSuperChat(_ item: PiliSuperChat, roomID: Int, reason: String, identity: PiliAccountIdentity) async throws {
         guard !reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw PiliOfflineError.message("请填写举报原因") }
-        let context = await requestSnapshot()
+        let context = requestSnapshot()
         try await piliContentWrite("/av/v1/SuperChat/report", fields: ["id": String(item.id), "id_str": String(item.id),
             "roomid": String(roomID), "uid": String(item.uid), "msg": item.message, "reason": reason, "reason_id": reason,
             "ts": String(item.timestamp), "token": item.token, "sign": "", "visit_id": "", "csrf_token": context.csrfToken ?? ""],

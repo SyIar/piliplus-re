@@ -19,7 +19,7 @@ nonisolated struct PiliVisibilityResult: Identifiable, Sendable {
 
 extension BiliAPIClient {
     func piliCheckVisibility(_ target: PiliVisibilityTarget, identity: PiliAccountIdentity) async throws -> PiliVisibilityResult {
-        let context = await requestSnapshot(purpose: target.purpose)
+        let context = requestSnapshot(purpose: target.purpose)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新检查") }
         func read(_ path: String, query: [String: String], anonymous: Bool) async throws -> BiliResponse<DynamicJSONValue> {
             try await get(base: baseURL, path: path, query: query, cookieHeader: anonymous ? "" : context.cookieHeader,
@@ -50,7 +50,7 @@ extension BiliAPIClient {
             visible = found
             if !found, !exhausted { note = "（回复较多，已检查前 1000 条）" }
         }
-        guard await identity.matches(requestSnapshot(purpose: target.purpose)) else { throw PiliOfflineError.message("账号已切换，请重新检查") }
+        guard identity.matches(requestSnapshot(purpose: target.purpose)) else { throw PiliOfflineError.message("账号已切换，请重新检查") }
         return .init(title: "\(target.title)可见性检查", message: visible
             ? "未携带账号 Cookie 时可以读取此\(target.title)。此结果不代表所有推荐或列表都会展示。"
             : "目前未能以游客身份读取此\(target.title)\(note)。审核延迟、隐私设置、登录要求或平台限制都可能影响结果，可稍后重试或申诉。", publicRead: visible)

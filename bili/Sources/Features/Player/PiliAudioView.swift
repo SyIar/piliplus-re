@@ -143,7 +143,7 @@ struct PiliAudioView: View {
         Task {
             defer { actionBusy = false }
             do {
-                let identity = PiliAccountIdentity(await model.api.requestSnapshot(purpose: .interaction))
+                let identity = PiliAccountIdentity(model.api.requestSnapshot(purpose: .interaction))
                 let response = try await model.api.piliAudioAction(method, item: track.item, liked: model.liked, coins: coins, identity: identity)
                 if model.selected?.id == track.id {
                     if method == "ThumbUp" { model.liked.toggle() }
@@ -177,7 +177,7 @@ private struct PiliAudioFavoritesView: View {
         }.navigationTitle("收藏音频").task {
             busy = true; defer { busy = false }
             do {
-                let identity = PiliAccountIdentity(await api.requestSnapshot(purpose: .interaction)); self.identity = identity
+                let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .interaction)); self.identity = identity
                 let data = try await api.piliContentRead("/x/v3/fav/folder/created/list-all", query: ["up_mid": String(identity.mid), "type": "12", "rid": String(id)], purpose: .interaction, identity: identity)
                 folders = data["list"].piliArray; initial = Set(folders.filter { $0["fav_state"].piliInt == 1 }.map { $0["id"].piliInt }); selection = initial
             } catch { self.error = error.localizedDescription }

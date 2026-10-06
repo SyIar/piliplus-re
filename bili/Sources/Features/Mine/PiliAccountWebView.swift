@@ -20,7 +20,7 @@ struct PiliAccountWebView: View {
             if api.requestSnapshot(purpose: purpose).playbackCredentialVersion != version {
                 ContentUnavailableView("账号已切换", systemImage: "person.crop.circle.badge.exclamationmark", description: Text("请重新打开此页面"))
             } else {
-                PiliIsolatedWebPage(url: url, cookies: api.requestSnapshot(purpose: purpose).cookieHeader ?? "")
+                PiliIsolatedWebPage(url: url, cookies: api.requestSnapshot(purpose: purpose).cookieHeader)
             }
         }.navigationTitle(title).navigationBarTitleDisplayMode(.inline)
     }

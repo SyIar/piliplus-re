@@ -17,7 +17,7 @@ nonisolated struct PiliAudioLanguages: Decodable, Sendable {
 extension BiliAPIClient {
     func piliLanguagePlayURL(bvid: String, cid: Int, language: String, quality: Int,
                             seasonID: Int? = nil, episodeID: Int? = nil) async throws -> PlayURLData {
-        let snapshot = await requestSnapshot(purpose: .playback)
+        let snapshot = requestSnapshot(purpose: .playback)
         guard snapshot.isLoggedIn else { throw PiliOfflineError.message("请先登录播放账号以使用原声翻译") }
         var query = ["bvid": bvid, "cid": String(cid), "qn": String(quality), "fnval": "4048", "fnver": "0", "fourk": "1", "cur_language": language]
         if let seasonID { query["season_id"] = String(seasonID) }
@@ -35,7 +35,7 @@ extension BiliAPIClient {
         if !language.isEmpty, value.curLanguage != language {
             throw PiliOfflineError.message("该原声翻译暂不可用")
         }
-        guard await requestSnapshot(purpose: .playback).playbackCredentialVersion == snapshot.playbackCredentialVersion else {
+        guard requestSnapshot(purpose: .playback).playbackCredentialVersion == snapshot.playbackCredentialVersion else {
             throw PiliOfflineError.message("播放账号已切换")
         }
         // Translated streams intentionally bypass the original-audio preload cache.

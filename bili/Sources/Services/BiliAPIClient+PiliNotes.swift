@@ -34,7 +34,7 @@ extension BiliAPIClient {
     }
     func savePiliNote(aid: Int, noteID: String?, title: String, text: String, published: Bool,
                       credentialVersion: Int) async throws -> String {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard context.playbackCredentialVersion == credentialVersion else { throw PiliOfflineError.message("账号已切换，请重新打开笔记") }
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }
@@ -55,7 +55,7 @@ extension BiliAPIClient {
         return id
     }
     func deletePiliNotes(_ records: [PiliNoteRecord], published: Bool, credentialVersion: Int) async throws {
-        let context = await requestSnapshot(purpose: .main)
+        let context = requestSnapshot(purpose: .main)
         guard context.playbackCredentialVersion == credentialVersion else { throw PiliOfflineError.message("账号已切换，请重新加载笔记") }
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }

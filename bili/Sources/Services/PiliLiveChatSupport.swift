@@ -67,19 +67,19 @@ extension BiliAPIClient {
     func piliLiveShieldKeyword(_ keyword: String, remove: Bool, roomID: Int, identity: PiliAccountIdentity) async throws {
         let word = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !word.isEmpty, word.count <= 100 else { throw PiliOfflineError.message("请输入 1–100 字的关键词") }
-        let csrf = await requestSnapshot().csrfToken ?? ""
+        let csrf = requestSnapshot().csrfToken ?? ""
         try await piliContentWrite("/xlive/web-ucenter/v1/banned/\(remove ? "DelShieldKeyword" : "AddShieldKeyword")",
             fields: ["keyword": word, "csrf_token": csrf], identity: identity, base: Self.piliLiveBase, referer: "https://live.bilibili.com/\(roomID)")
     }
     func piliLiveShieldUser(uid: Int, remove: Bool, roomID: Int, identity: PiliAccountIdentity) async throws {
         guard uid > 0 else { throw PiliOfflineError.message("请输入有效 UID") }
-        let csrf = await requestSnapshot().csrfToken ?? ""
+        let csrf = requestSnapshot().csrfToken ?? ""
         try await piliContentWrite("/liveact/shield_user", fields: ["uid": String(uid), "roomid": String(roomID), "type": remove ? "0" : "1", "csrf_token": csrf],
             identity: identity, base: Self.piliLiveBase, referer: "https://live.bilibili.com/\(roomID)")
     }
     func piliReportLiveMessage(_ item: DanmakuItem, roomID: Int, reason: String, reasonID: Int, identity: PiliAccountIdentity) async throws {
         guard let meta = item.liveMetadata, meta.canReport, !reason.isEmpty else { throw PiliOfflineError.message("该弹幕没有提供完整举报凭据") }
-        let csrf = await requestSnapshot().csrfToken ?? ""
+        let csrf = requestSnapshot().csrfToken ?? ""
         try await piliContentWrite("/xlive/web-ucenter/v1/dMReport/Report", fields: ["id": "0", "roomid": String(roomID),
             "tuid": String(meta.uid), "msg": item.text, "reason": reason, "ts": meta.timestamp, "sign": meta.signature,
             "reason_id": String(reasonID), "token": "", "dm_type": String(meta.type), "id_str": meta.id, "csrf_token": csrf, "visit_id": ""],

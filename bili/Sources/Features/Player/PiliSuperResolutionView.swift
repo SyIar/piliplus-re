@@ -45,7 +45,7 @@ struct PiliSuperResolutionSettingsView: View {
 /// Only SDR display frames are upscaled, with two GPU jobs at most and no CPU pixel copies.
 #if canImport(MetalFX)
 @MainActor
-final class PiliSuperResolutionView: MTKView, @preconcurrency MTKViewDelegate {
+final class PiliSuperResolutionView: MTKView, MTKViewDelegate {
     private weak var player: AVPlayer?
     private weak var item: AVPlayerItem?
     private let output = AVPlayerItemVideoOutput(pixelBufferAttributes: [
@@ -125,7 +125,7 @@ final class PiliSuperResolutionView: MTKView, @preconcurrency MTKViewDelegate {
         let semaphore = inFlight
         let lifetime = PiliMetalFrameLifetime(texture: reference, pixels: pixels)
         buffer.addCompletedHandler { [weak self, lifetime] command in
-            withExtendedLifetime(lifetime) { semaphore.signal() }
+            _ = withExtendedLifetime(lifetime) { semaphore.signal() }
             let success = command.status == .completed
             Task { @MainActor [weak self] in guard let self, !self.stopped else { return }; self.alpha = success ? 1 : 0 }
         }

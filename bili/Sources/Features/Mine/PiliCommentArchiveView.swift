@@ -65,7 +65,7 @@ struct PiliCommentArchiveView: View {
             }
     }
     private func reload() async {
-        let context = await dependencies.api.requestSnapshot(purpose: .interaction)
+        let context = dependencies.api.requestSnapshot(purpose: .interaction)
         guard context.isLoggedIn else { identity = nil; items = []; message = "请先登录互动账号"; return }
         let current = PiliAccountIdentity(context); identity = current; items = []
         do {

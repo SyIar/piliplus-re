@@ -75,7 +75,7 @@ extension BiliAPIClient {
         else {
             throw BiliAPIError.missingPayload
         }
-        let snapshot = await requestSnapshot(purpose: .interaction)
+        let snapshot = requestSnapshot(purpose: .interaction)
         if let scope = PiliCommentSubmissionScope.current, !scope.identity.matches(snapshot) { throw PiliOfflineError.message("互动账号已切换") }
         let interactionContext = snapshot
         guard interactionContext.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
@@ -129,7 +129,7 @@ extension BiliAPIClient {
     }
 
     func uploadDynamicCommentImage(_ imageData: Data) async throws -> DynamicCommentImage {
-        let snapshot = await requestSnapshot(purpose: .interaction)
+        let snapshot = requestSnapshot(purpose: .interaction)
         if let scope = PiliCommentSubmissionScope.current, !scope.identity.matches(snapshot) { throw PiliOfflineError.message("互动账号已切换") }
         guard snapshot.isLoggedIn, let csrf = snapshot.csrfToken else { throw BiliAPIError.missingCSRF }
         let response: BiliResponse<DynamicCommentImageUploadPayload> = try await postMultipart(
@@ -252,7 +252,7 @@ extension BiliAPIClient {
     {
         let mode = sort == .hot ? "3" : "2"
         let pagination = try Self.commentPaginationString(offset: cursor)
-        let revision = await commentReadRevision
+        let revision = commentReadRevision
         let resolvedCookieHeader = await resolvedCommentCookieHeader(cookieHeader)
         let response: BiliResponse<CommentPage> = try await get(
             base: baseURL,
@@ -270,7 +270,7 @@ extension BiliAPIClient {
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
         let page = response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
-        return try await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil, revision: revision)
+        return try commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil, revision: revision)
     }
 
     private static func commentPaginationString(offset: String) throws -> String {
@@ -313,7 +313,7 @@ extension BiliAPIClient {
         if sort == .time {
             query["sort"] = "1"
         }
-        let revision = await commentReadRevision
+        let revision = commentReadRevision
         let resolvedCookieHeader = await resolvedCommentCookieHeader(cookieHeader)
         let response: BiliResponse<CommentPage> = try await get(
             base: baseURL,
@@ -325,7 +325,7 @@ extension BiliAPIClient {
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
         let page = response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
-        return try await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil, revision: revision)
+        return try commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil, revision: revision)
     }
 
     func fetchCommentDialog(
@@ -354,7 +354,7 @@ extension BiliAPIClient {
         cookieHeader: String? = nil
     ) async throws -> CommentPage
     {
-        let revision = await commentReadRevision
+        let revision = commentReadRevision
         let resolvedCookieHeader = await resolvedCommentCookieHeader(cookieHeader)
         let response: BiliResponse<CommentPage> = try await get(
             base: baseURL,
@@ -372,14 +372,14 @@ extension BiliAPIClient {
         )
         guard response.code == 0 else { throw BiliAPIError.api(code: response.code, message: response.displayMessage) }
         let page = response.payload ?? CommentPage(replies: [], topReplies: [], cursor: nil)
-        return try await commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil, revision: revision)
+        return try commentPageForCurrentWriter(page, usesDefaultReader: cookieHeader == nil, revision: revision)
     }
 
     private func resolvedCommentCookieHeader(_ cookieHeader: String?) async -> String {
         if let cookieHeader {
             return cookieHeader
         }
-        return await requestSnapshot(purpose: .commentRead).cookieHeader
+        return requestSnapshot(purpose: .commentRead).cookieHeader
     }
 }
 

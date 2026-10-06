@@ -9,6 +9,7 @@ nonisolated enum PiliLivePhotoEncoder {
     /// Photos requires the same asset identifier in MakerApple/17 and the QuickTime
     /// container, plus a timed still-image marker. A plain JPEG + MP4 is not a Live Photo.
     @concurrent static func pair(image: URL, video: URL) async throws -> Pair {
+        try Task.checkCancellation()
         let directory = image.deletingLastPathComponent()
         let identifier = UUID().uuidString
         let photo = directory.appendingPathComponent("live-\(identifier).jpg")
@@ -24,6 +25,7 @@ nonisolated enum PiliLivePhotoEncoder {
             properties[kCGImageDestinationLossyCompressionQuality as String] = 0.95
             CGImageDestinationAddImageFromSource(destination, source, 0, properties as CFDictionary)
             guard CGImageDestinationFinalize(destination) else { throw PiliOfflineError.message("实况照片编码失败") }
+            try Task.checkCancellation()
             try await writeMovie(source: video, output: movie, identifier: identifier)
             try Task.checkCancellation()
             return Pair(image: photo, video: movie)
@@ -39,11 +41,13 @@ nonisolated enum PiliLivePhotoEncoder {
         guard duration.isNumeric, duration.seconds > 0, duration.seconds <= 60 else {
             throw PiliOfflineError.message("实况视频时长无效")
         }
+        try Task.checkCancellation()
         let reader = try AVAssetReader(asset: asset), writer = try AVAssetWriter(outputURL: output, fileType: .mov)
         var pairs: [(AVAssetReaderTrackOutput, AVAssetWriterInput)] = []
         let tracks = try await asset.loadTracks(withMediaType: .video) + asset.loadTracks(withMediaType: .audio)
         guard tracks.contains(where: { $0.mediaType == .video }) else { throw PiliOfflineError.message("实况视频没有画面") }
         for track in tracks {
+            try Task.checkCancellation()
             let format = try await track.load(.formatDescriptions).first
             let read = AVAssetReaderTrackOutput(track: track, outputSettings: nil)
             read.alwaysCopiesSampleData = false
@@ -68,38 +72,48 @@ nonisolated enum PiliLivePhotoEncoder {
         let adaptor = AVAssetWriterInputMetadataAdaptor(assetWriterInput: metadata)
         guard writer.canAdd(metadata) else { throw PiliOfflineError.message("实况时间标记不可用") }
         writer.add(metadata)
-        guard reader.startReading(), writer.startWriting() else { throw writer.error ?? reader.error ?? PiliOfflineError.message("无法创建实况视频") }
-        writer.startSession(atSourceTime: .zero)
+        // The reader, writer and inputs belong to this task only. Cancellation is
+        // checked between samples and at suspension points; cleanup never races
+        // an append/start/finish call from an arbitrary cancellation-handler thread.
         do {
-            try await withTaskCancellationHandler {
-                let still = AVMutableMetadataItem()
-                still.keySpace = .quickTimeMetadata; still.key = "com.apple.quicktime.still-image-time" as NSString
-                still.value = NSNumber(value: Int8(0)); still.dataType = kCMMetadataBaseDataType_SInt8 as String
-                guard adaptor.append(AVTimedMetadataGroup(items: [still], timeRange: CMTimeRange(start: .zero, duration: CMTime(value: 1, timescale: 30)))) else {
-                    throw writer.error ?? PiliOfflineError.message("无法写入实况时间标记")
+            try Task.checkCancellation()
+            guard reader.startReading(), writer.startWriting() else { throw writer.error ?? reader.error ?? PiliOfflineError.message("无法创建实况视频") }
+            writer.startSession(atSourceTime: .zero)
+            let still = AVMutableMetadataItem()
+            still.keySpace = .quickTimeMetadata; still.key = "com.apple.quicktime.still-image-time" as NSString
+            still.value = NSNumber(value: Int8(0)); still.dataType = kCMMetadataBaseDataType_SInt8 as String
+            guard adaptor.append(AVTimedMetadataGroup(items: [still], timeRange: CMTimeRange(start: .zero, duration: CMTime(value: 1, timescale: 30)))) else {
+                throw writer.error ?? PiliOfflineError.message("无法写入实况时间标记")
+            }
+            metadata.markAsFinished()
+            var ended = Set<Int>()
+            while ended.count < pairs.count {
+                try Task.checkCancellation()
+                guard writer.status == .writing, reader.status == .reading || reader.status == .completed else {
+                    throw writer.error ?? reader.error ?? PiliOfflineError.message("实况视频处理失败")
                 }
-                metadata.markAsFinished()
-                var ended = Set<Int>()
-                while ended.count < pairs.count {
+                var advanced = false
+                for index in pairs.indices where !ended.contains(index) {
                     try Task.checkCancellation()
-                    guard writer.status == .writing, reader.status == .reading || reader.status == .completed else {
-                        throw writer.error ?? reader.error ?? PiliOfflineError.message("实况视频处理失败")
-                    }
-                    var advanced = false
-                    for index in pairs.indices where !ended.contains(index) {
-                        let (read, write) = pairs[index]
-                        guard write.isReadyForMoreMediaData else { continue }
-                        if let sample = read.copyNextSampleBuffer() {
-                            guard write.append(sample) else { throw writer.error ?? PiliOfflineError.message("无法写入实况视频") }
-                        } else { write.markAsFinished(); ended.insert(index) }
-                        advanced = true
-                    }
-                    if !advanced { try await Task.sleep(for: .milliseconds(2)) }
+                    let (read, write) = pairs[index]
+                    guard write.isReadyForMoreMediaData else { continue }
+                    if let sample = read.copyNextSampleBuffer() {
+                        guard write.append(sample) else { throw writer.error ?? PiliOfflineError.message("无法写入实况视频") }
+                    } else { write.markAsFinished(); ended.insert(index) }
+                    advanced = true
                 }
-                guard reader.status != .failed else { throw reader.error ?? PiliOfflineError.message("实况视频读取失败") }
-                await writer.finishWriting()
-                guard writer.status == .completed else { throw writer.error ?? PiliOfflineError.message("实况视频保存失败") }
-            } onCancel: { reader.cancelReading(); writer.cancelWriting() }
-        } catch { reader.cancelReading(); writer.cancelWriting(); throw error }
+                if !advanced { try await Task.sleep(for: .milliseconds(2)) }
+            }
+            guard reader.status != .failed else { throw reader.error ?? PiliOfflineError.message("实况视频读取失败") }
+            try Task.checkCancellation()
+            await writer.finishWriting()
+            guard writer.status == .completed else { throw writer.error ?? PiliOfflineError.message("实况视频保存失败") }
+            try Task.checkCancellation()
+        } catch {
+            reader.cancelReading()
+            writer.cancelWriting()
+            try Task.checkCancellation()
+            throw error
+        }
     }
 }

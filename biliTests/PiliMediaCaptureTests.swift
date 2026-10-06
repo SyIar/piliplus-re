@@ -61,6 +61,71 @@ final class PiliMediaCaptureTests: XCTestCase {
         do { _ = try await PiliMediaCapture.export(url: URL(fileURLWithPath: "/missing.mp4"), start: .nan, length: 10); XCTFail() }
         catch { XCTAssertTrue(error.localizedDescription.contains("时间")) }
     }
+
+    func testAlreadyCancelledCaptureDoesNotReadSourceOrCreateOutput() async throws {
+        let before = try captureDirectories()
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await PiliMediaCapture.export(url: URL(fileURLWithPath: "/missing.mp4"), start: 0, length: 1)
+        }
+        do { _ = try await task.value; XCTFail("Cancelled exports must not produce a file") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(try captureDirectories(), before)
+    }
+
+    func testCancellingGIFAfterFirstFrameRemovesPartialOutputAndAllowsNextExport() async throws {
+        let movie = try await PiliTestMovie.make()
+        defer { try? FileManager.default.removeItem(at: movie.deletingLastPathComponent()) }
+        let before = try captureDirectories()
+        let task = Task {
+            try await PiliMediaCapture.export(url: movie, start: 0, length: 2) { _ in
+                // Cancel this export's task after it has decoded and written a frame.
+                withUnsafeCurrentTask { $0?.cancel() }
+            }
+        }
+        do { _ = try await task.value; XCTFail("Cancelled GIF must not be returned as complete") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(try captureDirectories(), before)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: movie.path))
+        let next = try await PiliMediaCapture.export(url: movie, start: 0, length: nil)
+        defer { PiliMediaCapture.remove(next) }
+        XCTAssertNotNil(CGImageSourceCreateWithURL(next as CFURL, nil))
+    }
+
+    func testAlreadyCancelledLivePhotoPreservesInputsWithoutCreatingResources() async throws {
+        let movie = try await PiliTestMovie.make()
+        defer { try? FileManager.default.removeItem(at: movie.deletingLastPathComponent()) }
+        let png = try await PiliMediaCapture.export(url: movie, start: 0, length: nil)
+        defer { PiliMediaCapture.remove(png) }
+        let root = png.deletingLastPathComponent()
+        let before = try FileManager.default.contentsOfDirectory(atPath: root.path)
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await PiliLivePhotoEncoder.pair(image: png, video: movie)
+        }
+        do { _ = try await task.value; XCTFail("Cancelled Live Photo must not be returned") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), before)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: movie.path))
+    }
+
+    func testFailedLivePhotoRemovesGeneratedResourcesButPreservesOriginalImage() async throws {
+        let movie = try await PiliTestMovie.make()
+        defer { try? FileManager.default.removeItem(at: movie.deletingLastPathComponent()) }
+        let png = try await PiliMediaCapture.export(url: movie, start: 0, length: nil)
+        defer { PiliMediaCapture.remove(png) }
+        let root = png.deletingLastPathComponent()
+        do {
+            _ = try await PiliLivePhotoEncoder.pair(image: png, video: root.appendingPathComponent("missing.mov"))
+            XCTFail("Missing video must fail")
+        } catch { XCTAssertFalse(error is CancellationError) }
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), [png.lastPathComponent])
+    }
+
+    private func captureDirectories() throws -> Set<String> {
+        Set(try FileManager.default.contentsOfDirectory(atPath: FileManager.default.temporaryDirectory.path)
+            .filter { $0.hasPrefix("PiliCapture-") })
+    }
 }
 
 @MainActor
