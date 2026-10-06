@@ -40,14 +40,16 @@ extension VideoDetailViewModel {
                     cid: cid,
                     seasonID: detail.pgcSeasonID,
                     epID: detail.pgcEpisodeID,
-                    preferredQuality: adaptiveStartupPreferredQuality
+                    preferredQuality: adaptiveStartupPreferredQuality,
+                    audioLanguage: piliAudioLanguage
                 )
             }
             return try await api.fetchPlayURL(
                 bvid: detail.bvid,
                 cid: cid,
                 page: page,
-                preferredQuality: adaptiveStartupPreferredQuality
+                preferredQuality: adaptiveStartupPreferredQuality,
+                audioLanguage: piliAudioLanguage
             )
         }
     }

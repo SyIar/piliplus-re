@@ -54,14 +54,16 @@ extension VideoDetailViewModel {
                             cid: cid,
                             seasonID: self.detail.pgcSeasonID,
                             epID: self.detail.pgcEpisodeID,
-                            preferredQuality: requestedQuality
+                            preferredQuality: requestedQuality,
+                            audioLanguage: self.piliAudioLanguage
                         )
                     }
                     return try await self.api.fetchPlayURL(
                         bvid: bvid,
                         cid: cid,
                         page: page,
-                        preferredQuality: requestedQuality
+                        preferredQuality: requestedQuality,
+                        audioLanguage: self.piliAudioLanguage
                     )
                 }
                 guard !Task.isCancelled,
@@ -132,6 +134,7 @@ extension VideoDetailViewModel {
         }
 
         guard let playerViewModel = stablePlayerViewModel,
+              selectedPlayVariant?.audioURL == variant.audioURL,
               playerViewModel.engineDiagnostics.hlsVideoVariantCount > 1,
               playerViewModel.preferVideoRenditionInCurrentItem(variant)
         else { return false }

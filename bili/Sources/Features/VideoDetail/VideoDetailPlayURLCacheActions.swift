@@ -6,6 +6,7 @@ extension VideoDetailViewModel {
         page: Int?,
         mode: VideoDetailPlayURLLoadMode
     ) async -> VideoDetailPlayURLCacheResolution {
+        guard piliAudioLanguage == nil else { return .needsNetwork(deferredFallback: nil) }
         var deferredPlayableFallback: VideoDetailPlayURLFallback?
 
         if let resolution = await resolvePendingCachedPlayURLForStartup(

@@ -21,6 +21,7 @@ extension VideoDetailViewModel {
         cid: Int,
         page: Int?
     ) async {
+        guard piliAudioLanguage == nil else { return }
         await VideoPreloadCenter.shared.store(
             data,
             bvid: detail.bvid,

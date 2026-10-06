@@ -35,7 +35,8 @@ extension VideoDetailViewModel {
                 cid: cid,
                 seasonID: detail.pgcSeasonID,
                 epID: detail.pgcEpisodeID,
-                preferredQuality: adaptiveStartupPreferredQuality
+                preferredQuality: adaptiveStartupPreferredQuality,
+                audioLanguage: piliAudioLanguage
             )
         }
         return try await api.fetchStartupPlayURL(
@@ -44,7 +45,8 @@ extension VideoDetailViewModel {
             page: page,
             preferredQuality: adaptiveStartupPreferredQuality,
             requestLease: requestLease,
-            requestSource: .foreground
+            requestSource: .foreground,
+            audioLanguage: piliAudioLanguage
         )
     }
 

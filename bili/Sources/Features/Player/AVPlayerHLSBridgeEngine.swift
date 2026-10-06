@@ -48,6 +48,10 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
     private var lastDisplayDynamicRangePolicySummary: String?
     private var playerItem: AVPlayerItem?
     private var videoOutput: AVPlayerItemVideoOutput?
+    private var superResolutionView: PiliSuperResolutionView?
+    private var superResolutionMode = UserDefaults.standard.integer(forKey: PiliSuperResolutionPolicy.key)
+    private var superResolutionUnavailable = false
+    nonisolated(unsafe) private var superResolutionObservers: [NSObjectProtocol] = []
     private var lastVideoFrameImage: UIImage?
     private var recoveryFrameCacheTask: Task<Void, Never>?
     private var source: PlayerStreamSource?
@@ -214,6 +218,19 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
 #endif
 
     init() {
+        for name in [PiliSuperResolutionPolicy.changed, ProcessInfo.thermalStateDidChangeNotification,
+                     NSNotification.Name.NSProcessInfoPowerStateDidChange, UIApplication.didBecomeActiveNotification,
+                     UIApplication.willResignActiveNotification] {
+            superResolutionObservers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.superResolutionMode = UserDefaults.standard.integer(forKey: PiliSuperResolutionPolicy.key)
+                    self.superResolutionUnavailable = false
+                    self.superResolutionView?.stop(); self.superResolutionView = nil
+                    self.refreshSuperResolution()
+                }
+            })
+        }
         nativeDolbyVideoOverlay.onReadyForDisplay = { [weak self] in
             self?.handleNativeDolbyVideoOverlayReady()
         }
@@ -224,6 +241,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
     }
 
     deinit {
+        for observer in superResolutionObservers { NotificationCenter.default.removeObserver(observer) }
         pendingSurfaceDetachTask?.cancel()
         itemObservers.removeAll()
         layerReadyForDisplayObserver = nil
@@ -297,6 +315,30 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
             gravity: videoGravity
         )
         nativeDolbyVideoOverlay.refreshLayout(in: surfaceView, gravity: videoGravity)
+        refreshSuperResolution()
+    }
+
+    private func refreshSuperResolution() {
+        guard superResolutionMode > 0, !superResolutionUnavailable, !isStopped, let item = player.currentItem,
+              source?.playbackContentMode != .audioOnly, source?.dynamicRange == .sdr,
+              !nativeDolbyVideoOverlay.isActive, playerViewController?.isPictureInPictureActive != true,
+              UIApplication.shared.applicationState == .active, !ProcessInfo.processInfo.isLowPowerModeEnabled,
+              ProcessInfo.processInfo.thermalState.rawValue < ProcessInfo.ThermalState.serious.rawValue,
+              let container = playerViewController?.contentOverlayView ?? surfaceView else {
+            superResolutionView?.stop(); superResolutionView = nil; return
+        }
+        if superResolutionView?.isUsing(item) != true {
+            superResolutionView?.stop()
+            superResolutionView = PiliSuperResolutionView(player: player, item: item, mode: superResolutionMode)
+            superResolutionUnavailable = superResolutionView == nil
+        }
+        guard let view = superResolutionView else { return }
+        if view.superview !== container { view.removeFromSuperview(); container.insertSubview(view, at: 0) }
+        let rectangle: CGRect
+        if let controller = playerViewController {
+            rectangle = container.convert(controller.videoBounds, from: controller.view)
+        } else { rectangle = playerLayer?.videoRect ?? container.bounds }
+        if rectangle.width > 1, rectangle.height > 1 { view.frame = rectangle }
     }
 
     func recoverSurface() {
@@ -491,6 +533,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
 
     func detachNativePlaybackController(_ controller: AVPlayerViewController) {
         guard playerViewController === controller else { return }
+        superResolutionView?.stop(); superResolutionView = nil
         removeContentOverlayHostingController()
         controller.player = nil
         controllerReadyForDisplayObserver = nil
@@ -1139,6 +1182,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
     }
 
     private func tearDownCurrentItemForReplacement() {
+        superResolutionView?.stop(); superResolutionView = nil
         let oldItem = player.currentItem
         let oldBridge = hlsBridge
         let oldLiveProxy = liveHLSProxy
@@ -1361,6 +1405,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
         controller.updatesNowPlayingInfoCenter = false
         controller.view.backgroundColor = .black
         observeControllerReadyForDisplay(controller)
+        refreshSuperResolution()
     }
 
     private func installContentOverlayIfPossible() {
@@ -2166,6 +2211,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
                       self.player.currentItem === self.playerItem
                 else { return }
                 self.reportFirstFrameIfPossible(currentTime: self.displayTime(fromPlayerTime: seconds))
+                if self.superResolutionMode > 0 { self.refreshSuperResolution() }
             }
         }
     }
@@ -2199,6 +2245,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
     private func beginSeekTransaction(
         targetDisplayTime: TimeInterval?
     ) -> Int {
+        superResolutionView?.invalidateFrame()
         seekGeneration &+= 1
         isPerformingSeek = true
         if let targetDisplayTime, targetDisplayTime.isFinite, targetDisplayTime >= 0 {

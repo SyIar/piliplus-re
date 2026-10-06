@@ -2,7 +2,7 @@ import Foundation
 
 extension VideoDetailViewModel {
     func warmCachedPlayInfoIfAvailable() {
-        guard let cid = selectedCID, selectedPlayVariant == nil else { return }
+        guard let cid = selectedCID, selectedPlayVariant == nil, piliAudioLanguage == nil else { return }
         let bvid = detail.bvid
         let page = selectedPageNumber
         trackBackgroundTask(
@@ -41,6 +41,7 @@ extension VideoDetailViewModel {
     ) async {
         let bvid = detail.bvid
         guard isCurrentPlaybackContext(bvid: bvid, cid: cid, page: page) else { return }
+        guard piliAudioLanguage == nil || data.curLanguage == piliAudioLanguage else { return }
         if let cid,
            await prepareHistoryResumeBeforeApplyingPlayURL(data, cid: cid) {
             await loadPlayURL()

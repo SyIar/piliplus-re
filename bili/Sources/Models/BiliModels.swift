@@ -1620,9 +1620,20 @@ nonisolated struct PlayURLData: Decodable, Sendable {
     let supportFormats: [PlaySupportFormat]?
     let lastPlayTime: TimeInterval?
     let lastPlayCID: Int?
+    let language: PiliAudioLanguages?
+    let curLanguage: String?
+
+    init(code: Int?, message: String?, durl: [PlayDURL]?, dash: DASHInfo?, quality: Int?,
+         acceptQuality: [Int]?, acceptDescription: [String]?, supportFormats: [PlaySupportFormat]?,
+         lastPlayTime: TimeInterval?, lastPlayCID: Int?, language: PiliAudioLanguages? = nil, curLanguage: String? = nil) {
+        self.code = code; self.message = message; self.durl = durl; self.dash = dash; self.quality = quality
+        self.acceptQuality = acceptQuality; self.acceptDescription = acceptDescription; self.supportFormats = supportFormats
+        self.lastPlayTime = lastPlayTime; self.lastPlayCID = lastPlayCID; self.language = language; self.curLanguage = curLanguage
+    }
 
     enum CodingKeys: String, CodingKey {
-        case code, message, durl, dash, quality
+        case code, message, durl, dash, quality, language
+        case curLanguage = "cur_language"
         case acceptQuality = "accept_quality"
         case acceptDescription = "accept_description"
         case supportFormats = "support_formats"
@@ -1641,11 +1652,15 @@ nonisolated struct PlayURLData: Decodable, Sendable {
             acceptDescription: mergedDescriptions(metadata: metadata),
             supportFormats: mergedSupportFormats(primary: supportFormats, secondary: metadata.supportFormats),
             lastPlayTime: lastPlayTime ?? metadata.lastPlayTime,
-            lastPlayCID: lastPlayCID ?? metadata.lastPlayCID
+            lastPlayCID: lastPlayCID ?? metadata.lastPlayCID,
+            language: language ?? metadata.language, curLanguage: curLanguage ?? metadata.curLanguage
         )
     }
 
     nonisolated func mergingPlayableStreams(from other: PlayURLData) -> PlayURLData {
+        if let current = curLanguage, let incoming = other.curLanguage, current != incoming {
+            return mergingDisplayFormats(from: other)
+        }
         let mergedDURL = durl ?? other.durl
         return PlayURLData(
             code: code ?? other.code,
@@ -1657,7 +1672,8 @@ nonisolated struct PlayURLData: Decodable, Sendable {
             acceptDescription: mergedDescriptions(metadata: other),
             supportFormats: mergedSupportFormats(primary: supportFormats, secondary: other.supportFormats),
             lastPlayTime: lastPlayTime ?? other.lastPlayTime,
-            lastPlayCID: lastPlayCID ?? other.lastPlayCID
+            lastPlayCID: lastPlayCID ?? other.lastPlayCID,
+            language: language ?? other.language, curLanguage: curLanguage ?? other.curLanguage
         )
     }
 
@@ -1672,7 +1688,7 @@ nonisolated struct PlayURLData: Decodable, Sendable {
             acceptDescription: acceptDescription,
             supportFormats: supportFormats,
             lastPlayTime: nil,
-            lastPlayCID: nil
+            lastPlayCID: nil, language: language, curLanguage: curLanguage
         )
     }
 
@@ -2154,7 +2170,7 @@ nonisolated struct VideoListenAudioVariant: Identifiable, Hashable, Sendable {
 
 nonisolated struct PlayVariant: Identifiable, Hashable, Sendable {
     nonisolated var id: String {
-        "\(quality)-\(videoURL?.absoluteString ?? "locked")-audio:\(audioStream?.id ?? 0):\(audioStream?.codecs ?? "muxed")"
+        "\(quality)-\(videoURL?.absoluteString ?? "locked")-audio:\(audioStream?.id ?? 0):\(audioStream?.codecs ?? "muxed"):\(audioURL?.absoluteString ?? "")"
     }
 
     let quality: Int

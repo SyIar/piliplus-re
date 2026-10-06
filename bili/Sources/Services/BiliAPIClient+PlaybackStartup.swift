@@ -14,11 +14,15 @@ extension BiliAPIClient {
         page: Int? = nil,
         preferredQuality: Int? = nil,
         requestLease: StartupPlayURLRequestLease? = nil,
-        requestSource: StartupPlayURLRequestSource = .preload
+        requestSource: StartupPlayURLRequestSource = .preload,
+        audioLanguage: String? = nil
     ) async throws -> PlayURLData {
         let snapshot = requestSnapshot(purpose: .playback)
         let configuredQuality = preferredQuality ?? snapshot.effectivePreferredVideoQuality
         let requestedQuality = startupRequestedQuality(configuredQuality: configuredQuality)
+        if let audioLanguage {
+            return try await piliLanguagePlayURL(bvid: bvid, cid: cid, language: audioLanguage, quality: requestedQuality)
+        }
         let key = PlayURLCacheKey(
             bvid: bvid,
             cid: cid,

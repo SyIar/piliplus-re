@@ -1563,6 +1563,8 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
     var body: some View {
         NavigationStack {
             List {
+                NavigationLink("原声翻译", systemImage: "waveform") { PiliAudioLanguageView(viewModel: detailViewModel) }
+                NavigationLink("超分辨率", systemImage: "sparkles.tv") { PiliSuperResolutionSettingsView() }
                 if detailViewModel.isVideoListenModeEnabled,
                    !detailViewModel.videoListenAudioVariants.isEmpty {
                     NavigationLink {
@@ -1641,6 +1643,11 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                 }
 
                 if !detailViewModel.isVideoListenModeEnabled {
+                    if let source = detailViewModel.selectedPlayVariant?.videoURL {
+                        NavigationLink("截图与动图", systemImage: "camera") {
+                            PiliMediaCaptureView(source: source, time: viewModel.currentTime, duration: viewModel.duration ?? 0)
+                        }
+                    }
                     NavigationLink {
                         SurfaceOnlyDanmakuSettingsPage(
                             detailViewModel: detailViewModel,
@@ -1947,6 +1954,9 @@ private enum SurfaceOnlyLandscapeMoreControlsPage {
     case playbackOrder
     case sleepTimer
     case danmaku
+    case capture
+    case language
+    case superResolution
     case rate
 
     var title: String {
@@ -1965,6 +1975,9 @@ private enum SurfaceOnlyLandscapeMoreControlsPage {
             return "定时关闭"
         case .danmaku:
             return "弹幕设置"
+        case .capture: return "截图与动图"
+        case .language: return "原声翻译"
+        case .superResolution: return "超分辨率"
         case .rate:
             return "倍速"
         }
@@ -2047,6 +2060,14 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                 .scrollContentBackground(.hidden)
             case .rate:
                 ratePage
+            case .language:
+                PiliAudioLanguageView(viewModel: detailViewModel).scrollContentBackground(.hidden)
+            case .superResolution:
+                PiliSuperResolutionSettingsView().scrollContentBackground(.hidden)
+            case .capture:
+                if let source = detailViewModel.selectedPlayVariant?.videoURL {
+                    PiliMediaCaptureView(source: source, time: viewModel.currentTime, duration: viewModel.duration ?? 0)
+                }
             }
         }
     }
@@ -2055,6 +2076,11 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
         ScrollView {
             VStack(spacing: 10) {
                 VStack(spacing: 0) {
+                    SurfaceOnlyLandscapeMenuRow(title: "原声翻译", systemImage: "waveform", accessory: nil, showsChevron: true) { page = .language }
+                    SurfaceOnlyLandscapeMenuRow(title: "超分辨率", systemImage: "sparkles.tv", accessory: nil, showsChevron: true) { page = .superResolution }
+                    if !detailViewModel.isVideoListenModeEnabled {
+                        SurfaceOnlyLandscapeMenuRow(title: "截图与动图", systemImage: "camera", accessory: nil, showsChevron: true) { page = .capture }
+                    }
                     if detailViewModel.isVideoListenModeEnabled,
                        !detailViewModel.videoListenAudioVariants.isEmpty {
                         SurfaceOnlyLandscapeMenuRow(

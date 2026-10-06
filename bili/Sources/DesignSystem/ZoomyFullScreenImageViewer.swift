@@ -983,11 +983,9 @@ private enum ZoomyPhotoLibrarySaver {
     static func save(_ snapshot: ZoomyViewerMediaSnapshot) async -> Bool {
         guard await requestAddAuthorization() else { return false }
 
-        if snapshot.isLivePhoto,
-           let imageFileURL = snapshot.imageFileURL,
-           let liveVideoFileURL = snapshot.liveVideoFileURL,
-           await saveLivePhoto(imageFileURL: imageFileURL, videoFileURL: liveVideoFileURL) {
-            return true
+        if snapshot.isLivePhoto {
+            guard let imageFileURL = snapshot.imageFileURL, let liveVideoFileURL = snapshot.liveVideoFileURL else { return false }
+            return await saveLivePhoto(imageFileURL: imageFileURL, videoFileURL: liveVideoFileURL)
         }
 
         if snapshot.isAnimatedGIF {
@@ -1243,6 +1241,11 @@ private enum ZoomyViewerMediaLoader {
             imageFileURL = try await imageDownload
             videoFileURL = try await videoDownload
             try Task.checkCancellation()
+            if let originalImage = imageFileURL, let originalVideo = videoFileURL {
+                let pair = try await PiliLivePhotoEncoder.pair(image: originalImage, video: originalVideo)
+                imageFileURL = pair.image; videoFileURL = pair.video
+                removeTemporaryFile(originalImage); removeTemporaryFile(originalVideo)
+            }
             guard let imageFileURL,
                   let videoFileURL,
                   let image = downsampledImage(fileURL: imageFileURL, targetPixelSize: targetPixelSize)

@@ -31,6 +31,13 @@ struct PiliOfflinePlayerScreen: View {
             CCNeoButton("投屏", variant: .ghost, icon: "screen-check") {
                 AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .offline(model) }) }
             }
+            Button("截图与动图", systemImage: "camera") {
+                if let file = try? PiliOfflineStorage.playbackURL(model.item) {
+                    AppHelper.shared.presentSheet(.sheet) {
+                        PiliMediaCaptureView(source: file, time: model.player.currentTime, duration: model.item.duration)
+                    }
+                }
+            }
             }
             CCNeoButton("字幕", variant: .ghost, icon: PikaIcon.Name.fileText) {
                 PiliSubtitleSettingsView.present(controller: subtitles) { seconds in model.player.seek(by: seconds - model.player.currentTime) }

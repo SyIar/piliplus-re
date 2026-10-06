@@ -8,6 +8,7 @@ import UIKit
 final class VideoDetailViewModel: ObservableObject {
     @Published var detail: VideoItem {
         didSet {
+            if oldValue.bvid != detail.bvid { resetPiliAudioLanguage() }
             refreshDetailDisplayMetrics()
             scheduleRenderStoreSync([.description, .playback, .networkDiagnostics, .danmaku])
         }
@@ -24,7 +25,10 @@ final class VideoDetailViewModel: ObservableObject {
     var detailPresentationState = VideoDetailPresentationState()
     var relatedStateStorage = VideoDetailRelatedState()
     var commentListState = VideoDetailCommentListState()
-    @Published var selectedCID: Int? { didSet { scheduleRenderStoreSync(.playback) } }
+    @Published var selectedCID: Int? { didSet {
+        if oldValue != selectedCID { resetPiliAudioLanguage() }
+        scheduleRenderStoreSync(.playback)
+    } }
     @Published var state: LoadingState = .idle {
         didSet { scheduleRenderStoreSync(.playback) }
     }
@@ -122,7 +126,19 @@ final class VideoDetailViewModel: ObservableObject {
         didSet { scheduleRenderStoreSync(.networkDiagnostics) }
     }
     var audioFallbackContentKey: String?
-    var currentPlayURLData: PlayURLData?
+    var currentPlayURLData: PlayURLData? {
+        didSet {
+            if let values = currentPlayURLData?.language?.items {
+                var seen = Set<String>()
+                piliAudioLanguages = values.filter { !$0.id.isEmpty && seen.insert($0.id).inserted }
+            }
+        }
+    }
+    @Published var piliAudioLanguages: [PiliAudioLanguage] = []
+    @Published var piliAudioLanguage: String?
+    @Published var piliAudioLanguageBusy = false
+    @Published var piliAudioLanguageError: String?
+    var piliAudioLanguageGeneration = UUID()
     @Published var resumeDiagnostics: PlaybackResumeDiagnostics = .none {
         didSet { scheduleRenderStoreSync(.networkDiagnostics) }
     }

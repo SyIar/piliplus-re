@@ -64,6 +64,10 @@ struct VideoDetailSummaryCard: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
+                    tool("截图与动图", icon: "camera") { PiliMediaCaptureView.present(viewModel) }
+                    tool("原声翻译", icon: "waveform") {
+                        AppHelper.shared.presentSheet(.sheet) { NavigationStack { PiliAudioLanguageView(viewModel: viewModel) } }
+                    }
                     tool("离线下载", icon: "arrow.down.circle") {
                         AppHelper.shared.presentSheet(.sheet) { PiliDownloadSheet(viewModel: viewModel) }
                     }

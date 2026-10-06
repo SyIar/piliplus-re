@@ -22,6 +22,7 @@ extension VideoDetailViewModel {
             String(cid),
             page.map(String.init) ?? "-",
             "q\(adaptiveQuality ?? 0)",
+            piliAudioLanguage ?? "default",
             streamSource.cachePlatform
         ].joined(separator: "|")
         if startupPlayURLTaskKey == key, let startupPlayURLTask {

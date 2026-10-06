@@ -63,10 +63,15 @@ extension BiliAPIClient {
         seasonID: Int?,
         epID: Int?,
         qn: Int = 112,
-        preferredQuality: Int? = nil
+        preferredQuality: Int? = nil,
+        audioLanguage: String? = nil
     ) async throws -> PlayURLData {
         let context = await playbackAPIRequestContext()
         let requestedQuality = preferredQuality ?? context.effectivePreferredVideoQuality ?? qn
+        if let audioLanguage {
+            return try await piliLanguagePlayURL(bvid: bvid, cid: cid, language: audioLanguage, quality: requestedQuality,
+                                                 seasonID: seasonID, episodeID: epID)
+        }
         if let courseID = bvid.piliCourseEpisodeID {
             return try await piliCoursePlayURL(epID: courseID, cid: cid, seasonID: seasonID, quality: requestedQuality)
         }
