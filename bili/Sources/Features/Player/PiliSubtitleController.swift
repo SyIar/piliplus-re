@@ -23,6 +23,15 @@ final class PiliSubtitleController: ObservableObject {
     private var contextID: String?
     private var generation = UUID()
     private var api: BiliAPIClient?
+    private var muted = false
+    private var excludesAI: Bool {
+        let mode = defaults.string(forKey: "piliplus.subtitle.mode") ?? "withoutAI"
+        return mode == "withoutAI" || (mode == "auto" && !muted)
+    }
+    func updateMuted(_ value: Bool) {
+        guard muted != value else { return }; muted = value
+        if defaults.string(forKey: "piliplus.subtitle.mode") == "auto" { selectPreferred() }
+    }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -97,7 +106,7 @@ final class PiliSubtitleController: ObservableObject {
 
     private func selectPreferredSecondary() {
         let preferred = defaults.string(forKey: "piliplus.subtitle.secondaryLanguage")
-        let candidates = tracks.filter { $0.id != selectedID && ((defaults.string(forKey: "piliplus.subtitle.mode") ?? "withoutAI") != "withoutAI" || !$0.isAI) }
+        let candidates = tracks.filter { $0.id != selectedID && (!excludesAI || !$0.isAI) }
         let id = selectedID == nil ? nil : (candidates.first { $0.lan == preferred } ?? candidates.first)?.id
         loadSelection(id, secondary: true)
     }
@@ -164,7 +173,7 @@ final class PiliSubtitleController: ObservableObject {
     func selectPreferred() {
         let mode = defaults.string(forKey: "piliplus.subtitle.mode") ?? "withoutAI"
         let preferred = defaults.string(forKey: "piliplus.subtitle.language")
-        let candidates = mode == "withoutAI" ? tracks.filter { !$0.isAI } : tracks
+        let candidates = excludesAI ? tracks.filter { !$0.isAI } : tracks
         select(mode == "off" ? nil : (candidates.first { $0.lan == preferred } ?? candidates.first)?.id, remember: false)
         if dualEnabled { selectPreferredSecondary() }
     }

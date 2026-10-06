@@ -1,6 +1,6 @@
 import Foundation
 
-struct SponsorBlockSegment: Identifiable, Codable, Equatable, Sendable {
+nonisolated struct SponsorBlockSegment: Identifiable, Codable, Equatable, Sendable {
     var id: String { uuid }
 
     let uuid: String
@@ -10,6 +10,8 @@ struct SponsorBlockSegment: Identifiable, Codable, Equatable, Sendable {
     let endTime: TimeInterval
     let videoDuration: TimeInterval?
     let votes: Int?
+
+    var isSupportedAction: Bool { ["skip", "mute", "full", "poi"].contains(actionType) }
 
     var isSkippable: Bool {
         actionType.lowercased() == "skip" && endTime > startTime
@@ -41,7 +43,7 @@ struct SponsorBlockSegment: Identifiable, Codable, Equatable, Sendable {
     }
 }
 
-struct SponsorBlockSkipEvent: Equatable, Sendable {
+nonisolated struct SponsorBlockSkipEvent: Equatable, Sendable {
     let segment: SponsorBlockSegment
     let fromTime: TimeInterval
     let skippedAt: Date
@@ -74,6 +76,7 @@ final class SponsorBlockService: @unchecked Sendable {
 
         var request = URLRequest(url: url)
         request.timeoutInterval = 12
+        request.setValue("", forHTTPHeaderField: "Cookie")
         request.setValue("cc.bili", forHTTPHeaderField: "Origin")
         request.setValue("cc.bili/1.0", forHTTPHeaderField: "X-Ext-Version")
         request.setValue("application/json, text/plain, */*", forHTTPHeaderField: "Accept")
@@ -89,10 +92,49 @@ final class SponsorBlockService: @unchecked Sendable {
             throw BiliAPIError.api(code: httpResponse.statusCode, message: HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))
         }
 
-        return try JSONDecoder().decode([SponsorBlockSegmentResponse].self, from: data)
-            .compactMap(SponsorBlockSegment.init(response:))
-            .filter(\.isSkippable)
+        return try await Self.decodeSegments(data)
+    }
+
+    @concurrent private static func decodeSegments(_ data: Data) async throws -> [SponsorBlockSegment] {
+        guard data.count <= 4 * 1_024 * 1_024 else { throw PiliOfflineError.message("空降片段数据过大") }
+        try Task.checkCancellation()
+        let response = try JSONDecoder().decode([SponsorBlockSegmentResponse].self, from: data)
+        guard response.count <= 1_000 else { throw PiliOfflineError.message("空降片段数据过大") }
+        return response.compactMap(SponsorBlockSegment.init(response:)).filter(\.isSupportedAction)
             .sorted { $0.startTime < $1.startTime }
+    }
+
+    func vote(uuid: String, type: Int? = nil, category: String? = nil, userID: String) async throws {
+        guard !uuid.isEmpty, !userID.isEmpty, (type != nil) != (category != nil),
+              type == nil || [0, 1, 20].contains(type!),
+              category == nil || PiliSponsorCategory(rawValue: category!) != nil else { throw BiliAPIError.missingPayload }
+        var query = ["UUID": uuid, "userID": userID]
+        if let type { query["type"] = String(type) }; if let category { query["category"] = category }
+        _ = try await write("voteOnSponsorTime", query: query)
+    }
+    func submit(bvid: String, cid: Int, duration: Double, start: Double, end: Double, category: PiliSponsorCategory, action: String, userID: String) async throws {
+        guard cid > 0, !bvid.isEmpty, !userID.isEmpty, duration.isFinite, duration > 0, start.isFinite, end.isFinite,
+              start >= 0, end <= duration, (end > start || action == "poi" && end == start), category.actions.contains(action) else {
+            throw PiliOfflineError.message("请检查片段时间、分类和动作")
+        }
+        let body: PiliJSON = .object(["videoID": .string(bvid), "cid": .string(String(cid)), "userID": .string(userID),
+            "userAgent": .string("PiliPlusSwift/0.1"), "videoDuration": .decimal(duration),
+            "segments": .array([.object(["segment": .array([.decimal(start), .decimal(end)]), "category": .string(category.rawValue), "actionType": .string(action)])])])
+        _ = try await write("skipSegments", body: try JSONEncoder().encode(body))
+    }
+    private func write(_ path: String, query: [String: String] = [:], body: Data? = nil) async throws -> Data {
+        var components = URLComponents(url: baseURL.appendingPathComponent("api/\(path)"), resolvingAgainstBaseURL: false)!
+        components.queryItems = query.map { .init(name: $0.key, value: $0.value) }
+        guard let url = components.url else { throw BiliAPIError.invalidURL }
+        var request = URLRequest(url: url); request.httpMethod = "POST"; request.timeoutInterval = 15
+        request.setValue("PiliPlusSwift", forHTTPHeaderField: "Origin"); request.setValue("PiliPlusSwift/0.1", forHTTPHeaderField: "X-Ext-Version")
+        request.setValue("", forHTTPHeaderField: "Cookie")
+        if let body { request.httpBody = body; request.setValue("application/json", forHTTPHeaderField: "Content-Type") }
+        // Deliberately one attempt: a lost response must not duplicate a public submission.
+        let (bytes, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw BiliAPIError.emptyData }
+        guard (200...299).contains(http.statusCode) else { throw BiliAPIError.api(code: http.statusCode, message: String(data: bytes.prefix(500), encoding: .utf8) ?? "空降社区请求失败") }
+        return bytes
     }
 
     func reportViewed(uuid: String) async {
@@ -107,6 +149,7 @@ final class SponsorBlockService: @unchecked Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.timeoutInterval = 8
+        request.setValue("", forHTTPHeaderField: "Cookie")
         request.setValue("cc.bili", forHTTPHeaderField: "Origin")
         request.setValue("cc.bili/1.0", forHTTPHeaderField: "X-Ext-Version")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -117,8 +160,7 @@ final class SponsorBlockService: @unchecked Sendable {
     }
 }
 
-private struct SponsorBlockSegmentResponse: Decodable {
-    let cid: String?
+private nonisolated struct SponsorBlockSegmentResponse: Decodable {
     let category: String
     let actionType: String?
     let segment: [Double]
@@ -127,7 +169,6 @@ private struct SponsorBlockSegmentResponse: Decodable {
     let votes: Int?
 
     enum CodingKeys: String, CodingKey {
-        case cid
         case category
         case actionType
         case segment
@@ -138,11 +179,11 @@ private struct SponsorBlockSegmentResponse: Decodable {
 }
 
 private extension SponsorBlockSegment {
-    init?(response: SponsorBlockSegmentResponse) {
+    nonisolated init?(response: SponsorBlockSegmentResponse) {
         guard response.segment.count >= 2 else { return nil }
         let startTime = response.segment[0]
         let endTime = response.segment[1]
-        guard startTime.isFinite, endTime.isFinite, startTime >= 0, endTime > startTime else { return nil }
+        guard !response.uuid.isEmpty, startTime.isFinite, endTime.isFinite, startTime >= 0, endTime <= 31_536_000, (endTime > startTime || (response.actionType == "poi" && endTime == startTime)) else { return nil }
 
         self.init(
             uuid: response.uuid,

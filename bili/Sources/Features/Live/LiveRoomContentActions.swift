@@ -6,8 +6,9 @@ extension LiveRoomContentView {
         pendingFullscreenExitTask?.cancel()
         isCompletingFullscreenExit = false
 
-        let orientation = UIDevice.current.orientation
-        let targetMode = PlayerFullscreenMode.landscape(orientation.isLandscape ? orientation : .landscapeRight)
+        let mask = VideoDetailRotationPolicy().preferredLandscapeInterfaceOrientation(
+            currentInterfaceOrientation: nil, deviceOrientation: UIDevice.current.orientation, preference: .stored)
+        let targetMode = PlayerFullscreenMode.landscape(mask == .landscapeRight ? .landscapeLeft : .landscapeRight)
         guard fullscreenMode != targetMode else {
             requestLiveFullscreenGeometry(for: targetMode)
             playerViewModel?.refreshSurfaceLayout()

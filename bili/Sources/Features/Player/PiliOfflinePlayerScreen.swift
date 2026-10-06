@@ -16,14 +16,14 @@ struct PiliOfflinePlayerScreen: View {
         VStack(spacing: 16) {
             if model.item.effectiveMediaKind == .audio {
                 PiliOfflineAudioControls(player: model.player, title: model.item.title, author: model.item.author).id(model.item.id)
-                PiliSubtitleOverlay(controller: subtitles, clock: model.player.playbackClock)
+                PiliOfflineSubtitleLayer(controller: subtitles, player: model.player)
                     .frame(height: 110)
             } else {
             BiliPlayerView(viewModel: model.player, duration: model.item.duration,
                            surfaceOverlay: AnyView(ZStack {
                                PiliOfflineDanmakuOverlay(player: model.player, items: danmaku,
                                                          isEnabled: showsDanmaku, settings: libraryStore.danmakuSettings)
-                               PiliSubtitleOverlay(controller: subtitles, clock: model.player.playbackClock)
+                               PiliOfflineSubtitleLayer(controller: subtitles, player: model.player)
                            }),
                            isDanmakuEnabled: showsDanmaku,
                            onToggleDanmaku: { showsDanmaku.toggle() })
@@ -122,6 +122,10 @@ private struct PiliOfflineAudioControls: View {
 }
 
 private struct PiliOfflineDanmakuOverlay: View {
+    @AppStorage("piliplus.danmaku.separateFullscreenFont") private var separateFullscreenFont = false
+    @AppStorage("piliplus.danmaku.fullscreenFontScale") private var fullscreenFontScale = 1.0
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
     @ObservedObject var player: PlayerStateViewModel
     let items: [DanmakuItem]
     let isEnabled: Bool
@@ -129,7 +133,7 @@ private struct PiliOfflineDanmakuOverlay: View {
     var body: some View {
         DanmakuOverlayView(items: items, itemsRevision: items.count, isPlaying: player.isPlaying,
                            playbackRate: player.playbackRate.rawValue, isEnabled: isEnabled,
-                           hasPresentedPlayback: player.hasPresentedPlayback, settings: settings,
+                           hasPresentedPlayback: player.hasPresentedPlayback, settings: settings.usingFullscreenFont(fullscreenFontScale, enabled: separateFullscreenFont, isFullscreen: verticalSizeClass == .compact),
                            topInset: 48, bottomInset: 72, playbackClock: player.playbackClock)
             .allowsHitTesting(false)
     }

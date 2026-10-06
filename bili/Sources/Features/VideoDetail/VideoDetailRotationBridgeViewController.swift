@@ -209,7 +209,7 @@ final class VideoDetailRotationBridgeViewController: UIViewController {
         rotationCoordinator.allowLandscape(in: scene)
         let target = rotationPolicy.preferredLandscapeInterfaceOrientation(
             currentInterfaceOrientation: scene?.effectiveGeometry.interfaceOrientation,
-            deviceOrientation: UIDevice.current.orientation
+            deviceOrientation: UIDevice.current.orientation, preference: .stored
         )
         rotationCoordinator.requestGeometryUpdate(to: target, in: scene)
     }

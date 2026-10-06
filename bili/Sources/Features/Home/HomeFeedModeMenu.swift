@@ -13,6 +13,8 @@ struct HomeFeedModeMenu: View {
                     Label(mode.title, systemImage: currentMode == mode ? "checkmark" : mode.systemImage)
                 }
             }
+            Divider()
+            NavigationLink { PiliPGCCatalogueView() } label: { Label("番剧与影视", systemImage: "film") }
         } label: {
             HStack(spacing: 6) {
                 Text(currentMode.title).font(.system(size: 22, weight: .bold))

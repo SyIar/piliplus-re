@@ -7,6 +7,8 @@ struct PiliSubtitleOverlay: View {
     @ObservedObject var controller: PiliSubtitleController
     @ObservedObject var clock: PlayerPlaybackClock
     var landscape = false
+    @Environment(\.piliPlaybackIsMuted) private var playerMuted
+    @ObservedObject private var audibility = PiliSystemAudibility.shared
     @AppStorage("piliplus.subtitle.fontSize") private var fontSize = 17.0
     @AppStorage("piliplus.subtitle.landscapeSize") private var landscapeSize = 23.0
     @AppStorage("piliplus.subtitle.bottom") private var bottom = 54.0
@@ -38,6 +40,7 @@ struct PiliSubtitleOverlay: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .allowsHitTesting(false)
+        .onChange(of: playerMuted || audibility.isSilent, initial: true) { _, silent in controller.updateMuted(silent) }
     }
 }
 
@@ -93,6 +96,7 @@ struct PiliSubtitleSettingsView: View {
                         Text("关闭").tag("off")
                         Text("开启").tag("on")
                         Text("仅非 AI 字幕").tag("withoutAI")
+                        Text("静音时允许 AI 字幕").tag("auto")
                     }.onChange(of: mode) { _, _ in controller.selectPreferred() }
                 }
                 Section("双语字幕") {

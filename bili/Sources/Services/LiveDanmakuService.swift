@@ -2612,6 +2612,9 @@ nonisolated final class LiveDanmakuService: @unchecked Sendable {
     }
 
     private static func danmakuSenderName(in info: [Any]) -> String? {
+        if let head = info.first as? [Any], head.indices.contains(15),
+           let content = head[15] as? [String: Any], let user = content["user"] as? [String: Any],
+           let base = user["base"] as? [String: Any], let name = base["name"] as? String, !name.isEmpty { return name }
         guard info.indices.contains(2) else { return nil }
         if let user = info[2] as? [Any],
            user.indices.contains(1),

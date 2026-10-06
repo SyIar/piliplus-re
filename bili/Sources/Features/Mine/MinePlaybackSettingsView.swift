@@ -22,6 +22,8 @@ struct MinePlaybackSettingsView: View {
     var body: some View {
         Form {
             Section("播放与交互") {
+                PiliVideoAspectPicker()
+                PiliFullscreenDirectionPicker()
                 Toggle("自动跳过番剧片头片尾", isOn: $skipsPGC)
                 Toggle("高能进度条", isOn: $showsEnergy)
                 Toggle("开始播放后自动全屏", isOn: $autoFullscreen)

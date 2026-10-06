@@ -64,6 +64,13 @@ struct DanmakuSettings: Codable, Equatable, Sendable {
         hidesInPortrait: true
     )
 
+    func usingFullscreenFont(_ scale: Double, enabled: Bool, isFullscreen: Bool) -> DanmakuSettings {
+        guard enabled, isFullscreen, scale.isFinite else { return self }
+        var value = self
+        value.fontScale = min(max(scale, 0.7), 1.45)
+        return value
+    }
+
     var normalized: DanmakuSettings {
         DanmakuSettings(
             fontScale: min(max(fontScale, 0.7), 1.45),

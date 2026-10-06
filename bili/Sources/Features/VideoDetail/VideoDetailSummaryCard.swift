@@ -78,6 +78,9 @@ struct VideoDetailSummaryCard: View {
                     tool("投屏", icon: "tv") {
                         AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .online(viewModel) }) }
                     }
+                    tool("空降助手", icon: "forward.end") {
+                        AppHelper.shared.presentSheet(.sheet) { PiliSponsorView(model: viewModel) }
+                    }
                     tool("字幕", icon: "captions.bubble") {
                         PiliSubtitleSettingsView.present(controller: viewModel.piliSubtitles) { seconds in
                             guard let player = viewModel.stablePlayerViewModel else { return }

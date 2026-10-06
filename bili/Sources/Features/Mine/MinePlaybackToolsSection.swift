@@ -14,6 +14,7 @@ struct MinePlaybackToolsSection: View {
                 MineSettingsLabel("空降助手", systemImage: "forward.end")
             }
 
+            NavigationLink { PiliSponsorSettingsView() } label: { Label("空降分类策略", systemImage: "slider.horizontal.3") }
             NavigationLink {
                 ResourceLoadingExperimentSettingsView(libraryStore: libraryStore)
             } label: {

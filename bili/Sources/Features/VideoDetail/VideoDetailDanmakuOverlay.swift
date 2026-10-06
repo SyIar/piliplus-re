@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct VideoDetailDanmakuOverlay: View {
+    @AppStorage("piliplus.danmaku.separateFullscreenFont") private var separateFullscreenFont = false
+    @AppStorage("piliplus.danmaku.fullscreenFontScale") private var fullscreenFontScale = 1.0
+
     let store: VideoDetailDanmakuRenderStore
     let playerViewModel: PlayerStateViewModel
     let clock: PlayerPlaybackClock
@@ -25,7 +28,7 @@ struct VideoDetailDanmakuOverlay: View {
             isEnabled: snapshot.isEnabled && isVisibleInCurrentOrientation,
             hasPresentedPlayback: snapshot.hasPresentedPlayback,
             isLoadShedding: snapshot.isLoadShedding,
-            settings: snapshot.settings,
+            settings: snapshot.settings.usingFullscreenFont(fullscreenFontScale, enabled: separateFullscreenFont, isFullscreen: usesLandscapePlaybackChrome),
             topInset: usesLandscapePlaybackChrome ? 28 : 8,
             bottomInset: usesLandscapePlaybackChrome ? 84 : 54,
             isLayoutTransitioning: isLayoutTransitioning,

@@ -112,6 +112,9 @@ final class LiveDanmakuOverlayState: ObservableObject {
 }
 
 struct LiveDanmakuOverlay: View {
+    @AppStorage("piliplus.danmaku.separateFullscreenFont") private var separateFullscreenFont = false
+    @AppStorage("piliplus.danmaku.fullscreenFontScale") private var fullscreenFontScale = 1.0
+
     @ObservedObject var state: LiveDanmakuOverlayState
     @ObservedObject var playerViewModel: PlayerStateViewModel
     let usesLandscapeChrome: Bool
@@ -133,7 +136,7 @@ struct LiveDanmakuOverlay: View {
                 isEnabled: snapshot.isEnabled && isVisibleInCurrentOrientation,
                 hasPresentedPlayback: playerViewModel.hasPresentedPlayback || shouldDriveLiveDanmaku,
                 isLoadShedding: false,
-                settings: snapshot.settings,
+                settings: snapshot.settings.usingFullscreenFont(fullscreenFontScale, enabled: separateFullscreenFont, isFullscreen: usesLandscapeChrome),
                 topInset: usesLandscapeChrome ? 28 : 8,
                 bottomInset: usesLandscapeChrome ? 84 : 54,
                 isLayoutTransitioning: isLayoutTransitioning,

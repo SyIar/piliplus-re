@@ -4656,6 +4656,77 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    @MainActor
+    func testPGCCatalogueUsesServerFiltersAndTimelineResultEnvelope() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            switch request.url?.path {
+            case "/pgc/season/index/condition":
+                return Self.response(for: request, body: #"{"code":0,"data":{"order":[{"field":"3","name":"追番人数"}],"filter":[{"field":"area","name":"地区","values":[{"keyword":"-1","name":"全部"},{"keyword":"2","name":"日本"}]}]}}"#)
+            case "/pgc/season/index/result":
+                return Self.response(for: request, body: #"{"code":0,"data":{"has_next":1,"list":[{"season_id":42,"title":"番剧","cover":"https://i0.hdslb.com/test.jpg","index_show":"更新至第 4 话"}]}}"#)
+            case "/pgc/web/timeline":
+                return Self.response(for: request, body: #"{"code":0,"result":[{"date":"10-06","is_today":1,"episodes":[{"episode_id":9,"season_id":42,"title":"番剧","pub_time":"18:00","pub_index":"第 4 话"}]}]}"#)
+            default: return Self.response(for: request, body: #"{"code":-404}"#)
+            }
+        }
+        let api = try makeAPI(cookieHeader: "")
+        let conditions = try await api.piliPGCConditions(type: 1)
+        XCTAssertEqual(conditions.defaults["area"], "-1")
+        XCTAssertEqual(conditions.defaults["order"], "3")
+        let result = try await api.piliPGCCatalogue(type: 1, page: 2, filters: ["area": "2", "order": "3", "sort": "0"])
+        XCTAssertEqual(result.items.first?.seasonID, 42); XCTAssertTrue(result.more)
+        let url = try XCTUnwrap(recorder.request?.url)
+        let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        for (name, value) in ["area": "2", "page": "2", "pagesize": "21", "season_type": "1", "type": "0"] {
+            XCTAssertTrue(query.contains(.init(name: name, value: value)))
+        }
+        let timeline = try await api.piliPGCTimeline(type: 1)
+        XCTAssertEqual(timeline.first?.title, "10-06 · 今天")
+        XCTAssertEqual(timeline.first?.episodes.first?.id, 9)
+    }
+
+    @MainActor
+    func testSponsorCommunityPreservesAllActionsAndUsesUnauthenticatedSingleWrites() async throws {
+        let recorder = RequestContractRecorder()
+        let counter = RequestContractCounter()
+        RequestContractURLProtocol.install { request in
+            counter.increment(); recorder.record(request)
+            let body = request.httpMethod == "POST" ? "{}" : #"[{"UUID":"skip","cid":12,"category":"sponsor","actionType":"skip","segment":[1,4]},{"UUID":"mute","category":"sponsor","actionType":"mute","segment":[4,8]},{"UUID":"full","category":"exclusive_access","actionType":"full","segment":[0,90]},{"UUID":"poi","category":"poi_highlight","actionType":"poi","segment":[20,20]},{"UUID":"invalid","category":"sponsor","actionType":"skip","segment":[8,2]}]"#
+            return Self.response(for: request, body: body)
+        }
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [RequestContractURLProtocol.self]
+        let session = URLSession(configuration: configuration)
+        defer { session.invalidateAndCancel() }
+        let service = SponsorBlockService(baseURL: URL(string: "https://community.invalid")!, session: session)
+        let segments = try await service.fetchSkipSegments(bvid: "BV-test", cid: 12)
+        XCTAssertEqual(Set(segments.map(\.actionType)), ["skip", "mute", "full", "poi"])
+        try await service.vote(uuid: "skip", type: 1, userID: "community-id")
+        let vote = try XCTUnwrap(recorder.request)
+        XCTAssertEqual(vote.httpMethod, "POST")
+        XCTAssertEqual(vote.url?.path, "/api/voteOnSponsorTime")
+        let query = URLComponents(url: vote.url!, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertTrue(query.contains(.init(name: "UUID", value: "skip")))
+        XCTAssertTrue(query.contains(.init(name: "userID", value: "community-id")))
+        XCTAssertEqual(vote.value(forHTTPHeaderField: "Cookie") ?? "", "")
+        try await service.submit(bvid: "BV-test", cid: 12, duration: 90, start: 8, end: 20, category: .sponsor, action: "mute", userID: "community-id")
+        let submission = try XCTUnwrap(recorder.request)
+        XCTAssertEqual(submission.url?.path, "/api/skipSegments")
+        let body = try XCTUnwrap(try JSONSerialization.jsonObject(with: XCTUnwrap(requestBodyData(from: submission))) as? [String: Any])
+        XCTAssertEqual(body["cid"] as? String, "12")
+        XCTAssertEqual(body["videoDuration"] as? Double, 90)
+        let payload = try XCTUnwrap((body["segments"] as? [[String: Any]])?.first)
+        XCTAssertEqual(payload["actionType"] as? String, "mute")
+        XCTAssertEqual(payload["segment"] as? [Double], [8, 20])
+        do {
+            try await service.submit(bvid: "BV-test", cid: 12, duration: 90, start: 50, end: 10, category: .sponsor, action: "skip", userID: "community-id")
+            XCTFail("Invalid interval must never be sent")
+        } catch { }
+        XCTAssertEqual(counter.currentValue, 3)
+    }
+
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

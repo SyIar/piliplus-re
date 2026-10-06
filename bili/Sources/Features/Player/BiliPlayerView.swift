@@ -306,13 +306,14 @@ struct BiliPlayerView: View {
             isPictureInPictureEnabled: libraryStore.pictureInPictureEnabled,
             lifecycleActions: context.lifecycleActions
         )
+        .piliVideoAspect(player: viewModel)
         .onChange(of: surfaceState.isUserSeeking) { _, isUserSeeking in
             updateSeekTransitionSnapshot(isUserSeeking: isUserSeeking)
         }
     }
 
     private var videoGravity: AVLayerVideoGravity {
-        .resizeAspect
+        PiliVideoAspect.stored.gravity
     }
 
     private static func makeOptions(

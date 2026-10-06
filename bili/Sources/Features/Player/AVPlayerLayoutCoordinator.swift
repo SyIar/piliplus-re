@@ -22,7 +22,8 @@ final class AVPlayerLayoutCoordinator {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         playerLayer.videoGravity = gravity
-        playerLayer.frame = containerView.bounds
+        containerView.clipsToBounds = true
+        playerLayer.frame = PiliVideoAspect.stored.frame(in: containerView.bounds, videoSize: playerLayer.player?.currentItem?.presentationSize ?? .zero)
         playerLayer.position = CGPoint(x: containerView.bounds.midX, y: containerView.bounds.midY)
         playerLayer.setNeedsLayout()
         playerLayer.setNeedsDisplay()
@@ -73,7 +74,7 @@ final class AVPlayerLayoutCoordinator {
         CATransaction.setDisableActions(true)
         UIView.performWithoutAnimation {
             playerController.videoGravity = gravity
-            playerController.view.frame = bounds
+            playerController.view.frame = PiliVideoAspect.stored.frame(in: bounds, videoSize: playerController.player?.currentItem?.presentationSize ?? .zero)
             playerController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             playerController.view.setNeedsLayout()
         }

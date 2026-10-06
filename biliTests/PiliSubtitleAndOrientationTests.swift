@@ -5,6 +5,23 @@ import PiliPlaybackCore
 
 @MainActor
 final class PiliSubtitleAndOrientationTests: XCTestCase {
+    func testAutomaticSubtitlesUseAIOnlyWhenMutedAndKeepHumanSubtitles() throws {
+        let name = "subtitle-auto-\(UUID().uuidString)"
+        let isolated = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { isolated.removePersistentDomain(forName: name) }
+        isolated.set("auto", forKey: "piliplus.subtitle.mode")
+        let controller = PiliSubtitleController(defaults: isolated)
+        let ai = PiliSubtitleTrack(lan: "ai-zh", lanDoc: "AI 中文", subtitleURL: nil, type: 1)
+        controller.loadOffline([.init(track: ai, cues: [])])
+        XCTAssertNil(controller.selectedID)
+        controller.updateMuted(true); XCTAssertEqual(controller.selectedID, ai.id)
+        controller.updateMuted(false); XCTAssertNil(controller.selectedID)
+        let human = PiliSubtitleTrack(lan: "zh", lanDoc: "中文", subtitleURL: nil, type: 0)
+        controller.loadOffline([.init(track: human, cues: []), .init(track: ai, cues: [])])
+        XCTAssertEqual(controller.selectedID, human.id)
+        controller.updateMuted(true); XCTAssertEqual(controller.selectedID, human.id)
+        XCTAssertEqual(isolated.string(forKey: "piliplus.subtitle.mode"), "auto")
+    }
     func testExactDirectionLockSurvivesPolicyUpdatesAndRejectsRotation() {
         let coordinator = PlaybackRotationCoordinator()
         defer { coordinator.deactivate(in: nil) }

@@ -427,6 +427,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     @Published private(set) var isPlaybackSurfaceReady = false
     @Published private(set) var isCurrentPlaybackSurfaceReadyForDisplay = false
     @Published private(set) var isAwaitingAppBackgroundSurfaceRecovery = false
+    @Published private(set) var sponsorBlockMutesAudio = false
     @Published private(set) var activeSponsorBlockSegment: SponsorBlockSegment?
     @Published private(set) var prepareElapsedMilliseconds: Int?
     @Published private(set) var firstFrameElapsedMilliseconds: Int?
@@ -519,7 +520,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     private var pictureInPictureController: AVPictureInPictureController?
     private var didConfigurePictureInPicture = false
     private var sponsorBlockSegments: [SponsorBlockSegment] = []
-    private var sponsorBlockSearchIndex = 0
+    private var manuallyMutedSponsorBlockIDs = Set<String>()
     private var skippedSponsorBlockIDs = Set<String>()
     private var sponsorBlockReportedIDs = Set<String>()
     private var ignoredStartupPlaybackTimeOutliers = 0
@@ -2846,7 +2847,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
         guard surfaceView != nil else { return false }
         ActivePlaybackCoordinator.shared.activate(self)
         engine.setVolume(navigationAudioSuspension.volume)
-        engine.setMuted(navigationAudioSuspension.isMuted)
+        engine.setMuted(isMuted || sponsorBlockMutesAudio)
         if navigationAudioSuspension.resumeTime > 0.25 {
             applyStartupResumeTime(navigationAudioSuspension.resumeTime, reason: "cancelledNavigation")
         }
@@ -3577,7 +3578,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
         engine.setVolume(normalizedVolume)
         if normalizedVolume > 0, isMuted {
             isMuted = false
-            engine.setMuted(false)
+            engine.setMuted(sponsorBlockMutesAudio)
         }
         invalidatePictureInPicturePlaybackState()
     }
@@ -3585,7 +3586,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     func setMuted(_ muted: Bool) {
         guard !isTerminated else { return }
         isMuted = muted
-        engine.setMuted(muted)
+        engine.setMuted(muted || sponsorBlockMutesAudio)
         invalidatePictureInPicturePlaybackState()
     }
 
@@ -3609,18 +3610,44 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
         onSegmentSkipped: (@Sendable (SponsorBlockSkipEvent) async -> Void)? = nil
     ) {
         sponsorBlockSegments = segments
-            .filter(\.isSkippable)
+            .filter(\.isSupportedAction)
             .sorted { $0.startTime < $1.startTime }
         sponsorBlockEnabled = isEnabled
+        manuallyMutedSponsorBlockIDs.removeAll()
         self.onSponsorBlockSegmentSkipped = onSegmentSkipped
         skippedSponsorBlockIDs.removeAll()
         sponsorBlockReportedIDs.removeAll()
-        sponsorBlockSearchIndex = 0
+        updateSponsorMute(at: currentTime)
         activeSponsorBlockSegment = nil
     }
 
+    func previewSponsorBlockSegment(_ segment: SponsorBlockSegment) {
+        skippedSponsorBlockIDs.insert(segment.id)
+        manuallyMutedSponsorBlockIDs.remove(segment.id)
+        seek(to: segment.startTime)
+        updateSponsorMute(at: segment.startTime)
+    }
+    func manuallySkipSponsorBlockSegment(_ segment: SponsorBlockSegment) {
+        let fromTime = currentTime
+        skippedSponsorBlockIDs.insert(segment.id)
+        seek(to: segment.actionType == "poi" ? segment.startTime : segment.endTime)
+        updateSponsorMute(at: currentTime)
+        reportSponsorBlockSkip(segment, from: fromTime)
+    }
+    func manuallyMuteSponsorBlockSegment(_ segment: SponsorBlockSegment) {
+        guard segment.actionType == "mute" else { return }
+        manuallyMutedSponsorBlockIDs.insert(segment.id)
+        updateSponsorMute(at: currentTime)
+        reportSponsorBlockSkip(segment, from: currentTime)
+    }
+    private func updateSponsorMute(at time: Double) {
+        let categories = PiliSponsorPreferences.shared.automaticCategories
+        let muted = sponsorBlockEnabled && !isTerminated && PiliSponsorRules.shouldMute(at: time, segments: sponsorBlockSegments, automaticCategories: categories, ignoredIDs: skippedSponsorBlockIDs, manualIDs: manuallyMutedSponsorBlockIDs)
+        if sponsorBlockMutesAudio != muted { sponsorBlockMutesAudio = muted; if !isTerminated { engine.setMuted(isMuted || muted) } }
+    }
     func setSponsorBlockEnabled(_ isEnabled: Bool) {
         sponsorBlockEnabled = isEnabled
+        updateSponsorMute(at: currentTime)
         if !isEnabled {
             activeSponsorBlockSegment = nil
         }
@@ -4259,11 +4286,12 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
         let callbackGeneration = engineCallbackGeneration
         if restoreVolumeState {
             engine.setVolume(volume)
-            engine.setMuted(isMuted)
+            engine.setMuted(isMuted || sponsorBlockMutesAudio)
             engine.setPlaybackRate(playbackRate.rawValue)
         } else {
             volume = engine.volume
-            isMuted = engine.isMuted
+            if !sponsorBlockMutesAudio { isMuted = engine.isMuted }
+            engine.setMuted(isMuted || sponsorBlockMutesAudio)
         }
         engine.onPlaybackStateChange = { [weak self] state in
             guard let self, self.isCurrentEngineCallbackGeneration(callbackGeneration) else { return }
@@ -5717,6 +5745,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func skipSponsorBlockSegmentIfNeeded(at time: TimeInterval) {
+        updateSponsorMute(at: time)
         guard sponsorBlockEnabled,
               engine.hasMedia,
               wantsAutoplay,
@@ -5733,8 +5762,9 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
         }
 
         activeSponsorBlockSegment = segment
-        guard !skippedSponsorBlockIDs.contains(segment.id) else { return }
-        let pendingSegments = sponsorBlockSegments.filter { !skippedSponsorBlockIDs.contains($0.id) }
+        guard segment.isSkippable, PiliSponsorPreferences.shared.mode(segment.category) == .automatic,
+              !skippedSponsorBlockIDs.contains(segment.id) else { return }
+        let pendingSegments = sponsorBlockSegments.filter { $0.isSkippable && PiliSponsorPreferences.shared.mode($0.category) == .automatic && !skippedSponsorBlockIDs.contains($0.id) }
         let ranges = pendingSegments.map {
             SkipSegment(id: $0.id, start: $0.startTime, end: $0.endTime)
         }
@@ -5762,27 +5792,16 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func sponsorBlockSegment(at time: TimeInterval) -> SponsorBlockSegment? {
-        if sponsorBlockSearchIndex >= sponsorBlockSegments.count {
-            sponsorBlockSearchIndex = max(sponsorBlockSegments.count - 1, 0)
+        var manual: SponsorBlockSegment?
+        for segment in sponsorBlockSegments {
+            if segment.startTime - sponsorBlockPrerollTolerance > time { break }
+            guard ["skip", "mute"].contains(segment.actionType), PiliSponsorPreferences.shared.mode(segment.category) != .disabled,
+                  !skippedSponsorBlockIDs.contains(segment.id), !manuallyMutedSponsorBlockIDs.contains(segment.id),
+                  time < segment.endTime - sponsorBlockTailTolerance else { continue }
+            if segment.isSkippable, PiliSponsorPreferences.shared.mode(segment.category) == .automatic { return segment }
+            if manual == nil { manual = segment }
         }
-        while sponsorBlockSearchIndex > 0,
-              time < max(sponsorBlockSegments[sponsorBlockSearchIndex].startTime - sponsorBlockPrerollTolerance, 0) {
-            sponsorBlockSearchIndex -= 1
-        }
-
-        while sponsorBlockSearchIndex < sponsorBlockSegments.count {
-            let segment = sponsorBlockSegments[sponsorBlockSearchIndex]
-            let startBoundary = max(segment.startTime - sponsorBlockPrerollTolerance, 0)
-            let endBoundary = max(segment.endTime - sponsorBlockTailTolerance, startBoundary)
-            if time < startBoundary {
-                return nil
-            }
-            if time < endBoundary {
-                return segment
-            }
-            sponsorBlockSearchIndex += 1
-        }
-        return nil
+        return manual
     }
 
     private func reportSponsorBlockSkip(_ segment: SponsorBlockSegment, from time: TimeInterval) {

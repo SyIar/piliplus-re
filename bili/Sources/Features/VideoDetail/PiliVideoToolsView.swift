@@ -63,6 +63,7 @@ struct PiliVideoToolsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section("画面") { PiliVideoAspectPicker() }
                 if store.loading { ProgressView("加载视频信息") }
                 if let error = store.error { Text(error); Button("重试") { Task { await store.retry(model) } } }
                 if store.energy != nil {

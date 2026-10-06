@@ -522,7 +522,7 @@ final class VideoSurfaceContainerView: UIView {
         nativePlayerViewController.speeds = showsSystemPlaybackControls
             ? []
             : AVPlaybackSpeed.systemDefaultSpeeds
-        nativePlayerViewController.videoGravity = .resizeAspect
+        nativePlayerViewController.videoGravity = PiliVideoAspect.stored.gravity
         let isPictureInPictureAllowed = isPictureInPictureEnabled
             && AVPictureInPictureController.isPictureInPictureSupported()
         nativePlayerViewController.allowsPictureInPicturePlayback = isPictureInPictureAllowed

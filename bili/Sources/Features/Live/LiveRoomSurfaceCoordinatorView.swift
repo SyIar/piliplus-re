@@ -548,6 +548,7 @@ private struct LiveRoomSurfaceOnlyOverlay: View {
                 context: .live(roomID: viewModel.roomID, title: viewModel.title)
             )
         }
+        .piliVideoAspect(player: playerViewModel)
         .environmentObject(dependencies)
         .environmentObject(libraryStore)
         .environment(\.appThemeTintColor, libraryStore.appTintColor)

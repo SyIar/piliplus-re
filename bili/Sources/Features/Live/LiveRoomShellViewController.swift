@@ -506,7 +506,10 @@ final class LiveRoomShellViewController: UIViewController {
         case .landscape:
             let scene = view.window?.windowScene
             AppOrientationLock.update(to: .allButUpsideDown, in: scene)
-            AppOrientationLock.requestGeometryUpdate(to: .landscapeRight, in: scene)
+            let target = VideoDetailRotationPolicy().preferredLandscapeInterfaceOrientation(
+                currentInterfaceOrientation: scene?.effectiveGeometry.interfaceOrientation,
+                deviceOrientation: UIDevice.current.orientation, preference: .stored)
+            AppOrientationLock.requestGeometryUpdate(to: target, in: scene)
         case .unavailable:
             return
         }

@@ -22,6 +22,7 @@ struct PiliPlaybackToolsView: View {
                     .accessibilityLabel("关闭播放设置")
                 }
 
+                PiliVideoAspectPicker()
                 VStack(alignment: .leading, spacing: 12) {
                     Text("自动连播").ccText(font: .cc.baseBold, color: .cc.foreground)
                     Picker("播放顺序", selection: Binding(get: { preferences.order }, set: { preferences.setOrder($0) })) {

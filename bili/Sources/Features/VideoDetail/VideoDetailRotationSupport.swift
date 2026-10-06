@@ -80,8 +80,10 @@ nonisolated struct VideoDetailRotationPolicy: Equatable {
 
     func preferredLandscapeInterfaceOrientation(
         currentInterfaceOrientation: UIInterfaceOrientation?,
-        deviceOrientation: UIDeviceOrientation
+        deviceOrientation: UIDeviceOrientation,
+        preference: PiliFullscreenDirection = .automatic
     ) -> UIInterfaceOrientationMask {
+        if let fixed = preference.mask { return fixed }
         if currentInterfaceOrientation == .landscapeLeft {
             return .landscapeLeft
         }

@@ -3,6 +3,14 @@ import XCTest
 
 @MainActor
 final class PiliVideoExtrasTests: XCTestCase {
+    func testVideoAspectFitsWidthOrHeightWithoutChangingSourceAspect() {
+        let bounds = CGRect(x: 0, y: 0, width: 300, height: 200), source = CGSize(width: 1920, height: 1080)
+        let width = PiliVideoAspect.width.frame(in: bounds, videoSize: source)
+        XCTAssertEqual(width.width, 300); XCTAssertEqual(width.height, 168.75); XCTAssertEqual(width.midY, bounds.midY)
+        let height = PiliVideoAspect.height.frame(in: bounds, videoSize: source)
+        XCTAssertEqual(height.height, 200); XCTAssertEqual(height.width / height.height, 16.0 / 9, accuracy: 0.001)
+        XCTAssertEqual(PiliVideoAspect.fit.frame(in: bounds, videoSize: .zero), bounds)
+    }
     func testHighRefreshStopsForBackgroundPowerHeatAndUnsupportedDisplays() {
         XCTAssertEqual(PiliRefreshRatePolicy.preferred(enabled: true, active: true, maximum: 120, lowPower: false, thermal: .nominal), 120)
         XCTAssertNil(PiliRefreshRatePolicy.preferred(enabled: true, active: false, maximum: 120, lowPower: false, thermal: .nominal))

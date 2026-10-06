@@ -760,6 +760,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                                             video: detailViewModel.detail, cid: detailViewModel.selectedCID,
                                             clock: viewModel.playbackClock, landscape: configuration.isFullscreenActive)
                         .zIndex(2.6)
+                    PiliSponsorManualPrompt(player: viewModel).zIndex(2.7)
                     PiliVideoToolsOverlay(model: detailViewModel, store: detailViewModel.piliVideoTools, clock: viewModel.playbackClock)
                         .zIndex(2.7)
                     PiliInteractiveOverlay(controller: detailViewModel.piliInteractive, viewModel: detailViewModel)
@@ -777,7 +778,9 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
         }
         .environmentObject(dependencies)
         .environmentObject(libraryStore)
+        .piliVideoAspect(player: viewModel)
         .environment(\.piliVideoTools, detailViewModel.piliVideoTools)
+        .environment(\.piliPlaybackIsMuted, viewModel.isMuted || viewModel.sponsorBlockMutesAudio || viewModel.volume <= 0)
         .environment(\.appThemeTintColor, runtimeSettings.appTintColor)
         .biliPlayerLifecycle(
             isFullscreenActive: configuration.isFullscreenActive,
