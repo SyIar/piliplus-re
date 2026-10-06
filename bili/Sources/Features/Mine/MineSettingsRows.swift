@@ -85,6 +85,7 @@ struct MinePlaybackPreferenceChip: View {
 /// Keep a menu picker in the trailing column even when its explanation wraps.
 /// Native Form pickers move the value below a multiline label on narrow screens.
 struct PiliSettingPicker<Selection: Hashable, Options: View, Label: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding private var selection: Selection
     private let options: Options
     private let label: Label
@@ -98,13 +99,26 @@ struct PiliSettingPicker<Selection: Hashable, Options: View, Label: View>: View 
     }
 
     var body: some View {
-        HStack(spacing: 16) {
-            label.frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
-            Picker(selection: $selection) { options } label: { label }
-                .labelsHidden().pickerStyle(.menu)
-                .lineLimit(1).layoutPriority(1)
+        if dynamicTypeSize.isAccessibilitySize {
+            // Preserve whole titles at large sizes; the action keeps the same
+            // trailing edge on its own line instead of squeezing Chinese text
+            // into a one-character-wide column.
+            VStack(alignment: .leading, spacing: 8) {
+                label.fixedSize(horizontal: false, vertical: true)
+                picker.frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        } else {
+            HStack(spacing: 16) {
+                label.frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                picker.layoutPriority(1)
+            }
         }
+    }
+
+    private var picker: some View {
+        Picker(selection: $selection) { options } label: { label }
+            .labelsHidden().pickerStyle(.menu).lineLimit(1)
     }
 }
 

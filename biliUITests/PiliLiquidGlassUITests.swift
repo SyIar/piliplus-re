@@ -144,6 +144,10 @@ final class PiliLiquidGlassUITests: XCTestCase {
         app.navigationBars.buttons.firstMatch.tap()
         app.buttons["glass.settings"].tap()
         XCTAssertTrue(app.navigationBars["界面设置"].waitForExistence(timeout: 10))
+        let iconTitle = app.staticTexts["应用图标"].firstMatch
+        XCTAssertTrue(iconTitle.waitForExistence(timeout: 10))
+        XCTAssertGreaterThan(iconTitle.frame.width, iconTitle.frame.height,
+                             "Large text must not force a short setting title into a vertical column")
         let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         screenshot.name = "Settings with large text and reduced transparency"; screenshot.lifetime = .keepAlways; add(screenshot)
     }

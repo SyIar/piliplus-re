@@ -1655,9 +1655,9 @@ enum VideoDetailSegmentedPickerGlassStyle: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .clear:
-            return "Clear"
+            return "清透"
         case .regular:
-            return "Regular"
+            return "柔和"
         }
     }
 }
