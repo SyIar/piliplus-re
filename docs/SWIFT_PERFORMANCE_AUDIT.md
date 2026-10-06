@@ -1,6 +1,6 @@
 # Swift / SwiftUI 性能核查
 
-核查日期：2026-10-06。目标项目使用 Swift 6、MainActor 默认隔离和 Approachable Concurrency；测试工具链为 Xcode 26。源码检查和模拟器回归可以发现无谓工作、检查正确性，不能推导真机 FPS、耗电或首次播放耗时改善百分比。
+核查日期：2026-10-06。目标项目使用 Swift 6 语言模式、MainActor 默认隔离和 Approachable Concurrency；测试工具链为 Xcode 26。源码检查和模拟器回归可以发现无谓工作、检查正确性，不能推导真机 FPS、耗电或首次播放耗时改善百分比。
 
 ## 依据与适用规则
 
@@ -34,7 +34,23 @@
 
 缩图的收益是可验证的像素数量上界下降。没有在此报告声称实测节省多少 MB；JPEG/HEIF 解码缓冲、色彩空间、操作系统缓存和设备差异均会影响进程峰值。
 
-主应用仍使用 Swift 5 语言模式和 Swift 6 工具链。当前 Release 编译仍有 AVFoundation 媒体取消闭包捕获 `AVAssetReader`、`AVAssetWriter`、`AVAssetImageGenerator` 的 Sendable 警告，以及多余 `await` 等警告。升级至 Swift 6 语言模式前，需按 SDK 的线程约定继续审查媒体对象的访问与取消隔离；本轮不宣称已完成严格并发迁移。
+## Swift 6 迁移
+
+在先前 build 67 中，主应用和测试仍使用 Swift 5 语言模式。此次先修复媒体对象取消路径，再将应用、单元测试、UI 测试的 Debug/Release 六个配置全部设为 `SWIFT_VERSION = 6.0`；核心 Swift 包显式采用 `.v6`。保留 `SWIFT_STRICT_CONCURRENCY = complete` 和主应用的默认 MainActor 隔离，仓库校验会阻止配置退回 Swift 5。
+
+- **截图/GIF**：独立 actor 持有 `AVAssetImageGenerator`，串行提交生成请求与取消操作。取消处理器只引用 actor；SDK 回调仅恢复 continuation，不跨任务直接访问媒体对象。取消状态在 actor 内保留，防止取消先于请求时又启动新的请求。
+- **Live Photo**：reader、writer 和输入对象仅由编码任务持有。任务在逐样本循环、等待及结束写入前后检查取消，并在同一任务内清理；取消回调不再从另一条执行路径调用这些对象。已开始的 SDK `finishWriting` 会先返回，再检查取消并删除产物，避免写入结束和取消清理相互竞争。
+- **资源与错误**：预先取消的任务在读取文件前退出，途中取消删除未完成输出，原始输入保留；取消后可正常开始下一次导出。新增取消/失败清理回归测试，保留 PNG、GIF 帧间隔、Live Photo 关联标识与 Photos 识别验证。
+- **测试隔离**：下拉刷新 UI 测试与富文本点击布局辅助函数明确使用 MainActor；互动视频测试中的可变失败开关由 MainActor fixture 持有，避免 Sendable 回调捕获之后仍修改局部变量。原有断言和失败/重试场景全部保留。
+- **诊断清理**：去除编译器确认无异步操作的 `await`、无效的 MTKViewDelegate `@preconcurrency` 标记、非可选字符串的空值兜底，明确忽略 GPU 信号量返回值；局域网地址字符串按首个 NUL 截断后进行 UTF-8 解码，替换 Swift 6 弃用的 C 字符数组转换。此次没有添加 `@unchecked Sendable` 或 AVFoundation `@preconcurrency import` 来规避媒体对象检查。
+
+首轮 [Swift 6 构建 68](https://github.com/SyIar/piliplus-re/actions/runs/37441324968) 在 Swift 6.3.3 的 IRGen 阶段崩溃，栈定位到动态评论排序的 `Binding`：把带隔离信息的函数直接用作 setter 时，编译器生成转换 thunk 失败。改为显式闭包调用，继续保留 MainActor 约束；未关闭严格检查或降回 Swift 5。后续 [构建 69](https://github.com/SyIar/piliplus-re/actions/runs/37442094409) 在账号历史策略的同类绑定触发相同崩溃，已统一改写剩余五处直接 setter 引用。两次失败构建均不计为验收通过。
+
+[Swift 6 验收构建 71](https://github.com/SyIar/piliplus-re/actions/runs/37442856023)（`45c2083`，Xcode 26.6 / Swift 6.3.3）已完整通过：**39 core（5 XCTest + 34 Swift Testing）、821 iOS 单元、7 UI**，设备 Release 构建和 7 份原生界面预览均成功。日志确认 `bili`、`biliTests`、`biliUITests` 均以 `-swift-version 6` 编译；新增 4 项取消/清理测试和原有 3 项媒体导出测试全部通过。测试旧有隔离警告、AVFoundation Sendable 警告及多余 await 警告均已消失。
+
+随后只调整上述 C 字符数组转换及交付说明；[main 发布流程](https://github.com/SyIar/piliplus-re/actions?query=branch%3Amain) 会对最终提交重新执行全部测试和设备构建，全部成功后才发布未签名 IPA。构建 71 仅剩该字符串弃用警告和 Apple 的“无 AppIntents 依赖，跳过元数据提取”提示；后者不代表源码并发问题。
+
+严格模式检查的是编译器可见的并发边界，不等于真机压力测试或第三方/既有 unsafe 边界的完全证明；此前列出的平台差异和真机性能采样仍然适用。
 
 ## 检查后保留的已有实现
 

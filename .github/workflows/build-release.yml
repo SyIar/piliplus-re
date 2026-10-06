@@ -132,7 +132,8 @@ jobs:
           tar -czf dist/ThirdParty-Licenses.tar.gz -C dist Licenses
           rm -r dist/Licenses
           cat > release-notes.txt <<'NOTES'
-          Swift / AVPlayer 原生客户端，蓝色主题与 iOS Liquid Glass 界面。
+          Swift 6 / AVPlayer 原生客户端，蓝色主题与 iOS Liquid Glass 界面。
+          应用与测试已切换 Swift 6 语言模式，媒体导出的取消路径采用明确隔离与单任务所有权。
           已接入播放工具、动态/评论/消息、AU 音频、空间/收藏及离线投屏等业务。
           逐项范围、平台差异和验证记录见 docs/PILIPLUS_FULL_ALIGNMENT.md 与 docs/PILIPLUS_FEATURE_INVENTORY.md。
           Swift 性能优化依据与待真机采样项目见 docs/SWIFT_PERFORMANCE_AUDIT.md。

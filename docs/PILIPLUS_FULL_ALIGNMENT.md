@@ -46,10 +46,12 @@
 - CI `37426772417` 发现新收藏页 catch 变量遮蔽，已修复并停止过期构建；不计为通过。
 - [CI `37428611871`](https://github.com/SyIar/piliplus-re/actions/runs/37428611871)（`d29b043`）完整成功：39 core + 816 iOS 单元 + 7 UI，设备 Release、原生预览均通过；包含 AU、社区详情、更多空间、收藏管理、评论归档/关键词与内容提示增量。
 - [最终代码验收 CI `37430767177`](https://github.com/SyIar/piliplus-re/actions/runs/37430767177)（`01c11f2`）完整成功：**39 core（5 XCTest + 34 Swift Testing）、817 iOS 单元、7 UI**，设备 Release 和原生预览均通过。新增首页回归确认旧列表不能恢复屏蔽内容，已看边界随过滤正确更新；WebKit 代理签名、字幕解码和 URLProtocol 隔离修正已编译通过。
-- 已下载并检查 build 66 的实际 IPA：ZIP 完整性与 SHA-256 均通过，`SOURCE_COMMIT.txt` 为 `01c11f2ae6e20bf5265934615b0eca8ff08f2bfa`，Release Bundle ID `cc.bili`，最低 iOS 26.1，未签名。剩余 Swift 语言模式/SDK 警告列入性能报告。
+- 已下载并检查 build 66 的实际 IPA：ZIP 完整性与 SHA-256 均通过，`SOURCE_COMMIT.txt` 为 `01c11f2ae6e20bf5265934615b0eca8ff08f2bfa`，Release Bundle ID `cc.bili`，最低 iOS 26.1，未签名。当时剩余的 Swift 语言模式/SDK 警告已在后续迁移处理中记录，见性能报告。
 - 新增请求契约验证 endpoint、账号/匿名身份、数字 JSON/protobuf、单次写入、课程评论类型、评分状态与分页；归档测试检查账号隔离、去重、原版 JSON、坏文件和大小上界。
 
-本轮应用代码验收提交为 `01c11f2`，随后仅更新交付文档和发布说明。`main` 保留完整测试与设备构建流程，二者成功后自动生成 [预发布与下载](https://github.com/SyIar/piliplus-re/releases)；最终发布提交以包内 `SOURCE_COMMIT.txt` 和 [main Actions](https://github.com/SyIar/piliplus-re/actions?query=branch%3Amain) 为准。每份发布同时附对应源码、许可证与 IPA 的 SHA-256。
+功能迁移阶段的应用代码验收提交为 `01c11f2`，对应发布 build 67。后续 **Swift 6 语言模式迁移**已由 [构建 71](https://github.com/SyIar/piliplus-re/actions/runs/37442856023)（`45c2083`）完成验证：**39 core、821 iOS 单元、7 UI**，设备 Release 和原生预览均成功；媒体取消所有权、测试隔离与编译器兼容处理见 [Swift 6 迁移记录](SWIFT_PERFORMANCE_AUDIT.md#swift-6-迁移)。此前列出的平台差异及真机验收事项仍然适用。
+
+`main` 保留完整测试与设备构建流程，二者成功后自动生成 [预发布与下载](https://github.com/SyIar/piliplus-re/releases)；最终发布提交以包内 `SOURCE_COMMIT.txt` 和 [main Actions](https://github.com/SyIar/piliplus-re/actions?query=branch%3Amain) 为准。每份发布同时附对应源码、许可证与 IPA 的 SHA-256。
 
 ## 用户后续验收
 
