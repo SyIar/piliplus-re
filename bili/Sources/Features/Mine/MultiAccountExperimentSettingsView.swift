@@ -57,7 +57,7 @@ struct MultiAccountExperimentSettingsView: View {
                 Picker(
                     selection: Binding(
                         get: { sessionStore.mainAccountMID ?? sessionStore.accounts[0].mid },
-                        set: selectMainAccount
+                        set: { value in selectMainAccount(value) }
                     )
                 ) {
                     ForEach(sessionStore.accounts) { account in
@@ -75,7 +75,7 @@ struct MultiAccountExperimentSettingsView: View {
                                 ?? sessionStore.mainAccountMID
                                 ?? sessionStore.accounts[0].mid
                         },
-                        set: selectPlaybackAccount
+                        set: { value in selectPlaybackAccount(value) }
                     )
                 ) {
                     ForEach(sessionStore.accounts) { account in
@@ -93,7 +93,7 @@ struct MultiAccountExperimentSettingsView: View {
                                 ?? sessionStore.mainAccountMID
                                 ?? sessionStore.accounts[0].mid
                         },
-                        set: selectDynamicFeedAccount
+                        set: { value in selectDynamicFeedAccount(value) }
                     )
                 ) {
                     ForEach(sessionStore.accounts) { account in
@@ -111,7 +111,7 @@ struct MultiAccountExperimentSettingsView: View {
                                 ?? sessionStore.mainAccountMID
                                 ?? sessionStore.accounts[0].mid
                         },
-                        set: selectInteractionAccount
+                        set: { value in selectInteractionAccount(value) }
                     )
                 ) {
                     ForEach(sessionStore.accounts) { account in
@@ -137,7 +137,7 @@ struct MultiAccountExperimentSettingsView: View {
                 Picker(
                     selection: Binding(
                         get: { sessionStore.historyAccountPolicy },
-                        set: selectHistoryPolicy
+                        set: { value in selectHistoryPolicy(value) }
                     )
                 ) {
                     ForEach(WatchHistoryAccountPolicy.allCases) { policy in
