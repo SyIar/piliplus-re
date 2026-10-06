@@ -14,11 +14,11 @@ extension BiliAPIClient {
         isLoggedIn ? authenticatedCookieHeader : anonymousCookieHeader
     }
 
-    func fetchDynamicFeed(offset: String? = nil) async throws -> DynamicFeedData {
+    func fetchDynamicFeed(offset: String? = nil, category: PiliDynamicCategory = .all) async throws -> DynamicFeedData {
         let context = await dynamicFeedRequestContext()
         guard context.isLoggedIn else { throw BiliAPIError.missingSESSDATA }
         var query = [
-            "type": "all",
+            "type": category.rawValue,
             "platform": "web",
             "features": dynamicWebFeatures,
             "web_location": "333.1365",
@@ -30,7 +30,7 @@ extension BiliAPIClient {
         let isInitialRequest = offset?.isEmpty != false
         let diskSnapshotIdentity =
             isInitialRequest
-            ? DynamicFeedDiskSnapshotStore.accountIdentity(for: context.currentUserMID)
+            ? DynamicFeedDiskSnapshotStore.accountIdentity(for: context.currentUserMID).map { category == .all ? $0 : $0 + "." + category.rawValue }
             : nil
         if let diskSnapshotIdentity,
             let cachedData = await DynamicFeedDiskSnapshotStore.shared.freshData(for: diskSnapshotIdentity)

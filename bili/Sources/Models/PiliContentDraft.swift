@@ -21,11 +21,12 @@ nonisolated struct PiliDynamicDraft: Codable, Equatable, Sendable {
     var repostID: String?
     var voteID: Int?
     var voteTitle = ""
+    var reservation: PiliReservationDraft?
     var plainText: String { tokens.map(\.text).joined() }
     var hasContent: Bool { !plainText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !pictures.isEmpty || repostID != nil }
 
     func validate(now: Date = Date(), pendingImages: Int = 0) throws {
-        guard hasContent || pendingImages > 0 || voteID != nil else { throw PiliOfflineError.message("请输入动态内容或添加图片") }
+        guard hasContent || pendingImages > 0 || voteID != nil || reservation != nil else { throw PiliOfflineError.message("请输入动态内容或添加图片") }
         guard plainText.count <= 10_000, title.count <= 100, pictures.count + pendingImages <= 9 else { throw PiliOfflineError.message("正文最多 10000 字、标题最多 100 字、图片最多 9 张") }
         if let scheduledAt, scheduledAt <= now.addingTimeInterval(60) { throw PiliOfflineError.message("定时发布至少在一分钟之后") }
         guard tokens.allSatisfy({ [1, 2, 4, 9].contains($0.type) && ($0.type != 2 || Int($0.businessID) ?? 0 > 0) }) else {
@@ -45,6 +46,9 @@ nonisolated struct PiliDynamicDraft: Codable, Equatable, Sendable {
             "scene": .int(repostID != nil ? 4 : pictures.isEmpty ? 1 : 2),
             "option": .object(options), "upload_id": .string(uploadID),
             "meta": .object(["app_meta": .object(["from": .string("create.dynamic.web"), "mobi_app": .string("web")])])]
+        if let reservation {
+            request["attach_card"] = .object(["common_card": .object(["type": .int(14), "biz_id": .int(reservation.id), "reserve_source": .int(0), "reserve_lottery": .int(0)])])
+        }
         if !pictures.isEmpty { request["pics"] = .array(pictures.map(\.json)) }
         if let topicID { request["topic"] = .object(["id": .int(topicID), "name": .string(topicName), "from_source": .string("dyn.web.list"), "from_topic_id": .int(0)]) }
         var body: [String: PiliJSON] = ["dyn_req": .object(request)]
@@ -67,4 +71,10 @@ nonisolated struct PiliNamedResource: Identifiable, Hashable, Sendable {
     let name: String
     var subtitle = ""
     var image: String?
+}
+
+nonisolated enum PiliDynamicCategory: String, CaseIterable, Identifiable, Sendable {
+    case all, video, pgc, article
+    var id: String { rawValue }
+    var title: String { switch self { case .all: "全部"; case .video: "投稿"; case .pgc: "番剧"; case .article: "专栏" } }
 }

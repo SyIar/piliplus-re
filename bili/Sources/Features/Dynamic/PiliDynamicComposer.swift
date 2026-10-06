@@ -30,7 +30,7 @@ struct PiliDynamicComposer: View {
     @State private var revision = 0
     @State private var timed = false
     @State private var publishDate = Date().addingTimeInterval(3600)
-    enum PickerKind: String, Identifiable { case mention, topic, vote; var id: String { rawValue } }
+    enum PickerKind: String, Identifiable { case mention, topic, vote, reservation; var id: String { rawValue } }
 
     init(api: BiliAPIClient, initial: PiliDynamicDraft = .init(), onPublished: @escaping () -> Void = {}) {
         self.api = api; self.onPublished = onPublished
@@ -63,6 +63,7 @@ struct PiliDynamicComposer: View {
                         Button { picker = .mention; focused = false } label: { Image(systemName: "at") }.accessibilityLabel("提及用户")
                         Button { picker = .topic; focused = false } label: { Image(systemName: "number") }.accessibilityLabel("选择话题")
                         Button { picker = .vote; focused = false } label: { Image(systemName: "chart.bar.xaxis") }.accessibilityLabel("添加投票")
+                        Button { picker = .reservation; focused = false } label: { Image(systemName: "calendar.badge.plus") }.accessibilityLabel("添加直播预约")
                         PhotosPicker(selection: $photos, maxSelectionCount: max(1, 9 - content.pictures.count - rich.images.count), matching: .images) { Image(systemName: "photo") }
                             .disabled(content.pictures.count + rich.images.count >= 9).accessibilityLabel("添加图片")
                     }.buttonStyle(.borderless)
@@ -84,7 +85,10 @@ struct PiliDynamicComposer: View {
                         HStack { Text("#\(content.topicName)#"); Spacer(); Button("移除") { content.topicID = nil; content.topicName = "" }.buttonStyle(.borderless) }
                     }
                     if content.voteID != nil {
-                        HStack { Label(content.voteTitle, systemImage: "chart.bar"); Spacer(); Button("移除") { content.voteID = nil }.buttonStyle(.borderless) }
+                        HStack { Button(content.voteTitle) { picker = .vote }; Spacer(); Button("移除") { content.voteID = nil }.buttonStyle(.borderless) }
+                    }
+                    if let reservation = content.reservation {
+                        HStack { Button("直播预约：" + reservation.title) { picker = .reservation }; Spacer(); Button("移除") { content.reservation = nil }.buttonStyle(.borderless) }
                     }
                 }
                 Section("发布设置") {
@@ -119,7 +123,9 @@ struct PiliDynamicComposer: View {
                 case .topic:
                     PiliResourcePicker(title: "话题", load: { try await api.piliTopics(keyword: $0) }) { item in content.topicID = item.id; content.topicName = item.name }
                 case .vote:
-                    PiliVoteCreator(api: api, identity: identity) { id, title in content.voteID = id; content.voteTitle = title }
+                    PiliVoteCreator(api: api, identity: identity, voteID: content.voteID) { id, title in content.voteID = id; content.voteTitle = title }
+                case .reservation:
+                    PiliReservationCreator(api: api, identity: identity, initial: content.reservation) { content.reservation = $0 }
                 }
             }
             .task { await restore() }
@@ -258,39 +264,6 @@ struct PiliResourcePicker: View {
                         items = values; loading = false
                     } catch is CancellationError {} catch { if requested == query { self.error = error.localizedDescription; loading = false } }
                 }
-        }
-    }
-}
-
-private struct PiliVoteCreator: View {
-    let api: BiliAPIClient
-    let identity: PiliAccountIdentity
-    let onCreate: (Int, String) -> Void
-    @Environment(\.dismiss) private var dismiss
-    @State private var title = ""
-    @State private var options = ["", ""]
-    @State private var choices = 1
-    @State private var days = 7
-    @State private var busy = false
-    @State private var error: String?
-    var body: some View {
-        NavigationStack {
-            Form {
-                TextField("投票标题", text: $title)
-                ForEach(options.indices, id: \.self) { index in TextField("选项 \(index + 1)", text: $options[index]) }
-                if options.count < 20 { Button("添加选项") { options.append("") } }
-                Stepper("最多选择 \(choices) 项", value: $choices, in: 1...options.count)
-                Stepper("\(days) 天后结束", value: $days, in: 1...365)
-                if let error { Text(error).foregroundStyle(.red) }
-            }.disabled(busy).navigationTitle("发起投票")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.disabled(busy) }
-                    ToolbarItem(placement: .confirmationAction) { Button("创建") { Task {
-                        busy = true; defer { busy = false }
-                        do { let id = try await api.createPiliVote(title: title, options: options, multiple: choices, days: days, identity: identity); onCreate(id, title); dismiss() }
-                        catch { self.error = error.localizedDescription }
-                    } }.disabled(busy) }
-                }.interactiveDismissDisabled(busy)
         }
     }
 }

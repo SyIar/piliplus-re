@@ -27,6 +27,12 @@ extension BiliAPIClient {
         }
         let vote = module["additional"]["vote"]
         if draft.voteID == nil, vote["vote_id"].piliInt > 0 { draft.voteID = vote["vote_id"].piliInt; draft.voteTitle = vote["desc"].piliString }
+        let reserveID = module["additional"]["reserve"]["rid"].piliInt
+        if reserveID > 0 {
+            let info = try await piliContentRead("/x/new-reserve/up/reserve/info", query: ["id": String(reserveID), "from": "1"], identity: identity)
+            draft.reservation = .init(id: reserveID, title: info["title"].piliString,
+                date: Date(timeIntervalSince1970: TimeInterval(info["live_plan_start_time"].piliInt)), subtype: info["sub_type"].piliInt)
+        }
         let option = item["option"]
         draft.privatePost = option["private_pub"].piliInt == 1 || !item["modules"]["module_author"]["badge_text"].piliString.isEmpty
         draft.commentPolicy = option["close_comment"].piliInt == 1 ? 1 : option["up_choose_comment"].piliInt == 1 ? 2 : 0

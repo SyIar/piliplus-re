@@ -7,6 +7,7 @@ final class DynamicFeedLifecycleCoordinator {
     private let libraryStore: LibraryStore
     private let contentFilter: DynamicFeedContentFilter
     private let resourcePrefetchCoordinator: DynamicFeedResourcePrefetchCoordinator
+    private let category: PiliDynamicCategory
     private var rawItems: [DynamicFeedItem] = []
     private var offset = ""
     private var hasMore = true
@@ -25,8 +26,9 @@ final class DynamicFeedLifecycleCoordinator {
         sessionStore: SessionStore,
         libraryStore: LibraryStore,
         contentFilter: DynamicFeedContentFilter,
-        resourcePrefetchCoordinator: DynamicFeedResourcePrefetchCoordinator
+        resourcePrefetchCoordinator: DynamicFeedResourcePrefetchCoordinator, category: PiliDynamicCategory = .all
     ) {
+        self.category = category
         self.api = api
         self.sessionStore = sessionStore
         self.libraryStore = libraryStore
@@ -48,29 +50,30 @@ final class DynamicFeedLifecycleCoordinator {
 
     func loadInitialPage() async throws -> [DynamicFeedItem] {
         resetPagination()
-        let page = try await DynamicFeedWarmCache.shared.page(
-            api: api,
-            identityKey: cacheIdentityKey
-        )
+        let page: DynamicFeedData
+        if category == .all {
+            page = try await DynamicFeedWarmCache.shared.page(api: api, identityKey: cacheIdentityKey)
+        } else { page = try await api.fetchDynamicFeed(category: category) }
         return apply(page: page, prefetchDelay: 0.08)
     }
 
     func refreshPage() async throws -> [DynamicFeedItem] {
         resetPagination()
         let identityKey = cacheIdentityKey
-        let page = try await api.fetchDynamicFeed()
-        await DynamicFeedWarmCache.shared.store(page, identityKey: identityKey)
+        let page = try await api.fetchDynamicFeed(category: category)
+        if category == .all { await DynamicFeedWarmCache.shared.store(page, identityKey: identityKey) }
         return apply(page: page, prefetchDelay: 0.08)
     }
 
     func loadMorePage() async throws -> [DynamicFeedItem] {
-        let page = try await api.fetchDynamicFeed(offset: offset)
+        let page = try await api.fetchDynamicFeed(offset: offset, category: category)
         let moreItems = contentFilter.displayable(page.items)
         rawItems = contentFilter.uniqueAppendItems(moreItems, to: rawItems)
         let filteredItems = filteredCurrentItems()
         resourcePrefetchCoordinator.scheduleResourcePrefetch(for: moreItems, initialDelay: 0.75)
-        offset = page.offset ?? offset
-        hasMore = page.hasMore ?? false
+        let next = page.offset ?? ""
+        hasMore = page.hasMore == true && !next.isEmpty && next != offset
+        offset = next
         return filteredItems
     }
 

@@ -962,7 +962,12 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         XCTAssertTrue(player.prepareStoppedPlaybackAfterAppBackgroundIfNeeded())
         player.play()
 
-        try await Task.sleep(nanoseconds: 1_800_000_000)
+        // Hosted simulators may suspend the process between the two recovery stages.
+        // Observe the recovery event, keeping all stage/count assertions below intact.
+        let deadline = ContinuousClock.now.advanced(by: .seconds(6))
+        while engine.playerItemRecoveryCallCount == 0 && ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(25))
+        }
         XCTAssertEqual(engine.videoOutputRefreshCallCount, 2)
         XCTAssertEqual(engine.playerItemRecoveryCallCount, 1)
         XCTAssertGreaterThanOrEqual(engine.playCallCount, 3)

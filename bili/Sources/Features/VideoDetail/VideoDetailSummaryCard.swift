@@ -93,6 +93,11 @@ struct VideoDetailSummaryCard: View {
                                 }
                             }
                         }
+                        tool("举报视频", icon: "exclamationmark.bubble") {
+                            AppHelper.shared.presentSheet(.sheet) {
+                                NavigationStack { PiliAccountWebView(api: viewModel.api, url: URL(string: "https://www.bilibili.com/appeal/?avid=\(aid)")!, title: "举报视频") }
+                            }
+                        }
                         tool("视频笔记", icon: "note.text") {
                             AppHelper.shared.presentSheet(.sheet) { PiliNotesLibraryView(api: viewModel.api, video: viewModel.detail) }
                         }

@@ -2,6 +2,7 @@ import SwiftUI
 import WebKit
 
 struct BiliWebLoginView: View {
+    @EnvironmentObject private var dependencies: AppDependencies
     @Environment(\.dismiss) private var dismiss
     var usesIsolatedSession = false
     let onLoginCookies: ([HTTPCookie]) -> Void
@@ -14,6 +15,14 @@ struct BiliWebLoginView: View {
             }
             .hiddenInlineNavigationTitle()
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink("Cookie 登录") {
+                        PiliCookieLoginView(api: dependencies.api) { cookies in
+                            onLoginCookies(cookies)
+                            dismiss()
+                        }
+                    }
+                }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("关闭") {
                         dismiss()
@@ -133,7 +142,7 @@ enum BiliWebCookieStore {
     ])
 
     static func isStorableBiliCookie(_ cookie: HTTPCookie) -> Bool {
-        cookie.domain.localizedCaseInsensitiveContains("bilibili.com")
+        (cookie.domain.lowercased() == "bilibili.com" || cookie.domain.lowercased().hasSuffix(".bilibili.com"))
             && storableCookieNames.contains(cookie.name)
             && !cookie.value.isEmpty
     }

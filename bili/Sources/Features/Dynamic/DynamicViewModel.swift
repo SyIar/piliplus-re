@@ -26,7 +26,7 @@ final class DynamicViewModel: ObservableObject {
         lifecycleCoordinator.hasMoreItems
     }
 
-    init(api: BiliAPIClient, libraryStore: LibraryStore, sessionStore: SessionStore) {
+    init(api: BiliAPIClient, libraryStore: LibraryStore, sessionStore: SessionStore, category: PiliDynamicCategory = .all) {
         let contentFilter = DynamicFeedContentFilter(libraryStore: libraryStore)
         let resourcePrefetchCoordinator = DynamicFeedResourcePrefetchCoordinator(
             api: api,
@@ -37,7 +37,7 @@ final class DynamicViewModel: ObservableObject {
             sessionStore: sessionStore,
             libraryStore: libraryStore,
             contentFilter: contentFilter,
-            resourcePrefetchCoordinator: resourcePrefetchCoordinator
+            resourcePrefetchCoordinator: resourcePrefetchCoordinator, category: category
         )
         filterCancellable = libraryStore.$blocksAdDynamics
             .combineLatest(libraryStore.$blocksGoodsDynamics)

@@ -25,6 +25,7 @@ struct PiliNotesLibraryView: View {
                     NavigationLink {
                         PiliNoteEditorView(api: api, aid: aid, initialTitle: video.title, noteID: nil, initialText: "", time: nil)
                     } label: { Label { Text("开始记笔记") } icon: { PikaIcon(PikaIcon.Name.edit) } }
+                    PiliFullNoteEditorLink(api: api, aid: aid)
                 } else {
                     Picker("类型", selection: $published) { Text("私人笔记").tag(false); Text("公开笔记").tag(true) }.pickerStyle(.segmented)
                 }
@@ -115,6 +116,9 @@ struct PiliNoteReaderView: View {
                     ForEach(Array(detail.operations.enumerated()), id: \.offset) { _, operation in
                         PiliNoteOperationView(operation: operation)
                     }
+                    if !published, !detail.forbidsEditing, let aid = detail.aid ?? record.aid {
+                        PiliFullNoteEditorLink(api: api, aid: aid)
+                    }
                     if !published, !detail.forbidsEditing, let aid = detail.aid ?? record.aid, detail.canEditAsText {
                         NavigationLink("编辑笔记") {
                             PiliNoteEditorView(api: api, aid: aid, initialTitle: detail.title, noteID: record.noteID,
@@ -165,6 +169,8 @@ struct PiliNoteEditorView: View {
     @State private var published = false
     @State private var saving = false
     @State private var message: String?
+    @State private var draftTask: Task<Void, Never>?
+    @State private var saved = false
     init(api: BiliAPIClient, aid: Int, initialTitle: String, noteID: String?, initialText: String, time: Double?) {
         self.api = api; self.aid = aid; self.time = time
         let account = api.requestSnapshot(purpose: .main)
@@ -177,6 +183,7 @@ struct PiliNoteEditorView: View {
     }
     var body: some View {
         Form {
+            PiliFullNoteEditorLink(api: api, aid: aid)
             TextField("笔记标题", text: $title)
             TextEditor(text: $text).font(.cc.base).frame(minHeight: 260)
             if let time {
@@ -198,8 +205,15 @@ struct PiliNoteEditorView: View {
             Text("编辑内容自动保存在本机草稿中，点击保存后才同步到当前主账号。").ccText(font: .cc.sm, color: .cc.mutedForeground)
         }
         .navigationTitle("编辑笔记").navigationBarTitleDisplayMode(.inline)
-        .onChange(of: text) { _, _ in persistDraft() }
-        .onChange(of: title) { _, _ in persistDraft() }
+        .onChange(of: text) { _, _ in scheduleDraft() }
+        .onChange(of: title) { _, _ in scheduleDraft() }
+        .onDisappear { draftTask?.cancel(); if !saved { persistDraft() } }
+    }
+    private func scheduleDraft() {
+        saved = false; draftTask?.cancel()
+        draftTask = Task { @MainActor in
+            do { try await Task.sleep(for: .milliseconds(600)); persistDraft() } catch {}
+        }
     }
     private func persistDraft() { UserDefaults.standard.set(["title": title, "text": text], forKey: draftKey) }
     private func save() async {
@@ -208,8 +222,21 @@ struct PiliNoteEditorView: View {
         defer { saving = false }
         do {
             noteID = try await api.savePiliNote(aid: aid, noteID: noteID, title: title, text: text, published: published, credentialVersion: credentialVersion)
+            draftTask?.cancel(); saved = true
             UserDefaults.standard.removeObject(forKey: draftKey)
             message = published ? "已提交公开笔记" : "笔记已保存"
         } catch { message = "保存失败，草稿已保留：\(error.localizedDescription)" }
+    }
+}
+
+struct PiliFullNoteEditorLink: View {
+    let api: BiliAPIClient
+    let aid: Int
+    var body: some View {
+        NavigationLink("富文本笔记（图片与排版）") {
+            PiliAccountWebView(api: api,
+                url: URL(string: "https://www.bilibili.com/h5/note-app?oid=\(aid)&pagefrom=ugcvideo&is_stein_gate=0")!,
+                title: "富文本笔记")
+        }
     }
 }

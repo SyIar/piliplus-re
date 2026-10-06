@@ -7,26 +7,26 @@ final class DynamicViewModelHolder: ObservableObject {
     private var snapshotRefreshTask: Task<Void, Never>?
     private var lastSnapshot: DynamicRenderSnapshot?
 
-    func configure(api: BiliAPIClient, libraryStore: LibraryStore, sessionStore: SessionStore) {
+    func configure(api: BiliAPIClient, libraryStore: LibraryStore, sessionStore: SessionStore, category: PiliDynamicCategory = .all) {
         guard viewModel == nil else { return }
-        installViewModel(api: api, libraryStore: libraryStore, sessionStore: sessionStore)
+        installViewModel(api: api, libraryStore: libraryStore, sessionStore: sessionStore, category: category)
     }
 
-    func reconfigure(api: BiliAPIClient, libraryStore: LibraryStore, sessionStore: SessionStore) {
+    func reconfigure(api: BiliAPIClient, libraryStore: LibraryStore, sessionStore: SessionStore, category: PiliDynamicCategory = .all) {
         snapshotRefreshTask?.cancel()
         snapshotRefreshTask = nil
         cancellable = nil
         viewModel = nil
         lastSnapshot = nil
-        installViewModel(api: api, libraryStore: libraryStore, sessionStore: sessionStore)
+        installViewModel(api: api, libraryStore: libraryStore, sessionStore: sessionStore, category: category)
     }
 
     private func installViewModel(
         api: BiliAPIClient,
         libraryStore: LibraryStore,
-        sessionStore: SessionStore
+        sessionStore: SessionStore, category: PiliDynamicCategory
     ) {
-        let viewModel = DynamicViewModel(api: api, libraryStore: libraryStore, sessionStore: sessionStore)
+        let viewModel = DynamicViewModel(api: api, libraryStore: libraryStore, sessionStore: sessionStore, category: category)
         self.viewModel = viewModel
         lastSnapshot = DynamicRenderSnapshot(viewModel)
         cancellable = viewModel.objectWillChange.sink { [weak self] _ in

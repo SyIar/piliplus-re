@@ -33,7 +33,7 @@ final class PiliNetworkSessionSourceTests: XCTestCase {
     }
 }
 
-private nonisolated final class PiliSessionSourceURLProtocol: URLProtocol, @unchecked Sendable {
+private nonisolated final class PiliSessionSourceURLProtocol: URLProtocol {
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {

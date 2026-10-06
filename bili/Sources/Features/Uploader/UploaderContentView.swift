@@ -44,6 +44,14 @@ struct UploaderContentView: View {
 
     private var content: some View {
         scrollContent
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        PiliAccountWebView(api: dependencies.api, url: URL(string: "https://account.bilibili.com/h5/account-h5/gr/report?navhide=1&targetmid=\(owner.mid)")!, title: "举报用户")
+                    } label: { Image(systemName: "exclamationmark.bubble") }
+                        .accessibilityLabel("举报用户")
+                }
+            }
             .task {
                 await viewModel.loadInitial()
             }

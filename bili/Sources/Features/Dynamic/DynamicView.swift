@@ -4,13 +4,16 @@ struct DynamicView: View {
     @EnvironmentObject private var dependencies: AppDependencies
     @EnvironmentObject private var libraryStore: LibraryStore
     @State private var showsComposer = false
+    @State private var category = PiliDynamicCategory.all
 
     var body: some View {
-        DynamicContentRoot(
-            api: dependencies.api,
-            libraryStore: libraryStore,
-            sessionStore: dependencies.sessionStore
-        )
+        VStack(spacing: 0) {
+            Picker("动态分类", selection: $category) {
+                ForEach(PiliDynamicCategory.allCases) { Text($0.title).tag($0) }
+            }.pickerStyle(.segmented).padding(.horizontal).padding(.vertical, 8)
+            DynamicContentRoot(api: dependencies.api, libraryStore: libraryStore,
+                sessionStore: dependencies.sessionStore, category: category).id(category)
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showsComposer = true } label: { Image(systemName: "square.and.pencil") }
@@ -27,6 +30,7 @@ private struct DynamicContentRoot: View {
     let api: BiliAPIClient
     @ObservedObject var libraryStore: LibraryStore
     @ObservedObject var sessionStore: SessionStore
+    let category: PiliDynamicCategory
     @StateObject private var holder = DynamicViewModelHolder()
     @StateObject private var pullRefreshSettings = PullRefreshRuntimeSettingsStore()
 
@@ -45,7 +49,7 @@ private struct DynamicContentRoot: View {
                         holder.configure(
                             api: api,
                             libraryStore: libraryStore,
-                            sessionStore: sessionStore
+                            sessionStore: sessionStore, category: category
                         )
                     }
             }
@@ -61,7 +65,7 @@ private struct DynamicContentRoot: View {
             holder.reconfigure(
                 api: api,
                 libraryStore: libraryStore,
-                sessionStore: sessionStore
+                sessionStore: sessionStore, category: category
             )
         }
     }

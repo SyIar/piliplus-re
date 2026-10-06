@@ -43,15 +43,8 @@ extension BiliAPIClient {
         }
     }
     func createPiliVote(title: String, options: [String], multiple: Int, days: Int, identity: PiliAccountIdentity) async throws -> Int {
-        let names = options.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
-        guard !title.isEmpty, title.count <= 80, (2...20).contains(names.count), Set(names).count == names.count,
-              (1...names.count).contains(multiple), (1...365).contains(days) else { throw PiliOfflineError.message("请填写标题、至少两个不同选项以及有效的结束时间") }
-        let result = try await piliContentWrite("/x/vote/create", body: .object(["vote_info": .object([
-            "title": .string(title), "desc": .string(title), "type": .int(0), "choice_cnt": .int(multiple),
-            "duration": .int(days * 86400), "vote_publisher": .int(identity.mid), "only_fans_level": .int(0),
-            "options": .array(names.map { .object(["opt_desc": .string($0), "img_url": .string("")]) })])]), identity: identity)
-        guard result["vote_id"].piliInt > 0 else { throw BiliAPIError.missingPayload }
-        return result["vote_id"].piliInt
+        try await piliSaveVote(id: nil, title: title, description: title, choices: multiple,
+            duration: days * 86400, options: options.map { ($0, "") }, identity: identity)
     }
     func fetchPiliDynamicSearch(mid: Int, keyword: String, offset: String = "", page: Int = 1) async throws -> DynamicFeedData {
         let context = await requestSnapshot(purpose: .dynamicFeed)
