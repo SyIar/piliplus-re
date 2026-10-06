@@ -15,7 +15,10 @@ extension LiveRoomContentView {
     }
 
     func liveDetailControls(_ viewModel: LiveRoomViewModel, contentWidth: CGFloat) -> some View {
-        LiveRoomMinimalDetailHeader(viewModel: viewModel)
+        VStack(alignment: .leading, spacing: 18) {
+            LiveRoomMinimalDetailHeader(viewModel: viewModel)
+            PiliLiveInteractionView(viewModel: viewModel, store: viewModel.superChatStore)
+        }
         .frame(width: contentWidth, alignment: .leading)
     }
 }

@@ -30,22 +30,26 @@ extension BiliAPIClient {
             for: purpose,
             multiAccountEnabled: libraryStore.multiAccountExperimentEnabled
         )
+        let anonymousPlayback = purpose == .playback && libraryStore.incognitoModeEnabled
+        let version = purpose == .playback
+            ? account.version &+ (libraryStore.playbackPrivacyRevision &* 1_000_000_000)
+            : account.version
         return RequestSnapshot(
-            cookieHeader: account.cookieHeader,
+            cookieHeader: anonymousPlayback ? account.anonymousCookieHeader : account.cookieHeader,
             anonymousCookieHeader: account.anonymousCookieHeader,
-            appAccessKey: account.accessKey,
+            appAccessKey: anonymousPlayback ? nil : account.accessKey,
             homeRecommendIdentityKey: sessionStore.recommendCacheIdentityKey(
                 guestModeEnabled: libraryStore.guestModeEnabled
             ),
-            isLoggedIn: account.isLoggedIn,
-            csrfToken: account.csrfToken,
-            currentUserMID: account.accountMID,
+            isLoggedIn: !anonymousPlayback && account.isLoggedIn,
+            csrfToken: anonymousPlayback ? nil : account.csrfToken,
+            currentUserMID: anonymousPlayback ? nil : account.accountMID,
             preferredVideoQuality: preferredVideoQuality,
             cellularPreferredVideoQuality: cellularPreferredVideoQuality,
             playbackStreamSourcePreference: libraryStore.playbackStreamSourcePreference,
             homeRecommendFeedSourcePreference: libraryStore.homeRecommendFeedSourcePreference,
             guestModeEnabled: libraryStore.guestModeEnabled,
-            playbackCredentialVersion: account.version,
+            playbackCredentialVersion: version,
             isAccountPurposeEnabled: account.isPurposeEnabled,
             effectivePreferredVideoQuality: LibraryStore.effectivePreferredVideoQuality(
                 preferred: preferredVideoQuality,
@@ -122,12 +126,13 @@ nonisolated extension BiliAPIClient {
     func playbackHistoryRequestContext() async -> PlaybackHistoryRequestContext {
         let snapshot = await requestSnapshot(purpose: .historyWrite)
         let paused = await libraryStore.piliCloudHistoryPaused(mid: snapshot.currentUserMID)
+        let incognito = await libraryStore.incognitoModeEnabled
         return PlaybackHistoryRequestContext(
             cookieHeader: snapshot.cookieHeader,
             appAccessKey: snapshot.appAccessKey,
             isLoggedIn: snapshot.isLoggedIn,
             csrfToken: snapshot.csrfToken,
-            isAccountPurposeEnabled: snapshot.isAccountPurposeEnabled && !paused
+            isAccountPurposeEnabled: snapshot.isAccountPurposeEnabled && !paused && !incognito
         )
     }
 
@@ -204,7 +209,7 @@ nonisolated extension BiliAPIClient {
     }
 
     func liveAccountRequestIdentity() async -> (cookieHeader: String, currentUserMID: Int?) {
-        let snapshot = await requestSnapshot()
+        let snapshot = await requestSnapshot(purpose: .playback)
         return (snapshot.cookieHeader, snapshot.currentUserMID)
     }
 

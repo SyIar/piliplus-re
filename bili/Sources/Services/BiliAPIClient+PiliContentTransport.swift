@@ -45,12 +45,12 @@ extension BiliAPIClient {
 
     func piliContentRead(_ path: String, query: [String: String] = [:], signed: Bool = false,
                          purpose: BiliAccountPurpose = .main, identity: PiliAccountIdentity? = nil,
-                         base: URL? = nil) async throws -> DynamicJSONValue {
+                         base: URL? = nil, referer: String = "https://www.bilibili.com/") async throws -> DynamicJSONValue {
         let context = await requestSnapshot(purpose: purpose)
         if let identity, !identity.matches(context) { throw PiliOfflineError.message("账号已切换，请重新打开页面") }
         let parameters = signed ? try await signedWBIQuery(query) : query
         let response: BiliResponse<DynamicJSONValue> = try await get(
-            base: base ?? baseURL, path: path, query: parameters,
+            base: base ?? baseURL, path: path, query: parameters, referer: referer,
             cookieHeader: context.isLoggedIn ? context.cookieHeader : context.anonymousCookieHeader,
             cachePolicy: .reloadIgnoringLocalCacheData)
         if let identity, !(await identity.matches(requestSnapshot(purpose: purpose))) {
@@ -64,7 +64,7 @@ extension BiliAPIClient {
     func piliContentWrite(_ path: String, body: PiliJSON? = nil, fields: [String: String]? = nil,
                           query: [String: String] = [:], signed: Bool = false,
                           identity: PiliAccountIdentity, purpose: BiliAccountPurpose = .main,
-                          base: URL? = nil) async throws -> DynamicJSONValue {
+                          base: URL? = nil, referer: String = "https://www.bilibili.com/") async throws -> DynamicJSONValue {
         let context = await requestSnapshot(purpose: purpose)
         guard identity.matches(context) else { throw PiliOfflineError.message("账号已切换，请重新打开页面") }
         guard let csrf = context.csrfToken, !csrf.isEmpty else { throw BiliAPIError.missingCSRF }
@@ -76,10 +76,10 @@ extension BiliAPIClient {
         if var fields {
             fields["csrf"] = csrf
             response = try await postForm(base: base ?? baseURL, path: path, query: parameters,
-                body: fields, cookieHeader: context.cookieHeader, retryPolicy: Self.piliSingleWrite)
+                body: fields, referer: referer, cookieHeader: context.cookieHeader, retryPolicy: Self.piliSingleWrite)
         } else {
             var request = try await makeRequest(base: base ?? baseURL, path: path, query: parameters,
-                referer: "https://www.bilibili.com/", cookieHeader: context.cookieHeader,
+                referer: referer, cookieHeader: context.cookieHeader,
                 cachePolicy: .reloadIgnoringLocalCacheData)
             request.httpMethod = "POST"
             request.setValue("application/json; charset=UTF-8", forHTTPHeaderField: "Content-Type")

@@ -53,12 +53,13 @@ final class AppDependencies: ObservableObject {
                 }
             }
             .store(in: &sessionCancellables)
-        Publishers.CombineLatest(
+        Publishers.CombineLatest3(
             sessionStore.$playbackAccountCredentialVersion,
-            libraryStore.$multiAccountExperimentEnabled
+            libraryStore.$multiAccountExperimentEnabled,
+            libraryStore.$incognitoModeEnabled
         )
             .removeDuplicates { lhs, rhs in
-                lhs.0 == rhs.0 && lhs.1 == rhs.1
+                lhs.0 == rhs.0 && lhs.1 == rhs.1 && lhs.2 == rhs.2
             }
             .dropFirst()
             .sink { [weak self] _ in

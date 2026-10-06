@@ -65,7 +65,7 @@ private struct PiliCommentActionsContent<Content: View>: View {
                 .contextMenu {
                     Button { CommentCopyAction.copy(comment.content?.message ?? "") } label: { Label("复制评论", systemImage: "doc.on.doc") }
                     Button("保存完整评论", systemImage: "square.and.arrow.down") { showsExport = true }
-                    if comment.member?.numericMID == subject.identity.mid {
+                    if comment.member?.videoOwner?.mid == subject.identity.mid {
                         Button("检查对外可见性", systemImage: "checkmark.shield") { checksVisibility = true }
                     }
                     Button { perform(.dislike(state.reaction != 2)) } label: {

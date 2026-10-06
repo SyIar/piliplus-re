@@ -4465,6 +4465,67 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testIncognitoPlaybackDropsCredentialsAndInvalidatesScopeWithoutAffectingInteractions() async throws {
+        let api = try makeAPI(cookieHeader: "SESSDATA=private; DedeUserID=1001; bili_jct=private-csrf", accessKey: "private-access")
+        let before = api.requestSnapshot(purpose: .playback)
+        api.libraryStore.setIncognitoModeEnabled(true)
+        let anonymous = api.requestSnapshot(purpose: .playback)
+        XCTAssertFalse(anonymous.isLoggedIn)
+        XCTAssertNil(anonymous.appAccessKey)
+        XCTAssertNil(anonymous.csrfToken)
+        XCTAssertNil(anonymous.currentUserMID)
+        XCTAssertFalse(anonymous.cookieHeader.contains("SESSDATA"))
+        XCTAssertNotEqual(before.playbackCredentialVersion, anonymous.playbackCredentialVersion)
+        XCTAssertTrue(api.requestSnapshot(purpose: .interaction).isLoggedIn)
+        XCTAssertTrue(api.requestSnapshot().cookieHeader.contains("private"))
+        let history = await api.playbackHistoryRequestContext()
+        XCTAssertFalse(history.isAccountPurposeEnabled)
+        api.libraryStore.setIncognitoModeEnabled(false)
+        let restored = api.requestSnapshot(purpose: .playback)
+        XCTAssertTrue(restored.isLoggedIn)
+        XCTAssertNotEqual(restored.playbackCredentialVersion, before.playbackCredentialVersion, "Off/on/off must not accept a stale request")
+    }
+
+    @MainActor
+    func testLiveEmotesAndSendingUseRoomScopedSignedOneAttemptRequests() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
+            }
+            if request.url?.path == "/xlive/web-ucenter/v2/emoticon/GetEmoticons" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"data":[{"pkg_type":3,"emoticons":[{"emoji":"[dog]","emoticon_unique":"official_dog","perm":1}]},{"pkg_type":2,"emoticons":[{"emoji":"加油","emoticon_unique":"room_1_2","perm":0}]}]}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=live; DedeUserID=1001; bili_jct=live-csrf")
+        let identity = PiliAccountIdentity(api.requestSnapshot())
+        let emotes = try await api.piliLiveEmotes(roomID: 99, identity: identity)
+        XCTAssertEqual(emotes.count, 2)
+        XCTAssertTrue(emotes[0].insertsText)
+        XCTAssertFalse(emotes[1].allowed)
+        try await api.piliSendLive(roomID: 99, message: "[dog] hello", emote: false, identity: identity)
+        try await api.piliSendLive(roomID: 99, message: "room_99_3", emote: true, identity: identity)
+        let writes = recorder.requests.filter { $0.httpMethod == "POST" }
+        XCTAssertEqual(writes.count, 2)
+        for request in writes {
+            XCTAssertEqual(request.url?.host, "api.live.bilibili.com")
+            XCTAssertEqual(request.url?.path, "/msg/send")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Referer"), "https://live.bilibili.com/99")
+            XCTAssertNotNil(Self.queryValues(for: request)["w_rid"])
+            XCTAssertEqual(formValues(in: request)["csrf_token"], "live-csrf")
+            XCTAssertEqual(formValues(in: request)["roomid"], "99")
+        }
+        XCTAssertNil(formValues(in: writes[0])["dm_type"])
+        XCTAssertEqual(formValues(in: writes[1])["dm_type"], "1")
+        let failures = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in failures.record(request); throw URLError(.networkConnectionLost) }
+        do { try await api.piliSendLive(roomID: 99, message: "message", emote: false, identity: identity); XCTFail() }
+        catch { XCTAssertEqual(failures.requests.filter { $0.httpMethod == "POST" }.count, 1) }
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

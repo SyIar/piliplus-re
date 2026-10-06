@@ -528,6 +528,15 @@ private struct LiveRoomSurfaceOnlyOverlay: View {
             )
             .allowsHitTesting(false)
             .zIndex(2.5)
+            if state.usesLandscapeChrome, !state.isBareSurfaceTransitionActive {
+                VStack {
+                    Spacer()
+                    HStack {
+                        PiliLiveInteractionView(viewModel: viewModel, store: viewModel.superChatStore, compact: true)
+                        Spacer()
+                    }.padding(.leading, 20).padding(.bottom, 84)
+                }.zIndex(3.5)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.clear)

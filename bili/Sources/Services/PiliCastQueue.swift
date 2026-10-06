@@ -55,7 +55,7 @@ extension PiliCastSource {
                         }
                         let context = api.requestSnapshot(purpose: .playback)
                         guard context.playbackCredentialVersion == version else { throw PiliOfflineError.message("播放账号已切换，请重新投屏") }
-                        return PiliCastSource(title: title, duration: Double(detail.duration ?? 0), position: 0, variant: variant, localFile: nil,
+                        return PiliCastSource(title: title, duration: Double(detail.pages?.first(where: { $0.cid == resolvedCID })?.duration ?? detail.duration ?? 0), position: 0, variant: variant, localFile: nil,
                             headers: BiliHLSManifestBuilder.httpHeaders(referer: "https://www.bilibili.com/", cookieHeader: context.cookieHeader))
                     })
                 }

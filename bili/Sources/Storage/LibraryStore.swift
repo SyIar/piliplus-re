@@ -145,6 +145,7 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var videoListenPlaybackOrder: VideoListenPlaybackOrder
     @Published private(set) var videoListenPlaylistSortOrder: VideoListenPlaylistSortOrder
     @Published private(set) var cellularBiliTrafficCompatibilityExperimentEnabled: Bool
+    private(set) var playbackPrivacyRevision = 0
     @Published private(set) var incognitoModeEnabled: Bool
     @Published private(set) var guestModeEnabled: Bool
     @Published private(set) var multiAccountExperimentEnabled: Bool
@@ -1296,6 +1297,8 @@ final class LibraryStore: ObservableObject {
     }
 
     func setIncognitoModeEnabled(_ isEnabled: Bool) {
+        guard incognitoModeEnabled != isEnabled else { return }
+        playbackPrivacyRevision &+= 1
         incognitoModeEnabled = isEnabled
         userDefaults.set(isEnabled, forKey: Self.incognitoModeEnabledKey)
     }
@@ -1709,6 +1712,7 @@ extension LibraryStore {
         videoListenPlaybackOrder = restored.videoListenPlaybackOrder
         videoListenPlaylistSortOrder = restored.videoListenPlaylistSortOrder
         cellularBiliTrafficCompatibilityExperimentEnabled = restored.cellularBiliTrafficCompatibilityExperimentEnabled
+        if incognitoModeEnabled != restored.incognitoModeEnabled { playbackPrivacyRevision &+= 1 }
         incognitoModeEnabled = restored.incognitoModeEnabled
         guestModeEnabled = restored.guestModeEnabled
         multiAccountExperimentEnabled = restored.multiAccountExperimentEnabled

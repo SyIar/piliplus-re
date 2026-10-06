@@ -9,7 +9,8 @@ extension LiveRoomViewModel {
         isDanmakuEnabled.toggle()
         libraryStore.setDanmakuEnabled(isDanmakuEnabled)
         refreshLiveDanmakuDiagnosticsRenderState()
-        if isDanmakuEnabled {
+        if isDanmakuEnabled || superChatStore.mode != 0 {
+            liveDanmakuRenderStore.updateEnabled(isDanmakuEnabled)
             resumeLiveDanmakuIfNeeded()
         } else {
             stopLiveDanmaku(clearItems: true)
@@ -42,7 +43,7 @@ extension LiveRoomViewModel {
     }
 
     func resumeLiveDanmakuIfNeeded() {
-        guard isDanmakuEnabled, playerViewModel != nil, roomID > 0 else { return }
+        guard (isDanmakuEnabled || superChatStore.mode != 0), playerViewModel != nil, roomID > 0 else { return }
         startLiveDanmakuIfNeeded(roomID: roomID)
     }
 
@@ -51,7 +52,7 @@ extension LiveRoomViewModel {
         isDanmakuEnabled = isEnabled
         liveDanmakuRenderStore.updateEnabled(isEnabled)
         refreshLiveDanmakuDiagnosticsRenderState()
-        if isEnabled {
+        if isEnabled || superChatStore.mode != 0 {
             resumeLiveDanmakuIfNeeded()
         } else {
             stopLiveDanmaku(clearItems: true)
@@ -59,7 +60,8 @@ extension LiveRoomViewModel {
     }
 
     func startLiveDanmakuIfNeeded(roomID: Int) {
-        guard isDanmakuEnabled, liveDanmakuService == nil else { return }
+        guard (isDanmakuEnabled || superChatStore.mode != 0), liveDanmakuService == nil else { return }
+        superChatStore.load(roomID: roomID, api: api)
         liveDanmakuRenderStore.updateConnectionState(phase: .fetchingConfig, error: nil)
         prefetchLiveDanmakuHistoryIfNeeded(roomID: roomID)
         liveDanmakuStartDate = Date()
@@ -85,7 +87,7 @@ extension LiveRoomViewModel {
         candidate: LiveStreamURLCandidate,
         generation: Int
     ) {
-        guard isDanmakuEnabled else { return }
+        guard isDanmakuEnabled || superChatStore.mode != 0 else { return }
         let defersForTransportStream = LiveStartupAuxiliaryPolicy.defersUntilFirstFrame(
             streamFormat: candidate.formatName
         )
@@ -122,6 +124,7 @@ extension LiveRoomViewModel {
     }
 
     func stopLiveDanmaku(clearItems: Bool) {
+        superChatStore.stop(clear: clearItems)
         liveDanmakuRenderStore.flushPendingLiveItems()
         liveDanmakuService?.stop()
         liveDanmakuService = nil
@@ -157,6 +160,7 @@ extension LiveRoomViewModel {
     }
 
     func appendLiveDanmakuItems(_ items: [DanmakuItem]) {
+        superChatStore.ingest(items.compactMap(\.superChat))
         guard isDanmakuEnabled, !items.isEmpty else { return }
         liveDanmakuRenderStore.appendItems(items, retainingLimit: 240)
         if let liveDanmakuStartDate {

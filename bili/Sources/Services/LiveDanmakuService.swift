@@ -2523,7 +2523,8 @@ nonisolated final class LiveDanmakuService: @unchecked Sendable {
                 color: payload.color,
                 text: trimmedText,
                 senderName: payload.senderName,
-                inlineEmotes: payload.inlineEmotes
+                inlineEmotes: payload.inlineEmotes,
+                superChat: commandBaseName(command).hasPrefix("SUPER_CHAT_MESSAGE") ? PiliSuperChat(dictionary: object["data"] as? [String: Any] ?? [:]) : nil
             )
         ]
         result.events.append(.danmakuParsed(text: trimmedText))

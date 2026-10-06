@@ -27,6 +27,8 @@ final class LiveRoomViewModel: ObservableObject {
     @Published private(set) var isMutatingAnchorFollow = false
     @Published private(set) var interactionMessage: String?
 
+    let superChatStore = PiliSuperChatStore()
+    @Published var liveDanmakuDraft = ""
     let seedRoom: LiveRoom
     let liveDanmakuRenderStore: LiveDanmakuRenderStore
     let liveRotationSurfaceAlignmentState = LiveRotationSurfaceAlignmentState()
