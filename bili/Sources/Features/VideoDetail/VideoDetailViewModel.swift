@@ -20,6 +20,7 @@ final class VideoDetailViewModel: ObservableObject {
         }
     }
     let renderStores = VideoDetailViewModelRenderStores()
+    let piliVideoTools = PiliVideoToolsController()
     let piliSubtitles = PiliSubtitleController()
     let piliInteractive = PiliInteractiveController()
     var detailPresentationState = VideoDetailPresentationState()

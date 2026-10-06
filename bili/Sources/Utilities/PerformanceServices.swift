@@ -3798,19 +3798,23 @@ private struct PlayableMediaWarmupSource: Sendable {
 
 @MainActor
 enum Haptics {
+    private static var enabled: Bool { UserDefaults.standard.object(forKey: "piliplus.haptics.enabled") as? Bool ?? true }
     static func light() {
+        guard enabled else { return }
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.prepare()
         generator.impactOccurred(intensity: 0.65)
     }
 
     static func medium() {
+        guard enabled else { return }
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.prepare()
         generator.impactOccurred(intensity: 0.75)
     }
 
     static func success() {
+        guard enabled else { return }
         let generator = UINotificationFeedbackGenerator()
         generator.prepare()
         generator.notificationOccurred(.success)

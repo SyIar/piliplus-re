@@ -59,6 +59,7 @@ struct CommentAuthorIdentity: View {
 
     let name: String
     let owner: VideoOwner?
+    var member: CommentMember? = nil
 
     private var showsUPBadge: Bool {
         guard let contentOwnerMID, contentOwnerMID > 0 else { return false }
@@ -71,6 +72,17 @@ struct CommentAuthorIdentity: View {
                 .appTypography(.commentAuthor, fallback: .subheadline.weight(.semibold))
                 .lineLimit(1)
 
+            if let level = member?.levelInfo?.currentLevel, (1...7).contains(level) {
+                Text("LV\(level)").font(.system(size: 9, weight: .bold, design: .rounded))
+                    .foregroundStyle(.secondary).accessibilityLabel("等级 \(level)")
+            }
+            if member?.isVIP == true {
+                Text("大会员").font(.system(size: 9, weight: .medium)).foregroundStyle(.pink)
+            }
+            if let type = member?.verificationType {
+                Image(systemName: "checkmark.seal.fill").font(.system(size: 11)).foregroundStyle(type == 0 ? .orange : .blue)
+                    .accessibilityLabel(type == 0 ? "个人认证" : "机构认证")
+            }
             if showsUPBadge {
                 BilibiliUPBadge(size: 16, color: appTintColor)
                     .alignmentGuide(.firstTextBaseline) { dimensions in

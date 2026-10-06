@@ -13,6 +13,9 @@ struct BiliPlayerSurfaceGestureLayerHost<Content: View>: View {
     let prepareUserSeekWarmup: (Double, Bool) -> Void
     let resetPreparedScrubProgress: () -> Void
 
+    var isFullscreen = false
+    var onSwipeFullscreen: (() -> Void)? = nil
+
     private var gestureActions: BiliPlayerSurfaceGestureActions {
         BiliPlayerSurfaceGestureActions(
             viewModel: viewModel,
@@ -59,7 +62,12 @@ struct BiliPlayerSurfaceGestureLayerHost<Content: View>: View {
             },
             onHorizontalSeekCancelPendingChanged: { isPending in
                 seekPreviewModel.setCancellationPending(isPending)
-            }
+            },
+            onDoubleTapSeek: { offset in
+                guard viewModel.canSeek, !viewModel.isTerminated else { return }
+                viewModel.seek(to: min(max(0, viewModel.playbackClock.currentTime + offset), resolvedDuration))
+            },
+            isFullscreen: isFullscreen, onSwipeFullscreen: onSwipeFullscreen
         )
         .id(ObjectIdentifier(viewModel))
         .onDisappear {

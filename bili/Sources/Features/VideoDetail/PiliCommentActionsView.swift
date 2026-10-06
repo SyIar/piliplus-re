@@ -1,4 +1,5 @@
 import SwiftUI
+import Translation
 
 private struct PiliCommentActionsModifier: ViewModifier {
     let comment: Comment
@@ -45,6 +46,7 @@ private struct PiliCommentActionsContent<Content: View>: View {
     @State private var pending: PiliCommentMutation?
     @State private var showsReport = false
     @State private var showsExport = false
+    @State private var showsTranslation = false
     @State private var checksVisibility = false
     @State private var errorMessage: String?
     private var state: PiliCommentState { store.state(comment, subject: subject) }
@@ -64,6 +66,7 @@ private struct PiliCommentActionsContent<Content: View>: View {
                 }
                 .contextMenu {
                     Button { CommentCopyAction.copy(comment.content?.message ?? "") } label: { Label("复制评论", systemImage: "doc.on.doc") }
+                    Button("翻译评论", systemImage: "translate") { showsTranslation = true }
                     Button("保存完整评论", systemImage: "square.and.arrow.down") { showsExport = true }
                     if comment.member?.videoOwner?.mid == subject.identity.mid {
                         Button("检查对外可见性", systemImage: "checkmark.shield") { checksVisibility = true }
@@ -104,6 +107,7 @@ private struct PiliCommentActionsContent<Content: View>: View {
                 try await store.perform(.report(reason: reason, text: text), comment: comment, subject: subject, referer: target.referer, api: api)
             }
         }
+        .translationPresentation(isPresented: $showsTranslation, text: comment.content?.message ?? "")
         .sheet(isPresented: $showsExport) { PiliContentImageExportView(document: .comment(comment, source: target.referer)) }
         .sheet(isPresented: $checksVisibility) {
             NavigationStack { PiliVisibilityCheckView(api: api, target: .comment(oid: target.oid, type: target.type, id: comment.rpid, root: comment.rootID ?? 0)) }

@@ -153,6 +153,7 @@ struct PiliGlassFullscreenControls: View {
 }
 
 struct PiliGlassProgressBar: View {
+    @Environment(\.piliVideoTools) private var tools
     @ObservedObject var clock: PlayerPlaybackClock
     let canSeek: Bool
     let actions: PlayerNativePlaybackControlsActions
@@ -171,5 +172,8 @@ struct PiliGlassProgressBar: View {
         .padding(.horizontal, 16)
         .frame(height: 44)
         .piliLiquidGlass(in: Capsule(), overVideo: true)
+        .overlay(alignment: .top) {
+            if let tools { PiliEnergyStrip(store: tools).frame(height: 18).padding(.horizontal, 64).offset(y: -14).allowsHitTesting(false) }
+        }
     }
 }

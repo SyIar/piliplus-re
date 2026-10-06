@@ -24,7 +24,7 @@ struct CommentReplyRootView: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    CommentAuthorIdentity(name: display.authorName, owner: display.authorOwner)
+                    CommentAuthorIdentity(name: display.authorName, owner: display.authorOwner, member: comment.member)
                         .foregroundStyle(.primary)
 
                     if !display.timeText.isEmpty {

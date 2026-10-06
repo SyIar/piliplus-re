@@ -8,6 +8,7 @@ struct PiliFullscreenVideoReactions: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            if !viewModel.detail.piliIsCourse { PiliTripleButton(viewModel: viewModel, store: store) }
             PiliGlassPlayerButton(symbol: store.interactionState.isLiked ? "hand.thumbsup.fill" : "hand.thumbsup",
                                   title: store.interactionState.isLiked ? "取消点赞" : "点赞", grouped: true) {
                 markInteraction()

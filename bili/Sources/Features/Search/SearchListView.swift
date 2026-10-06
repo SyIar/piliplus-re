@@ -3,6 +3,7 @@ import SwiftUI
 struct SearchListView: View {
     @ObservedObject var viewModel: SearchViewModel
     let showsHotSearches: Bool
+    @State private var confirmsClearHistory = false
 
     private let discoveryColumns = [
         GridItem(.flexible(), spacing: 10),
@@ -31,6 +32,9 @@ struct SearchListView: View {
         .defersRemoteImageLoadsDuringFastScroll()
         .background(Color(.systemGroupedBackground))
         .nativeTopScrollEdgeEffect()
+        .confirmationDialog("清空搜索历史？", isPresented: $confirmsClearHistory, titleVisibility: .visible) {
+            Button("清空", role: .destructive) { viewModel.clearHistory() }
+        }
     }
 
     @ViewBuilder
@@ -46,6 +50,25 @@ struct SearchListView: View {
                 }
             }
         } else {
+            if let word = viewModel.defaultSearch {
+                Button { Task { await viewModel.search(word.keyword) } } label: {
+                    Label(word.display, systemImage: "magnifyingglass").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }.buttonStyle(.plain).accessibilityLabel("默认搜索：\(word.display)")
+            }
+            if !viewModel.searchHistory.isEmpty {
+                SearchContentSection(title: "搜索历史", systemImage: "clock") {
+                    HStack { Spacer(); Button("清空", role: .destructive) { confirmsClearHistory = true }.font(.caption) }
+                    LazyVGrid(columns: discoveryColumns, alignment: .leading, spacing: 10) {
+                        ForEach(viewModel.searchHistory, id: \.self) { term in
+                            Button { Task { await viewModel.search(term) } } label: {
+                                Text(term).font(.subheadline).lineLimit(1).frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+                                    .padding(.horizontal, 12).background(.quaternary, in: Capsule())
+                            }.buttonStyle(.plain)
+                                .contextMenu { Button("删除记录", systemImage: "trash", role: .destructive) { viewModel.removeHistory(term) } }
+                        }
+                    }
+                }
+            }
             if !showsHotSearches {
                 SearchDiscoveryEmptyCard(title: "开始搜索", message: "输入关键词后搜索内容。")
             } else if viewModel.hotSearchState.isLoading {
@@ -227,6 +250,8 @@ private struct SearchStructuredResultCard: View, Equatable {
     var body: some View {
         Group {
             switch result {
+            case .live(let room):
+                NavigationLink(value: room) { LiveRoomCard(room: room) }.buttonStyle(.plain)
             case .video(let video):
                 VideoRouteLink(video) {
                     SearchVideoResultRow(video: video)
@@ -274,7 +299,7 @@ private struct SearchScopedResultSkeletonRow: View {
             SearchNonVideoResultSkeletonRow(style: .media)
         case .article:
             SearchNonVideoResultSkeletonRow(style: .article)
-        case .comprehensive, .video:
+        case .comprehensive, .video, .live:
             SearchVideoResultSkeletonRow()
         }
     }

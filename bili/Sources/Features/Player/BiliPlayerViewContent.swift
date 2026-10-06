@@ -36,7 +36,9 @@ struct BiliPlayerViewContent: View {
             seekPreviewContext: context.seekPreviewContext,
             holdCurrentFrameForSeek: context.holdCurrentFrameForSeek,
             prepareUserSeekWarmup: context.prepareUserSeekWarmup,
-            resetPreparedScrubProgress: context.resetPreparedScrubProgress
+            resetPreparedScrubProgress: context.resetPreparedScrubProgress,
+            isFullscreen: context.configuration.isFullscreenActive,
+            onSwipeFullscreen: context.configuration.isFullscreenActive ? context.configuration.onExitFullscreen : context.configuration.onRequestFullscreen
         )
     }
 

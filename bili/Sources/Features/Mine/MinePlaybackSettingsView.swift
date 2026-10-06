@@ -1,6 +1,12 @@
 import SwiftUI
 
 struct MinePlaybackSettingsView: View {
+    @AppStorage("piliplus.player.doubleTapSeek") private var doubleTapSeek = false
+    @AppStorage("piliplus.player.swipeFullscreen") private var swipeFullscreen = true
+    @AppStorage("piliplus.player.skipPGC") private var skipsPGC = false
+    @AppStorage("piliplus.player.energy") private var showsEnergy = true
+    @AppStorage("piliplus.player.autoFullscreen") private var autoFullscreen = false
+    @AppStorage("piliplus.haptics.enabled") private var hapticsEnabled = true
     @ObservedObject var libraryStore: LibraryStore
     @AppStorage("piliplus.player.lockOrientation") private var locksOrientation = true
     @AppStorage("cc.bili.playback.showsAdvancedSettings.v1") var showsAdvancedPlaybackSettings = false
@@ -15,6 +21,14 @@ struct MinePlaybackSettingsView: View {
 
     var body: some View {
         Form {
+            Section("播放与交互") {
+                Toggle("自动跳过番剧片头片尾", isOn: $skipsPGC)
+                Toggle("高能进度条", isOn: $showsEnergy)
+                Toggle("开始播放后自动全屏", isOn: $autoFullscreen)
+                Toggle("震动反馈", isOn: $hapticsEnabled)
+                Toggle("两侧双击快退/快进 10 秒", isOn: $doubleTapSeek)
+                Toggle("中部上滑全屏、下滑退出", isOn: $swipeFullscreen)
+            }
             Section { NavigationLink { PiliSuperResolutionSettingsView() } label: { Label("超分辨率", systemImage: "sparkles.tv") } }
             MinePlaybackPreferenceSection(
                 libraryStore: libraryStore,

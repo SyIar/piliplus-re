@@ -64,6 +64,10 @@ struct VideoDetailSummaryCard: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
+                    if !viewModel.detail.piliIsCourse { PiliTripleButton(viewModel: viewModel, store: renderPack.interactionStore) }
+                    tool("章节与视频信息", icon: "list.bullet.rectangle") {
+                        AppHelper.shared.presentSheet(.sheet) { PiliVideoToolsView(model: viewModel, store: viewModel.piliVideoTools) }
+                    }
                     tool("截图与动图", icon: "camera") { PiliMediaCaptureView.present(viewModel) }
                     tool("原声翻译", icon: "waveform") {
                         AppHelper.shared.presentSheet(.sheet) { NavigationStack { PiliAudioLanguageView(viewModel: viewModel) } }

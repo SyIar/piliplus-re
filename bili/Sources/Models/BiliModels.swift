@@ -1622,17 +1622,19 @@ nonisolated struct PlayURLData: Decodable, Sendable {
     let lastPlayCID: Int?
     let language: PiliAudioLanguages?
     let curLanguage: String?
+    let clipInfoList: [PiliPGCClip]?
 
     init(code: Int?, message: String?, durl: [PlayDURL]?, dash: DASHInfo?, quality: Int?,
          acceptQuality: [Int]?, acceptDescription: [String]?, supportFormats: [PlaySupportFormat]?,
-         lastPlayTime: TimeInterval?, lastPlayCID: Int?, language: PiliAudioLanguages? = nil, curLanguage: String? = nil) {
+         lastPlayTime: TimeInterval?, lastPlayCID: Int?, language: PiliAudioLanguages? = nil, curLanguage: String? = nil, clipInfoList: [PiliPGCClip]? = nil) {
         self.code = code; self.message = message; self.durl = durl; self.dash = dash; self.quality = quality
         self.acceptQuality = acceptQuality; self.acceptDescription = acceptDescription; self.supportFormats = supportFormats
-        self.lastPlayTime = lastPlayTime; self.lastPlayCID = lastPlayCID; self.language = language; self.curLanguage = curLanguage
+        self.lastPlayTime = lastPlayTime; self.lastPlayCID = lastPlayCID; self.language = language; self.curLanguage = curLanguage; self.clipInfoList = clipInfoList
     }
 
     enum CodingKeys: String, CodingKey {
         case code, message, durl, dash, quality, language
+        case clipInfoList = "clip_info_list"
         case curLanguage = "cur_language"
         case acceptQuality = "accept_quality"
         case acceptDescription = "accept_description"
@@ -1653,7 +1655,7 @@ nonisolated struct PlayURLData: Decodable, Sendable {
             supportFormats: mergedSupportFormats(primary: supportFormats, secondary: metadata.supportFormats),
             lastPlayTime: lastPlayTime ?? metadata.lastPlayTime,
             lastPlayCID: lastPlayCID ?? metadata.lastPlayCID,
-            language: language ?? metadata.language, curLanguage: curLanguage ?? metadata.curLanguage
+            language: language ?? metadata.language, curLanguage: curLanguage ?? metadata.curLanguage, clipInfoList: clipInfoList ?? metadata.clipInfoList
         )
     }
 
@@ -1673,7 +1675,7 @@ nonisolated struct PlayURLData: Decodable, Sendable {
             supportFormats: mergedSupportFormats(primary: supportFormats, secondary: other.supportFormats),
             lastPlayTime: lastPlayTime ?? other.lastPlayTime,
             lastPlayCID: lastPlayCID ?? other.lastPlayCID,
-            language: language ?? other.language, curLanguage: curLanguage ?? other.curLanguage
+            language: language ?? other.language, curLanguage: curLanguage ?? other.curLanguage, clipInfoList: clipInfoList ?? other.clipInfoList
         )
     }
 
@@ -1688,7 +1690,7 @@ nonisolated struct PlayURLData: Decodable, Sendable {
             acceptDescription: acceptDescription,
             supportFormats: supportFormats,
             lastPlayTime: nil,
-            lastPlayCID: nil, language: language, curLanguage: curLanguage
+            lastPlayCID: nil, language: language, curLanguage: curLanguage, clipInfoList: clipInfoList
         )
     }
 
@@ -3174,9 +3176,18 @@ nonisolated struct CommentMember: Decodable, Hashable, Sendable {
     let uname: String?
     let avatar: String?
     let levelInfo: CommentLevelInfo?
+    let vip: DynamicJSONValue?
+    let officialVerify: DynamicJSONValue?
+
+    var isVIP: Bool { vip?["vipStatus"].piliInt == 1 || vip?["vip_status"].piliInt == 1 }
+    var verificationType: Int? {
+        guard let raw = officialVerify?["type"], let type = Int(raw.piliString), (0...1).contains(type) else { return nil }; return type
+    }
 
     enum CodingKeys: String, CodingKey {
         case mid, uname, avatar
+        case vip
+        case officialVerify = "official_verify"
         case levelInfo = "level_info"
     }
 
@@ -3185,7 +3196,9 @@ nonisolated struct CommentMember: Decodable, Hashable, Sendable {
         mid = container.decodeLossyStringIfPresent(forKey: .mid)
         uname = try container.decodeIfPresent(String.self, forKey: .uname)
         avatar = try container.decodeIfPresent(String.self, forKey: .avatar)
-        levelInfo = try container.decodeIfPresent(CommentLevelInfo.self, forKey: .levelInfo)
+        levelInfo = try? container.decodeIfPresent(CommentLevelInfo.self, forKey: .levelInfo)
+        vip = try? container.decodeIfPresent(DynamicJSONValue.self, forKey: .vip)
+        officialVerify = try? container.decodeIfPresent(DynamicJSONValue.self, forKey: .officialVerify)
     }
 
     nonisolated var videoOwner: VideoOwner? {

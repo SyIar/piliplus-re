@@ -44,6 +44,7 @@ enum SearchScope: String, CaseIterable, Identifiable, Hashable {
     case movie
     case article
     case user
+    case live
 
     var id: String { rawValue }
 
@@ -59,6 +60,8 @@ enum SearchScope: String, CaseIterable, Identifiable, Hashable {
             return "影视"
         case .article:
             return "专栏"
+        case .live:
+            return "直播间"
         case .user:
             return "UP主"
         }
@@ -76,6 +79,8 @@ enum SearchScope: String, CaseIterable, Identifiable, Hashable {
             return "film"
         case .article:
             return "doc.text"
+        case .live:
+            return "dot.radiowaves.left.and.right"
         case .user:
             return "person.crop.circle"
         }
@@ -92,9 +97,12 @@ enum SearchResultItem: Identifiable, Hashable {
     case bangumi(SearchMediaItem)
     case movie(SearchMediaItem)
     case article(SearchArticleItem)
+    case live(LiveRoom)
 
     var id: String {
         switch self {
+        case .live(let room):
+            return "live-\(room.roomID)"
         case .video(let video):
             return "video-\(video.id)"
         case .user(let user):
@@ -112,6 +120,8 @@ enum SearchResultItem: Identifiable, Hashable {
         switch self {
         case .video:
             return "视频"
+        case .live:
+            return "直播间"
         case .user:
             return "UP主"
         case .bangumi:
@@ -127,6 +137,8 @@ enum SearchResultItem: Identifiable, Hashable {
         switch self {
         case .video:
             return "play.rectangle"
+        case .live:
+            return "dot.radiowaves.left.and.right"
         case .user:
             return "person.crop.circle"
         case .bangumi:
@@ -144,6 +156,9 @@ final class SearchViewModel: ObservableObject {
     @Published var query = ""
     @Published var selectedScope: SearchScope = .comprehensive
     @Published var selectedOrder: SearchSortOrder = .comprehensive
+    @Published var selectedDuration: PiliSearchDuration = .any
+    @Published private(set) var searchHistory: [String] = []
+    @Published private(set) var defaultSearch: PiliDefaultSearch?
     @Published var hotSearches: [HotSearchItem] = []
     @Published var suggestions: [SearchSuggestItem] = []
     @Published var results: [SearchResultItem] = []
@@ -154,14 +169,18 @@ final class SearchViewModel: ObservableObject {
     private(set) var resultsRevision = 0
 
     private let api: BiliAPIClient
+    private let historyStore: PiliSearchHistory
+    private var loadedDefaultSearch = false
     private let debouncer = TaskDebouncer()
     private var page = 1
     private var lastKeyword = ""
     private var hasMore = false
     private var searchGeneration = 0
 
-    init(api: BiliAPIClient) {
+    init(api: BiliAPIClient, historyDefaults: UserDefaults = .standard) {
         self.api = api
+        historyStore = PiliSearchHistory(defaults: historyDefaults)
+        searchHistory = historyStore.values
     }
 
     var showsDiscovery: Bool {
@@ -179,7 +198,7 @@ final class SearchViewModel: ObservableObject {
     }
 
     var searchPrompt: String {
-        selectedScope == .comprehensive ? "搜索" : "搜索\(selectedScope.title)"
+        selectedScope == .comprehensive ? (defaultSearch?.display ?? "搜索") : "搜索\(selectedScope.title)"
     }
 
     var emptyResultsTitle: String {
@@ -200,7 +219,12 @@ final class SearchViewModel: ObservableObject {
     func restoreDiscoveryState(loadHotSearches: Bool = true) async {
         guard showsDiscovery else { return }
 
-        guard loadHotSearches else { return }
+        searchHistory = historyStore.values
+        guard loadHotSearches else { defaultSearch = nil; return }
+        if !loadedDefaultSearch {
+            loadedDefaultSearch = true
+            defaultSearch = try? await api.piliDefaultSearch()
+        }
         guard hotSearches.isEmpty, hotSearchState != .loaded else { return }
         await loadHotSearch()
     }
@@ -241,11 +265,14 @@ final class SearchViewModel: ObservableObject {
     }
 
     func search(_ keyword: String? = nil) async {
-        let term = (keyword ?? query).trimmingCharacters(in: .whitespacesAndNewlines)
+        let supplied = (keyword ?? query).trimmingCharacters(in: .whitespacesAndNewlines)
+        let term = supplied.isEmpty ? (defaultSearch?.keyword ?? "") : supplied
         guard !term.isEmpty else { return }
         debouncer.cancel()
         let generation = beginSearchRequest()
         query = term
+        historyStore.record(term, enabled: !api.libraryStore.incognitoModeEnabled)
+        searchHistory = historyStore.values
         page = 1
         lastKeyword = term
         hasMore = false
@@ -293,6 +320,16 @@ final class SearchViewModel: ObservableObject {
         await search(lastKeyword)
     }
 
+    func selectDuration(_ duration: PiliSearchDuration) async {
+        guard selectedDuration != duration else { return }
+        selectedDuration = duration
+        guard selectedScope.supportsOrder, !lastKeyword.isEmpty else { return }
+        await search(lastKeyword)
+    }
+
+    func removeHistory(_ term: String) { historyStore.remove(term); searchHistory = historyStore.values }
+    func clearHistory() { historyStore.clear(); searchHistory = [] }
+
     func loadMoreIfNeeded(current item: SearchResultItem?) async {
         guard let item,
             results.last?.id == item.id,
@@ -323,7 +360,7 @@ final class SearchViewModel: ObservableObject {
     private func fetchResults(keyword: String, page: Int) async throws -> [SearchResultItem] {
         switch selectedScope {
         case .comprehensive:
-            let videos = try await api.searchVideos(keyword: keyword, page: page, order: selectedOrder.apiValue)
+            let videos = try await api.searchVideos(keyword: keyword, page: page, order: selectedOrder.apiValue, duration: selectedDuration.rawValue)
                 .map(SearchResultItem.video)
             guard page == 1 else { return videos }
             async let userResults = api.searchUsers(keyword: keyword, page: 1)
@@ -344,7 +381,7 @@ final class SearchViewModel: ObservableObject {
                 .map(SearchResultItem.article)
             return users + bangumi + movies + articles + videos
         case .video:
-            return try await api.searchVideos(keyword: keyword, page: page, order: selectedOrder.apiValue)
+            return try await api.searchVideos(keyword: keyword, page: page, order: selectedOrder.apiValue, duration: selectedDuration.rawValue)
                 .map(SearchResultItem.video)
         case .bangumi:
             return try await api.searchBangumi(keyword: keyword, page: page)
@@ -355,6 +392,8 @@ final class SearchViewModel: ObservableObject {
         case .article:
             return try await api.searchArticles(keyword: keyword, page: page)
                 .map(SearchResultItem.article)
+        case .live:
+            return try await api.piliSearchLiveRooms(keyword: keyword, page: page).map(SearchResultItem.live)
         case .user:
             return try await api.searchUsers(keyword: keyword, page: page)
                 .map(SearchResultItem.user)

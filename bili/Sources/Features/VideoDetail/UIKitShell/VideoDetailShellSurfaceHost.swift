@@ -605,6 +605,8 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
         )
     }
 
+    @State private var didAutoEnterFullscreen = false
+
     var body: some View {
         let _ = legacyObservationBridge.revision
         let context = runtimeContext
@@ -660,7 +662,9 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                             seekPreviewContext: renderContext.seekPreviewContext,
                             holdCurrentFrameForSeek: holdCurrentFrameForSeek,
                             prepareUserSeekWarmup: prepareUserSeekWarmupIfNeeded,
-                            resetPreparedScrubProgress: { lastPreparedScrubProgress = -1 }
+                            resetPreparedScrubProgress: { lastPreparedScrubProgress = -1 },
+                            isFullscreen: configuration.isFullscreenActive,
+                            onSwipeFullscreen: isAudioOnlyPlayback ? nil : (configuration.isFullscreenActive ? onExitFullscreen : onRequestFullscreen)
                         )
                         .allowsHitTesting(!isGlassControlsLocked)
                         .zIndex(1)
@@ -756,6 +760,8 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                                             video: detailViewModel.detail, cid: detailViewModel.selectedCID,
                                             clock: viewModel.playbackClock, landscape: configuration.isFullscreenActive)
                         .zIndex(2.6)
+                    PiliVideoToolsOverlay(model: detailViewModel, store: detailViewModel.piliVideoTools, clock: viewModel.playbackClock)
+                        .zIndex(2.7)
                     PiliInteractiveOverlay(controller: detailViewModel.piliInteractive, viewModel: detailViewModel)
                         .zIndex(3.5)
                 }
@@ -771,6 +777,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
         }
         .environmentObject(dependencies)
         .environmentObject(libraryStore)
+        .environment(\.piliVideoTools, detailViewModel.piliVideoTools)
         .environment(\.appThemeTintColor, runtimeSettings.appTintColor)
         .biliPlayerLifecycle(
             isFullscreenActive: configuration.isFullscreenActive,
@@ -783,6 +790,14 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
         .onAppear {
             if !isAudioOnlyPlayback {
                 detailViewModel.scheduleDanmakuLoadIfNeeded()
+            }
+        }
+        .onReceive(viewModel.$hasPresentedPlayback.removeDuplicates()) { shown in
+            guard shown, !didAutoEnterFullscreen else { return }
+            didAutoEnterFullscreen = true
+            if UserDefaults.standard.bool(forKey: "piliplus.player.autoFullscreen"), !isAudioOnlyPlayback,
+               !configuration.isFullscreenActive, !isBareSurfaceTransitionActive {
+                Task { @MainActor in await Task.yield(); if !detailViewModel.isPlaybackInvalidatedForNavigation { onRequestFullscreen() } }
             }
         }
         .onChange(of: ObjectIdentifier(viewModel)) { _, _ in

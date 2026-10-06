@@ -122,7 +122,11 @@ final class NativePlayerSurfaceGestureController: NSObject {
             locationX: location.x,
             width: view.bounds.width
         ) else { return }
-        viewModel.togglePlayback()
+        if viewModel.canSeek, let duration = resolvedDuration(for: viewModel),
+           let offset = PiliPlaybackGesturePolicy.seekOffset(x: location.x, width: view.bounds.width,
+                enabled: UserDefaults.standard.bool(forKey: "piliplus.player.doubleTapSeek")) {
+            viewModel.seek(to: min(max(0, viewModel.playbackClock.currentTime + offset), duration))
+        } else { viewModel.togglePlayback() }
     }
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {

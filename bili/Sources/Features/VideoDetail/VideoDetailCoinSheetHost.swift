@@ -6,10 +6,15 @@ struct VideoDetailCoinSheetHost: View {
     @ObservedObject var viewModel: VideoDetailViewModel
     @State private var selectedCoinCount = 1
     @State private var isSubmitting = false
+    @State private var didSucceed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 8) {
+                Image(systemName: "bitcoinsign.circle.fill")
+                    .font(.system(size: 32)).foregroundStyle(appTintColor)
+                    .symbolEffect(.bounce, options: .nonRepeating, value: reduceMotion ? false : didSucceed)
                 Text("已投 \(viewModel.interactionState.coinCount) / 2 枚")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -92,11 +97,13 @@ struct VideoDetailCoinSheetHost: View {
         isSubmitting = true
         Task { @MainActor in
             let succeeded = await viewModel.addCoin(count: coinCount)
-            isSubmitting = false
             if succeeded {
+                didSucceed = true
                 Haptics.success()
+                if !reduceMotion { try? await Task.sleep(for: .milliseconds(500)) }
                 dismiss()
             }
+            isSubmitting = false
         }
     }
 }

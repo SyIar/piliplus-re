@@ -3,6 +3,7 @@ import PiliPlaybackCore
 
 struct PiliSubtitlePreviewFixture: View {
     @StateObject private var controller = PiliSubtitleController()
+    @State private var configured = false
     @StateObject private var clock = PlayerPlaybackClock()
     var body: some View {
         VStack(spacing: 0) {
@@ -13,6 +14,7 @@ struct PiliSubtitlePreviewFixture: View {
             PiliSubtitleSettingsView(controller: controller)
         }
         .task {
+            guard !configured else { return }; configured = true
             AppOrientationLock.restorePortrait()
             if UITestFixtureScenario.resetsPersistedState {
                 UserDefaults.standard.set("on", forKey: "piliplus.subtitle.mode")

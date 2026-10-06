@@ -167,7 +167,14 @@ final class PiliLiquidGlassUITests: XCTestCase {
         // Tap the nested UISwitch, as a user does, and verify the visible result.
         let control = toggle.switches.firstMatch
         XCTAssertTrue(control.isHittable, app.debugDescription)
-        control.tap()
+        control.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)
+        if XCTWaiter.wait(for: [enabled], timeout: 3) != .completed {
+            // A hosted simulator can lose the first touch while presenting the Form.
+            // Drag the actual thumb; never change the fixture's state from the test.
+            control.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5))
+                .press(forDuration: 0.1, thenDragTo: control.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)))
+        }
         // On a cold hosted simulator, resolving the SwiftUI switch row can take
         // longer than three seconds. Await the rendered subtitle instead of the
         // row's accessibility value; this also verifies that the track loaded.

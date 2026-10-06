@@ -4565,6 +4565,62 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testSearchDurationLiveRoomsAndDefaultWordUseDistinctContracts() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
+            }
+            if request.url?.path == "/x/web-interface/search/default" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"name":"actual query","show_name":"display title"}}"#)
+            }
+            if Self.queryValues(for: request)["search_type"] == "live_room" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"result":[{"roomid":99,"title":"<em>直播</em>间","uname":"主播","uid":42,"user_cover":"//i.example.com/cover.jpg"}]}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{"result":[]}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "")
+        _ = try await api.searchVideos(keyword: "duration", order: "click", duration: 3)
+        let rooms = try await api.piliSearchLiveRooms(keyword: "live", page: 2)
+        let word = try await api.piliDefaultSearch()
+        XCTAssertEqual(rooms.first?.roomID, 99); XCTAssertEqual(rooms.first?.title, "直播间")
+        XCTAssertEqual(word?.keyword, "actual query"); XCTAssertEqual(word?.display, "display title")
+        let video = try XCTUnwrap(recorder.requests.first { Self.queryValues(for: $0)["search_type"] == "video" })
+        XCTAssertEqual(Self.queryValues(for: video)["duration"], "3")
+        XCTAssertEqual(Self.queryValues(for: video)["order"], "click")
+        let live = try XCTUnwrap(recorder.requests.first { Self.queryValues(for: $0)["search_type"] == "live_room" })
+        XCTAssertEqual(Self.queryValues(for: live)["page"], "2"); XCTAssertNil(Self.queryValues(for: live)["duration"])
+        XCTAssertNotNil(Self.queryValues(for: live)["w_rid"])
+    }
+
+    @MainActor
+    func testTripleUsesPGCAndUGCEndpointsAndNeverRetriesAmbiguousCoinWrites() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            return Self.response(for: request, body: #"{"code":0,"data":{"like":true,"coin":true,"fav":true,"multiply":2}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=triple; DedeUserID=1001; bili_jct=triple-csrf")
+        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","aid":99,"title":"UGC"}"#.utf8))
+        let pgc = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"ep77","aid":99,"title":"PGC","pgcEpisodeID":77}"#.utf8))
+        let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .interaction))
+        let result = try await api.piliTriple(video: video, identity: identity)
+        XCTAssertEqual(result["coin"].piliInt, 1)
+        _ = try await api.piliTriple(video: pgc, identity: identity)
+        XCTAssertEqual(recorder.requests.map { $0.url!.path }, ["/x/web-interface/archive/like/triple", "/pgc/season/episode/like/triple"])
+        XCTAssertEqual(formValues(in: recorder.requests[0])["aid"], "99")
+        XCTAssertEqual(formValues(in: recorder.requests[1])["ep_id"], "77")
+        XCTAssertEqual(formValues(in: recorder.requests[1])["csrf"], "triple-csrf")
+        let failures = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in failures.record(request); throw URLError(.networkConnectionLost) }
+        do { _ = try await api.piliTriple(video: video, identity: identity); XCTFail() }
+        catch { XCTAssertEqual(failures.requests.count, 1) }
+        do { _ = try await api.piliTriple(video: video, identity: .init(mid: 1001, version: -1)); XCTFail() }
+        catch { XCTAssertEqual(failures.requests.count, 1, "Stale identity must never submit a financial mutation") }
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

@@ -24,6 +24,8 @@ extension VideoDetailViewModel {
             isMutatingFavorite = active
         case .follow:
             isMutatingFollow = active
+        case .triple:
+            isMutatingLike = active; isMutatingCoin = active; isMutatingFavorite = active
         }
     }
 }

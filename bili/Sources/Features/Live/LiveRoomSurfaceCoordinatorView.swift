@@ -492,7 +492,9 @@ private struct LiveRoomSurfaceOnlyOverlay: View {
                         seekPreviewContext: renderContext.seekPreviewContext,
                         holdCurrentFrameForSeek: holdCurrentFrameForSeek,
                         prepareUserSeekWarmup: prepareUserSeekWarmupIfNeeded,
-                        resetPreparedScrubProgress: { lastPreparedScrubProgress = -1 }
+                        resetPreparedScrubProgress: { lastPreparedScrubProgress = -1 },
+                        isFullscreen: configuration.isFullscreenActive,
+                        onSwipeFullscreen: configuration.isFullscreenActive ? configuration.onExitFullscreen : configuration.onRequestFullscreen
                     )
                     .zIndex(1)
 

@@ -1,12 +1,12 @@
 import Foundation
 
 extension BiliAPIClient {
-    func searchVideos(keyword: String, page: Int = 1, order: String? = nil) async throws -> [VideoItem] {
+    func searchVideos(keyword: String, page: Int = 1, order: String? = nil, duration: Int = 0) async throws -> [VideoItem] {
         let results: [SearchVideoItem] = try await searchTypedResults(
             keyword: keyword,
             searchType: "video",
             page: page,
-            order: order
+            order: order, duration: duration
         )
         return
             results
@@ -36,7 +36,7 @@ extension BiliAPIClient {
         keyword: String,
         searchType: String,
         page: Int = 1,
-        order: String? = nil
+        order: String? = nil, duration: Int = 0
     ) async throws -> [Result] {
         let keys = try await fetchWBIKeys(priority: URLSessionTask.highPriority)
         var params = [
@@ -48,6 +48,7 @@ extension BiliAPIClient {
         if let order, !order.isEmpty {
             params["order"] = order
         }
+        if (1...4).contains(duration) { params["duration"] = String(duration) }
         let signed = WBISigner.sign(params, keys: keys)
         let response: BiliResponse<SearchTypeData<Result>> = try await get(
             base: baseURL,
@@ -59,6 +60,23 @@ extension BiliAPIClient {
             throw BiliAPIError.api(code: response.code, message: response.displayMessage)
         }
         return response.payload?.result ?? []
+    }
+
+    func piliSearchLiveRooms(keyword: String, page: Int = 1) async throws -> [LiveRoom] {
+        let rooms: [LiveRoom] = try await searchTypedResults(keyword: keyword, searchType: "live_room", page: page)
+        return rooms.filter { $0.roomID > 0 }.map { room in
+            LiveRoom(roomID: room.roomID, title: room.title.removingHTMLTags(), uname: room.uname.removingHTMLTags(),
+                uid: room.uid, face: room.face, cover: room.cover, keyframe: room.keyframe, online: room.online,
+                areaName: room.areaName, parentAreaName: room.parentAreaName, liveStatus: room.liveStatus)
+        }
+    }
+
+    func piliDefaultSearch() async throws -> PiliDefaultSearch? {
+        let data = try await piliContentRead("/x/web-interface/search/default")
+        let keyword = data["name"].piliString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !keyword.isEmpty else { return nil }
+        let display = data["show_name"].piliString
+        return .init(keyword: keyword, display: display.isEmpty ? keyword : display)
     }
 
     func fetchSearchSuggest(term: String) async throws -> [SearchSuggestItem] {

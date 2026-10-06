@@ -16,6 +16,12 @@ struct BiliPlayerSurfaceGestureLayer<Content: View>: View {
     let onHorizontalSeekCancelled: () -> Void
     let onHorizontalSeekCancelPendingChanged: (Bool) -> Void
 
+    var onDoubleTapSeek: ((Double) -> Void)? = nil
+    var isFullscreen = false
+    var onSwipeFullscreen: (() -> Void)? = nil
+    @AppStorage("piliplus.player.doubleTapSeek") private var doubleTapSeek = false
+    @AppStorage("piliplus.player.swipeFullscreen") private var swipeFullscreen = true
+
     @State private var horizontalSeekStartProgress: Double?
     @State private var horizontalSeekCurrentProgress: Double?
     @State private var horizontalSeekLastTranslationWidth: CGFloat?
@@ -160,7 +166,10 @@ struct BiliPlayerSurfaceGestureLayer<Content: View>: View {
                 guard !isHorizontalSeeking, !isSpeedBoostGestureActive else { return }
                 updateVerticalAdjustment(for: value, size: size)
             }
-            .onEnded { _ in
+            .onEnded { value in
+                if !isHorizontalSeeking, !isVerticalAdjusting, !isSpeedBoostGestureActive, swipeFullscreen,
+                   PiliPlaybackGesturePolicy.changesFullscreen(startX: value.startLocation.x, size: size,
+                       translation: value.translation, fullscreen: isFullscreen) { onSwipeFullscreen?() }
                 resetVerticalAdjustmentState()
             }
     }
@@ -175,7 +184,9 @@ struct BiliPlayerSurfaceGestureLayer<Content: View>: View {
                         locationX: doubleTap.location.x,
                         width: size.width
                     ) else { return }
-                    onDoubleTap()
+                    if canSeek, let offset = PiliPlaybackGesturePolicy.seekOffset(x: doubleTap.location.x, width: size.width, enabled: doubleTapSeek), let onDoubleTapSeek {
+                        onDoubleTapSeek(offset)
+                    } else { onDoubleTap() }
                 case .second:
                     onSingleTap()
                 }
@@ -222,6 +233,7 @@ struct BiliPlayerSurfaceGestureLayer<Content: View>: View {
     }
 
     private func updateVerticalAdjustment(for value: DragGesture.Value, size: CGSize) {
+        if swipeFullscreen, onSwipeFullscreen != nil, PiliPlaybackGesturePolicy.isCenter(x: value.startLocation.x, width: size.width) { return }
         if !isVerticalAdjusting {
             guard PlayerSurfaceVerticalAdjustmentPolicy.shouldBegin(
                 translation: value.translation,

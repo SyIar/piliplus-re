@@ -57,6 +57,7 @@ private struct SearchFilterCapsule: View {
         HStack(spacing: 0) {
             scopeMenu
             orderMenu
+            if viewModel.selectedScope.supportsOrder { durationMenu }
         }
         .font(.subheadline.weight(.medium))
         .lineLimit(1)
@@ -114,6 +115,18 @@ private struct SearchFilterCapsule: View {
         .foregroundStyle(viewModel.selectedScope.supportsOrder ? .primary : .secondary)
         .accessibilityLabel("排序方式")
         .accessibilityValue(viewModel.selectedOrder.title)
+    }
+
+    private var durationMenu: some View {
+        Menu {
+            ForEach(PiliSearchDuration.allCases) { duration in
+                Button { Task { await viewModel.selectDuration(duration) } } label: {
+                    Label(duration.title, systemImage: duration == viewModel.selectedDuration ? "checkmark" : "clock")
+                }
+            }
+        } label: { filterLabel(title: viewModel.selectedDuration.title) }
+            .frame(maxWidth: .infinity, minHeight: 40).buttonStyle(.plain)
+            .accessibilityLabel("视频时长").accessibilityValue(viewModel.selectedDuration.title)
     }
 
     private func filterLabel(title: String) -> some View {

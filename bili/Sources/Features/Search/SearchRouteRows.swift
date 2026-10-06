@@ -5,6 +5,8 @@ struct SearchResultRouteRow: View {
 
     var body: some View {
         switch result {
+        case .live(let room):
+            NavigationLink(value: room) { LiveRoomCard(room: room) }.buttonStyle(.plain)
         case .video(let video):
             VideoRouteLink(video) {
                 SearchVideoResultRow(video: video)

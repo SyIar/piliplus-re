@@ -43,6 +43,8 @@ final class SearchBottomAccessoryStore: ObservableObject {
 
 private struct SearchRenderSnapshot: Equatable {
     let query: String
+    let defaultSearch: PiliDefaultSearch?
+    let selectedDuration: PiliSearchDuration
     let showsDiscovery: Bool
     let selectedScope: SearchScope
     let selectedOrder: SearchSortOrder
@@ -59,6 +61,8 @@ private struct SearchRenderSnapshot: Equatable {
 
     init(_ viewModel: SearchViewModel) {
         query = viewModel.query
+        defaultSearch = viewModel.defaultSearch
+        selectedDuration = viewModel.selectedDuration
         showsDiscovery = viewModel.showsDiscovery
         selectedScope = viewModel.selectedScope
         selectedOrder = viewModel.selectedOrder

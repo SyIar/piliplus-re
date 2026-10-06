@@ -1,4 +1,5 @@
 import SwiftUI
+import Translation
 import UIKit
 
 extension Notification.Name {
@@ -28,6 +29,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
     @State private var composer: ComposerRoute?
     @State private var showsReport = false
     @State private var showsExport = false
+    @State private var showsTranslation = false
     @State private var checksVisibility = false
     @State private var confirmDelete = false
     @State private var message: String?
@@ -38,6 +40,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
         content.contextMenu {
             Button("转发动态", systemImage: "arrowshape.turn.up.right") { var draft = PiliDynamicDraft(); draft.repostID = item.idStr; composer = .init(draft: draft) }
             Button("复制动态文字", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.displayText ?? "" }
+            Button("翻译动态", systemImage: "translate") { showsTranslation = true }
             Button("保存完整动态", systemImage: "square.and.arrow.down") { showsExport = true }
             Button("举报动态", systemImage: "exclamationmark.bubble") { showsReport = true }
             if item.author?.mid == api.requestSnapshot(purpose: .main).currentUserMID {
@@ -58,6 +61,7 @@ struct PiliDynamicManagementModifier: ViewModifier {
         .sheet(isPresented: $showsReport) {
             NavigationStack { PiliContentReportView(api: api, target: .dynamic(id: item.idStr, author: item.author?.mid ?? 0)) }
         }
+        .translationPresentation(isPresented: $showsTranslation, text: item.displayText ?? "")
         .sheet(isPresented: $showsExport) { PiliDynamicExportView(api: api, id: item.idStr) }
         .sheet(isPresented: $checksVisibility) { NavigationStack { PiliVisibilityCheckView(api: api, target: .dynamic(item.idStr)) } }
         .confirmationDialog("删除这条动态？", isPresented: $confirmDelete, titleVisibility: .visible) {
