@@ -7,9 +7,11 @@ struct PiliLiveInteractionView: View {
     var compact = false
     @State private var showsComposer = false
     @State private var showsHistory = false
+    @State private var showsChat = false
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
+                Button { showsChat = true } label: { Image(systemName: "text.bubble") }.buttonStyle(.glass).accessibilityLabel("直播聊天与屏蔽")
                 Button { showsComposer = true } label: { Label("发弹幕", systemImage: "bubble.left.and.text.bubble.right") }
                     .buttonStyle(.glass).accessibilityIdentifier("live.send.open")
                 Button { showsHistory = true } label: { Label("醒目留言", systemImage: "bubble.left.and.exclamationmark.bubble.right") }
@@ -22,6 +24,7 @@ struct PiliLiveInteractionView: View {
                 }
             }
         }
+        .sheet(isPresented: $showsChat) { PiliLiveChatView(viewModel: viewModel, store: viewModel.chatStore) }
         .sheet(isPresented: $showsComposer) { PiliLiveComposer(viewModel: viewModel) }
         .sheet(isPresented: $showsHistory) {
             PiliSuperChatHistoryView(store: store, api: viewModel.api, roomID: viewModel.roomID) {
@@ -138,6 +141,9 @@ struct PiliLiveComposer: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let target = viewModel.liveReplyTarget {
+                    HStack { Text("回复 \(target.senderName ?? "用户")"); Spacer(); Button("取消回复") { viewModel.liveReplyTarget = nil } }
+                }
                 Section {
                     if let selected {
                         Label("表情：\(selected.text)", systemImage: "face.smiling")
@@ -184,11 +190,12 @@ struct PiliLiveComposer: View {
         guard !busy, let identity else { return }; busy = true; error = nil
         let message = selected?.id ?? viewModel.liveDanmakuDraft
         let isEmote = selected != nil
+        let reply = viewModel.liveReplyTarget?.liveMetadata
         Task {
             defer { busy = false }
             do {
-                try await viewModel.api.piliSendLive(roomID: viewModel.roomID, message: message, emote: isEmote, identity: identity)
-                if !isEmote { viewModel.liveDanmakuDraft = "" }; dismiss()
+                try await viewModel.api.piliSendLive(roomID: viewModel.roomID, message: message, emote: isEmote, identity: identity, reply: reply)
+                if !isEmote { viewModel.liveDanmakuDraft = "" }; viewModel.liveReplyTarget = nil; dismiss()
             } catch { self.error = error.localizedDescription }
         }
     }

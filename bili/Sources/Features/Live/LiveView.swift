@@ -25,6 +25,11 @@ struct LiveView: View {
                 }
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink { PiliLiveExploreView(api: dependencies.api) } label: { Label("分区与关注", systemImage: "square.grid.2x2") }
+            }
+        }
         .task {
             pullRefreshSettings.bind(dependencies.libraryStore)
         }

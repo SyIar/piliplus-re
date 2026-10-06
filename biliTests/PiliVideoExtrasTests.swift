@@ -3,6 +3,14 @@ import XCTest
 
 @MainActor
 final class PiliVideoExtrasTests: XCTestCase {
+    func testHighRefreshStopsForBackgroundPowerHeatAndUnsupportedDisplays() {
+        XCTAssertEqual(PiliRefreshRatePolicy.preferred(enabled: true, active: true, maximum: 120, lowPower: false, thermal: .nominal), 120)
+        XCTAssertNil(PiliRefreshRatePolicy.preferred(enabled: true, active: false, maximum: 120, lowPower: false, thermal: .nominal))
+        XCTAssertNil(PiliRefreshRatePolicy.preferred(enabled: true, active: true, maximum: 60, lowPower: false, thermal: .nominal))
+        XCTAssertNil(PiliRefreshRatePolicy.preferred(enabled: true, active: true, maximum: 120, lowPower: true, thermal: .nominal))
+        XCTAssertNil(PiliRefreshRatePolicy.preferred(enabled: true, active: true, maximum: 120, lowPower: false, thermal: .serious))
+        XCTAssertNil(PiliRefreshRatePolicy.preferred(enabled: false, active: true, maximum: 120, lowPower: false, thermal: .nominal))
+    }
     func testSearchHistoryIsBoundedPrivateAndDeduplicated() throws {
         let name = "PiliSearchTests.\(UUID().uuidString)"
         // Use a unique domain so tests cannot modify the user's search history.

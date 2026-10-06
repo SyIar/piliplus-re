@@ -101,6 +101,7 @@ nonisolated struct LiveRoom: Identifiable, Decodable, Hashable {
         case parentAreaNameAlt = "parent_area_name"
         case parentAreaNameV2 = "parent_area_v2_name"
         case userCover = "user_cover"
+        case roomCover = "room_cover"
         case systemCover = "system_cover"
     }
 
@@ -117,6 +118,7 @@ nonisolated struct LiveRoom: Identifiable, Decodable, Hashable {
         cover =
             try container.decodeIfPresent(String.self, forKey: .cover)
             ?? container.decodeIfPresent(String.self, forKey: .userCover)
+            ?? container.decodeIfPresent(String.self, forKey: .roomCover)
         keyframe =
             try container.decodeIfPresent(String.self, forKey: .keyframe)
             ?? container.decodeIfPresent(String.self, forKey: .systemCover)
@@ -175,6 +177,7 @@ nonisolated struct LiveRoomInfo: Decodable, Hashable {
         case uid, title, keyframe, description, online
         case roomID = "room_id"
         case userCover = "user_cover"
+        case roomCover = "room_cover"
         case liveStatus = "live_status"
         case areaName = "area_name"
         case parentAreaName = "parent_area_name"

@@ -4621,6 +4621,41 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testLiveReplyShieldReportRankingAndFollowingContracts() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
+            }
+            if request.url?.path == "/xlive/web-ucenter/user/following" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"totalPage":3,"list":[{"roomid":99,"live_status":1,"room_cover":"//i.example.com/live.jpg"},{"roomid":100,"live_status":0}]}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=live; DedeUserID=1001; bili_jct=live-csrf")
+        let identity = PiliAccountIdentity(api.requestSnapshot())
+        let item = try XCTUnwrap(LiveDanmakuService.parsedItems(for: PiliLiveChatTests.message(), roomID: 9, startDate: .now).first)
+        try await api.piliSendLive(roomID: 9, message: "reply", emote: false, identity: identity, reply: item.liveMetadata)
+        try await api.piliLiveShieldKeyword("sale", remove: false, roomID: 9, identity: identity)
+        try await api.piliLiveShieldUser(uid: 42, remove: true, roomID: 9, identity: identity)
+        try await api.piliReportLiveMessage(item, roomID: 9, reason: "垃圾广告", reasonID: 3, identity: identity)
+        _ = try await api.piliLiveRanks(roomID: 9, ownerID: 10, type: "weekly_rank", page: 2)
+        let followed = try await api.piliFollowedLiveRooms(page: 2, identity: identity)
+        XCTAssertTrue(followed.more); XCTAssertEqual(followed.rooms.map(\.roomID), [99])
+        XCTAssertEqual(followed.rooms.first?.cover, "//i.example.com/live.jpg")
+        let writes = recorder.requests.filter { $0.httpMethod == "POST" }
+        XCTAssertEqual(writes.count, 4)
+        XCTAssertEqual(formValues(in: writes[0])["reply_mid"], "42"); XCTAssertEqual(formValues(in: writes[0])["replay_dmid"], "9876543210987")
+        XCTAssertTrue(writes[1].url!.path.hasSuffix("AddShieldKeyword")); XCTAssertEqual(formValues(in: writes[1])["keyword"], "sale")
+        XCTAssertEqual(formValues(in: writes[2])["type"], "0")
+        XCTAssertEqual(formValues(in: writes[3])["sign"], "report-signature"); XCTAssertEqual(formValues(in: writes[3])["reason_id"], "3")
+        for request in writes { XCTAssertEqual(formValues(in: request)["csrf_token"], "live-csrf") }
+        let rank = try XCTUnwrap(recorder.requests.first { $0.url?.path.contains("queryContributionRank") == true })
+        XCTAssertEqual(Self.queryValues(for: rank)["switch"], "current_week_rank"); XCTAssertEqual(Self.queryValues(for: rank)["page"], "2")
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

@@ -15,6 +15,7 @@ struct UploaderHeaderView: View {
             UploaderFollowMessage(message: viewModel.followMessage, isFollowing: viewModel.isFollowing)
             UploaderProfileStatusMessage(state: viewModel.profileState)
             UploaderStatsRow(owner: owner, viewModel: viewModel, card: card)
+            NavigationLink { PiliMedalWallView(mid: owner.mid) } label: { Label("粉丝勋章", systemImage: "medal") }.font(.subheadline)
         }
         .padding()
         .biliGlassEffect(

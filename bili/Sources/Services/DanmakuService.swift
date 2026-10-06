@@ -180,6 +180,7 @@ nonisolated struct DanmakuItem: Identifiable, Hashable, Sendable {
     let color: UInt32
     let text: String
     let superChat: PiliSuperChat?
+    let liveMetadata: PiliLiveMessageMetadata?
     let special: SpecialDanmaku?
     let serverID: String?
     let cid: Int?
@@ -202,7 +203,7 @@ nonisolated struct DanmakuItem: Identifiable, Hashable, Sendable {
         senderHash: String? = nil,
         mergeCount: Int = 1,
         inlineEmotes: [String: BiliInlineEmote] = [:],
-        superChat: PiliSuperChat? = nil
+        superChat: PiliSuperChat? = nil, liveMetadata: PiliLiveMessageMetadata? = nil
     ) {
         self.id = id
         self.time = time
@@ -210,7 +211,7 @@ nonisolated struct DanmakuItem: Identifiable, Hashable, Sendable {
         self.fontSize = fontSize
         self.color = color
         self.text = text
-        self.superChat = superChat
+        self.superChat = superChat; self.liveMetadata = liveMetadata
         self.special = mode == 7 ? SpecialDanmaku(json: text) : nil
         self.serverID = serverID; self.cid = cid; self.isVIPColor = isVIPColor
         self.senderName = senderName

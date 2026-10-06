@@ -72,7 +72,7 @@ extension BiliAPIClient {
             query: ["platform": "pc", "room_id": String(roomID)], identity: identity, base: Self.piliLiveBase, referer: "https://live.bilibili.com/\(roomID)")
         return PiliLiveEmote.parse(data)
     }
-    func piliSendLive(roomID: Int, message: String, emote: Bool, identity: PiliAccountIdentity) async throws {
+    func piliSendLive(roomID: Int, message: String, emote: Bool, identity: PiliAccountIdentity, reply: PiliLiveMessageMetadata? = nil) async throws {
         let text = message.trimmingCharacters(in: .whitespacesAndNewlines)
         guard roomID > 0, !text.isEmpty, text.utf16.count <= 1000 else { throw PiliOfflineError.message("请输入弹幕，最多 1000 字；直播间实际字数限制以平台返回为准") }
         let context = await requestSnapshot()
@@ -83,6 +83,9 @@ extension BiliAPIClient {
         else {
             fields.merge(["room_type": "0", "jumpfrom": "0", "reply_mid": "0", "reply_attr": "0", "replay_dmid": "",
                 "statistics": "{\"appId\":100,\"platform\":5}", "reply_type": "0", "reply_uname": ""]) { _, new in new }
+        }
+        if !emote, let reply, reply.uid > 0, !reply.id.isEmpty {
+            fields["reply_mid"] = String(reply.uid); fields["replay_dmid"] = reply.id
         }
         try await piliContentWrite("/msg/send", fields: fields, query: ["web_location": "444.8"], signed: true,
             identity: identity, base: Self.piliLiveBase, referer: "https://live.bilibili.com/\(roomID)")

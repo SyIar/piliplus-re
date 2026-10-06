@@ -27,6 +27,9 @@ final class LiveRoomViewModel: ObservableObject {
     @Published private(set) var isMutatingAnchorFollow = false
     @Published private(set) var interactionMessage: String?
 
+    var isLiveChatOpen = false
+    let chatStore = PiliLiveChatStore()
+    @Published var liveReplyTarget: DanmakuItem?
     let superChatStore = PiliSuperChatStore()
     @Published var liveDanmakuDraft = ""
     let seedRoom: LiveRoom

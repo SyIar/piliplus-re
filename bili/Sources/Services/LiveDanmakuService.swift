@@ -2524,7 +2524,8 @@ nonisolated final class LiveDanmakuService: @unchecked Sendable {
                 text: trimmedText,
                 senderName: payload.senderName,
                 inlineEmotes: payload.inlineEmotes,
-                superChat: commandBaseName(command).hasPrefix("SUPER_CHAT_MESSAGE") ? PiliSuperChat(dictionary: object["data"] as? [String: Any] ?? [:]) : nil
+                superChat: commandBaseName(command).hasPrefix("SUPER_CHAT_MESSAGE") ? PiliSuperChat(dictionary: object["data"] as? [String: Any] ?? [:]) : nil,
+                liveMetadata: commandBaseName(command) == "DANMU_MSG" ? PiliLiveMessageMetadata(command: object) : nil
             )
         ]
         result.events.append(.danmakuParsed(text: trimmedText))
