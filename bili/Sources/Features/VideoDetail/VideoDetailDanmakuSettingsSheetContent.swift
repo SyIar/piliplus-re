@@ -5,6 +5,7 @@ struct DanmakuSettingsSheetContent: View {
     let summary: String
     let displayAreaBinding: Binding<DanmakuDisplayArea>
     let hidesDanmakuInPortraitBinding: Binding<Bool>
+    let mergesDuplicatesBinding: Binding<Bool>
     let fontScaleBinding: Binding<Double>
     let fontWeightBinding: Binding<DanmakuFontWeightOption>
     let opacityBinding: Binding<Double>
@@ -23,6 +24,13 @@ struct DanmakuSettingsSheetContent: View {
             DanmakuSettingsPortraitVisibilitySection(
                 hidesDanmakuInPortrait: hidesDanmakuInPortraitBinding
             )
+
+            Section {
+                Toggle("合并重复弹幕", isOn: mergesDuplicatesBinding)
+                    .accessibilityIdentifier("ui.danmaku.merge")
+            } footer: {
+                Text("每 15 秒内，相同内容和样式合并显示数量；同一用户重复发送只计一次。")
+            }
 
             DanmakuSettingsTextSection(
                 settings: store.danmakuSettings,

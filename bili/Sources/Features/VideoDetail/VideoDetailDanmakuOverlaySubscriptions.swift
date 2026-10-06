@@ -13,11 +13,12 @@ extension VideoDetailDanmakuOverlayState {
                 guard let self,
                       playerViewModel?.isTerminated != true
                 else { return }
+                let mergeChanged = self.snapshot.settings.mergesDuplicates != renderSnapshot.effectiveSettings.mergesDuplicates
                 self.updateSnapshot {
                     $0.isEnabled = renderSnapshot.isDanmakuEnabled
                     $0.settings = renderSnapshot.effectiveSettings
                 }
-                guard self.sourceItemsRevision != renderSnapshot.itemsRevision else { return }
+                guard mergeChanged || self.sourceItemsRevision != renderSnapshot.itemsRevision else { return }
                 self.allItems = renderSnapshot.items
                 self.sourceItemsRevision = renderSnapshot.itemsRevision
                 self.lastWindowCenterBucket = nil

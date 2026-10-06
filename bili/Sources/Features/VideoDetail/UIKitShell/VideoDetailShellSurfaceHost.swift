@@ -2977,6 +2977,11 @@ private struct SurfaceOnlyDanmakuSettingsPage: View {
             summary: settingsSummary,
             displayAreaBinding: displayAreaBinding,
             hidesDanmakuInPortraitBinding: hidesDanmakuInPortraitBinding,
+            mergesDuplicatesBinding: Binding(get: { detailViewModel.danmakuSettings.mergesDuplicates }, set: { value in
+                var settings = detailViewModel.danmakuSettings
+                settings.mergesDuplicates = value
+                detailViewModel.updateDanmakuSettings(settings)
+            }),
             fontScaleBinding: fontScaleBinding,
             fontWeightBinding: fontWeightBinding,
             opacityBinding: opacityBinding,

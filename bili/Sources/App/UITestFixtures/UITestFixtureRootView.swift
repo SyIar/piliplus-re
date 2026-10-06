@@ -21,6 +21,8 @@ struct UITestFixtureRootView: View {
                 PiliSubtitlePreviewFixture()
             case .glassPlayer:
                 PiliGlassPlayerPreviewFixture()
+            case .commentTree:
+                PiliCommentTreeFixture()
             }
         }
         .environmentObject(dependencies)

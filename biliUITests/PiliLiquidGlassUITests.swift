@@ -2,6 +2,31 @@ import XCTest
 
 final class PiliLiquidGlassUITests: XCTestCase {
     @MainActor
+    func testCommentTreeFoldingPaginationAndLayoutPreference() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "commentTree", "--ui-test-reset-state"]
+        app.launch()
+        let child = app.staticTexts["ui.tree.reply.4"]
+        XCTAssertTrue(child.waitForExistence(timeout: 15))
+        app.buttons["ui.comments.tree.fold.2"].tap()
+        let hidden = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: child)
+        XCTAssertEqual(XCTWaiter.wait(for: [hidden], timeout: 10), .completed)
+        app.buttons["ui.comments.tree.fold.2"].tap()
+        XCTAssertTrue(child.waitForExistence(timeout: 10))
+        app.buttons["加载下一页"].tap()
+        XCTAssertTrue(app.staticTexts["ui.tree.reply.6"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.staticTexts["上级回复尚未加载或已删除"].exists)
+        app.segmentedControls.buttons["平铺"].tap()
+        app.terminate()
+        app.launchArguments = ["--ui-test-fixture", "commentTree"]
+        app.launch()
+        XCTAssertTrue(app.segmentedControls.buttons["平铺"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.segmentedControls.buttons["平铺"].isSelected)
+    }
+
+    @MainActor
     func testFullscreenGlassControlsLockAndSeek() {
         continueAfterFailure = false
         let app = XCUIApplication()

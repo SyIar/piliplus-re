@@ -8,7 +8,7 @@ struct CommentRepliesLoadedList: View {
 
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 0) {
-            ForEach(snapshot.replyDisplays) { replyDisplay in
+            PiliCommentTreeRows(rootID: rootComment.id, items: snapshot.replyDisplays, parentID: { $0.reply.parentID }) { replyDisplay in
                 CommentReplyDetailRow(
                     item: replyDisplay,
                     showDialog: replyDisplay.canShowDialog ? {
@@ -16,8 +16,6 @@ struct CommentRepliesLoadedList: View {
                     } : nil
                 )
                 .padding(.horizontal, 16)
-
-                Divider()
             }
 
             CommentRepliesFooter(

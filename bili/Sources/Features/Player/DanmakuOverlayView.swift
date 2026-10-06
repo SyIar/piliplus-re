@@ -365,17 +365,18 @@ final class DanmakuAnimationOverlayView: UIView {
         let previousEffectiveTime = effectivePlaybackTime()
         let previousShouldRender = shouldRenderDanmaku
         let previousIsPlaying = isPlaying
-        let didChangeItems = newItemsRevision != lastItemsRevision
+        let didChangeItems = newItemsRevision != lastItemsRevision || newSettings.mergesDuplicates != settings.mergesDuplicates
         let normalizedSettings = newSettings.normalized
         let didChangeRenderedSettings = abs(normalizedSettings.fontScale - settings.fontScale) > 0.001
             || abs(normalizedSettings.opacity - settings.opacity) > 0.001
             || normalizedSettings.displayArea != settings.displayArea
             || normalizedSettings.fontWeight != settings.fontWeight
+            || normalizedSettings.mergesDuplicates != settings.mergesDuplicates
         let didChangeTextMetrics = abs(normalizedSettings.fontScale - settings.fontScale) > 0.001
             || normalizedSettings.fontWeight != settings.fontWeight
         let didChangeInsets = abs(newTopInset - topInset) > 0.5 || abs(newBottomInset - bottomInset) > 0.5
-        items = newItems
         if didChangeItems {
+            items = normalizedSettings.mergesDuplicates ? DanmakuItem.mergingDuplicates(newItems) : newItems
             rebuildTimeBuckets()
         }
         lastItemsRevision = newItemsRevision
@@ -414,7 +415,7 @@ final class DanmakuAnimationOverlayView: UIView {
             return
         }
 
-        if !previousShouldRender || didChangeRenderedSettings || jumped {
+        if !previousShouldRender || didChangeRenderedSettings || jumped || (didChangeItems && normalizedSettings.mergesDuplicates) {
             rebuildVisibleItems(at: sanitizedTime, animated: newIsPlaying)
             updateDisplayLinkState()
             updateAnimationPauseState()
@@ -919,7 +920,7 @@ final class DanmakuAnimationOverlayView: UIView {
     }
 
     private func configure(_ label: UILabel, for item: DanmakuItem, font: UIFont, size: CGSize) {
-        label.text = item.text
+        label.text = item.displayText
         label.font = font
         label.textAlignment = .center
         label.numberOfLines = 1
@@ -1089,7 +1090,7 @@ final class DanmakuAnimationOverlayView: UIView {
 
     private func measuredTextSize(for item: DanmakuItem, font: UIFont) -> CGSize {
         let key = TextMeasurementKey(
-            text: item.text,
+            text: item.displayText,
             fontSizeTenths: Int((font.pointSize * 10).rounded()),
             fontWeight: settings.fontWeight
         )
@@ -1097,7 +1098,7 @@ final class DanmakuAnimationOverlayView: UIView {
             return cached
         }
 
-        let size = (item.text as NSString).size(withAttributes: [.font: font])
+        let size = (item.displayText as NSString).size(withAttributes: [.font: font])
         let measured = CGSize(width: ceil(size.width), height: ceil(max(size.height, font.lineHeight)))
         textSizeCache[key] = measured
         textSizeCacheOrder.append(key)

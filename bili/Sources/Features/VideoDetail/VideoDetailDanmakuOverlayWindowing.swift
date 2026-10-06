@@ -8,8 +8,14 @@ extension VideoDetailDanmakuOverlayState {
         guard force || lastWindowCenterBucket != centerBucket else { return }
         lastWindowCenterBucket = centerBucket
 
-        let lowerTime = max(0, sanitizedTime - effectiveWindowLookBehind)
-        let upperTime = sanitizedTime + effectiveWindowLookAhead
+        var lowerTime = max(0, sanitizedTime - effectiveWindowLookBehind)
+        var upperTime = sanitizedTime + effectiveWindowLookAhead
+        if store?.snapshot.effectiveSettings.mergesDuplicates == true {
+            // Include complete merge windows so scrolling/seeking never changes
+            // the representative or count of an already loaded group.
+            lowerTime = floor(lowerTime / 15) * 15
+            upperTime = ceil(upperTime / 15) * 15
+        }
         let lowerIndex = firstItemIndex(atOrAfter: lowerTime)
         let upperIndex = firstItemIndex(after: upperTime)
         let nextRange = lowerIndex..<upperIndex

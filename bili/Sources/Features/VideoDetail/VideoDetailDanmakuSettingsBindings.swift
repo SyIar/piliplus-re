@@ -8,6 +8,14 @@ extension DanmakuSettingsSheet {
         return "弹幕已关闭，播放时不会显示滚动评论。"
     }
 
+    var mergesDuplicatesBinding: Binding<Bool> {
+        Binding(get: { store.danmakuSettings.mergesDuplicates }, set: { value in
+            var settings = store.danmakuSettings
+            settings.mergesDuplicates = value
+            updateDanmakuSettings(settings)
+        })
+    }
+
     var fontScaleBinding: Binding<Double> {
         Binding(
             get: { store.danmakuSettings.fontScale },

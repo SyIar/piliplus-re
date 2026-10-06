@@ -72,7 +72,7 @@ private struct DynamicCommentRepliesLoadedList: View {
 
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 0) {
-            ForEach(replyItems) { replyItem in
+            PiliCommentTreeRows(rootID: rootComment.id, items: replyItems, parentID: { $0.reply.parentID }, highlightedID: highlightedReplyID) { replyItem in
                 DynamicCommentReplyDetailRow(
                     item: replyItem,
                     showDialog: replyItem.canShowDialog ? {
@@ -86,8 +86,6 @@ private struct DynamicCommentRepliesLoadedList: View {
                     in: RoundedRectangle(cornerRadius: 8, style: .continuous)
                 )
                 .id(replyItem.id)
-
-                Divider()
             }
 
             DynamicCommentRepliesFooter(

@@ -7,6 +7,7 @@ enum UITestFixtureScenario: String {
     case fullscreen
     case subtitles
     case glassPlayer
+    case commentTree
 
     static var current: Self? {
         let arguments = ProcessInfo.processInfo.arguments

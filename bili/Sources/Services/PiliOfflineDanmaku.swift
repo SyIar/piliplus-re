@@ -7,10 +7,11 @@ nonisolated struct PiliOfflineDanmaku: Codable, Sendable {
     let fontSize: Double
     let color: UInt32
     let text: String
+    let senderHash: String?
     init(_ item: DanmakuItem) {
-        id = item.id; time = item.time; mode = item.mode; fontSize = item.fontSize; color = item.color; text = item.text
+        id = item.id; time = item.time; mode = item.mode; fontSize = item.fontSize; color = item.color; text = item.text; senderHash = item.senderHash
     }
-    var item: DanmakuItem { DanmakuItem(id: id, time: time, mode: mode, fontSize: fontSize, color: color, text: text) }
+    var item: DanmakuItem { DanmakuItem(id: id, time: time, mode: mode, fontSize: fontSize, color: color, text: text, senderHash: senderHash) }
     static func load(_ id: UUID) -> [DanmakuItem] {
         guard let root = try? PiliOfflineStorage.directory(id),
               let data = try? Data(contentsOf: root.appendingPathComponent("danmaku.json")),
