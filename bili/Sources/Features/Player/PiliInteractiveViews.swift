@@ -88,10 +88,12 @@ struct PiliInteractiveChoicesView: View {
                         }
                     }
                     .padding(.horizontal, 20).padding(.top, 52).padding(.bottom, geometry.size.height > 250 ? 76 : 16)
-                    .background(alignment: .bottom) {
-                        LinearGradient(colors: [.clear, .black.opacity(0.72)], startPoint: .top, endPoint: .bottom)
-                            .allowsHitTesting(false)
-                    }
+                }
+                .background(alignment: .bottom) {
+                    // Shade the video behind both layouts, without dimming
+                    // hotspot labels by drawing this above their buttons.
+                    LinearGradient(colors: [.clear, .black.opacity(0.72)], startPoint: .top, endPoint: .bottom)
+                        .allowsHitTesting(false)
                 }
                 .foregroundStyle(.white)
             }

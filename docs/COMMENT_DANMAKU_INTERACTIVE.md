@@ -38,7 +38,8 @@
 - iOS 增加 XML/protobuf/离线兼容、真实弹幕 UILabel 切换合并、互动网络失败/播放失败/重试/账号切换/变量回溯/限时选择/存档与作者限制测试。
 - UI 增加树折叠/分页/布局持久化、互动条件选项/热点点击/变量回溯/结局与重新开始。测试使用生产组件和控制器，以确定性离线数据替代网络。
 - `Scripts/test-ios.sh` 运行完整 iOS 单元测试及四个玻璃 UI 场景；`Scripts/capture-preview.sh` 增加 `preview-comment-tree.png`、`preview-interactive.png` 和 `preview-interactive-hotspots.png`。
-- 本文初次提交时 iOS 增量仍在 CI 验证；最终成功记录以同版本 Actions 与 Release 为准。
+- `0b80a40` 的 [模拟器完整回归 #49](https://github.com/SyIar/piliplus-re/actions/runs/37408296994) 已通过：33 项核心测试、751 项 iOS 单元测试、4 项 UI 测试，零失败。实际验证了热点点击、变量回溯、结局重开、离页恢复和定时停止保护。
+- 已检查七张模拟器预览；根据热点截图，将视频渐变移到全部选项背后，保持按钮文字和蓝色清晰。此显示层调整及 main 的设备 Release 构建由合并后的完整流水线复核，最终成功记录以对应 Actions 与 Release 为准。
 
 模拟器测试无需签名。真实账号、互动视频的服务端特殊规则、不同设备画面缩放、长列表滚动及实机性能仍需用户后续反馈。
 UI 样例截图只证明生产组件的确定性场景，不代表已经完成所有线上内容验收。
