@@ -1,3 +1,4 @@
+import PiliPlaybackCore
 import Combine
 import SwiftUI
 import UIKit
@@ -57,6 +58,7 @@ struct DanmakuOverlayView: UIViewRepresentable {
     let isLayoutTransitioning: Bool
     let playbackClock: PlayerPlaybackClock?
     let onPlaybackTime: ((TimeInterval, Bool) -> Void)?
+    let onSelect: ((DanmakuItem) -> Void)?
 
     init(
         items: [DanmakuItem],
@@ -72,7 +74,8 @@ struct DanmakuOverlayView: UIViewRepresentable {
         bottomInset: CGFloat,
         isLayoutTransitioning: Bool = false,
         playbackClock: PlayerPlaybackClock? = nil,
-        onPlaybackTime: ((TimeInterval, Bool) -> Void)? = nil
+        onPlaybackTime: ((TimeInterval, Bool) -> Void)? = nil,
+        onSelect: ((DanmakuItem) -> Void)? = nil
     ) {
         self.items = items
         self.itemsRevision = itemsRevision
@@ -88,6 +91,7 @@ struct DanmakuOverlayView: UIViewRepresentable {
         self.isLayoutTransitioning = isLayoutTransitioning
         self.playbackClock = playbackClock
         self.onPlaybackTime = onPlaybackTime
+        self.onSelect = onSelect
     }
 
     func makeCoordinator() -> Coordinator {
@@ -96,6 +100,7 @@ struct DanmakuOverlayView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> DanmakuAnimationOverlayView {
         let view = DanmakuAnimationOverlayView()
+        view.onSelect = onSelect
         view.setLayoutTransitioning(isLayoutTransitioning)
         let resolvedCurrentTime = playbackClock?.currentTime ?? currentTime
         let signature = configurationSignature(resolvedCurrentTime: resolvedCurrentTime)
@@ -118,6 +123,7 @@ struct DanmakuOverlayView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: DanmakuAnimationOverlayView, context: Context) {
+        uiView.onSelect = onSelect
         if isLayoutTransitioning {
             uiView.setLayoutTransitioning(true)
         }
@@ -227,6 +233,8 @@ struct DanmakuOverlayView: UIViewRepresentable {
 }
 
 final class DanmakuAnimationOverlayView: UIView {
+    var onSelect: ((DanmakuItem) -> Void)? { didSet { isUserInteractionEnabled = onSelect != nil } }
+    private var maximumSpecialDuration: Double = 0
     private struct ActiveEntry {
         let id: String
         let item: DanmakuItem
@@ -372,11 +380,14 @@ final class DanmakuAnimationOverlayView: UIView {
             || normalizedSettings.displayArea != settings.displayArea
             || normalizedSettings.fontWeight != settings.fontWeight
             || normalizedSettings.mergesDuplicates != settings.mergesDuplicates
+            || normalizedSettings.showsVIPColors != settings.showsVIPColors
+            || normalizedSettings.showsAdvanced != settings.showsAdvanced
         let didChangeTextMetrics = abs(normalizedSettings.fontScale - settings.fontScale) > 0.001
             || normalizedSettings.fontWeight != settings.fontWeight
         let didChangeInsets = abs(newTopInset - topInset) > 0.5 || abs(newBottomInset - bottomInset) > 0.5
         if didChangeItems {
             items = normalizedSettings.mergesDuplicates ? DanmakuItem.mergingDuplicates(newItems) : newItems
+            maximumSpecialDuration = items.compactMap { $0.special?.duration }.max() ?? 0
             rebuildTimeBuckets()
         }
         lastItemsRevision = newItemsRevision
@@ -485,6 +496,56 @@ final class DanmakuAnimationOverlayView: UIView {
         retireExpiredActiveEntries(at: playbackTime)
         guard !isLayoutSettling, !isLayoutTransitioning else { return }
         spawnDueItems(at: playbackTime)
+        for entry in activeEntries.values where entry.item.special != nil {
+            updateSpecial(entry.label, item: entry.item, time: playbackTime)
+        }
+    }
+
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        onSelect != nil && selectedItem(at: point) != nil
+    }
+
+    private func selectedItem(at point: CGPoint) -> DanmakuItem? {
+        for label in subviews.reversed() {
+            guard let entry = activeEntries.values.first(where: { $0.label === label }), entry.item.serverID != nil else { continue }
+            let visible = label.layer.presentation() ?? label.layer
+            guard visible.opacity > 0.05, visible.frame.insetBy(dx: -4, dy: -4).contains(point) else { continue }
+            return entry.item
+        }
+        return nil
+    }
+
+    @objc private func selectDanmaku(_ recognizer: UITapGestureRecognizer) {
+        if let item = selectedItem(at: recognizer.location(in: self)) { onSelect?(item) }
+    }
+
+    private func spawnSpecial(_ item: DanmakuItem, at time: TimeInterval) {
+        guard let special = item.special else { return }
+        let font = UIFont.systemFont(ofSize: fontSize(for: item), weight: settings.fontWeight.uiFontWeight)
+        let size = (special.text as NSString).boundingRect(with: CGSize(width: bounds.width * 2, height: 1200),
+            options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font], context: nil).size
+        let label = dequeueLabel()
+        configure(label, for: item, font: font, size: CGSize(width: ceil(size.width) + 6, height: ceil(size.height) + 6))
+        label.numberOfLines = 0; label.textAlignment = .left
+        label.layer.anchorPoint = .zero
+        label.layer.shadowOpacity = special.stroke ? 0.92 : 0
+        addSubview(label)
+        activeEntries[item.id] = ActiveEntry(id: item.id, item: item, label: label, completion: nil,
+            createdAt: CACurrentMediaTime(), animationGeneration: animationGeneration, scrollingTrajectory: nil)
+        updateSpecial(label, item: item, time: time)
+    }
+
+    private func updateSpecial(_ label: UILabel, item: DanmakuItem, time: TimeInterval) {
+        guard let special = item.special else { return }
+        let value = special.position(at: time - item.time)
+        CATransaction.begin(); CATransaction.setDisableActions(true)
+        label.layer.position = CGPoint(x: value.x * bounds.width, y: value.y * bounds.height)
+        label.layer.opacity = Float(value.opacity)
+        var transform = CATransform3DIdentity
+        transform = CATransform3DRotate(transform, special.rotationZ, 0, 0, 1)
+        transform = CATransform3DRotate(transform, special.rotationY, 0, 1, 0)
+        label.layer.transform = transform
+        CATransaction.commit()
     }
 
     private func configureView() {
@@ -492,6 +553,7 @@ final class DanmakuAnimationOverlayView: UIView {
         isOpaque = false
         clipsToBounds = true
         isUserInteractionEnabled = false
+        addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(selectDanmaku(_:))))
         layer.allowsGroupOpacity = false
     }
 
@@ -679,6 +741,11 @@ final class DanmakuAnimationOverlayView: UIView {
                 continue
             }
 
+            if entry.item.special != nil {
+                recycle(entry.label)
+                spawnSpecial(entry.item, at: playbackTime)
+                continue
+            }
             let fontSize = fontSize(for: entry.item)
             let font = UIFont.systemFont(ofSize: fontSize, weight: settings.fontWeight.uiFontWeight)
             let textSize = measuredTextSize(for: entry.item, font: font)
@@ -815,8 +882,10 @@ final class DanmakuAnimationOverlayView: UIView {
     }
 
     private func spawn(_ item: DanmakuItem, at playbackTime: TimeInterval, animated: Bool) {
+        guard item.special == nil || settings.showsAdvanced else { return }
         guard item.isSupported, bounds.width > 20, bounds.height > 20 else { return }
         guard canSpawnAdditionalItem else { return }
+        if item.special != nil { spawnSpecial(item, at: playbackTime); return }
 
         let fontSize = fontSize(for: item)
         let font = UIFont.systemFont(ofSize: fontSize, weight: settings.fontWeight.uiFontWeight)
@@ -920,6 +989,8 @@ final class DanmakuAnimationOverlayView: UIView {
     }
 
     private func configure(_ label: UILabel, for item: DanmakuItem, font: UIFont, size: CGSize) {
+        label.layer.transform = CATransform3DIdentity
+        label.layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         label.text = item.displayText
         label.font = font
         label.textAlignment = .center
@@ -936,6 +1007,16 @@ final class DanmakuAnimationOverlayView: UIView {
         label.layer.shouldRasterize = true
         label.layer.rasterizationScale = window?.screen.scale ?? traitCollection.displayScale
         label.layer.allowsEdgeAntialiasing = true
+        if item.isVIPColor && settings.showsVIPColors {
+            let format = UIGraphicsImageRendererFormat(); format.scale = 1
+            let gradient = UIGraphicsImageRenderer(size: size, format: format).image { context in
+                let colors = [UIColor.systemPink.cgColor, UIColor.systemPurple.cgColor, UIColor.systemBlue.cgColor]
+                if let fill = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: nil) {
+                    context.cgContext.drawLinearGradient(fill, start: .zero, end: CGPoint(x: size.width, y: 0), options: [])
+                }
+            }
+            label.textColor = UIColor(patternImage: gradient).withAlphaComponent(settings.opacity)
+        }
     }
 
     private func dequeueLabel() -> UILabel {
@@ -1223,11 +1304,11 @@ final class DanmakuAnimationOverlayView: UIView {
     }
 
     private func displayDuration(for item: DanmakuItem) -> TimeInterval {
-        item.isScrolling ? scrollDuration : 4.2
+        item.special?.duration ?? (item.isScrolling ? scrollDuration : 4.2)
     }
 
     private func maximumDisplayDuration() -> TimeInterval {
-        max(scrollDuration, 4.2)
+        max(scrollDuration, 4.2, maximumSpecialDuration)
     }
 
     private var scrollDuration: TimeInterval {

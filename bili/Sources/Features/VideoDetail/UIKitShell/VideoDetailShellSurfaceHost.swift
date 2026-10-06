@@ -750,7 +750,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                         isLayoutTransitioning: isBareSurfaceTransitionActive,
                         onPlaybackTime: { detailViewModel.updateDanmakuPlaybackTime($0, underLoad: $1) }
                     )
-                    .allowsHitTesting(false)
+                    .allowsHitTesting(!isBareSurfaceTransitionActive)
                     .zIndex(2.5)
                     PiliOnlineSubtitleLayer(controller: detailViewModel.piliSubtitles, api: detailViewModel.api,
                                             video: detailViewModel.detail, cid: detailViewModel.selectedCID,
@@ -2987,7 +2987,8 @@ private struct SurfaceOnlyDanmakuSettingsPage: View {
             fontScaleBinding: fontScaleBinding,
             fontWeightBinding: fontWeightBinding,
             opacityBinding: opacityBinding,
-            toggleDanmaku: toggleDanmaku
+            toggleDanmaku: toggleDanmaku,
+            updateExtendedSettings: detailViewModel.updateDanmakuSettings
         )
         .scrollContentBackground(.hidden)
         .listRowBackground(Color.clear)

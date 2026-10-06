@@ -17,6 +17,7 @@ public struct PiliProtoMessage: Equatable, Sendable {
         let bytes = [UInt8](data)
         var index = 0
         while index < bytes.count {
+            guard fields.count < 65_536 else { throw DecodeError.tooLarge }
             let start = index, key = try Self.varint(bytes, index: &index)
             let number = key >> 3, wire = Int(key & 7)
             guard number > 0, number <= 0x1FFFFFFF else { throw DecodeError.invalidKey }

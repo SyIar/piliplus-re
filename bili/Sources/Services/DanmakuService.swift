@@ -9,6 +9,8 @@ struct DanmakuSettings: Codable, Equatable, Sendable {
     var loadFactor: Double
     var hidesInPortrait: Bool
     var mergesDuplicates: Bool
+    var showsVIPColors: Bool
+    var showsAdvanced: Bool
 
     init(
         fontScale: Double,
@@ -17,7 +19,8 @@ struct DanmakuSettings: Codable, Equatable, Sendable {
         fontWeight: DanmakuFontWeightOption,
         loadFactor: Double = 1.0,
         hidesInPortrait: Bool = true,
-        mergesDuplicates: Bool = false
+        mergesDuplicates: Bool = false,
+        showsVIPColors: Bool = true, showsAdvanced: Bool = true
     ) {
         self.fontScale = fontScale
         self.opacity = opacity
@@ -26,6 +29,7 @@ struct DanmakuSettings: Codable, Equatable, Sendable {
         self.loadFactor = loadFactor
         self.hidesInPortrait = hidesInPortrait
         self.mergesDuplicates = mergesDuplicates
+        self.showsVIPColors = showsVIPColors; self.showsAdvanced = showsAdvanced
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -35,7 +39,7 @@ struct DanmakuSettings: Codable, Equatable, Sendable {
         case fontWeight
         case loadFactor
         case hidesInPortrait
-        case mergesDuplicates
+        case mergesDuplicates, showsVIPColors, showsAdvanced
     }
 
     init(from decoder: Decoder) throws {
@@ -47,6 +51,8 @@ struct DanmakuSettings: Codable, Equatable, Sendable {
         self.loadFactor = try container.decodeIfPresent(Double.self, forKey: .loadFactor) ?? 1.0
         self.hidesInPortrait = try container.decodeIfPresent(Bool.self, forKey: .hidesInPortrait) ?? true
         self.mergesDuplicates = try container.decodeIfPresent(Bool.self, forKey: .mergesDuplicates) ?? false
+        self.showsVIPColors = try container.decodeIfPresent(Bool.self, forKey: .showsVIPColors) ?? true
+        self.showsAdvanced = try container.decodeIfPresent(Bool.self, forKey: .showsAdvanced) ?? true
     }
 
     static let `default` = DanmakuSettings(
@@ -66,7 +72,7 @@ struct DanmakuSettings: Codable, Equatable, Sendable {
             fontWeight: fontWeight,
             loadFactor: min(max(loadFactor, 0.35), 1.0),
             hidesInPortrait: hidesInPortrait,
-            mergesDuplicates: mergesDuplicates
+            mergesDuplicates: mergesDuplicates, showsVIPColors: showsVIPColors, showsAdvanced: showsAdvanced
         )
     }
 }
@@ -173,10 +179,14 @@ nonisolated struct DanmakuItem: Identifiable, Hashable, Sendable {
     let fontSize: Double
     let color: UInt32
     let text: String
+    let special: SpecialDanmaku?
+    let serverID: String?
+    let cid: Int?
+    let isVIPColor: Bool
     let senderName: String?
     let senderHash: String?
     var mergeCount: Int
-    var displayText: String { mergeCount > 1 ? "\(text) ×\(mergeCount)" : text }
+    var displayText: String { special?.text ?? (mergeCount > 1 ? "\(text) ×\(mergeCount)" : text) }
     let inlineEmotes: [String: BiliInlineEmote]
 
     init(
@@ -186,6 +196,7 @@ nonisolated struct DanmakuItem: Identifiable, Hashable, Sendable {
         fontSize: Double,
         color: UInt32,
         text: String,
+        serverID: String? = nil, cid: Int? = nil, isVIPColor: Bool = false,
         senderName: String? = nil,
         senderHash: String? = nil,
         mergeCount: Int = 1,
@@ -197,6 +208,8 @@ nonisolated struct DanmakuItem: Identifiable, Hashable, Sendable {
         self.fontSize = fontSize
         self.color = color
         self.text = text
+        self.special = mode == 7 ? SpecialDanmaku(json: text) : nil
+        self.serverID = serverID; self.cid = cid; self.isVIPColor = isVIPColor
         self.senderName = senderName
         self.senderHash = senderHash
         self.mergeCount = max(1, mergeCount)
@@ -216,7 +229,7 @@ nonisolated struct DanmakuItem: Identifiable, Hashable, Sendable {
     }
 
     nonisolated var isSupported: Bool {
-        isScrolling || isBottomAnchored || isTopAnchored
+        isScrolling || isBottomAnchored || isTopAnchored || special != nil
     }
 }
 
@@ -324,6 +337,7 @@ nonisolated final class DanmakuXMLParser: NSObject, XMLParserDelegate {
             fontSize: fontSize,
             color: color,
             text: trimmedText,
+            serverID: parts.count > 7 ? String(parts[7]) : nil, cid: cid,
             senderHash: parts.count > 6 ? String(parts[6]) : nil
         )
     }
@@ -374,6 +388,7 @@ nonisolated struct DanmakuSegmentProtobufParser {
         var fontSize = 25.0
         var color: UInt32 = 0xFF_FF_FF
         var content = ""
+        var colorful: UInt64 = 0
         var senderHash: String?
 
         while !reader.isAtEnd {
@@ -396,6 +411,7 @@ nonisolated struct DanmakuSegmentProtobufParser {
                 senderHash = try reader.readString()
             case (7, ProtobufWireType.lengthDelimited):
                 content = try reader.readString()
+            case (24, ProtobufWireType.varint): colorful = try reader.readVarint()
             case (12, ProtobufWireType.lengthDelimited):
                 idString = try reader.readString()
             default:
@@ -424,6 +440,7 @@ nonisolated struct DanmakuSegmentProtobufParser {
             fontSize: fontSize,
             color: color,
             text: text,
+            serverID: idString ?? numericID.map(String.init), cid: cid, isVIPColor: colorful == 60001,
             senderHash: senderHash
         )
         return item.isSupported ? item : nil
@@ -513,18 +530,18 @@ nonisolated private struct ProtobufWireReader {
 nonisolated extension DanmakuItem {
     static func mergingDuplicates(_ items: [DanmakuItem]) -> [DanmakuItem] {
         // Live chat names/emotes have different presentation semantics.
-        let eligible = items.filter { $0.isSupported && $0.senderName == nil && $0.inlineEmotes.isEmpty }
+        let eligible = items.filter { $0.isSupported && $0.special == nil && $0.senderName == nil && $0.inlineEmotes.isEmpty }
         let byID = Dictionary(eligible.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let groups = DanmakuMerge.groups(eligible.map {
             .init(id: $0.id, time: $0.time, text: $0.text,
-                  style: "\($0.mode)|\($0.color)|\($0.fontSize)", sender: $0.senderHash)
+                  style: "\($0.mode)|\($0.color)|\($0.fontSize)|\($0.isVIPColor)", sender: $0.senderHash)
         })
         var result = groups.compactMap { group -> DanmakuItem? in
             guard var item = byID[group.representativeID] else { return nil }
             item.mergeCount = group.count
             return item
         }
-        result.append(contentsOf: items.filter { $0.senderName != nil || !$0.inlineEmotes.isEmpty })
+        result.append(contentsOf: items.filter { $0.special != nil || $0.senderName != nil || !$0.inlineEmotes.isEmpty })
         return result.sorted { $0.time == $1.time ? $0.id < $1.id : $0.time < $1.time }
     }
 }

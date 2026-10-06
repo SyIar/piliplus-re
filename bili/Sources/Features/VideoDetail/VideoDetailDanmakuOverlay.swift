@@ -7,6 +7,9 @@ struct VideoDetailDanmakuOverlay: View {
     let usesLandscapePlaybackChrome: Bool
     let isLayoutTransitioning: Bool
     let onPlaybackTime: (TimeInterval, Bool) -> Void
+    @EnvironmentObject private var dependencies: AppDependencies
+    @State private var selected: DanmakuItem?
+    @State private var resumesAfterSelection = false
     @StateObject private var state = VideoDetailDanmakuOverlayState()
 
     var body: some View {
@@ -27,11 +30,20 @@ struct VideoDetailDanmakuOverlay: View {
             bottomInset: usesLandscapePlaybackChrome ? 84 : 54,
             isLayoutTransitioning: isLayoutTransitioning,
             playbackClock: clock,
-            onPlaybackTime: onPlaybackTime
+            onPlaybackTime: onPlaybackTime,
+            onSelect: { item in
+                resumesAfterSelection = playerViewModel.isPlaying
+                playerViewModel.pause()
+                selected = item
+            }
         )
         .padding(.horizontal, usesLandscapePlaybackChrome ? 0 : 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
+        .sheet(item: $selected, onDismiss: {
+            if resumesAfterSelection, ActivePlaybackCoordinator.shared.isActive(playerViewModel), !playerViewModel.isTerminated { playerViewModel.play() }
+            resumesAfterSelection = false
+        }) { item in PiliDanmakuActionsView(api: dependencies.api, item: item) }
         .videoDetailDanmakuOverlayLifecycle(
             store: store,
             playerViewModel: playerViewModel,

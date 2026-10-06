@@ -8,7 +8,8 @@ final class VideoDetailDanmakuOverlayState: ObservableObject {
     private weak var store: VideoDetailDanmakuRenderStore?
     private weak var playerViewModel: PlayerStateViewModel?
     var cancellables = Set<AnyCancellable>()
-    var allItems: [DanmakuItem] = []
+    var maximumSpecialDuration: Double = 0
+    var allItems: [DanmakuItem] = [] { didSet { maximumSpecialDuration = allItems.compactMap { $0.special?.duration }.max() ?? 0 } }
     var sourceItemsRevision = 0
     var publishedSourceItemsRevision = -1
     var publishedWindowRange: Range<Int> = 0..<0

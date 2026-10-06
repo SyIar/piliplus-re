@@ -43,11 +43,11 @@ final class PiliSubtitleController: ObservableObject {
             }
         }
         do {
-            let metadata = try await api.fetchPiliPlayerMetadata(bvid: video.bvid, cid: cid,
+            let values = try await api.fetchPiliSubtitleTracks(bvid: video.bvid, aid: video.aid, cid: cid,
                                                                 seasonID: video.pgcSeasonID, episodeID: video.pgcEpisodeID)
             guard !Task.isCancelled, generation == token else { return }
             var seen = Set<String>()
-            tracks = (metadata.subtitle?.subtitles ?? []).filter { seen.insert($0.id).inserted }.sorted {
+            tracks = values.filter { seen.insert($0.id).inserted }.sorted {
                 if $0.lan.contains("zh") != $1.lan.contains("zh") { return $0.lan.contains("zh") }
                 return !$0.isAI && $1.isAI
             }

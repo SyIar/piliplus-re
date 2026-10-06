@@ -17,7 +17,8 @@ struct DanmakuSettingsSheet: View {
                 fontScaleBinding: fontScaleBinding,
                 fontWeightBinding: fontWeightBinding,
                 opacityBinding: opacityBinding,
-                toggleDanmaku: toggleDanmaku
+                toggleDanmaku: toggleDanmaku,
+                updateExtendedSettings: updateDanmakuSettings
             )
             .navigationTitle("弹幕设置")
             .navigationBarTitleDisplayMode(.inline)

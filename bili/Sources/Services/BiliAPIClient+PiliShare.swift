@@ -38,13 +38,15 @@ extension BiliAPIClient {
     }
     func piliSendCard(_ card: PiliShareCard, recipient: Int, identity: PiliAccountIdentity) async throws {
         guard recipient > 0 else { throw BiliAPIError.missingPayload }
+        let context = await requestSnapshot(purpose: .main)
+        guard identity.matches(context), let csrf = context.csrfToken else { throw BiliAPIError.missingCSRF }
         let device = UUID().uuidString, content = String(decoding: try JSONEncoder().encode(card.body), as: UTF8.self)
         let query = try await signedWBIQuery(["w_sender_uid": String(identity.mid), "w_receiver_id": String(recipient), "w_dev_id": device])
         try await piliContentWrite("/web_im/v1/web_im/send_msg", fields: [
             "msg[sender_uid]": String(identity.mid), "msg[receiver_id]": String(recipient), "msg[receiver_type]": "1",
             "msg[msg_type]": String(card.messageType), "msg[msg_status]": "0", "msg[dev_id]": device,
             "msg[timestamp]": String(Int(Date().timeIntervalSince1970)), "msg[new_face_version]": "1", "msg[content]": content,
-            "from_firework": "0", "build": "0", "mobi_app": "web"], query: query, identity: identity,
+            "from_firework": "0", "build": "0", "mobi_app": "web", "csrf_token": csrf], query: query, identity: identity,
             base: URL(string: "https://api.vc.bilibili.com"))
     }
 }

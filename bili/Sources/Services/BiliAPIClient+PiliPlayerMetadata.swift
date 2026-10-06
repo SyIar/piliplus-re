@@ -2,6 +2,35 @@ import Foundation
 import PiliPlaybackCore
 
 extension BiliAPIClient {
+    func fetchPiliSubtitleTracks(bvid: String, aid: Int? = nil, cid: Int,
+                                 seasonID: Int? = nil, episodeID: Int? = nil) async throws -> [PiliSubtitleTrack] {
+        let context = await requestSnapshot(purpose: .playback)
+        let metadata = try await fetchPiliPlayerMetadata(bvid: bvid, cid: cid, seasonID: seasonID, episodeID: episodeID)
+        let tracks = metadata.subtitle?.subtitles ?? []
+        guard tracks.isEmpty, !context.isLoggedIn, !bvid.hasPrefix("pugv-") else { return tracks }
+        let resolvedAID: Int?
+        if let aid, aid > 0 { resolvedAID = aid }
+        else { resolvedAID = try await fetchVideoDetail(bvid: bvid).aid }
+        guard let resolvedAID, resolvedAID > 0, cid > 0 else { return [] }
+        var request = PiliProtoMessage()
+        request.set(1, integer: resolvedAID); request.set(2, integer: cid); request.set(3, integer: 1)
+        let response = try await piliGRPC("/bilibili.community.service.dm.v1.DM/DmView", message: request,
+            identity: nil, needsLogin: false, purpose: .playback)
+        guard await requestSnapshot(purpose: .playback).playbackCredentialVersion == context.playbackCredentialVersion else {
+            throw PiliOfflineError.message("播放账号已切换")
+        }
+        return try Self.piliGuestSubtitleTracks(response)
+    }
+
+    nonisolated static func piliGuestSubtitleTracks(_ response: PiliProtoMessage) throws -> [PiliSubtitleTrack] {
+        var seen = Set<String>()
+        return try response.message(3).messages(3).compactMap { item in
+            let language = item.string(3), address = item.string(5)
+            guard !language.isEmpty, !address.isEmpty else { return nil }
+            let track = PiliSubtitleTrack(lan: language, lanDoc: item.string(4), subtitleURL: address, type: item.integer(7))
+            return seen.insert(track.id).inserted ? track : nil
+        }
+    }
     func fetchPiliPlayerMetadata(bvid: String, cid: Int, seasonID: Int? = nil, episodeID: Int? = nil) async throws -> PiliPlayerMetadata {
         let context = await playbackAPIRequestContext()
         var query = ["bvid": bvid, "cid": String(cid)]
@@ -32,6 +61,8 @@ extension BiliAPIClient {
         let (data, _) = try await self.data(for: request, priority: URLSessionTask.defaultPriority)
         guard data.count <= 8 * 1024 * 1024 else { throw PiliOfflineError.message("字幕文件过大") }
         struct Document: Decodable { let body: [SubtitleCue] }
-        return SubtitleTimeline(try JSONDecoder().decode(Document.self, from: data).body).cues
+        return try await Task.detached(priority: .userInitiated) {
+            SubtitleTimeline(try JSONDecoder().decode(Document.self, from: data).body).cues
+        }.value
     }
 }

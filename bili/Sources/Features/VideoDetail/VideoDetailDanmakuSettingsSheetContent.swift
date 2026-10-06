@@ -10,6 +10,7 @@ struct DanmakuSettingsSheetContent: View {
     let fontWeightBinding: Binding<DanmakuFontWeightOption>
     let opacityBinding: Binding<Double>
     let toggleDanmaku: () -> Void
+    let updateExtendedSettings: (DanmakuSettings) -> Void
 
     var body: some View {
         Form {
@@ -32,6 +33,14 @@ struct DanmakuSettingsSheetContent: View {
                 Text("每 15 秒内，相同内容和样式合并显示数量；同一用户重复发送只计一次。")
             }
 
+            Section {
+                Toggle("高级弹幕", isOn: Binding(get: { store.danmakuSettings.showsAdvanced }, set: { value in
+                    var settings = store.danmakuSettings; settings.showsAdvanced = value; updateExtendedSettings(settings)
+                }))
+                Toggle("会员渐变弹幕", isOn: Binding(get: { store.danmakuSettings.showsVIPColors }, set: { value in
+                    var settings = store.danmakuSettings; settings.showsVIPColors = value; updateExtendedSettings(settings)
+                }))
+            }
             DanmakuSettingsTextSection(
                 settings: store.danmakuSettings,
                 fontScale: fontScaleBinding,

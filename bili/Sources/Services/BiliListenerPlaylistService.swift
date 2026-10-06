@@ -481,6 +481,9 @@ nonisolated enum BiliListenerPlaylistCodec {
                 stream.avail_out = uInt(chunkSize)
                 let status = inflate(&stream, Z_NO_FLUSH)
                 let produced = chunkSize - Int(stream.avail_out)
+                guard output.count + produced <= 16 * 1024 * 1024 else {
+                    throw BiliListenerPlaylistError.decompressionFailed
+                }
                 if produced > 0 {
                     output.append(destination, count: produced)
                 }

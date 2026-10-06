@@ -42,7 +42,7 @@ extension VideoDetailDanmakuOverlayState {
     }
 
     var effectiveWindowLookBehind: TimeInterval {
-        snapshot.isLoadShedding ? 6 : normalWindowLookBehind
+        max(snapshot.isLoadShedding ? 6 : normalWindowLookBehind, maximumSpecialDuration > 0 ? maximumSpecialDuration + windowRecenterInterval : 0)
     }
 
     var effectiveWindowLookAhead: TimeInterval {

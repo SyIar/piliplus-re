@@ -406,10 +406,10 @@ final class PiliOfflineStore: ObservableObject {
                     self.persist()
                 }
                 if item.hasSubtitles != true {
-                    let metadata = try await client.fetchPiliPlayerMetadata(bvid: item.bvid, cid: item.cid,
+                    let tracks = try await client.fetchPiliSubtitleTracks(bvid: item.bvid, cid: item.cid,
                                                                            seasonID: item.seasonID, episodeID: item.episodeID)
                     var subtitles: [PiliCachedSubtitle] = []
-                    for track in metadata.subtitle?.subtitles ?? [] {
+                    for track in tracks {
                         try Task.checkCancellation()
                         subtitles.append(PiliCachedSubtitle(track: track, cues: try await client.fetchPiliSubtitles(track)))
                     }
