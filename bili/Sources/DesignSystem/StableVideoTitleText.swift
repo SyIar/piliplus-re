@@ -1,8 +1,20 @@
 import SwiftUI
 import UIKit
 
+private struct VideoCardTitleTypographyKey: EnvironmentKey {
+    static let defaultValue: AppTypography.Role? = nil
+}
+
+extension EnvironmentValues {
+    var videoCardTitleTypography: AppTypography.Role? {
+        get { self[VideoCardTitleTypographyKey.self] }
+        set { self[VideoCardTitleTypographyKey.self] = newValue }
+    }
+}
+
 struct StableVideoTitleText: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.videoCardTitleTypography) private var titleTypography
 
     enum Style {
         case feedStory
@@ -66,7 +78,8 @@ struct StableVideoTitleText: View {
     }
 
     private var resolvedFont: UIFont {
-        style.typographyRole.uiFont(contentSizeCategory: dynamicTypeSize.uiContentSizeCategory)
+        (titleTypography ?? style.typographyRole)
+            .uiFont(contentSizeCategory: dynamicTypeSize.uiContentSizeCategory)
     }
 }
 

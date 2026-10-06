@@ -49,6 +49,7 @@ enum AppTypography {
         case sectionTitle
         case videoDetailTitle
         case feedVideoTitle
+        case recommendationVideoTitle
         case compactVideoTitle
         case dynamicBody
         case author
@@ -72,6 +73,7 @@ enum AppTypography {
         var pointSize: CGFloat {
             switch self {
             case .pageTitle: return 24
+            case .recommendationVideoTitle: return 14
             case .compactAuthor, .metadata, .tertiaryMetadata, .badge,
                  .settingsSubtitle, .liveChatName, .diagnostic: return 13
             default: return 17
@@ -90,7 +92,7 @@ enum AppTypography {
                 return .title3
             case .navigationTitle, .sectionTitle, .feedVideoTitle, .liveRoomTitle, .messageName:
                 return .headline
-            case .compactVideoTitle, .commentAuthor, .liveChatBody, .messagePreview:
+            case .recommendationVideoTitle, .compactVideoTitle, .commentAuthor, .liveChatBody, .messagePreview:
                 return .subheadline
             case .dynamicBody, .commentBody, .messageBody, .settingsRow:
                 return .body
@@ -119,7 +121,7 @@ enum AppTypography {
                 return .title3
             case .navigationTitle, .sectionTitle, .feedVideoTitle, .liveRoomTitle, .messageName:
                 return .headline
-            case .compactVideoTitle, .commentAuthor, .liveChatBody, .messagePreview:
+            case .recommendationVideoTitle, .compactVideoTitle, .commentAuthor, .liveChatBody, .messagePreview:
                 return .subheadline
             case .dynamicBody, .commentBody, .messageBody, .settingsRow:
                 return .body
@@ -221,11 +223,17 @@ enum AppTypography {
 private struct AppTypographyModifier: ViewModifier {
     let role: AppTypography.Role
     @ScaledMetric(relativeTo: .caption) private var small = 13.0
+    @ScaledMetric(relativeTo: .subheadline) private var recommendationTitle = 14.0
     @ScaledMetric(relativeTo: .body) private var bodySize = 17.0
     @ScaledMetric(relativeTo: .title2) private var large = 24.0
 
     func body(content: Content) -> some View {
-        let size = role.pointSize == 24 ? large : (role.pointSize == 13 ? small : bodySize)
+        let size = switch role.pointSize {
+        case 24: large
+        case 14: recommendationTitle
+        case 13: small
+        default: bodySize
+        }
         content.font(.system(size: size, weight: role.nativeWeight?.swiftUIWeight ?? .regular, design: role.design.swiftUIDesign))
     }
 }

@@ -7,6 +7,11 @@ struct HomeFeedVideoCardLabel: View {
     var usesGenericAuthorIcon = true
 
     var body: some View {
+        card.environment(\.videoCardTitleTypography, .recommendationVideoTitle)
+    }
+
+    @ViewBuilder
+    private var card: some View {
         switch metrics.mode {
         case .singleColumn:
             YouTubeStyleVideoFeedCardView(
