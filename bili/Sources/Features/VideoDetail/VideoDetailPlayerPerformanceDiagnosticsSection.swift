@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayDiagnosticsSection: View {
     let session: PlayerPerformanceSession
@@ -11,6 +12,6 @@ struct PlayerPerformanceOverlayDiagnosticsSection: View {
                 playerViewModel: playerViewModel
             )
         }
-        .font(.caption2)
+        .font(.cc.sm)
     }
 }

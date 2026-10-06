@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliDynamicReservationView: View {
     let api: BiliAPIClient
@@ -13,9 +14,9 @@ struct PiliDynamicReservationView: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(value["title"].piliString, systemImage: "calendar.badge.clock").font(.headline)
+            PiliLabel(value["title"].piliString, systemImage: "calendar.badge.clock").font(.cc.baseBold)
             Text(value["desc1"]["text"].piliString + " · " + value["desc2"]["text"].piliString)
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.cc.sm).foregroundStyle(.secondary)
             let button = value["button"]
             let checked = button["status"].piliInt == button["type"].piliInt
             Button {
@@ -25,11 +26,11 @@ struct PiliDynamicReservationView: View {
             } label: {
                 let text = button["jump_text"].piliString.isEmpty
                     ? button[checked ? "check_text" : "uncheck_text"].piliString : button["jump_text"].piliString
-                Label(text.isEmpty ? (checked ? "取消预约" : "预约") : text, systemImage: checked ? "checkmark.circle" : "bell.badge")
-            }.buttonStyle(.bordered).disabled(busy || button["disable"].piliInt == 1)
-            if let error { Text(error).font(.caption).foregroundStyle(.secondary) }
+                PiliLabel(text.isEmpty ? (checked ? "取消预约" : "预约") : text, systemImage: checked ? "checkmark.circle" : "bell.badge")
+            }.buttonStyle(.glass).disabled(busy || button["disable"].piliInt == 1)
+            if let error { Text(error).font(.cc.sm).foregroundStyle(.secondary) }
         }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
-            .background(.quaternary, in: RoundedRectangle(cornerRadius: 14))
+            .piliGlassCard(radius: 14)
             .onAppear { if identity == nil { identity = .init(api.requestSnapshot()) } }
     }
     private func toggle() async {

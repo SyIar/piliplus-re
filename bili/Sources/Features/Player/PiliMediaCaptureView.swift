@@ -14,7 +14,7 @@ struct PiliMediaCaptureView: View {
     @State private var progress = 0.0
     @State private var message: String?
     @State private var saving = false
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
 
     init(source: URL, time: Double, duration: Double) {
         self.source = source; self.duration = duration.isFinite ? max(0, duration) : 0
@@ -22,7 +22,7 @@ struct PiliMediaCaptureView: View {
     }
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 Section {
                     Picker("截取格式", selection: $animated) { Text("截图 PNG").tag(false); Text("动图 GIF").tag(true) }
                         .pickerStyle(.segmented)
@@ -31,13 +31,13 @@ struct PiliMediaCaptureView: View {
                     if animated {
                         Stepper("时长：\(Int(seconds)) 秒", value: $seconds, in: 1...10)
                         Picker("尺寸", selection: $edge) { Text("轻巧 480p").tag(480); Text("标准 640p").tag(640); Text("清晰 960p").tag(960) }
-                        Text("按视频剩余时长截取，最长边为所选尺寸。较长或较大动图会自动降低帧率。").font(.footnote).foregroundStyle(.secondary)
+                        Text("按视频剩余时长截取，最长边为所选尺寸。较长或较大动图会自动降低帧率。").font(.cc.sm).foregroundStyle(.secondary)
                     }
                 }.disabled(task != nil || saving)
                 Section {
                     if let output {
-                        ShareLink(item: output) { Label("分享导出文件", systemImage: "square.and.arrow.up") }
-                        Button("保存到相册", systemImage: "square.and.arrow.down") {
+                        ShareLink(item: output) { PiliLabel("分享导出文件", systemImage: "square.and.arrow.up") }
+                        PiliIconButton("保存到相册", systemImage: "square.and.arrow.down") {
                             saving = true
                             Task {
                                 defer { saving = false }
@@ -50,7 +50,7 @@ struct PiliMediaCaptureView: View {
                         ProgressView(value: progress)
                         Button("取消导出", role: .cancel) { task?.cancel() }
                     } else {
-                        Button(output == nil ? "开始截取" : "重新截取", systemImage: "camera") { capture() }
+                        PiliIconButton(output == nil ? "开始截取" : "重新截取", systemImage: "camera") { capture() }
                             .disabled(saving).accessibilityIdentifier("capture.start")
                     }
                     if let message { Text(message).foregroundStyle(.secondary) }
@@ -78,6 +78,6 @@ struct PiliMediaCaptureView: View {
     static func present(_ detail: VideoDetailViewModel) {
         guard let source = detail.selectedPlayVariant?.videoURL, let player = detail.stablePlayerViewModel else { return }
         let time = player.currentTime, duration = player.duration ?? Double(detail.detail.duration ?? 0)
-        AppHelper.shared.presentSheet(.sheet) { PiliMediaCaptureView(source: source, time: time, duration: duration) }
+        PiliPresentation.present(.sheet) { PiliMediaCaptureView(source: source, time: time, duration: duration) }
     }
 }

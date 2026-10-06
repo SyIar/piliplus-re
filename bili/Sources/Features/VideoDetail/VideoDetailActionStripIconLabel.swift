@@ -5,7 +5,7 @@ struct VideoDetailActionStripIconLabel: View {
     let foregroundStyle: Color
 
     var body: some View {
-        Image(systemName: systemImage)
+        PiliIcon(systemName: systemImage, size: VideoDetailActionStrip.Metrics.iconSize)
             .font(.system(size: VideoDetailActionStrip.Metrics.iconSize, weight: .semibold))
             .symbolRenderingMode(.monochrome)
             .frame(

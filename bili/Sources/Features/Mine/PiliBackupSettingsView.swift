@@ -14,7 +14,7 @@ struct PiliBackupSettingsView: View {
     @State private var importsFile = false
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 Section("WebDAV") {
                     TextField("服务器目录 https://.../dav/", text: $address).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
                     TextField("用户名", text: $username).textInputAutocapitalization(.never).autocorrectionDisabled()

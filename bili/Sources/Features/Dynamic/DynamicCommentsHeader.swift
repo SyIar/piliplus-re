@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicCommentsHeader: View {
     let replyCount: Int?
@@ -8,11 +9,11 @@ struct DynamicCommentsHeader: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Text("全部评论")
-                    .font(.headline.weight(.semibold))
+                    .font(.cc.baseBold.weight(.semibold))
 
                 if let replyCount, replyCount > 0 {
                     Text(BiliFormatters.compactCount(replyCount))
-                        .font(.caption.weight(.semibold))
+                        .font(.cc.sm.weight(.semibold))
                         .foregroundStyle(.secondary)
                 }
 

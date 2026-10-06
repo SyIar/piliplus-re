@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import ChunUI
 
 struct BiliPlayerViewContent: View {
     let context: BiliPlayerViewRenderContext
@@ -15,7 +16,7 @@ struct BiliPlayerViewContent: View {
             seekPreviewModel: context.seekPreviewModel,
             playbackControls: AnyView(playbackControls)
         )
-        .sheet(isPresented: $isMoreControlsPresented) {
+        .piliSheet(isPresented: $isMoreControlsPresented) {
             BiliPlayerMoreControlsSheet(
                 viewModel: context.viewModel,
                 configuration: context.configuration,
@@ -127,7 +128,7 @@ private struct BiliPlayerMoreControlsButton: View {
 
     var body: some View {
         Button(action: open) {
-            Image(systemName: "ellipsis.circle")
+            PiliIcon(systemName: "ellipsis.circle", size: iconSize)
                 .font(.system(size: iconSize, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: metrics.controlHeight, height: metrics.controlHeight)
@@ -151,7 +152,7 @@ private struct BiliPlayerMoreControlsSheet: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 if let moreControlsContent = configuration.moreControlsContent {
                     moreControlsContent
                 }
@@ -162,7 +163,7 @@ private struct BiliPlayerMoreControlsSheet: View {
                             viewModel.setPlaybackRate(rate)
                             dismiss()
                         } label: {
-                            Label(
+                            PiliLabel(
                                 rate.title,
                                 systemImage: rate == viewModel.playbackRate ? "checkmark" : "speedometer"
                             )
@@ -176,7 +177,7 @@ private struct BiliPlayerMoreControlsSheet: View {
                                 showDanmakuSettings()
                             }
                         } label: {
-                            Label("弹幕设置", systemImage: "text.bubble")
+                            PiliLabel("弹幕设置", systemImage: "text.bubble")
                         }
                     }
 
@@ -184,34 +185,34 @@ private struct BiliPlayerMoreControlsSheet: View {
                         showsRateChoices = true
                     } label: {
                         HStack {
-                            Label("倍速", systemImage: "speedometer")
+                            PiliLabel("倍速", systemImage: "speedometer")
                             Spacer()
                             Text(viewModel.playbackRate.title)
                                 .foregroundStyle(.secondary)
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.semibold))
+                            PiliIcon(systemName: "chevron.right")
+                                .font(.cc.sm.weight(.semibold))
                                 .foregroundStyle(.tertiary)
                         }
                     }
 
-                    Label("视频格式：\(videoFormatTitle)", systemImage: "film")
+                    PiliLabel("视频格式：\(videoFormatTitle)", systemImage: "film")
                         .foregroundStyle(.secondary)
 
-                    Label("解码：\(decodeTitle)", systemImage: "cpu")
+                    PiliLabel("解码：\(decodeTitle)", systemImage: "cpu")
                         .foregroundStyle(.secondary)
 
                     Toggle(isOn: Binding(
                         get: { libraryStore.playerPerformanceOverlayEnabled },
                         set: { libraryStore.setPlayerPerformanceOverlayEnabled($0) }
                     )) {
-                        Label("播放性能诊断", systemImage: "waveform.path.ecg.rectangle")
+                        PiliLabel("播放性能诊断", systemImage: "waveform.path.ecg.rectangle")
                     }
 
                     Toggle(isOn: Binding(
                         get: { libraryStore.playerControlEdgeScrimEnabled },
                         set: { libraryStore.setPlayerControlEdgeScrimEnabled($0) }
                     )) {
-                        Label("播放控件边缘遮罩", systemImage: "rectangle.topthird.inset.filled")
+                        PiliLabel("播放控件边缘遮罩", systemImage: "rectangle.topthird.inset.filled")
                     }
                 }
             }
@@ -230,7 +231,7 @@ private struct BiliPlayerMoreControlsSheet: View {
         .background {
             BiliPlayerGlassSheetBackground()
         }
-        .presentationDetents([.medium])
+        .piliPresentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .presentationBackground(.clear)
     }

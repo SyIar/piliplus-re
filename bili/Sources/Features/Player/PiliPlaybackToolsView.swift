@@ -62,7 +62,7 @@ struct PiliPlaybackToolsView: View {
     }
 
     static func present() {
-        AppHelper.shared.presentSheet(.half) { PiliPlaybackToolsView() }
+        PiliPresentation.present(.half) { PiliPlaybackToolsView() }
     }
 }
 

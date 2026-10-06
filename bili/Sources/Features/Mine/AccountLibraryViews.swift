@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 enum AccountLibraryKind: Hashable, Identifiable {
     case history
@@ -122,8 +123,8 @@ struct AccountLibraryButtonRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 16, weight: .semibold))
+            PiliIcon(systemName: systemImage, size: 16)
+                .font(.cc.baseBold)
                 .foregroundStyle(appTintColor)
                 .frame(width: 28, height: 28)
 

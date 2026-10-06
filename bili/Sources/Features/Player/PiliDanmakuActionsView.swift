@@ -9,17 +9,17 @@ struct PiliDanmakuActionsView: View {
     @State private var busy = false
     @State private var message: String?
     @State private var confirmsRecall = false
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     init(api: BiliAPIClient, item: DanmakuItem) {
         self.api = api; self.item = item; identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
     }
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 Text(item.displayText).textSelection(.enabled)
-                Button("复制", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.displayText; message = "已复制" }
+                PiliIconButton("复制", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.displayText; message = "已复制" }
                 if let id = item.serverID, let cid = item.cid {
-                    Button(liked ? "取消点赞" : "点赞", systemImage: liked ? "hand.thumbsup.fill" : "hand.thumbsup") { Task { await like(id: id, cid: cid) } }.disabled(busy)
+                    PiliIconButton(liked ? "取消点赞" : "点赞", systemImage: liked ? "hand.thumbsup.fill" : "hand.thumbsup") { Task { await like(id: id, cid: cid) } }.disabled(busy)
                     NavigationLink("举报弹幕") { PiliContentReportView(api: api, target: .danmaku(id: id, cid: cid)) }
                     if identity.mid > 0, item.senderHash?.lowercased() == PiliDanmakuRule.userHash(identity.mid) {
                         Button("撤回我的弹幕", role: .destructive) { confirmsRecall = true }.disabled(busy)
@@ -30,8 +30,8 @@ struct PiliDanmakuActionsView: View {
                 if let message { Text(message).foregroundStyle(.secondary) }
             }.navigationTitle("弹幕").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
-                .confirmationDialog("撤回这条弹幕？", isPresented: $confirmsRecall, titleVisibility: .visible) {
-                    Button("撤回", role: .destructive) { Task { await recall() } }
+                .piliConfirmation("撤回这条弹幕？", isPresented: $confirmsRecall, titleVisibility: .visible) {
+                    PiliAlertButton("撤回", role: .destructive) { Task { await recall() } }
                 }
                 .task {
                     guard let id = item.serverID, let cid = item.cid else { return }

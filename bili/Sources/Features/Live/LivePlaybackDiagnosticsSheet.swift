@@ -1,12 +1,13 @@
 import Foundation
 import SwiftUI
+import ChunUI
 import UIKit
 
 @MainActor
 struct LivePlaybackDiagnosticsSheet: View {
     @ObservedObject var viewModel: LiveRoomViewModel
     @ObservedObject private var performanceStore = PlayerPerformanceStore.shared
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var didCopyDiagnostics = false
 
     private var metricsID: String {
@@ -26,12 +27,12 @@ struct LivePlaybackDiagnosticsSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 LiveCDNProbeSection(viewModel: viewModel)
                 if didCopyDiagnostics {
                     Section {
-                        Label("诊断信息已复制", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                        PiliLabel("诊断信息已复制", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(Color.cc.success)
                     }
                 }
 
@@ -57,7 +58,7 @@ struct LivePlaybackDiagnosticsSheet: View {
 
                 Section("候选线路") {
                     if viewModel.streamCandidates.isEmpty {
-                        ContentUnavailableView(
+                        PiliUnavailableView(
                             "等待线路信息",
                             systemImage: "point.3.connected.trianglepath.dotted",
                             description: Text("取流完成后会显示官方返回的候选节点。")
@@ -77,7 +78,7 @@ struct LivePlaybackDiagnosticsSheet: View {
                     if let playerViewModel = viewModel.playerViewModel {
                         LivePlaybackDiagnosticsPlayerRows(playerViewModel: playerViewModel)
                     } else {
-                        ContentUnavailableView(
+                        PiliUnavailableView(
                             "等待播放器",
                             systemImage: "play.rectangle",
                             description: Text("直播流尚未创建或已停止。")
@@ -121,7 +122,7 @@ struct LivePlaybackDiagnosticsSheet: View {
                     Button {
                         copyDiagnostics()
                     } label: {
-                        Image(systemName: "doc.on.doc")
+                        PiliIcon(systemName: "doc.on.doc")
                     }
                     .accessibilityLabel("复制直播播放诊断")
                 }
@@ -276,7 +277,7 @@ private struct LivePlaybackDiagnosticsPerformanceRows: View {
                 LivePlaybackDiagnosticsRow("失败", value: failureMessage)
             }
         } else {
-            ContentUnavailableView(
+            PiliUnavailableView(
                 "等待性能事件",
                 systemImage: "chart.xyaxis.line",
                 description: Text("开始加载直播后会自动写入首帧和缓冲数据。")

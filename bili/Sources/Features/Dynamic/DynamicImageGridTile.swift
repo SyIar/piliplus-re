@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicImageGridTile: View {
     let item: DynamicImageDisplayItem
@@ -30,7 +31,7 @@ struct DynamicImageGridTile: View {
             ZStack {
                 Color.clear
                 Text("+\(imagesCount - 9)")
-                    .font(.title3.weight(.bold))
+                    .font(.cc.baseBold.weight(.bold))
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 7)

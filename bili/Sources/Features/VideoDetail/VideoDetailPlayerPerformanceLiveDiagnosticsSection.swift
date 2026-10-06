@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 private struct PlayerPerformanceOverlayDiagnosticRow: Identifiable, Equatable {
     let id: String
@@ -70,11 +71,11 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Image(systemName: isFailure ? "exclamationmark.triangle.fill" : "stethoscope")
-                    .font(.caption2.weight(.semibold))
+                PiliIcon(systemName: isFailure ? "exclamationmark.triangle.fill" : "stethoscope")
+                    .font(.cc.sm.weight(.semibold))
                     .foregroundStyle(isFailure ? .orange : .secondary)
                 Text("现场诊断")
-                    .font(.caption2.weight(.semibold))
+                    .font(.cc.sm.weight(.semibold))
                 Spacer(minLength: 0)
             }
 
@@ -88,7 +89,7 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
                         .lineLimit(nil)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.caption2.monospacedDigit())
+                .font(.cc.sm.monospacedDigit())
             }
         }
         .padding(8)
@@ -99,7 +100,7 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
         )
         .overlay {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(isFailure ? Color.orange.opacity(0.35) : Color(uiColor: .separator).opacity(0.55), lineWidth: 0.7)
+                .stroke(isFailure ? Color.cc.warning.opacity(0.35) : Color(uiColor: .separator).opacity(0.55), lineWidth: 0.7)
         }
     }
 

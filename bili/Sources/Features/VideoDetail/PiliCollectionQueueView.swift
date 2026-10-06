@@ -5,7 +5,7 @@ struct PiliCollectionQueueView: View {
     @ObservedObject var viewModel: VideoDetailViewModel
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 if let queue = viewModel.piliPlaybackQueue {
                     ForEach(Array(queue.bvids.enumerated()), id: \.element) { index, bvid in
                         Button {
@@ -16,7 +16,7 @@ struct PiliCollectionQueueView: View {
                                 Text(queue.titles[bvid] ?? (bvid == viewModel.detail.bvid ? viewModel.detail.title : bvid))
                                     .ccText(font: .cc.base, color: .cc.foreground)
                                 Spacer()
-                                if bvid == viewModel.detail.bvid { Image(systemName: "speaker.wave.2.fill").foregroundStyle(Color.cc.primary) }
+                                if bvid == viewModel.detail.bvid { PiliIcon(systemName: "speaker.wave.2.fill").foregroundStyle(Color.cc.primary) }
                             }.padding(.vertical, 6)
                         }.disabled(viewModel.isAdvancingPiliQueue)
                     }

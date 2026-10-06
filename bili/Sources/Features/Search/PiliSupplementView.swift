@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 import Charts
 
 struct PiliSupplementView: View {
@@ -25,13 +26,13 @@ struct PiliMusicView: View {
     @State private var error: String?
     @State private var comments: DynamicFeedItem?
     var body: some View {
-        List {
+        PiliList {
             if !detail.piliObject.isEmpty {
                 Section {
-                    Text(detail["music_title"].piliString).font(.title2.bold())
+                    Text(detail["music_title"].piliString).font(.cc.lgBold.bold())
                     Text(detail["origin_artist"].piliString).foregroundStyle(.secondary)
                     ForEach(["album", "music_publish", "music_source"], id: \.self) { key in
-                        if !detail[key].piliString.isEmpty { Text(detail[key].piliString).font(.subheadline) }
+                        if !detail[key].piliString.isEmpty { Text(detail[key].piliString).font(.cc.base) }
                     }
                     ForEach(detail["artists_list"].piliArray, id: \.self) { artist in
                         if let owner = try? artist.piliDecode(VideoOwner.self), owner.mid > 0 {
@@ -39,12 +40,12 @@ struct PiliMusicView: View {
                         }
                     }
                     if !detail["mv_bvid"].piliString.isEmpty, let url = URL(string: "https://www.bilibili.com/video/\(detail["mv_bvid"].piliString)") {
-                        AppLinkButton(url: url) { Label("播放 MV", systemImage: "play.circle.fill") }
+                        AppLinkButton(url: url) { PiliLabel("播放 MV", systemImage: "play.circle.fill") }
                     }
-                    Button(wished ? "已想听" : "想听", systemImage: wished ? "heart.fill" : "heart") { wish() }.disabled(busy)
+                    PiliIconButton(wished ? "已想听" : "想听", systemImage: wished ? "heart.fill" : "heart") { wish() }.disabled(busy)
                     let target = detail["music_comment"]
                     if target["oid"].piliInt > 0 {
-                        Button("音乐评论", systemImage: "bubble") { comments = try? piliCommentTarget(oid: target["oid"].piliString, type: target["page_type"].piliInt > 0 ? target["page_type"].piliInt : 47) }
+                        PiliIconButton("音乐评论", systemImage: "bubble") { comments = try? piliCommentTarget(oid: target["oid"].piliString, type: target["page_type"].piliInt > 0 ? target["page_type"].piliInt : 47) }
                     }
                     ShareLink(item: URL(string: "https://music.bilibili.com/h5/music-detail?music_id=\(id)")!)
                 }
@@ -62,15 +63,15 @@ struct PiliMusicView: View {
                 Section("使用这首音乐的视频") {
                     ForEach(recommendations, id: \.self) { item in
                         if let url = URL(string: "https://www.bilibili.com/video/\(item["bvid"].piliString)"), !item["bvid"].piliString.isEmpty {
-                            AppLinkButton(url: url) { VStack(alignment: .leading) { Text(item["title"].piliString); Text(item["up_nick_name"].piliString).font(.caption).foregroundStyle(.secondary) } }
+                            AppLinkButton(url: url) { VStack(alignment: .leading) { Text(item["title"].piliString); Text(item["up_nick_name"].piliString).font(.cc.sm).foregroundStyle(.secondary) } }
                         }
                     }
                 }
             }
             if busy { ProgressView() }
-            if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load() } } }
+            if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load() } } }
         }.navigationTitle("音乐详情").task { await load() }.refreshable { await load() }
-            .sheet(item: $comments) { DynamicCommentsSheet(item: $0, api: api) }
+            .piliSheet(item: $comments) { DynamicCommentsSheet(item: $0, api: api) }
     }
     private func load() async {
         guard !busy else { return }; busy = true; defer { busy = false }
@@ -107,7 +108,7 @@ struct PiliBubbleView: View {
     @State private var error: String?
     @State private var generation = UUID()
     var body: some View {
-        List {
+        PiliList {
             if !categories.isEmpty {
                 Picker("分类", selection: $category) {
                     Text("全部").tag("")
@@ -120,14 +121,14 @@ struct PiliBubbleView: View {
                     AppLinkButton(url: url) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(item["title"].piliString)
-                            Text("\(item["meta"]["author"].piliString) · \(item["meta"]["time_text"].piliString)").font(.caption).foregroundStyle(.secondary)
-                            Text("\(item["meta"]["view_stat"].piliString) · \(item["meta"]["reply_count"].piliString) 评论").font(.caption2).foregroundStyle(.secondary)
+                            Text("\(item["meta"]["author"].piliString) · \(item["meta"]["time_text"].piliString)").font(.cc.sm).foregroundStyle(.secondary)
+                            Text("\(item["meta"]["view_stat"].piliString) · \(item["meta"]["reply_count"].piliString) 评论").font(.cc.sm).foregroundStyle(.secondary)
                         }
                     }
                 }
             }
             if busy { ProgressView() }
-            else if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load() } } }
+            else if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load() } } }
             else if more { Button("加载更多") { Task { await load() } } }
             else if items.isEmpty { Text("暂无内容") }
         }.navigationTitle(title).task { await load(reset: true) }.refreshable { await load(reset: true) }
@@ -157,33 +158,33 @@ struct PiliMatchView: View {
     @State private var comments: DynamicFeedItem?
     @State private var error: String?
     var body: some View {
-        List {
+        PiliList {
             if !contest.piliObject.isEmpty {
-                Text(contest["season"]["title"].piliString).font(.headline)
+                Text(contest["season"]["title"].piliString).font(.cc.baseBold)
                 Text(contest["game_stage"].piliString).foregroundStyle(.secondary)
                 HStack(alignment: .top) {
                     team(contest["home_team"])
                     Spacer()
-                    Text(contest["contest_status"].piliInt == 1 ? "VS" : "\(contest["home_score"].piliInt) : \(contest["away_score"].piliInt)").font(.title2.bold())
+                    Text(contest["contest_status"].piliInt == 1 ? "VS" : "\(contest["home_score"].piliInt) : \(contest["away_score"].piliInt)").font(.cc.lgBold.bold())
                     Spacer(); team(contest["away_team"])
                 }
                 Text(Date(timeIntervalSince1970: Double(contest["stime"].piliInt)), format: .dateTime.year().month().day().hour().minute())
                 if contest["contest_status"].piliInt == 2, contest["live_room"].piliInt > 0,
                    let url = URL(string: "https://live.bilibili.com/\(contest["live_room"].piliInt)") {
-                    AppLinkButton(url: url) { Label("观看直播", systemImage: "play.circle") }
+                    AppLinkButton(url: url) { PiliLabel("观看直播", systemImage: "play.circle") }
                 }
                 if contest["contest_status"].piliInt == 3 { Text("比赛已结束").foregroundStyle(.secondary) }
-                Button("比赛讨论", systemImage: "bubble") { comments = try? piliCommentTarget(oid: String(id), type: 27) }
+                PiliIconButton("比赛讨论", systemImage: "bubble") { comments = try? piliCommentTarget(oid: String(id), type: 27) }
             } else if error == nil { ProgressView() }
-            if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load() } } }
+            if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load() } } }
         }.navigationTitle("比赛详情").task { await load() }.refreshable { await load() }
-            .sheet(item: $comments) { DynamicCommentsSheet(item: $0, api: api) }
+            .piliSheet(item: $comments) { DynamicCommentsSheet(item: $0, api: api) }
     }
     private func team(_ value: DynamicJSONValue) -> some View {
         VStack {
             let logo = value["logo"].piliString
             CachedRemoteImage(url: URL(string: logo.hasPrefix("/") ? "https://i1.hdslb.com" + logo : logo), targetPixelSize: 150) { $0.resizable().scaledToFit() } placeholder: { Color.clear }.frame(width: 50, height: 50)
-            Text(value["title"].piliString).font(.subheadline)
+            Text(value["title"].piliString).font(.cc.base)
         }.frame(maxWidth: .infinity)
     }
     private func load() async {

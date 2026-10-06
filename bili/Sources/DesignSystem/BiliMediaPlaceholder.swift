@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct BiliMediaPlaceholder: View {
     enum Style: Equatable {
@@ -33,21 +34,21 @@ struct BiliMediaPlaceholder: View {
 
             ZStack {
                 Circle()
-                    .fill(Color(.systemBackground).opacity(0.46))
+                    .fill(Color.cc.background.opacity(0.46))
                     .frame(width: iconSize * 2.05, height: iconSize * 2.05)
 
-                Image(systemName: phase == .failed ? "exclamationmark.triangle.fill" : style.systemImage)
+                PiliIcon(systemName: phase == .failed ? "exclamationmark.triangle.fill" : style.systemImage, size: iconSize)
                     .font(.system(size: iconSize, weight: .semibold))
-                    .foregroundStyle(phase == .failed ? Color.orange : Color.secondary.opacity(0.72))
+                    .foregroundStyle(phase == .failed ? Color.cc.warning : Color.secondary.opacity(0.72))
             }
 
             if phase == .failed {
                 Text("加载失败")
-                    .font(.caption2.weight(.semibold))
+                    .font(.cc.sm.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 7)
                     .frame(height: 20)
-                    .background(Color(.systemBackground).opacity(0.42), in: Capsule())
+                    .background(Color.cc.background.opacity(0.42), in: Capsule())
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     .padding(.bottom, 9)
             }

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct MineDisplaySettingsSection: View {
     @ObservedObject var libraryStore: LibraryStore
@@ -53,7 +54,7 @@ struct MineDisplaySettingsSection: View {
                         MineSettingsLabel("手动字体大小", systemImage: "textformat")
                         Spacer(minLength: 8)
                         Text(libraryStore.manualFontSize.title)
-                            .font(.caption.monospacedDigit())
+                            .font(.cc.sm.monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
 
@@ -64,9 +65,9 @@ struct MineDisplaySettingsSection: View {
                     ) {
                         Text("手动字体大小")
                     } minimumValueLabel: {
-                        Text("A").font(.caption2)
+                        Text("A").font(.cc.sm)
                     } maximumValueLabel: {
-                        Text("A").font(.title3)
+                        Text("A").font(.cc.baseBold)
                     }
                     .tint(libraryStore.appTintColor)
                     .accessibilityValue(libraryStore.manualFontSize.title)
@@ -126,7 +127,7 @@ struct MineDisplaySettingsSection: View {
                     MineSettingsLabel("封面角标暗色底", systemImage: "circle.lefthalf.filled")
                     Spacer(minLength: 8)
                     Text(videoCoverBadgeContrastBackingOpacityTitle)
-                        .font(.caption.monospacedDigit())
+                        .font(.cc.sm.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
 
@@ -236,7 +237,7 @@ private struct MineThemeColorControl: View {
             currentSelectionFooter
 
             Text("影响 App 选中状态、系统控件高亮和首页点击刷新颜色。")
-                .font(.footnote)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
         }
         .onAppear {
@@ -283,7 +284,7 @@ private struct MineThemeColorControl: View {
 
                 HStack(spacing: 10) {
                     TextField(AppThemeTintColor.defaultHex, text: $tintHexDraft)
-                        .font(.body.monospaced())
+                        .font(.cc.base.monospaced())
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                         .keyboardType(.asciiCapable)
@@ -313,7 +314,7 @@ private struct MineThemeColorControl: View {
                 }
 
             Text(libraryStore.appTintColorHex)
-                .font(.footnote.monospaced())
+                .font(.cc.sm.monospaced())
                 .foregroundStyle(.secondary)
 
             Spacer(minLength: 0)
@@ -349,8 +350,8 @@ private struct MineThemeColorControl: View {
             .frame(width: 24, height: 24)
             .overlay {
                 if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .bold))
+                    PiliIcon(systemName: "checkmark", size: 11)
+                        .font(.cc.smBold)
                         .foregroundStyle(.white)
                 }
             }
@@ -377,7 +378,7 @@ private struct MineImageCacheControl: View {
                         .controlSize(.small)
                 } else {
                     Text(summaryTitle)
-                        .font(.caption.monospacedDigit())
+                        .font(.cc.sm.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
             }

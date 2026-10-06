@@ -127,7 +127,7 @@ private struct VideoCoverSurfaceModifier: ViewModifier {
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         let baseSurface = content
-            .background(Color(.secondarySystemGroupedBackground))
+            .piliGlassCard()
             .clipShape(shape)
 
         if appliesUnifiedBorder {

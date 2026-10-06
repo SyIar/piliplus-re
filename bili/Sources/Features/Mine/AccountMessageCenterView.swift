@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct AccountMessageCenterView: View {
     @ObservedObject var viewModel: AccountMessageCenterViewModel
@@ -7,10 +8,10 @@ struct AccountMessageCenterView: View {
     @State private var showsDiagnostics = false
 
     var body: some View {
-        List {
+        PiliList {
             if sessionStore.isLoggedIn {
                 Section {
-                    NavigationLink { PiliMessageSettingsView(api: dependencies.api) } label: { Label("消息设置", systemImage: "slider.horizontal.3") }
+                    NavigationLink { PiliMessageSettingsView(api: dependencies.api) } label: { PiliLabel("消息设置", systemImage: "slider.horizontal.3") }
                     NavigationLink {
                         AccountPrivateMessageSessionsView(viewModel: viewModel)
                     } label: {
@@ -77,7 +78,7 @@ struct AccountMessageCenterView: View {
                         ProgressView()
                             .controlSize(.small)
                     } else {
-                        Image(systemName: "checkmark.circle")
+                        PiliIcon(systemName: "checkmark.circle")
                     }
                 }
                 .disabled(
@@ -90,7 +91,7 @@ struct AccountMessageCenterView: View {
                 Button {
                     Task { await viewModel.refreshUnread(force: true) }
                 } label: {
-                    Image(systemName: "arrow.clockwise")
+                    PiliIcon(systemName: "arrow.clockwise")
                 }
                 .disabled(!sessionStore.isLoggedIn || viewModel.unreadState.isLoading)
                 .accessibilityLabel("刷新账号消息")
@@ -98,7 +99,7 @@ struct AccountMessageCenterView: View {
                 Button {
                     showsDiagnostics = true
                 } label: {
-                    Image(systemName: "waveform.path.ecg")
+                    PiliIcon(systemName: "waveform.path.ecg")
                 }
                 .accessibilityLabel("账号消息诊断")
             }
@@ -110,20 +111,18 @@ struct AccountMessageCenterView: View {
         .refreshable {
             await viewModel.refreshUnread(force: true)
         }
-        .sheet(isPresented: $showsDiagnostics) {
+        .piliSheet(isPresented: $showsDiagnostics) {
             AccountMessageDiagnosticsView(store: viewModel.diagnosticsStore)
         }
-        .alert(
+        .piliAlert(
             "操作失败",
             isPresented: Binding(
                 get: { viewModel.actionErrorMessage != nil },
                 set: { if !$0 { viewModel.clearActionError() } }
             )
         ) {
-            Button("好") { viewModel.clearActionError() }
-        } message: {
-            Text(viewModel.actionErrorMessage ?? "请稍后重试")
-        }
+            PiliAlertButton("好") { viewModel.clearActionError() }
+        } message: { viewModel.actionErrorMessage ?? "请稍后重试" }
     }
 }
 
@@ -136,7 +135,7 @@ private struct AccountMessageInboxView: View {
     @State private var pendingDeletion: AccountMessageItem?
 
     var body: some View {
-        List {
+        PiliList {
             content
         }
         .hiddenInlineNavigationTitle()
@@ -147,12 +146,12 @@ private struct AccountMessageInboxView: View {
                 Menu {
                     Picker("筛选", selection: $filter) {
                         ForEach(AccountMessageInboxFilter.allCases) { option in
-                            Label(option.title, systemImage: option.systemImage)
+                            PiliLabel(option.title, systemImage: option.systemImage)
                                 .tag(option)
                         }
                     }
                 } label: {
-                    Image(systemName: filter == .all ? "line.3.horizontal.decrease.circle" : filter.systemImage)
+                    PiliIcon(systemName: filter == .all ? "line.3.horizontal.decrease.circle" : filter.systemImage)
                 }
                 .accessibilityLabel("筛选：\(filter.title)")
             }
@@ -163,7 +162,7 @@ private struct AccountMessageInboxView: View {
         .refreshable {
             await viewModel.refreshAll()
         }
-        .confirmationDialog(
+        .piliConfirmation(
             "删除这条通知？",
             isPresented: Binding(
                 get: { pendingDeletion != nil },
@@ -172,26 +171,24 @@ private struct AccountMessageInboxView: View {
             titleVisibility: .visible
         ) {
             if let pendingDeletion {
-                Button("删除", role: .destructive) {
+                PiliAlertButton("删除", role: .destructive) {
                     self.pendingDeletion = nil
                     Task { await viewModel.delete(pendingDeletion) }
                 }
             }
-            Button("取消", role: .cancel) {
+            PiliAlertButton("取消", role: .cancel) {
                 pendingDeletion = nil
             }
         }
-        .alert(
+        .piliAlert(
             "操作失败",
             isPresented: Binding(
                 get: { viewModel.actionErrorMessage != nil },
                 set: { if !$0 { viewModel.clearActionError() } }
             )
         ) {
-            Button("好") { viewModel.clearActionError() }
-        } message: {
-            Text(viewModel.actionErrorMessage ?? "请稍后重试")
-        }
+            PiliAlertButton("好") { viewModel.clearActionError() }
+        } message: { viewModel.actionErrorMessage ?? "请稍后重试" }
     }
 
     @ViewBuilder
@@ -267,7 +264,7 @@ private struct AccountMessageInboxView: View {
                         Button {
                             Task { await viewModel.toggleLikeNotification(item) }
                         } label: {
-                            Label(
+                            PiliLabel(
                                 item.isLikeNotificationMuted ? "接收点赞提醒" : "停止点赞提醒",
                                 systemImage: item.isLikeNotificationMuted ? "bell" : "bell.slash"
                             )
@@ -277,7 +274,7 @@ private struct AccountMessageInboxView: View {
                         Button(role: .destructive) {
                             pendingDeletion = item
                         } label: {
-                            Label("删除通知", systemImage: "trash")
+                            PiliLabel("删除通知", systemImage: "trash")
                         }
                     }
                 }
@@ -296,7 +293,7 @@ struct AccountMessageFeedView: View {
     @State private var pendingDeletion: AccountMessageItem?
 
     var body: some View {
-        List {
+        PiliList {
             content
         }
         .hiddenInlineNavigationTitle()
@@ -306,7 +303,7 @@ struct AccountMessageFeedView: View {
                 Button {
                     Task { await viewModel.refresh(category) }
                 } label: {
-                    Image(systemName: "arrow.clockwise")
+                    PiliIcon(systemName: "arrow.clockwise")
                 }
                 .disabled(!sessionStore.isLoggedIn || feed.state.isLoading)
                 .accessibilityLabel("刷新\(category.title)")
@@ -318,7 +315,7 @@ struct AccountMessageFeedView: View {
         .refreshable {
             await viewModel.refresh(category)
         }
-        .confirmationDialog(
+        .piliConfirmation(
             "删除这条通知？",
             isPresented: Binding(
                 get: { pendingDeletion != nil },
@@ -327,26 +324,24 @@ struct AccountMessageFeedView: View {
             titleVisibility: .visible
         ) {
             if let pendingDeletion {
-                Button("删除", role: .destructive) {
+                PiliAlertButton("删除", role: .destructive) {
                     self.pendingDeletion = nil
                     Task { await viewModel.delete(pendingDeletion) }
                 }
             }
-            Button("取消", role: .cancel) {
+            PiliAlertButton("取消", role: .cancel) {
                 pendingDeletion = nil
             }
         }
-        .alert(
+        .piliAlert(
             "操作失败",
             isPresented: Binding(
                 get: { viewModel.actionErrorMessage != nil },
                 set: { if !$0 { viewModel.clearActionError() } }
             )
         ) {
-            Button("好") { viewModel.clearActionError() }
-        } message: {
-            Text(viewModel.actionErrorMessage ?? "请稍后重试")
-        }
+            PiliAlertButton("好") { viewModel.clearActionError() }
+        } message: { viewModel.actionErrorMessage ?? "请稍后重试" }
     }
 
     @ViewBuilder
@@ -438,7 +433,7 @@ struct AccountMessageFeedView: View {
                         Button {
                             Task { await viewModel.toggleLikeNotification(item) }
                         } label: {
-                            Label(
+                            PiliLabel(
                                 item.isLikeNotificationMuted ? "接收点赞提醒" : "停止点赞提醒",
                                 systemImage: item.isLikeNotificationMuted ? "bell" : "bell.slash"
                             )
@@ -448,7 +443,7 @@ struct AccountMessageFeedView: View {
                         Button(role: .destructive) {
                             pendingDeletion = item
                         } label: {
-                            Label("删除通知", systemImage: "trash")
+                            PiliLabel("删除通知", systemImage: "trash")
                         }
                     }
                 }
@@ -484,8 +479,8 @@ private struct AccountMessageCategoryRow: View {
 
     var body: some View {
         HStack(spacing: 13) {
-            Image(systemName: systemImage)
-                .font(.system(size: 18, weight: .medium))
+            PiliIcon(systemName: systemImage, size: 18)
+                .font(.cc.base)
                 .foregroundStyle(appTintColor)
                 .frame(width: 28, height: 28)
 
@@ -571,7 +566,7 @@ private struct AccountMessageFeedRow: View {
                 }
 
                 if hasInlineBodyLinks, item.routeURL != nil {
-                    Label("查看详情", systemImage: "arrow.up.right.square")
+                    PiliLabel("查看详情", systemImage: "arrow.up.right.square")
                         .appTypography(.action, fallback: .caption.weight(.medium))
                         .foregroundStyle(appTintColor)
                 }
@@ -585,8 +580,8 @@ private struct AccountMessageFeedRow: View {
                 ProgressView()
                     .controlSize(.small)
             } else if item.isLikeNotificationMuted {
-                Image(systemName: "bell.slash.fill")
-                    .font(.caption)
+                PiliIcon(systemName: "bell.slash.fill")
+                    .font(.cc.sm)
                     .foregroundStyle(.secondary)
             }
         }
@@ -651,7 +646,7 @@ private struct AccountMessageRouteButton<Label: View>: View {
         }
         .buttonStyle(.plain)
         .disabled(isResolving)
-        .sheet(item: $presentation) { presentation in
+        .piliSheet(item: $presentation) { presentation in
             switch presentation {
             case .comment(let target):
                 AccountMessageCommentThreadSheet(target: target, viewModel: viewModel)
@@ -688,7 +683,7 @@ private struct AccountMessageCommentThreadSheet: View {
     let target: AccountMessageCommentTarget
     @ObservedObject var viewModel: AccountMessageCenterViewModel
 
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var state: LoadingState = .idle
     @State private var thread: AccountMessageCommentThread?
 
@@ -708,7 +703,7 @@ private struct AccountMessageCommentThreadSheet: View {
                     if let originalURL = target.originalURL {
                         ToolbarItem(placement: .topBarTrailing) {
                             AppLinkButton(url: originalURL) {
-                                Image(systemName: "arrow.up.right.square")
+                                PiliIcon(systemName: "arrow.up.right.square")
                             }
                             .accessibilityLabel("查看\(target.contentTitle)")
                         }
@@ -731,7 +726,7 @@ private struct AccountMessageCommentThreadSheet: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .failed(let message):
                 ContentUnavailableView {
-                    Label("评论暂时不可见", systemImage: "text.bubble.fill")
+                    PiliLabel("评论暂时不可见", systemImage: "text.bubble.fill")
                 } description: {
                     Text(message)
                 } actions: {
@@ -745,7 +740,7 @@ private struct AccountMessageCommentThreadSheet: View {
                     }
                 }
             case .idle, .loaded:
-                ContentUnavailableView("没有找到评论", systemImage: "text.bubble")
+                PiliUnavailableView("没有找到评论", systemImage: "text.bubble")
             }
         }
     }
@@ -759,8 +754,8 @@ private struct AccountMessageCommentThreadSheet: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     if thread.requestedReplyWasUnavailable {
-                        Label("目标回复不可见，已显示所在评论串", systemImage: "exclamationmark.bubble")
-                            .font(.caption)
+                        PiliLabel("目标回复不可见，已显示所在评论串", systemImage: "exclamationmark.bubble")
+                            .font(.cc.sm)
                             .foregroundStyle(.secondary)
                     }
 
@@ -810,13 +805,13 @@ private struct AccountMessageCommentThreadSheet: View {
 private struct AccountMessageUnavailableView: View {
     let target: AccountMessageUnavailableTarget
 
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var browserItem: InAppBrowserItem?
 
     var body: some View {
         NavigationStack {
             ContentUnavailableView {
-                Label(target.title, systemImage: "exclamationmark.triangle")
+                PiliLabel(target.title, systemImage: "exclamationmark.triangle")
             } description: {
                 Text(target.message)
             } actions: {
@@ -833,7 +828,7 @@ private struct AccountMessageUnavailableView: View {
                 }
             }
         }
-        .sheet(item: $browserItem) { item in
+        .piliSheet(item: $browserItem) { item in
             InAppBrowserView(url: item.url)
                 .ignoresSafeArea()
         }
@@ -868,11 +863,11 @@ private struct AccountMessageAvatar: View {
 
     private var avatar: some View {
         AvatarRemoteImage(urlString: item.avatarURLString, pixelSize: 112) {
-            Image(systemName: item.category.systemImage)
-                .font(.system(size: 17, weight: .medium))
+            PiliIcon(systemName: item.category.systemImage, size: 17)
+                .font(.cc.base)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
+                .piliGlassCard()
         }
         .frame(width: 40, height: 40)
         .clipShape(Circle())
@@ -892,11 +887,11 @@ private struct AccountMessageLikeDetailView: View {
     @State private var hasMore = true
 
     var body: some View {
-        List {
+        PiliList {
             if let routeURL = item.routeURL {
                 Section {
                     AppLinkButton(url: routeURL) {
-                        Label(cardTitle ?? item.contextLines.first ?? "查看被点赞的内容", systemImage: "arrow.up.right.square")
+                        PiliLabel(cardTitle ?? item.contextLines.first ?? "查看被点赞的内容", systemImage: "arrow.up.right.square")
                             .lineLimit(2)
                     }
                 }
@@ -1035,7 +1030,7 @@ private struct AccountMessageLikeDetailActorRow: View {
     private var content: some View {
         HStack(spacing: 12) {
             AvatarRemoteImage(urlString: entry.actor.avatarURLString, pixelSize: 112) {
-                Image(systemName: "person.crop.circle")
+                PiliIcon(systemName: "person.crop.circle")
                     .foregroundStyle(.secondary)
             }
             .frame(width: 42, height: 42)
@@ -1066,7 +1061,7 @@ private struct AccountMessageFollowersView: View {
     @State private var hasMore = true
 
     var body: some View {
-        List {
+        PiliList {
             if followers.isEmpty {
                 emptyContent
             } else {
@@ -1197,7 +1192,7 @@ private struct AccountMessageFollowerRow: View {
     private var content: some View {
         HStack(spacing: 12) {
             AvatarRemoteImage(urlString: follower.actor.avatarURLString, pixelSize: 112) {
-                Image(systemName: "person.crop.circle")
+                PiliIcon(systemName: "person.crop.circle")
                     .foregroundStyle(.secondary)
             }
             .frame(width: 44, height: 44)

@@ -47,8 +47,8 @@ struct PiliGlassPlayerPreviewFixture: View {
         }
         .onChange(of: locked) { _, value in rotation.setControlsLocked(value) }
         .onDisappear { rotation.deactivate(in: nil) }
-        .alert("预览控件", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
-            Button("好") { message = nil }
-        } message: { Text(message ?? "") }
+        .piliAlert("预览控件", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+            PiliAlertButton("好") { message = nil }
+        } message: { message ?? "" }
     }
 }

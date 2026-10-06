@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct MinePlaybackToolsSection: View {
     @ObservedObject var libraryStore: LibraryStore
@@ -14,7 +15,7 @@ struct MinePlaybackToolsSection: View {
                 MineSettingsLabel("空降助手", systemImage: "forward.end")
             }
 
-            NavigationLink { PiliSponsorSettingsView() } label: { Label("空降分类策略", systemImage: "slider.horizontal.3") }
+            NavigationLink { PiliSponsorSettingsView() } label: { PiliLabel("空降分类策略", systemImage: "slider.horizontal.3") }
             NavigationLink {
                 ResourceLoadingExperimentSettingsView(libraryStore: libraryStore)
             } label: {
@@ -51,7 +52,7 @@ struct MinePlaybackToolsSection: View {
                 VStack(alignment: .leading, spacing: 3) {
                     MineSettingsLabel("可播放降级限时实验", systemImage: "timer")
                     Text("已有可播放低档位后，完整取流最多再等待 650ms；超时直接开始播放")
-                        .font(.caption)
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -63,7 +64,7 @@ struct MinePlaybackToolsSection: View {
                     VStack(alignment: .leading, spacing: 3) {
                         MineSettingsLabel("测试视频 \(index + 1)", systemImage: "play.rectangle")
                         Text(video.title)
-                            .font(.caption)
+                            .font(.cc.sm)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
                     }

@@ -33,12 +33,12 @@ struct CommentOwnerProfileNavigationContainer<Content: View>: View {
                 }
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button("返回", systemImage: "chevron.left", action: toolbarConfiguration.onDismiss)
+                        PiliIconButton("返回", systemImage: "chevron.left", action: toolbarConfiguration.onDismiss)
                             .tint(.primary)
                             .accessibilityLabel("返回")
                     }
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("刷新", systemImage: "arrow.clockwise", action: toolbarConfiguration.onRefresh)
+                        PiliIconButton("刷新", systemImage: "arrow.clockwise", action: toolbarConfiguration.onRefresh)
                             .tint(.primary)
                             .accessibilityLabel("刷新评论")
                     }

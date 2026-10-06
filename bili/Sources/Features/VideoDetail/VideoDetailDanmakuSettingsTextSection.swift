@@ -30,7 +30,7 @@ struct DanmakuSettingsTextSection: View {
                     Text(weight.title).tag(weight)
                 }
             } label: {
-                Label("字体粗细", systemImage: "bold")
+                PiliLabel("字体粗细", systemImage: "bold")
             }
             .pickerStyle(.navigationLink)
         }

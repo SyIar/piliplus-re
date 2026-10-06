@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicCommentPlainEmptyStateView: View {
     let title: String
@@ -7,18 +8,18 @@ struct DynamicCommentPlainEmptyStateView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 28, weight: .semibold))
+            PiliIcon(systemName: systemImage, size: 28)
+                .font(.cc.lgBold)
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 5) {
                 Text(title)
-                    .font(.headline)
+                    .font(.cc.baseBold)
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
 
                 Text(message)
-                    .font(.subheadline)
+                    .font(.cc.base)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -39,20 +40,20 @@ struct DynamicCommentErrorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                Image(systemName: "exclamationmark.circle")
-                    .foregroundStyle(.orange)
+                PiliIcon(systemName: "exclamationmark.circle")
+                    .foregroundStyle(Color.cc.warning)
                 Text("评论加载失败")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.cc.base.weight(.semibold))
             }
 
             Text(message)
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
             Button(action: retry) {
-                Label("重试", systemImage: "arrow.clockwise")
-                    .font(.caption.weight(.semibold))
+                PiliLabel("重试", systemImage: "arrow.clockwise")
+                    .font(.cc.sm.weight(.semibold))
             }
             .dynamicCommentGlassButtonStyle()
             .controlSize(.small)

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
     let session: PlayerPerformanceSession
@@ -6,7 +7,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
     var body: some View {
         Group {
             if let cdnHost = session.cdnHostMessage {
-                Label(cdnHost, systemImage: "network")
+                PiliLabel(cdnHost, systemImage: "network")
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -14,7 +15,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let networkMessage = session.networkMessage {
                 Text(networkMessage)
-                    .font(.caption2.monospacedDigit())
+                    .font(.cc.sm.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -22,7 +23,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let hlsStartupMessage = session.hlsStartupMessage {
                 Text(hlsStartupMessage)
-                    .font(.caption2.monospacedDigit())
+                    .font(.cc.sm.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -30,7 +31,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let accessLogMessage = session.accessLogMessage {
                 Text(accessLogMessage)
-                    .font(.caption2.monospacedDigit())
+                    .font(.cc.sm.monospacedDigit())
                     .foregroundStyle((session.accessLogStallCount ?? 0) > 0 ? .orange : .secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -38,7 +39,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let mediaCacheMessage = session.mediaCacheMessage {
                 Text(mediaCacheMessage)
-                    .font(.caption2.monospacedDigit())
+                    .font(.cc.sm.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -46,7 +47,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let manifestStageMessage = session.manifestStageMessage {
                 Text(manifestStageMessage)
-                    .font(.caption2.monospacedDigit())
+                    .font(.cc.sm.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)

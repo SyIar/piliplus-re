@@ -52,3 +52,21 @@ xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-interactive.
 xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture interactive --ui-test-interactive-hotspots
 sleep 3
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-interactive-hotspots.png"
+
+# Production settings and common page/modal surfaces in both appearances.
+for appearance in light dark; do
+  xcrun simctl ui "$device_id" appearance "$appearance"
+  xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings
+  sleep 3
+  xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-settings-$appearance.png"
+  xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-sheet
+  sleep 3
+  xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-sheet-$appearance.png"
+  xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-alert
+  sleep 3
+  xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-alert-$appearance.png"
+done
+xcrun simctl ui "$device_id" appearance light
+xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings --glass-reduce-transparency -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
+sleep 3
+xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-settings-accessibility.png"

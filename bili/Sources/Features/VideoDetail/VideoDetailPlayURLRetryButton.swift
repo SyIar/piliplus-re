@@ -7,9 +7,9 @@ struct VideoDetailPlayURLRetryButton: View {
 
     var body: some View {
         Button(action: retry) {
-            Label(title, systemImage: systemImage)
+            PiliLabel(title, systemImage: systemImage)
                 .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 enum VideoCoverBadgeShadow {
     static let storageKey = "cc.bili.display.videoCoverBadgeShadowOpacity.v1"
@@ -50,7 +51,7 @@ struct VideoCoverGlassBadge<Content: View>: View {
 
     var body: some View {
         content
-            .font(.caption2.weight(.semibold))
+            .font(.cc.sm.weight(.semibold))
             .videoCoverBadgeForeground(opacity: 0)
             .lineLimit(1)
             .truncationMode(.tail)
@@ -78,7 +79,7 @@ struct VideoCoverDurationBadge: View {
     var body: some View {
         if showsVideoCoverDurationBadges {
             Text(duration)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.cc.smBold)
                 .monospacedDigit()
                 .videoCoverBadgeForeground(opacity: 0)
                 .lineLimit(1)
@@ -104,8 +105,8 @@ struct VideoCoverViewCountBadge: View {
     }
 
     var body: some View {
-        Label(viewText, systemImage: "play.fill")
-            .font(.caption2.weight(.semibold))
+        PiliLabel(viewText, systemImage: "play.fill")
+            .font(.cc.sm.weight(.semibold))
             .labelStyle(.titleAndIcon)
             .videoCoverBadgeForeground(opacity: 0)
             .lineLimit(1)
@@ -128,7 +129,7 @@ struct VideoCoverPlayBadge: View {
 
     var body: some View {
         GlassEffectContainer(spacing: 8) {
-            Image(systemName: "play.fill")
+            PiliIcon(systemName: "play.fill", size: iconSize)
                 .font(.system(size: iconSize, weight: .bold))
                 .videoCoverBadgeForeground(opacity: 0)
                 .offset(x: 1)

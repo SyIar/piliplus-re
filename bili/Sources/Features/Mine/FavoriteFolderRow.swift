@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct FavoriteFolderRow: View {
     let folder: FavoriteFolder
@@ -10,8 +11,8 @@ struct FavoriteFolderRow: View {
 
             Spacer(minLength: 8)
 
-            Image(systemName: "chevron.right")
-                .font(.footnote.weight(.semibold))
+            PiliIcon(systemName: "chevron.right")
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }
         .padding(.vertical, 3)
@@ -46,8 +47,8 @@ private struct FavoriteFolderPlaceholder: View {
             .fill(appTintColor.opacity(0.12))
             .frame(width: 54, height: 54)
             .overlay {
-                Image(systemName: "folder.fill")
-                    .font(.title3.weight(.semibold))
+                PiliIcon(systemName: "folder.fill")
+                    .font(.cc.baseBold.weight(.semibold))
                     .foregroundStyle(appTintColor)
             }
     }
@@ -61,25 +62,25 @@ private struct FavoriteFolderInfo: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(folder.displayTitle)
-                .font(.subheadline.weight(.semibold))
+                .font(.cc.base.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(2)
 
             HStack(spacing: 8) {
-                Label("\(folder.mediaCount ?? 0) 个内容", systemImage: "play.rectangle.stack")
+                PiliLabel("\(folder.mediaCount ?? 0) 个内容", systemImage: "play.rectangle.stack")
                 if folder.isFavorited {
-                    Label("已收藏当前视频", systemImage: "star.fill")
+                    PiliLabel("已收藏当前视频", systemImage: "star.fill")
                         .foregroundStyle(appTintColor)
                 }
             }
-            .font(.caption)
+            .font(.cc.sm)
             .foregroundStyle(.secondary)
             .lineLimit(1)
 
             if let intro = folder.intro?.trimmingCharacters(in: .whitespacesAndNewlines),
                !intro.isEmpty {
                 Text(intro)
-                    .font(.caption2)
+                    .font(.cc.sm)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }

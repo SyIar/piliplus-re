@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 import UniformTypeIdentifiers
 
 nonisolated private struct PiliCommentDocument: FileDocument {
@@ -23,18 +24,18 @@ struct PiliCommentArchiveView: View {
     @State private var busy = false
     @State private var message: String?
     var body: some View {
-        List {
+        PiliList {
             Section {
                 Text("保存在本机的已发送评论，可导入原版 PiliPlus 导出的 JSON。最多保留最近 2,000 条；不会自动获取账号的全部历史评论。")
-                    .font(.footnote).foregroundStyle(.secondary)
-                if let message { Text(message).font(.footnote) }
+                    .font(.cc.sm).foregroundStyle(.secondary)
+                if let message { Text(message).font(.cc.sm) }
             }
             ForEach(items.filter { query.isEmpty || $0.message.localizedCaseInsensitiveContains(query) }) { comment in
                 VStack(alignment: .leading, spacing: 8) {
                     Text(comment.message).textSelection(.enabled)
-                    Text(Date(timeIntervalSince1970: Double(comment.created)), style: .date).font(.caption).foregroundStyle(.secondary)
+                    Text(Date(timeIntervalSince1970: Double(comment.created)), style: .date).font(.cc.sm).foregroundStyle(.secondary)
                     HStack {
-                        if let url = comment.contextURL { AppLinkButton(url: url) { Label("查看内容", systemImage: "arrow.up.right") } }
+                        if let url = comment.contextURL { AppLinkButton(url: url) { PiliLabel("查看内容", systemImage: "arrow.up.right") } }
                         Button("评论区") { comments = try? piliCommentTarget(oid: comment.oid, type: comment.type) }
                         Spacer()
                         Menu("更多", systemImage: "ellipsis") {
@@ -42,11 +43,11 @@ struct PiliCommentArchiveView: View {
                             Button("仅移除本机记录") { remove(comment, server: false) }
                             Button("删除已发送评论", role: .destructive) { deleting = comment }
                         }
-                    }.font(.caption).buttonStyle(.borderless).disabled(busy)
+                    }.font(.cc.sm).buttonStyle(.borderless).disabled(busy)
                 }.padding(.vertical, 5)
             }
             if busy { ProgressView() }
-            else if items.isEmpty { ContentUnavailableView("暂无本机评论", systemImage: "text.bubble", description: Text("发送成功的评论将自动保存在这里。")) }
+            else if items.isEmpty { PiliUnavailableView("暂无本机评论", systemImage: "text.bubble", description: Text("发送成功的评论将自动保存在这里。")) }
         }.navigationTitle("我的评论").searchable(text: $query, prompt: "搜索评论内容")
             .task(id: sessionStore.interactionAccountCredentialVersion) { await reload() }
             .toolbar { Menu("备份", systemImage: "ellipsis.circle") {
@@ -59,9 +60,9 @@ struct PiliCommentArchiveView: View {
             .fileExporter(isPresented: $exporting, document: document, contentType: .json, defaultFilename: "PiliPlus-comments") { result in
                 if case .failure(let error) = result { message = error.localizedDescription }
             }
-            .sheet(item: $comments) { DynamicCommentsSheet(item: $0, api: dependencies.api) }
-            .confirmationDialog("从哔哩哔哩删除这条评论？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
-                if let deleting { Button("删除评论", role: .destructive) { remove(deleting, server: true) } }
+            .piliSheet(item: $comments) { DynamicCommentsSheet(item: $0, api: dependencies.api) }
+            .piliConfirmation("从哔哩哔哩删除这条评论？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
+                if let deleting { PiliAlertButton("删除评论", role: .destructive) { remove(deleting, server: true) } }
             }
     }
     private func reload() async {

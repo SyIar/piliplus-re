@@ -27,6 +27,7 @@ struct VideoFeedStoryCardView: View, Equatable {
             VideoFeedStoryMediaContainer(display: display)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .piliGlassCard()
         .contentShape(Rectangle())
     }
 }

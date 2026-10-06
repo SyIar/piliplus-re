@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceMetricGrid: View {
     let group: PlayerPerformanceSampleGroup
@@ -103,18 +104,18 @@ private struct PlayerPerformanceMetricCell: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.caption2.weight(.semibold))
+            PiliIcon(systemName: icon)
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .frame(width: 14)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.caption2)
+                    .font(.cc.sm)
                     .foregroundStyle(.secondary)
 
                 Text(value)
-                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .font(.cc.sm.monospacedDigit().weight(.semibold))
                     .foregroundStyle(color)
             }
         }

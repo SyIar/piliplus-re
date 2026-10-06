@@ -9,9 +9,9 @@ struct PlayerPerformanceLogView: View {
     var body: some View {
         let reportableSessions = store.sessions.filter(PlayerPerformanceCopyTextFormatter.isReportableSession)
         let detailNavigationSnapshots = navigationSnapshots
-        List {
+        PiliList {
             if store.events.isEmpty && store.sessions.isEmpty && detailNavigationSnapshots.isEmpty {
-                ContentUnavailableView(
+                PiliUnavailableView(
                     "暂无播放记录",
                     systemImage: "speedometer",
                     description: Text("播放自动优化会在后台使用这些记录调整开播画质、预加载和 CDN 复测。")
@@ -99,7 +99,7 @@ struct PlayerPerformanceLogView: View {
                         didCopy = false
                     }
                 } label: {
-                    Image(systemName: didCopy ? "checkmark" : "doc.on.doc")
+                    PiliIcon(systemName: didCopy ? "checkmark" : "doc.on.doc")
                 }
                 .disabled(isEmpty)
                 .accessibilityLabel(didCopy ? "已复制性能日志" : "复制性能日志")
@@ -108,7 +108,7 @@ struct PlayerPerformanceLogView: View {
                     store.clear()
                     PlaybackDetailPerformanceMonitor.shared.clear()
                 } label: {
-                    Image(systemName: "trash")
+                    PiliIcon(systemName: "trash")
                 }
                 .disabled(isEmpty)
                 .accessibilityLabel("清空性能日志")

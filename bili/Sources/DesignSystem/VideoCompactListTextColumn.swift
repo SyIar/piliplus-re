@@ -32,7 +32,7 @@ private struct VideoCompactAuthorLabel: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         case .icon(let systemImage):
-            Label(display.authorName, systemImage: systemImage)
+            PiliLabel(display.authorName, systemImage: systemImage)
                 .appTypography(.compactAuthor, fallback: .caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
@@ -49,7 +49,7 @@ private struct VideoCompactMetadataRow: View {
         case .related:
             HStack(spacing: 4) {
                 if !display.viewText.isEmpty {
-                    Label(display.viewText, systemImage: "play.fill")
+                    PiliLabel(display.viewText, systemImage: "play.fill")
                         .labelStyle(.titleAndIcon)
                 }
 
@@ -78,7 +78,7 @@ private struct VideoCompactMetadataLabel: View {
 
     var body: some View {
         if !text.isEmpty {
-            Label(text, systemImage: systemImage)
+            PiliLabel(text, systemImage: systemImage)
                 .labelStyle(.titleAndIcon)
         }
     }

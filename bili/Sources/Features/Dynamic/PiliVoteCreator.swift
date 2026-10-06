@@ -1,12 +1,13 @@
 import PhotosUI
 import SwiftUI
+import ChunUI
 
 struct PiliVoteCreator: View {
     let api: BiliAPIClient
     let identity: PiliAccountIdentity
     var voteID: Int?
     let onCreate: (Int, String) -> Void
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var title = ""
     @State private var description = ""
     @State private var options = [PiliVoteOption(), PiliVoteOption()]
@@ -18,7 +19,7 @@ struct PiliVoteCreator: View {
     @State private var error: String?
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 TextField("投票标题", text: $title)
                 TextField("说明（可选）", text: $description, axis: .vertical)
                 Toggle("图片投票", isOn: $imageVote)
@@ -36,13 +37,13 @@ struct PiliVoteCreator: View {
                 if options.count < 20 { Button("添加选项") { options.append(.init()) } }
                 Stepper("最多选择 \(choices) 项", value: $choices, in: 1...max(1, options.count))
                 DatePicker("结束时间", selection: $ends, in: Date()...Date().addingTimeInterval(90 * 86400))
-                if let error { Text(error).foregroundStyle(.red) }
+                if let error { Text(error).foregroundStyle(Color.cc.destructive) }
                 if busy || !loaded { ProgressView() }
             }.disabled(busy || !loaded).navigationTitle(voteID == nil ? "发起投票" : "编辑投票")
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.disabled(busy) }
                     ToolbarItem(placement: .confirmationAction) { Button("保存") { Task { await save() } }.disabled(busy || !loaded) }
-                }.interactiveDismissDisabled(busy)
+                }.piliInteractiveDismissDisabled(busy)
                 .task {
                     guard !loaded else { return }
                     do {
@@ -92,9 +93,9 @@ private struct PiliVoteOptionPhoto: View {
             else if !option.imageURL.isEmpty {
                 CachedRemoteImage(url: URL(string: option.imageURL), targetPixelSize: 180) { $0.resizable().scaledToFit() } placeholder: { ProgressView() }.frame(height: 90)
             }
-            PhotosPicker(selection: $selection, matching: .images) { Label("选择图片", systemImage: "photo") }
+            PhotosPicker(selection: $selection, matching: .images) { PiliLabel("选择图片", systemImage: "photo") }
             if loading { ProgressView() }
-            if let error { Text(error).foregroundStyle(.red) }
+            if let error { Text(error).foregroundStyle(Color.cc.destructive) }
         }.task(id: selection) {
             guard let selection else { return }; loading = true; error = nil
             defer { loading = false }

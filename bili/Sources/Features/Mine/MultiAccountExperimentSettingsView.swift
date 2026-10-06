@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct MultiAccountExperimentSettingsView: View {
     @ObservedObject var sessionStore: SessionStore
@@ -10,13 +11,13 @@ struct MultiAccountExperimentSettingsView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        Form {
+        PiliForm {
             if libraryStore.multiAccountExperimentEnabled {
                 accountsSection
                 purposeSection
                 addAccountSection
             } else {
-                ContentUnavailableView(
+                PiliUnavailableView(
                     "实验尚未开启",
                     systemImage: "person.2.badge.gearshape",
                     description: Text("请先在隐私设置中打开“多账号用途分配实验”。")
@@ -27,28 +28,26 @@ struct MultiAccountExperimentSettingsView: View {
         .formStyle(.grouped)
         .nativeTopScrollEdgeEffect()
         .hiddenInlineNavigationTitle()
-        .sheet(isPresented: $isShowingWebLogin) {
+        .piliSheet(isPresented: $isShowingWebLogin) {
             BiliWebLoginView(usesIsolatedSession: true) { cookies in
                 addAccount(cookies)
             }
         }
-        .alert(
+        .piliAlert(
             "账号操作失败",
             isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
             )
         ) {
-            Button("好", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "未知错误")
-        }
+            PiliAlertButton("好", role: .cancel) {}
+        } message: { errorMessage ?? "未知错误" }
     }
 
     private var purposeSection: some View {
         Section {
             if sessionStore.accounts.isEmpty {
-                ContentUnavailableView(
+                PiliUnavailableView(
                     "还没有账号",
                     systemImage: "person.crop.circle.badge.plus",
                     description: Text("添加账号后才能分配用途。")
@@ -269,7 +268,7 @@ private struct MultiAccountExperimentAccountRow: View {
                 Circle()
                     .fill(.quaternary)
                     .overlay {
-                        Image(systemName: "person.fill")
+                        PiliIcon(systemName: "person.fill")
                             .foregroundStyle(.secondary)
                     }
             }
@@ -291,12 +290,12 @@ private struct MultiAccountExperimentAccountRow: View {
 
             Menu {
                 Button(role: .destructive, action: onDelete) {
-                    Label("删除账号", systemImage: "trash")
+                    PiliLabel("删除账号", systemImage: "trash")
                 }
                 .disabled(!canDelete)
             } label: {
-                Image(systemName: "ellipsis.circle")
-                    .font(.title3)
+                PiliIcon(systemName: "ellipsis.circle")
+                    .font(.cc.baseBold)
                     .frame(width: 32, height: 32)
                     .contentShape(Circle())
             }

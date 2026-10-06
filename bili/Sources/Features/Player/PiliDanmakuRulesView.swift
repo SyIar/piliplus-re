@@ -10,7 +10,7 @@ struct PiliDanmakuRulesView: View {
     @State private var error: String?
     init(api: BiliAPIClient) { self.api = api; _session = ObservedObject(wrappedValue: api.sessionStore) }
     var body: some View {
-        Form {
+        PiliForm {
             if identity?.matches(api.requestSnapshot()) != true {
                 Text("请先登录，再管理弹幕屏蔽规则")
             } else {

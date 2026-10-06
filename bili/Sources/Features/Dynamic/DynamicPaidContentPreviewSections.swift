@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicPaidContentCover: View {
     let content: DynamicPaidContent
@@ -68,7 +69,7 @@ struct DynamicPaidContentMetadata: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Label(kindText, systemImage: kindIcon)
+            PiliLabel(kindText, systemImage: kindIcon)
                 .foregroundStyle(content.isChargeExclusive ? appTintColor : .secondary)
 
             if let subtitle = content.subtitle, !subtitle.isEmpty {
@@ -77,11 +78,11 @@ struct DynamicPaidContentMetadata: View {
             }
 
             if content.isLocked {
-                Label("需解锁", systemImage: "lock.fill")
+                PiliLabel("需解锁", systemImage: "lock.fill")
                     .foregroundStyle(appTintColor)
             }
         }
-        .font(.caption)
+        .font(.cc.sm)
         .foregroundStyle(.secondary)
         .lineLimit(1)
     }
@@ -122,8 +123,8 @@ struct DynamicPaidContentBadge: View {
 
     var body: some View {
         GlassEffectContainer(spacing: 8) {
-            Label(content.badgeText, systemImage: content.isChargeExclusive ? "bolt.fill" : "sparkles")
-                .font(.caption2.weight(.semibold))
+            PiliLabel(content.badgeText, systemImage: content.isChargeExclusive ? "bolt.fill" : "sparkles")
+                .font(.cc.sm.weight(.semibold))
                 .labelStyle(.titleAndIcon)
                 .videoCoverBadgeForeground(opacity: 0)
                 .lineLimit(1)

@@ -2,12 +2,12 @@ import SwiftUI
 
 struct DynamicKeywordFilterSettingsView: View {
     @ObservedObject var libraryStore: LibraryStore
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var draftKeyword = ""
     @FocusState private var isDraftFocused: Bool
 
     var body: some View {
-        List {
+        PiliList {
             Section {
                 TextField("输入关键词", text: $draftKeyword)
                     .textInputAutocapitalization(.never)
@@ -43,7 +43,7 @@ struct DynamicKeywordFilterSettingsView: View {
                             Button(role: .destructive) {
                                 libraryStore.removeBlockedDynamicKeyword(keyword)
                             } label: {
-                                Image(systemName: "minus.circle")
+                                PiliIcon(systemName: "minus.circle")
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("删除 \(keyword)")

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlaybackNetworkBaselineCacheRows: View {
     let cacheSummary: ResourceCacheSummary?
@@ -24,7 +25,7 @@ struct PlaybackNetworkBaselineCacheRows: View {
             )
         } else {
             Text("正在读取缓存基线...")
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
         }
     }

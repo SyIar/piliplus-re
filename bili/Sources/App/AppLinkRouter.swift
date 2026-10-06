@@ -1,6 +1,7 @@
 import Foundation
 import SafariServices
 import SwiftUI
+import ChunUI
 
 struct InAppBrowserItem: Identifiable {
     let id = UUID()
@@ -503,8 +504,8 @@ struct AppLinkButtons: View {
                 HStack(spacing: 6) {
                     ForEach(visibleURLs, id: \.absoluteString) { url in
                         AppLinkButton(url: url) {
-                            Label(AppLinkRouter.displayTitle(for: url), systemImage: "link")
-                                .font(.caption.weight(.semibold))
+                            PiliLabel(AppLinkRouter.displayTitle(for: url), systemImage: "link")
+                                .font(.cc.sm.weight(.semibold))
                                 .labelStyle(.titleAndIcon)
                                 .foregroundStyle(appTintColor)
                                 .lineLimit(1)
@@ -523,7 +524,7 @@ struct AppLinkButtons: View {
 
                     if hiddenCount > 0 {
                         Text("+\(hiddenCount)")
-                            .font(.caption.weight(.semibold))
+                            .font(.cc.sm.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 9)
                             .frame(height: 24)

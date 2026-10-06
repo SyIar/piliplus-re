@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 import Translation
 import UIKit
 
@@ -38,38 +39,38 @@ struct PiliDynamicManagementModifier: ViewModifier {
     private struct ComposerRoute: Identifiable { let id = UUID(); let draft: PiliDynamicDraft }
     func body(content: Content) -> some View {
         content.contextMenu {
-            Button("转发动态", systemImage: "arrowshape.turn.up.right") { var draft = PiliDynamicDraft(); draft.repostID = item.idStr; composer = .init(draft: draft) }
-            Button("复制动态文字", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.displayText ?? "" }
-            Button("翻译动态", systemImage: "translate") { showsTranslation = true }
-            Button("保存完整动态", systemImage: "square.and.arrow.down") { showsExport = true }
-            Button("举报动态", systemImage: "exclamationmark.bubble") { showsReport = true }
+            PiliIconButton("转发动态", systemImage: "arrowshape.turn.up.right") { var draft = PiliDynamicDraft(); draft.repostID = item.idStr; composer = .init(draft: draft) }
+            PiliIconButton("复制动态文字", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.displayText ?? "" }
+            PiliIconButton("翻译动态", systemImage: "translate") { showsTranslation = true }
+            PiliIconButton("保存完整动态", systemImage: "square.and.arrow.down") { showsExport = true }
+            PiliIconButton("举报动态", systemImage: "exclamationmark.bubble") { showsReport = true }
             if item.author?.mid == api.requestSnapshot(purpose: .main).currentUserMID {
-                Button("检查对外可见性", systemImage: "checkmark.shield") { checksVisibility = true }
+                PiliIconButton("检查对外可见性", systemImage: "checkmark.shield") { checksVisibility = true }
                 if ["DYNAMIC_TYPE_WORD", "DYNAMIC_TYPE_DRAW", "DYNAMIC_TYPE_FORWARD"].contains(item.type ?? "") {
-                    Button("编辑动态", systemImage: "square.and.pencil") { loadEditingDraft() }.disabled(busy)
+                    PiliIconButton("编辑动态", systemImage: "square.and.pencil") { loadEditingDraft() }.disabled(busy)
                 }
-                Button("置顶动态", systemImage: "pin") { mutate("set_top") }
-                Button("取消置顶", systemImage: "pin.slash") { mutate("rm_top") }
-                Button("删除动态", systemImage: "trash", role: .destructive) {
+                PiliIconButton("置顶动态", systemImage: "pin") { mutate("set_top") }
+                PiliIconButton("取消置顶", systemImage: "pin.slash") { mutate("rm_top") }
+                PiliIconButton("删除动态", systemImage: "trash", role: .destructive) {
                     operationIdentity = PiliAccountIdentity(api.requestSnapshot(purpose: .main)); confirmDelete = true
                 }
             }
         }
-        .sheet(item: $composer) { route in
+        .piliSheet(item: $composer) { route in
             PiliDynamicComposer(api: api, initial: route.draft) { NotificationCenter.default.post(name: .piliDynamicChanged, object: nil) }
         }
-        .sheet(isPresented: $showsReport) {
+        .piliSheet(isPresented: $showsReport) {
             NavigationStack { PiliContentReportView(api: api, target: .dynamic(id: item.idStr, author: item.author?.mid ?? 0)) }
         }
         .translationPresentation(isPresented: $showsTranslation, text: item.displayText ?? "")
-        .sheet(isPresented: $showsExport) { PiliDynamicExportView(api: api, id: item.idStr) }
-        .sheet(isPresented: $checksVisibility) { NavigationStack { PiliVisibilityCheckView(api: api, target: .dynamic(item.idStr)) } }
-        .confirmationDialog("删除这条动态？", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("删除", role: .destructive) { mutate("remove", identity: operationIdentity) }
+        .piliSheet(isPresented: $showsExport) { PiliDynamicExportView(api: api, id: item.idStr) }
+        .piliSheet(isPresented: $checksVisibility) { NavigationStack { PiliVisibilityCheckView(api: api, target: .dynamic(item.idStr)) } }
+        .piliConfirmation("删除这条动态？", isPresented: $confirmDelete, titleVisibility: .visible) {
+            PiliAlertButton("删除", role: .destructive) { mutate("remove", identity: operationIdentity) }
         }
-        .alert("动态操作", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
-            Button("好", role: .cancel) {}
-        } message: { Text(message ?? "") }
+        .piliAlert("动态操作", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+            PiliAlertButton("好", role: .cancel) {}
+        } message: { message ?? "" }
     }
     private func loadEditingDraft() {
         guard !busy else { return }; busy = true
@@ -109,7 +110,7 @@ struct PiliDynamicSearchView: View {
     var body: some View {
         ScrollView {
             LazyVStack {
-                if let error { Text(error).foregroundStyle(.red) }
+                if let error { Text(error).foregroundStyle(Color.cc.destructive) }
                 ForEach(items) { item in DynamicFeedCard(item: item, api: api).padding(.horizontal) }
                 if loading { ProgressView() }
                 else if hasMore { Button("加载更多") { Task { await load(reset: false) } } }

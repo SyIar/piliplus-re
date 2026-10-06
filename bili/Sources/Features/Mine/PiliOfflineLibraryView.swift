@@ -24,7 +24,7 @@ struct PiliOfflineLibraryView: View {
     }
 
     var body: some View {
-        List(selection: $selection) {
+        PiliSelectionList(selection: $selection) {
             if let error = store.storageError { Text(error).ccText(font: .cc.sm, color: .cc.mutedForeground) }
             Section {
                 Toggle("允许蜂窝网络下载新任务", isOn: $allowsCellular)

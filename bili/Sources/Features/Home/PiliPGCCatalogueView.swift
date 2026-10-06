@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliPGCCatalogueView: View {
     @EnvironmentObject private var dependencies: AppDependencies
@@ -20,23 +21,23 @@ struct PiliPGCCatalogueView: View {
                 HStack {
                     Picker("内容类型", selection: $type) { ForEach(types, id: \.0) { Text($0.1).tag($0.0) } }.pickerStyle(.menu)
                     Spacer()
-                    Button("筛选", systemImage: "line.3.horizontal.decrease") { draft = filters; showsFilters = true }.disabled(conditions == nil)
+                    PiliIconButton("筛选", systemImage: "line.3.horizontal.decrease") { draft = filters; showsFilters = true }.disabled(conditions == nil)
                 }
-                NavigationLink { PiliPGCTimelineView(api: dependencies.api, type: type) } label: { Label("更新日历", systemImage: "calendar") }
+                NavigationLink { PiliPGCTimelineView(api: dependencies.api, type: type) } label: { PiliLabel("更新日历", systemImage: "calendar") }
                 ForEach(items) { media in SearchResultRouteRow(result: type == 1 || type == 4 ? .bangumi(media) : .movie(media)) }
-                if let error { Text(error).font(.footnote); Button("重试") { Task { if conditions == nil { await reload() } else { await loadPage() } } } }
+                if let error { Text(error).font(.cc.sm); Button("重试") { Task { if conditions == nil { await reload() } else { await loadPage() } } } }
                 if loading { ProgressView().frame(maxWidth: .infinity) }
                 else if more { Button("加载更多") { Task { await loadPage() } }.frame(maxWidth: .infinity) }
-                else if items.isEmpty { ContentUnavailableView("暂无符合条件的内容", systemImage: "film") }
+                else if items.isEmpty { PiliUnavailableView("暂无符合条件的内容", systemImage: "film") }
             }.padding()
         }.navigationTitle("番剧与影视").navigationBarTitleDisplayMode(.inline)
             .task(id: type) { await reload() }
             .refreshable { await reload() }
-            .sheet(isPresented: $showsFilters) { filterSheet }
+            .piliSheet(isPresented: $showsFilters) { filterSheet }
     }
     private var filterSheet: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 if let conditions {
                     if !conditions.order.isEmpty {
                         Picker("排序", selection: value("order")) { ForEach(conditions.order) { Text($0.title).tag($0.id) } }
@@ -91,7 +92,7 @@ private struct PiliPGCTimelineView: View {
     @State private var loading = false
     @State private var error: String?
     var body: some View {
-        List {
+        PiliList {
             if loading { ProgressView() }
             if let error { Text(error); Button("重试") { Task { await load() } } }
             ForEach(days) { day in
@@ -103,7 +104,7 @@ private struct PiliPGCTimelineView: View {
                                 HStack {
                                     SearchPosterCover(sourceURLString: episode.cover, thumbnailWidth: 144, thumbnailHeight: 192,
                                                       targetPixelSize: 192, size: CGSize(width: 48, height: 64), placeholderSystemImage: "film")
-                                    VStack(alignment: .leading) { Text(episode.title).lineLimit(2); Text(episode.detail).font(.caption).foregroundStyle(.secondary) }
+                                    VStack(alignment: .leading) { Text(episode.title).lineLimit(2); Text(episode.detail).font(.cc.sm).foregroundStyle(.secondary) }
                                 }
                             }
                         }

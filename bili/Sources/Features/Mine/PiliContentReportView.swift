@@ -25,7 +25,7 @@ struct PiliContentReportView: View {
         self.api = api; self.target = target; identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
     }
     var body: some View {
-        Form {
+        PiliForm {
             Picker("举报原因", selection: $reason) {
                 Text("请选择").tag(Optional<Int>.none)
                 ForEach(target.reasons, id: \.0) { value in Text(value.1).tag(Optional(value.0)) }

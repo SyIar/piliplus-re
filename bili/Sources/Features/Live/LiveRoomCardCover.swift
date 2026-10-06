@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LiveRoomCardCover: View {
     let coverURL: URL?
@@ -48,8 +49,8 @@ struct LiveRoomCardCover: View {
     private var coverPlaceholderBase: some View {
         Color.gray.opacity(0.14)
             .overlay {
-                Image(systemName: "play.tv")
-                    .font(.title3)
+                PiliIcon(systemName: "play.tv")
+                    .font(.cc.baseBold)
                     .foregroundStyle(.secondary)
             }
     }

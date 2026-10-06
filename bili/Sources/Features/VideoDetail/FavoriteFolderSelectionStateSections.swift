@@ -18,14 +18,14 @@ struct FavoriteFolderSelectionFailureSection: View {
 
     var body: some View {
         Section {
-            ContentUnavailableView(
+            PiliUnavailableView(
                 "无法读取收藏夹",
                 systemImage: "exclamationmark.circle",
                 description: Text(message)
             )
 
             Button(action: retry) {
-                Label("重试", systemImage: "arrow.clockwise")
+                PiliLabel("重试", systemImage: "arrow.clockwise")
             }
         }
     }
@@ -34,7 +34,7 @@ struct FavoriteFolderSelectionFailureSection: View {
 struct FavoriteFolderSelectionEmptySection: View {
     var body: some View {
         Section {
-            ContentUnavailableView(
+            PiliUnavailableView(
                 "暂无收藏夹",
                 systemImage: "folder",
                 description: Text("请先在 B 站创建收藏夹。")

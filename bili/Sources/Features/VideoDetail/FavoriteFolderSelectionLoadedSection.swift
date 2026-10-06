@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct FavoriteFolderSelectionLoadedSection: View {
     let folders: [FavoriteFolder]
@@ -37,7 +38,7 @@ private struct FavoriteFolderSelectionRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(folder.displayTitle)
-                .font(.subheadline.weight(.semibold))
+                .font(.cc.base.weight(.semibold))
                 .lineLimit(2)
 
             HStack(spacing: 6) {
@@ -46,7 +47,7 @@ private struct FavoriteFolderSelectionRow: View {
                     Text("当前已收藏")
                 }
             }
-            .font(.caption)
+            .font(.cc.sm)
             .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)

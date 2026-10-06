@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDescriptionOwnerRow: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -34,7 +35,7 @@ struct VideoDescriptionOwnerRow: View {
 
             Button(action: toggleFollow) {
                 Text(isFollowing ? "已关注" : "+ 关注")
-                    .font(.caption.weight(.bold))
+                    .font(.cc.sm.weight(.bold))
                     .frame(minWidth: 58)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)

@@ -1,5 +1,6 @@
 import Combine
 import SwiftUI
+import ChunUI
 
 private enum LiveRoomChatLayoutMetrics {
     static let chatOverlaySpacing: CGFloat = 12
@@ -10,8 +11,8 @@ private enum LiveRoomTheme {
     static let background = Color(.systemGroupedBackground)
     static let chatBubble = Color(.systemGray5)
     static let chatSender = Color(.secondaryLabel)
-    static let highlightedChatBubble = Color.orange.opacity(0.16)
-    static let highlightedChatSender = Color.orange
+    static let highlightedChatBubble = Color.cc.warning.opacity(0.16)
+    static let highlightedChatSender = Color.cc.warning
 }
 
 struct LiveRoomChatTimelineSnapshot: Equatable {
@@ -275,8 +276,8 @@ private struct LiveRoomPlainDanmakuTimeline: View {
         ZStack(alignment: .bottomTrailing) {
             if !isDanmakuEnabled || !renderState.snapshot.isEnabled {
                 Button(action: onEnableDanmaku) {
-                    Label("开启弹幕", systemImage: "text.bubble")
-                        .font(.subheadline.weight(.semibold))
+                    PiliLabel("开启弹幕", systemImage: "text.bubble")
+                        .font(.cc.base.weight(.semibold))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
                 }
@@ -332,8 +333,8 @@ private struct LiveRoomPlainDanmakuTimeline: View {
                         followsLatest = true
                         scrollToLatest(using: proxy, anchorID: latestAnchorID)
                     } label: {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 18, weight: .semibold))
+                        PiliIcon(systemName: "chevron.down", size: 18)
+                            .font(.cc.baseBold)
                             .frame(width: 38, height: 38)
                     }
                     .buttonStyle(.plain)
@@ -516,8 +517,8 @@ private struct LiveRoomSimpleLiveLayoutView: View {
     private var header: some View {
         HStack(spacing: 12) {
             Button(action: onNavigateBack) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 17, weight: .semibold))
+                PiliIcon(systemName: "chevron.left", size: 17)
+                    .font(.cc.baseBold)
                     .frame(width: 38, height: 38)
             }
             .buttonStyle(.plain)
@@ -537,17 +538,17 @@ private struct LiveRoomSimpleLiveLayoutView: View {
                 Button {
                     viewModel.showLiveDanmakuSettings()
                 } label: {
-                    Label("弹幕设置", systemImage: "text.bubble")
+                    PiliLabel("弹幕设置", systemImage: "text.bubble")
                 }
 
                 Button {
                     viewModel.showLivePlaybackDiagnostics()
                 } label: {
-                    Label("播放诊断", systemImage: "waveform.path.ecg.rectangle")
+                    PiliLabel("播放诊断", systemImage: "waveform.path.ecg.rectangle")
                 }
             } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 17, weight: .semibold))
+                PiliIcon(systemName: "ellipsis", size: 17)
+                    .font(.cc.baseBold)
                     .frame(width: 38, height: 38)
             }
             .buttonStyle(.plain)
@@ -668,8 +669,8 @@ private struct LiveRoomSimpleLiveLayoutView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.caption.weight(.semibold))
+            PiliLabel(title, systemImage: systemImage)
+                .font(.cc.sm.weight(.semibold))
                 .frame(maxWidth: .infinity)
                 .frame(height: bottomActionBarHeight)
         }
@@ -682,8 +683,8 @@ private struct LiveRoomSimpleLiveLayoutView: View {
     private var liveShareAction: some View {
         if let shareURL = URL(string: "https://live.bilibili.com/\(viewModel.roomID)") {
             PiliShareMenu(url: shareURL, title: viewModel.title, message: "来自哔哩哔哩的直播间") {
-                Label("分享", systemImage: "square.and.arrow.up")
-                    .font(.caption.weight(.semibold))
+                PiliLabel("分享", systemImage: "square.and.arrow.up")
+                    .font(.cc.sm.weight(.semibold))
                     .frame(maxWidth: .infinity)
                     .frame(height: bottomActionBarHeight)
             }
@@ -702,7 +703,7 @@ private struct LiveRoomSimpleLiveInfoPane: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("直播间信息")
-                    .font(.headline)
+                    .font(.cc.baseBold)
 
                 detailRow("主播", value: viewModel.anchorName)
                 detailRow("热度", value: viewModel.onlineText)
@@ -719,9 +720,9 @@ private struct LiveRoomSimpleLiveInfoPane: View {
                     Divider()
 
                     Text("简介")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.cc.base.weight(.semibold))
                     Text(descriptionText)
-                        .font(.subheadline)
+                        .font(.cc.base)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -735,7 +736,7 @@ private struct LiveRoomSimpleLiveInfoPane: View {
     private func detailRow(_ title: String, value: String) -> some View {
         LabeledContent(title) {
             Text(value)
-                .font(.subheadline)
+                .font(.cc.base)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.trailing)
         }
@@ -759,7 +760,7 @@ private struct LiveRoomSimpleLiveSettingsPane: View {
                         Button {
                             viewModel.showLivePlaybackDiagnostics()
                         } label: {
-                            Label("播放诊断", systemImage: "waveform.path.ecg.rectangle")
+                            PiliLabel("播放诊断", systemImage: "waveform.path.ecg.rectangle")
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .buttonStyle(.plain)
@@ -784,7 +785,7 @@ private struct LiveRoomSimpleLiveSettingsPane: View {
                         Button {
                             viewModel.showLiveDanmakuSettings()
                         } label: {
-                            Label("打开弹幕设置", systemImage: "slider.horizontal.3")
+                            PiliLabel("打开弹幕设置", systemImage: "slider.horizontal.3")
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .buttonStyle(.plain)
@@ -812,40 +813,40 @@ private struct LiveRoomSimpleLiveSettingsPane: View {
     private var qualityMenu: some View {
         if viewModel.hasMultipleQualities || viewModel.currentQualityTitle != nil {
             HStack(spacing: 12) {
-                Label("画质", systemImage: "slider.horizontal.3")
+                PiliLabel("画质", systemImage: "slider.horizontal.3")
                 Spacer(minLength: 12)
                 Menu {
                     ForEach(viewModel.qualityMenuItems) { item in
                         Button {
                             viewModel.selectQuality(qn: item.qn)
                         } label: {
-                            Label(item.title, systemImage: item.isSelected ? "checkmark" : "")
+                            PiliLabel(item.title, systemImage: item.isSelected ? "checkmark" : "")
                         }
                     }
                 } label: {
                     Text(viewModel.currentQualityTitle ?? "自动")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
             }
         }
     }
 
     private var streamMenu: some View {
         HStack(spacing: 12) {
-            Label("线路", systemImage: "antenna.radiowaves.left.and.right")
+            PiliLabel("线路", systemImage: "antenna.radiowaves.left.and.right")
             Spacer(minLength: 12)
             Menu {
                 ForEach(viewModel.streamMenuItems) { item in
                     Button {
                         viewModel.selectStreamCandidate(id: item.id)
                     } label: {
-                        Label(item.title, systemImage: item.isSelected ? "checkmark" : "")
+                        PiliLabel(item.title, systemImage: item.isSelected ? "checkmark" : "")
                     }
                 }
             } label: {
                 Text(viewModel.currentStreamTitle ?? "自动")
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
         }
     }
 }
@@ -866,8 +867,8 @@ private struct LiveRoomPortraitHeader: View {
     var body: some View {
         HStack(spacing: 12) {
             Button(action: onNavigateBack) {
-                Image(systemName: "chevron.backward")
-                    .font(.system(size: 21, weight: .semibold))
+                PiliIcon(systemName: "chevron.backward", size: 21)
+                    .font(.cc.baseBold)
                     .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
@@ -943,12 +944,12 @@ private struct LiveRoomDanmakuTimeline: View {
         ZStack(alignment: .bottomTrailing) {
             if !isDanmakuEnabled || !snapshot.isEnabled {
                 Button(action: onEnableDanmaku) {
-                    Label("开启弹幕", systemImage: "text.bubble")
-                        .font(.subheadline.weight(.semibold))
+                    PiliLabel("开启弹幕", systemImage: "text.bubble")
+                        .font(.cc.base.weight(.semibold))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
                 .accessibilityLabel("开启直播弹幕")
             } else if visibleItems.isEmpty {
                 LiveRoomDanmakuEmptyState(
@@ -1004,8 +1005,8 @@ private struct LiveRoomDanmakuTimeline: View {
                         followsLatest = true
                         scrollToLatest(using: proxy)
                     } label: {
-                        Image(systemName: "arrow.down.to.line.compact")
-                            .font(.system(size: 16, weight: .semibold))
+                        PiliIcon(systemName: "arrow.down.to.line.compact", size: 16)
+                            .font(.cc.baseBold)
                             .frame(width: 40, height: 40)
                     }
                     .buttonStyle(.plain)
@@ -1043,18 +1044,18 @@ private struct LiveRoomDanmakuEmptyState: View {
                 ProgressView()
                     .tint(foregroundColor)
             } else {
-                Image(systemName: systemImage)
-                    .font(.system(size: 23, weight: .medium))
+                PiliIcon(systemName: systemImage, size: 23)
+                    .font(.cc.lg)
                     .foregroundStyle(foregroundColor)
             }
 
             Text(title)
-                .font(.subheadline.weight(.medium))
+                .font(.cc.base.weight(.medium))
                 .foregroundStyle(primaryTextColor)
 
             if let subtitle {
                 Text(subtitle)
-                    .font(.caption)
+                    .font(.cc.sm)
                     .foregroundStyle(foregroundColor)
                     .multilineTextAlignment(.center)
             }

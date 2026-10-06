@@ -1,7 +1,8 @@
 import SwiftUI
+import ChunUI
 
 struct QRCodeLoginView: View {
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @ObservedObject var viewModel: MineViewModel
     @State private var dismissTask: Task<Void, Never>?
 
@@ -15,7 +16,7 @@ struct QRCodeLoginView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(24)
-            .background(Color(.systemBackground))
+            .background(Color.cc.background)
             .hiddenInlineNavigationTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

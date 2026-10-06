@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 import UIKit
 
 struct PiliLiveInteractionView: View {
@@ -11,10 +12,10 @@ struct PiliLiveInteractionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                Button { showsChat = true } label: { Image(systemName: "text.bubble") }.buttonStyle(.glass).accessibilityLabel("直播聊天与屏蔽")
-                Button { showsComposer = true } label: { Label("发弹幕", systemImage: "bubble.left.and.text.bubble.right") }
+                Button { showsChat = true } label: { PiliIcon(systemName: "text.bubble") }.buttonStyle(.glass).accessibilityLabel("直播聊天与屏蔽")
+                Button { showsComposer = true } label: { PiliLabel("发弹幕", systemImage: "bubble.left.and.text.bubble.right") }
                     .buttonStyle(.glass).accessibilityIdentifier("live.send.open")
-                Button { showsHistory = true } label: { Label("醒目留言", systemImage: "bubble.left.and.exclamationmark.bubble.right") }
+                Button { showsHistory = true } label: { PiliLabel("醒目留言", systemImage: "bubble.left.and.exclamationmark.bubble.right") }
                     .buttonStyle(.glass).accessibilityIdentifier("live.superchat.open")
             }
             if !compact {
@@ -24,9 +25,9 @@ struct PiliLiveInteractionView: View {
                 }
             }
         }
-        .sheet(isPresented: $showsChat) { PiliLiveChatView(viewModel: viewModel, store: viewModel.chatStore) }
-        .sheet(isPresented: $showsComposer) { PiliLiveComposer(viewModel: viewModel) }
-        .sheet(isPresented: $showsHistory) {
+        .piliSheet(isPresented: $showsChat) { PiliLiveChatView(viewModel: viewModel, store: viewModel.chatStore) }
+        .piliSheet(isPresented: $showsComposer) { PiliLiveComposer(viewModel: viewModel) }
+        .piliSheet(isPresented: $showsHistory) {
             PiliSuperChatHistoryView(store: store, api: viewModel.api, roomID: viewModel.roomID) {
                 if store.mode != 0 { viewModel.resumeLiveDanmakuIfNeeded(); store.load(roomID: viewModel.roomID, api: viewModel.api) }
                 else if !viewModel.isDanmakuEnabled { viewModel.stopLiveDanmaku(clearItems: false) }
@@ -42,15 +43,15 @@ struct PiliSuperChatCard: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 CachedRemoteImage(url: URL(string: item.face), targetPixelSize: 96) { $0.resizable().scaledToFill() }
-                    placeholder: { Image(systemName: "person.crop.circle.fill") }
+                    placeholder: { PiliIcon(systemName: "person.crop.circle.fill") }
                     .frame(width: 28, height: 28).clipShape(Circle())
-                Text(item.name).font(.subheadline.bold()).lineLimit(1)
+                Text(item.name).font(.cc.base.bold()).lineLimit(1)
                 Spacer(minLength: 4)
-                Text("¥\(item.price)").font(.headline).monospacedDigit()
+                Text("¥\(item.price)").font(.cc.baseBold).monospacedDigit()
             }
-            Text(item.message).font(.body).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+            Text(item.message).font(.cc.base).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
             Text(item.end > date ? "剩余 \(Int(ceil(item.end.timeIntervalSince(date)))) 秒" : "展示已结束")
-                .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                .font(.cc.sm).foregroundStyle(.secondary).monospacedDigit()
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(red: Double((item.color >> 16) & 255) / 255, green: Double((item.color >> 8) & 255) / 255,
@@ -67,10 +68,10 @@ struct PiliSuperChatHistoryView: View {
     var onModeChange: () -> Void = {}
     @State private var report: PiliSuperChat?
     @State private var export: PiliSuperChat?
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 Picker("展示", selection: $store.mode) { Text("关闭").tag(0); Text("有效").tag(1); Text("全部").tag(2) }
                     .pickerStyle(.segmented).accessibilityIdentifier("live.superchat.filter")
                 if store.loading { ProgressView() }
@@ -81,18 +82,18 @@ struct PiliSuperChatHistoryView: View {
                     ForEach(values) { item in
                         PiliSuperChatCard(item: item, date: time.date)
                             .contextMenu {
-                                Button("复制", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.message }
-                                Button("保存", systemImage: "square.and.arrow.down") { export = item }
-                                Button("举报", systemImage: "exclamationmark.bubble") { report = item }
+                                PiliIconButton("复制", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.message }
+                                PiliIconButton("保存", systemImage: "square.and.arrow.down") { export = item }
+                                PiliIconButton("举报", systemImage: "exclamationmark.bubble") { report = item }
                             }
                     }
                 }
-                Text("保留本次进入直播间接收到的最近 200 条，历史接口返回范围以平台为准。").font(.footnote).foregroundStyle(.secondary)
+                Text("保留本次进入直播间接收到的最近 200 条，历史接口返回范围以平台为准。").font(.cc.sm).foregroundStyle(.secondary)
             }.navigationTitle("醒目留言").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
                 .onChange(of: store.mode) { _, _ in onModeChange() }
-                .sheet(item: $report) { item in PiliSuperChatReportView(api: api, item: item, roomID: roomID) }
-                .sheet(item: $export) { item in
+                .piliSheet(item: $report) { item in PiliSuperChatReportView(api: api, item: item, roomID: roomID) }
+                .piliSheet(item: $export) { item in
                     PiliContentImageExportView(document: .init(title: "醒目留言", author: "\(item.name) · ¥\(item.price)", text: item.message,
                         pictures: [], source: "https://live.bilibili.com/\(roomID)"))
                 }
@@ -108,10 +109,10 @@ private struct PiliSuperChatReportView: View {
     @State private var reason = ""
     @State private var busy = false
     @State private var error: String?
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 Text(item.message)
                 TextField("举报原因", text: $reason, axis: .vertical).lineLimit(2...5)
                 if let error { Text(error) }
@@ -137,19 +138,19 @@ struct PiliLiveComposer: View {
     @State private var loadID = UUID()
     @State private var busy = false
     @State private var error: String?
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 if let target = viewModel.liveReplyTarget {
                     HStack { Text("回复 \(target.senderName ?? "用户")"); Spacer(); Button("取消回复") { viewModel.liveReplyTarget = nil } }
                 }
                 Section {
                     if let selected {
-                        Label("表情：\(selected.text)", systemImage: "face.smiling")
+                        PiliLabel("表情：\(selected.text)", systemImage: "face.smiling")
                         Button("改发文字") { self.selected = nil }
                     } else { TextField("发一条友善的弹幕", text: $viewModel.liveDanmakuDraft, axis: .vertical).lineLimit(2...5) }
-                    Button(busy ? "正在发送" : "发送弹幕", systemImage: "paperplane.fill") { send() }
+                    PiliIconButton(busy ? "正在发送" : "发送弹幕", systemImage: "paperplane.fill") { send() }
                         .disabled(busy || (selected == nil && viewModel.liveDanmakuDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                         .accessibilityIdentifier("live.send.submit")
                 }.disabled(busy)
@@ -165,10 +166,10 @@ struct PiliLiveComposer: View {
                             } label: {
                                 VStack(spacing: 4) {
                                     CachedRemoteImage(url: URL(string: emote.image), targetPixelSize: 160) { $0.resizable().scaledToFit() }
-                                        placeholder: { Image(systemName: "face.smiling") }
+                                        placeholder: { PiliIcon(systemName: "face.smiling") }
                                         .frame(height: 44)
-                                    Text(emote.text).font(.caption2).lineLimit(1)
-                                    if !emote.allowed { Image(systemName: "lock.fill").font(.caption) }
+                                    Text(emote.text).font(.cc.sm).lineLimit(1)
+                                    if !emote.allowed { PiliIcon(systemName: "lock.fill").font(.cc.sm) }
                                 }.frame(maxWidth: .infinity)
                             }.buttonStyle(.plain).disabled(!emote.allowed || busy)
                                 .accessibilityLabel(emote.text + (emote.allowed ? "" : "，" + emote.reason))
@@ -184,7 +185,7 @@ struct PiliLiveComposer: View {
                     do { emotes = try await viewModel.api.piliLiveEmotes(roomID: viewModel.roomID, identity: identity) }
                     catch { if !Task.isCancelled { self.error = error.localizedDescription } }
                 }
-        }.interactiveDismissDisabled(busy)
+        }.piliInteractiveDismissDisabled(busy)
     }
     private func send() {
         guard !busy, let identity else { return }; busy = true; error = nil

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceSessionMetricsGrid: View {
     let session: PlayerPerformanceSession
@@ -30,18 +31,18 @@ private struct PlayerPerformanceSessionMetric: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.caption2.weight(.semibold))
+            PiliIcon(systemName: icon)
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .frame(width: 14)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.caption2)
+                    .font(.cc.sm)
                     .foregroundStyle(.secondary)
 
                 Text(PlayerPerformanceMetricText.millisecondsText(milliseconds))
-                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .font(.cc.sm.monospacedDigit().weight(.semibold))
                     .foregroundStyle(PlayerPerformanceMetricText.metricColor(milliseconds))
             }
         }

@@ -4,7 +4,7 @@ struct DanmakuSettingsSheet: View {
     @ObservedObject var store: VideoDetailDanmakuSettingsRenderStore
     let toggleDanmaku: () -> Void
     let updateDanmakuSettings: (DanmakuSettings) -> Void
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
 
     var body: some View {
         NavigationStack {

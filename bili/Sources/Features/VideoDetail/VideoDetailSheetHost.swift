@@ -9,7 +9,7 @@ private struct VideoDetailSheetHostModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .sheet(item: sheetRouteBinding) { route in
+            .piliSheet(item: sheetRouteBinding) { route in
                 switch route {
                 case .commentThread(let presentation):
                     let comment = presentation.rootComment
@@ -55,22 +55,22 @@ private struct VideoDetailSheetHostModifier: ViewModifier {
                     )
                 }
             }
-            .sheet(isPresented: sheetState.isShowingFavoriteFolders) {
+            .piliSheet(isPresented: sheetState.isShowingFavoriteFolders) {
                 VideoDetailFavoriteFolderSheetHost(
                     viewModel: viewModel,
                     actions: sheetActions.favoriteFolders
                 )
             }
-            .sheet(isPresented: sheetState.isShowingCoinPicker) {
+            .piliSheet(isPresented: sheetState.isShowingCoinPicker) {
                 VideoDetailCoinSheetHost(viewModel: viewModel)
             }
-            .sheet(isPresented: sheetState.isShowingDanmakuSettings) {
+            .piliSheet(isPresented: sheetState.isShowingDanmakuSettings) {
                 VideoDetailDanmakuSettingsSheetHost(
                     viewModel: viewModel,
                     actions: sheetActions.danmaku
                 )
             }
-            .sheet(isPresented: sheetState.isShowingNetworkDiagnostics) {
+            .piliSheet(isPresented: sheetState.isShowingNetworkDiagnostics) {
                 VideoDetailNetworkDiagnosticsSheetHost(
                     viewModel: viewModel,
                     libraryStore: libraryStore

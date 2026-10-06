@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlaybackNetworkHLSBridgeSection: View {
     let variant: PlayVariant?
@@ -9,7 +10,7 @@ struct PlaybackNetworkHLSBridgeSection: View {
             Section("HLSBridge") {
                 if snapshots.isEmpty {
                     Text("等待 HLSBridge 线路样本")
-                        .font(.caption)
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(snapshots.prefix(8)) { snapshot in

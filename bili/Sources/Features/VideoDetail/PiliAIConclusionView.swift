@@ -43,16 +43,16 @@ struct PiliAIConclusionView: View {
     @State private var error: String?
     @State private var generation = UUID()
     @State private var retry = 0
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     init(model: VideoDetailViewModel) { self.model = model; _session = ObservedObject(wrappedValue: model.api.sessionStore) }
     private var key: String { "\(model.detail.bvid):\(model.selectedCID ?? 0):\(session.playbackCredentialVersion):\(retry)" }
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 if loading { ProgressView("加载 AI 总结") }
                 if let error { Text(error); Button("重试") { retry += 1 } }
                 if let result {
-                    if result.isEmpty { ContentUnavailableView("暂无 AI 总结", systemImage: "text.badge.star", description: Text("平台尚未为当前分 P 提供总结")) }
+                    if result.isEmpty { PiliUnavailableView("暂无 AI 总结", systemImage: "text.badge.star", description: Text("平台尚未为当前分 P 提供总结")) }
                     if !result.summary.isEmpty { Section("视频总结") { Text(result.summary).textSelection(.enabled) } }
                     ForEach(result.outline) { outline in
                         Section(outline.title) {

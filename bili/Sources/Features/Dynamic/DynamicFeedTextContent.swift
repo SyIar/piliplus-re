@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicFeedTextContent: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -33,8 +34,8 @@ struct DynamicFeedTextContent: View {
                 Button(action: toggleExpanded) {
                     HStack(spacing: 4) {
                         Text(isExpanded ? "收起" : "展开")
-                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.caption2.weight(.bold))
+                        PiliIcon(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.cc.sm.weight(.bold))
                     }
                     .appTypography(.action, fallback: .footnote.weight(.semibold))
                     .foregroundStyle(appTintColor)

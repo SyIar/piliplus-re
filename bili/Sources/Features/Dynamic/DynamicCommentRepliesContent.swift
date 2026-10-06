@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicCommentRepliesContent: View {
     let rootComment: Comment
@@ -115,8 +116,8 @@ private struct DynamicCommentRepliesFooter: View {
             DynamicCommentErrorView(message: message, retry: loadMore)
         } else if snapshot.hasMoreReplies {
             Button(action: loadMore) {
-                Label("查看更多回复", systemImage: "chevron.down")
-                    .font(.caption.weight(.semibold))
+                PiliLabel("查看更多回复", systemImage: "chevron.down")
+                    .font(.cc.sm.weight(.semibold))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 8)
             }

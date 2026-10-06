@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct UploaderVideosSection: View {
     @ObservedObject var viewModel: UploaderViewModel
@@ -28,14 +29,14 @@ struct UploaderVideosSection: View {
                     Button {
                         Task { await viewModel.changeVideoOrder(order) }
                     } label: {
-                        Label(order.title, systemImage: order == viewModel.videoOrder ? "checkmark" : "circle")
+                        PiliLabel(order.title, systemImage: order == viewModel.videoOrder ? "checkmark" : "circle")
                     }
                 }
             } label: {
-                Label(viewModel.videoOrder.title, systemImage: "arrow.up.arrow.down.circle")
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel(viewModel.videoOrder.title, systemImage: "arrow.up.arrow.down.circle")
+                    .font(.cc.base.weight(.semibold))
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
 
@@ -90,7 +91,7 @@ struct UploaderVideosSection: View {
     private var footer: some View {
         if !viewModel.hasMoreVideos {
             Text("没有更多投稿了")
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicDetailBottomInteractionBar: ToolbarContent {
     @EnvironmentObject private var dependencies: AppDependencies
@@ -54,8 +55,8 @@ struct DynamicDetailBottomInteractionBar: ToolbarContent {
 
     private var likeButton: some View {
         Button(action: toggleLike) {
-            Image(systemName: likeState.isLiked ? "hand.thumbsup.fill" : "hand.thumbsup")
-                .font(.body)
+            PiliIcon(systemName: likeState.isLiked ? "hand.thumbsup.fill" : "hand.thumbsup")
+                .font(.cc.base)
         }
         .controlSize(.small)
         .imageScale(.medium)
@@ -70,23 +71,21 @@ struct DynamicDetailBottomInteractionBar: ToolbarContent {
             guard !isMutatingLike else { return }
             likeState = state
         }
-        .alert("操作失败", isPresented: Binding(
+        .piliAlert("操作失败", isPresented: Binding(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
-            Button("好", role: .cancel) { errorMessage = nil }
-        } message: {
-            Text(errorMessage ?? "请稍后重试")
-        }
+            PiliAlertButton("好", role: .cancel) { errorMessage = nil }
+        } message: { errorMessage ?? "请稍后重试" }
     }
 
     private var commentButton: some View {
         Button(action: openComment) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Image(systemName: "bubble.left")
-                    .font(.body)
+                PiliIcon(systemName: "bubble.left")
+                    .font(.cc.base)
                 Text("点击发送电波")
-                    .font(.body)
+                    .font(.cc.base)
             }
             .padding(.horizontal, 6)
         }
@@ -103,8 +102,8 @@ struct DynamicDetailBottomInteractionBar: ToolbarContent {
 
     private var shareButton: some View {
         ShareLink(item: dynamicShareURL) {
-            Image(systemName: "square.and.arrow.up")
-                .font(.body)
+            PiliIcon(systemName: "square.and.arrow.up")
+                .font(.cc.base)
         }
         .controlSize(.small)
         .imageScale(.medium)

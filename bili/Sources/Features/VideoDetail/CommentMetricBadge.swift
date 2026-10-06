@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 nonisolated struct CommentLikeDisplayState: Equatable, Sendable {
     let isLiked: Bool
@@ -59,8 +60,8 @@ struct CommentMetricBadge: View {
     let isHighlighted: Bool
 
     var body: some View {
-        Label(text, systemImage: systemImage)
-            .font(.caption2.weight(.semibold))
+        PiliLabel(text, systemImage: systemImage)
+            .font(.cc.sm.weight(.semibold))
             .labelStyle(.titleAndIcon)
             .lineLimit(1)
             .minimumScaleFactor(0.82)
@@ -114,9 +115,9 @@ private struct PiliCommentLikeControl: View {
         .disabled(store.isBusy(subject) || state.deleted)
         .accessibilityLabel(state.reaction == 1 ? "取消点赞评论" : "点赞评论")
         .accessibilityValue("\(state.likeCount) 个赞")
-        .alert("评论操作失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-            Button("好", role: .cancel) { errorMessage = nil }
-        } message: { Text(errorMessage ?? "") }
+        .piliAlert("评论操作失败", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            PiliAlertButton("好", role: .cancel) { errorMessage = nil }
+        } message: { errorMessage ?? "" }
         .dynamicCommentHitArea(.control)
     }
 }

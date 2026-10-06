@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 extension MinePlaybackSettingsView {
     var activePlaybackCDNProbeSnapshot: PlaybackCDNProbeSnapshot? {
@@ -30,48 +31,48 @@ extension MinePlaybackSettingsView {
                    let result = snapshot.result(for: recommendation),
                    let elapsed = result.elapsedMilliseconds {
                     HStack {
-                        Label(recommendation.title, systemImage: "checkmark.seal")
+                        PiliLabel(recommendation.title, systemImage: "checkmark.seal")
                         Spacer()
                         Text("\(elapsed) ms")
                             .monospacedDigit()
                     }
-                    .font(.caption)
+                    .font(.cc.sm)
                     .foregroundStyle(.secondary)
                 }
 
                 Text("上次测速 \(snapshot.probedAt.formatted(date: .abbreviated, time: .shortened))")
-                    .font(.caption2)
+                    .font(.cc.sm)
                     .foregroundStyle(isPlaybackCDNProbeSnapshotExpired(snapshot) ? AnyShapeStyle(.orange) : AnyShapeStyle(.tertiary))
 
                 if snapshot.isWeakReferenceOnly {
-                    Label("本次没有真实播放地址，只是 Host 连通性弱参考；403/959 不代表真实播放失败。", systemImage: "exclamationmark.triangle")
-                        .font(.caption2)
-                        .foregroundStyle(.orange)
+                    PiliLabel("本次没有真实播放地址，只是 Host 连通性弱参考；403/959 不代表真实播放失败。", systemImage: "exclamationmark.triangle")
+                        .font(.cc.sm)
+                        .foregroundStyle(Color.cc.warning)
                 }
 
                 if libraryStore.playbackCDNPreference == .automatic,
                    let activeRecommendation = libraryStore.automaticPlaybackCDNRecommendation {
-                    Label("测速参考 \(activeRecommendation.title)", systemImage: "bolt.horizontal")
-                        .font(.caption2)
+                    PiliLabel("测速参考 \(activeRecommendation.title)", systemImage: "bolt.horizontal")
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                 }
 
                 if let avoidanceDescription = libraryStore.activePlaybackCDNAvoidanceDescription {
-                    Label("临时避让 \(avoidanceDescription)", systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
-                        .font(.caption2)
-                        .foregroundStyle(.orange)
+                    PiliLabel("临时避让 \(avoidanceDescription)", systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
+                        .font(.cc.sm)
+                        .foregroundStyle(Color.cc.warning)
                 }
 
                 if libraryStore.playbackNetworkAddressFamilyPreference != .automatic {
-                    Label("协议偏好 \(libraryStore.playbackNetworkAddressFamilyPreference.title)", systemImage: "point.3.connected.trianglepath.dotted")
-                        .font(.caption2)
+                    PiliLabel("协议偏好 \(libraryStore.playbackNetworkAddressFamilyPreference.title)", systemImage: "point.3.connected.trianglepath.dotted")
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                 }
 
                 if isPlaybackCDNProbeSnapshotExpired(snapshot) {
-                    Label("CDN 测速结果已超过 \(playbackCDNProbeRefreshIntervalTitle)，建议重新测速", systemImage: "clock.badge.exclamationmark")
-                        .font(.caption2)
-                        .foregroundStyle(.orange)
+                    PiliLabel("CDN 测速结果已超过 \(playbackCDNProbeRefreshIntervalTitle)，建议重新测速", systemImage: "clock.badge.exclamationmark")
+                        .font(.cc.sm)
+                        .foregroundStyle(Color.cc.warning)
                 }
 
                 DisclosureGroup(isExpanded: $isShowingPlaybackCDNProbeDetails) {
@@ -82,8 +83,8 @@ extension MinePlaybackSettingsView {
                     }
                     .padding(.top, 4)
                 } label: {
-                    Label("CDN 测速排行", systemImage: "list.number")
-                        .font(.caption)
+                    PiliLabel("CDN 测速排行", systemImage: "list.number")
+                        .font(.cc.sm)
                 }
             }
             .padding(.vertical, 2)
@@ -106,7 +107,7 @@ extension MinePlaybackSettingsView {
                     Text("失败")
                 }
             }
-            .font(.caption)
+            .font(.cc.sm)
 
             HStack(spacing: 6) {
                 Text(result.userFacingStatus)
@@ -120,12 +121,12 @@ extension MinePlaybackSettingsView {
                     Text("弱参考")
                 }
             }
-            .font(.caption2)
+            .font(.cc.sm)
             .lineLimit(2)
 
             if let probedHost = result.probedHost {
                 Text([probedHost, result.probePathDescription].compactMap { $0 }.joined(separator: " · "))
-                    .font(.caption2)
+                    .font(.cc.sm)
                     .lineLimit(2)
                     .foregroundStyle(.tertiary)
             }

@@ -1,12 +1,13 @@
 import SwiftUI
+import ChunUI
 
 struct PiliSponsorSettingsView: View {
     @ObservedObject private var preferences = PiliSponsorPreferences.shared
     var body: some View {
-        List {
+        PiliList {
             Section {
                 Text("自动：按片段动作跳过或临时静音。手动：显示操作按钮。忽略：不处理此分类。整个视频标记和精彩时刻可在片段列表查看，不会自动跳过整部视频。")
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.cc.sm).foregroundStyle(.secondary)
             }
             ForEach(PiliSponsorCategory.allCases) { category in
                 Picker(category.title, selection: Binding(get: { preferences.mode(category.rawValue) }, set: { preferences.set($0, category: category.rawValue) })) {
@@ -25,7 +26,7 @@ struct PiliSponsorManualPrompt: View {
             VStack {
                 Spacer()
                 HStack {
-                    Button("\(segment.actionType == "mute" ? "静音" : "跳过") · \(segment.title)", systemImage: segment.actionType == "mute" ? "speaker.slash" : "forward.end") {
+                    PiliIconButton("\(segment.actionType == "mute" ? "静音" : "跳过") · \(segment.title)", systemImage: segment.actionType == "mute" ? "speaker.slash" : "forward.end") {
                         if segment.actionType == "mute" { player.manuallyMuteSponsorBlockSegment(segment) }
                         else { player.manuallySkipSponsorBlockSegment(segment) }
                     }.buttonStyle(.glass)
@@ -47,13 +48,13 @@ struct PiliSponsorView: View {
     @State private var category: PiliSponsorCategory = .sponsor
     @State private var action = "skip"
     @State private var confirmsSubmit = false
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     private var duration: Double { model.stablePlayerViewModel?.duration ?? Double(model.detail.duration ?? 0) }
     private var valid: Bool { duration > 0 && start >= 0 && end <= duration && (end > start || action == "poi" && start == end) && category.actions.contains(action) }
     var body: some View {
         NavigationStack {
-            List {
-                Section { NavigationLink { PiliSponsorSettingsView() } label: { Label("分类处理策略", systemImage: "slider.horizontal.3") } }
+            PiliList {
+                Section { NavigationLink { PiliSponsorSettingsView() } label: { PiliLabel("分类处理策略", systemImage: "slider.horizontal.3") } }
                 if let message { Text(message).foregroundStyle(.secondary) }
                 if loading { ProgressView("加载空降片段") }
                 Section("片段") {
@@ -70,29 +71,29 @@ struct PiliSponsorView: View {
                     if action == "full" { Button("标记整个视频") { start = 0; end = duration } }
                     if action == "poi" { Button("设为当前精彩时刻") { start = model.stablePlayerViewModel?.currentTime ?? 0; end = start } }
                     Button("提交到空降社区") { confirmsSubmit = true }.disabled(!valid || busy)
-                    Text("提交内容会公开到空降社区。请先核对时间和分类；社区身份独立于 B 站账号，保存在钥匙串中。").font(.caption).foregroundStyle(.secondary)
+                    Text("提交内容会公开到空降社区。请先核对时间和分类；社区身份独立于 B 站账号，保存在钥匙串中。").font(.cc.sm).foregroundStyle(.secondary)
                 }
             }.disabled(busy).navigationTitle("空降助手").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.disabled(busy) } }
                 .task { await load() }
-                .confirmationDialog("将此片段公开提交到空降社区？", isPresented: $confirmsSubmit, titleVisibility: .visible) {
-                    Button("确认提交") { submit() }
-                } message: { Text("\(category.title) · \(actionTitle(action)) · \(start.formatted())–\(end.formatted()) 秒") }
-        }.interactiveDismissDisabled(busy)
+                .piliConfirmation("将此片段公开提交到空降社区？", isPresented: $confirmsSubmit, titleVisibility: .visible) {
+                    PiliAlertButton("确认提交") { submit() }
+                } message: { "\(category.title) · \(actionTitle(action)) · \(start.formatted())–\(end.formatted()) 秒" }
+        }.piliInteractiveDismissDisabled(busy)
     }
     private func segmentRow(_ segment: SponsorBlockSegment) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(PiliSponsorCategory(rawValue: segment.category)?.title ?? segment.title).font(.headline)
-            Text("\(BiliFormatters.duration(Int(segment.startTime)))–\(BiliFormatters.duration(Int(segment.endTime))) · \(actionTitle(segment.actionType))").font(.caption)
+            Text(PiliSponsorCategory(rawValue: segment.category)?.title ?? segment.title).font(.cc.baseBold)
+            Text("\(BiliFormatters.duration(Int(segment.startTime)))–\(BiliFormatters.duration(Int(segment.endTime))) · \(actionTitle(segment.actionType))").font(.cc.sm)
             HStack {
                 Button("预览") { model.stablePlayerViewModel?.previewSponsorBlockSegment(segment) }
                 Button("跳转") { model.stablePlayerViewModel?.manuallySkipSponsorBlockSegment(segment) }
-                Button("赞成", systemImage: "hand.thumbsup") { vote(segment, type: 1) }
-                Button("反对", systemImage: "hand.thumbsdown") { vote(segment, type: 0) }
-            }.buttonStyle(.borderless).font(.caption)
+                PiliIconButton("赞成", systemImage: "hand.thumbsup") { vote(segment, type: 1) }
+                PiliIconButton("反对", systemImage: "hand.thumbsdown") { vote(segment, type: 0) }
+            }.buttonStyle(.borderless).font(.cc.sm)
             Menu("修改分类") { ForEach(PiliSponsorCategory.allCases.filter { $0.actions.contains(segment.actionType) }) { category in
                 Button(category.title) { change { try await model.sponsorBlockService.vote(uuid: segment.uuid, category: category.rawValue, userID: $0) } }
-            } }.font(.caption)
+            } }.font(.cc.sm)
         }
     }
     private func actionTitle(_ value: String) -> String { ["skip": "跳过", "mute": "静音", "full": "整个视频标记", "poi": "精彩时刻"][value] ?? value }

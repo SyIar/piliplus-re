@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayStartupLines: View {
     let session: PlayerPerformanceSession
@@ -29,13 +30,13 @@ private struct PlayerPerformanceOverlayStartupBreakdownSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Label("Startup breakdown", systemImage: "chart.bar.xaxis")
-                .font(.caption2.weight(.semibold))
+            PiliLabel("Startup breakdown", systemImage: "chart.bar.xaxis")
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.secondary)
 
             if metrics.isEmpty {
                 Text(message)
-                    .font(.system(size: 10, weight: .regular, design: .monospaced))
+                    .font(.cc.sm.monospaced())
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -69,7 +70,7 @@ private struct PlayerPerformanceOverlayStartupBreakdownMetricRow: View {
     var body: some View {
         HStack(spacing: 3) {
             Text(metric.name)
-                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -77,7 +78,7 @@ private struct PlayerPerformanceOverlayStartupBreakdownMetricRow: View {
             Spacer(minLength: 2)
 
             Text(metric.value)
-                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .font(.cc.smBold.monospaced())
                 .foregroundStyle(
                     PlayerPerformanceOverlayFormatting.metricColor(
                         PlayerPerformanceOverlayFormatting.millisecondsValue(from: metric.value)

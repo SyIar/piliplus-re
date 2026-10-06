@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlaybackNetworkURLPreferenceRow: View {
     let snapshot: PlaybackURLPreferenceSnapshot
@@ -7,16 +8,16 @@ struct PlaybackNetworkURLPreferenceRow: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
                 Text(snapshot.host)
-                    .font(.caption.monospaced())
+                    .font(.cc.sm.monospaced())
                     .lineLimit(1)
                 Spacer(minLength: 8)
                 Text("\(snapshot.averageMilliseconds) ms")
-                    .font(.caption.monospacedDigit())
+                    .font(.cc.sm.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
 
             Text(PlaybackNetworkDiagnosticFormat.playbackURLPreferenceSummary(snapshot))
-                .font(.caption2)
+                .font(.cc.sm)
                 .foregroundStyle(snapshot.failureCount > 0 ? .orange : .secondary)
                 .lineLimit(2)
         }

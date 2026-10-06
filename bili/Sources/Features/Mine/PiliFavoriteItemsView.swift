@@ -24,8 +24,8 @@ struct PiliFavoriteItemsView: View {
     }
     var body: some View {
         NavigationStack {
-            List {
-                NavigationLink { PiliPublicFavoriteView(api: model.api, folder: model.folder) } label: { Label("浏览全部内容（含音频）", systemImage: "music.note.list") }
+            PiliList {
+                NavigationLink { PiliPublicFavoriteView(api: model.api, folder: model.folder) } label: { PiliLabel("浏览全部内容（含音频）", systemImage: "music.note.list") }
                 Section {
                     Picker("显示顺序", selection: $model.order) {
                         ForEach(PiliFavoriteOrder.allCases) { Text($0.title).tag($0) }
@@ -43,7 +43,7 @@ struct PiliFavoriteItemsView: View {
                         if let aid = item.aid, aid > 0 {
                             Button { model.toggle(aid) } label: {
                                 HStack(spacing: 12) {
-                                    Image(systemName: model.selected.contains(aid) ? "checkmark.circle.fill" : "circle")
+                                    PiliIcon(systemName: model.selected.contains(aid) ? "checkmark.circle.fill" : "circle")
                                         .foregroundStyle(Color.cc.primary)
                                     LibraryVideoRow(item: item, timestampTitle: "收藏时间")
                                 }
@@ -88,7 +88,7 @@ struct PiliFavoriteItemsView: View {
                         Spacer()
                         Button("移除", role: .destructive) { confirmRemove = true }
                     }
-                    .buttonStyle(.glass).padding(16).background(.ultraThinMaterial)
+                    .buttonStyle(.glass).padding(16).piliGlassCard(radius: 24)
                     .disabled(model.isMutating)
                 }
             }
@@ -97,17 +97,17 @@ struct PiliFavoriteItemsView: View {
                 await model.load(reset: true)
             }
             .refreshable { await model.load(reset: true) }
-            .alert("移除所选的 \(model.selected.count) 个视频？", isPresented: $confirmRemove) {
-                Button("取消", role: .cancel) {}
-                Button("移除", role: .destructive) { Task { if await model.mutate(.remove) { onChanged() } } }
-            } message: { Text("只从当前收藏夹移除，其他收藏夹中的记录不受影响。") }
-            .alert("清理失效收藏？", isPresented: $confirmClean) {
-                Button("取消", role: .cancel) {}
-                Button("清理", role: .destructive) { Task { if await model.clean() { onChanged() } } }
-            } message: { Text("删除当前收藏夹中已失效的视频收藏记录。") }
-            .sheet(item: $targetMode) { mode in
+            .piliAlert("移除所选的 \(model.selected.count) 个视频？", isPresented: $confirmRemove) {
+                PiliAlertButton("取消", role: .cancel) {}
+                PiliAlertButton("移除", role: .destructive) { Task { if await model.mutate(.remove) { onChanged() } } }
+            } message: { "只从当前收藏夹移除，其他收藏夹中的记录不受影响。" }
+            .piliAlert("清理失效收藏？", isPresented: $confirmClean) {
+                PiliAlertButton("取消", role: .cancel) {}
+                PiliAlertButton("清理", role: .destructive) { Task { if await model.clean() { onChanged() } } }
+            } message: { "删除当前收藏夹中已失效的视频收藏记录。" }
+            .piliSheet(item: $targetMode) { mode in
                 NavigationStack {
-                    List {
+                    PiliList {
                         ForEach(model.folders) { folder in
                             Button(folder.displayTitle) {
                                 targetMode = nil
@@ -120,7 +120,7 @@ struct PiliFavoriteItemsView: View {
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button("取消") { targetMode = nil } } }
                 }
             }
-            .sheet(item: $sortTarget) { target in
+            .piliSheet(item: $sortTarget) { target in
                 NavigationStack {
                     PiliFavoriteResourceSortView(api: model.api, folderID: model.folder.id, items: target.items,
                                                  credentialVersion: target.version) {
@@ -128,7 +128,7 @@ struct PiliFavoriteItemsView: View {
                     }
                 }
             }
-            .sheet(item: $downloadRequest) { request in PiliBatchDownloadSheet(api: model.api, request: request) }
+            .piliSheet(item: $downloadRequest) { request in PiliBatchDownloadSheet(api: model.api, request: request) }
         }
     }
     private func showTargets(_ mode: TargetMode) {
@@ -145,7 +145,7 @@ private struct PiliFavoriteResourceSortView: View {
     let folderID: Int
     let credentialVersion: Int
     let onSaved: () -> Void
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var items: [AccountVideoEntry]
     @State private var movements: [String] = []
     @State private var busy = false
@@ -155,7 +155,7 @@ private struct PiliFavoriteResourceSortView: View {
         _items = State(initialValue: items.filter { ($0.aid ?? 0) > 0 })
     }
     var body: some View {
-        List {
+        PiliList {
             Section { Text("拖动调整已加载的视频。需要整理更多内容时，请先返回加载更多。") }
             if let error { Text(error).foregroundStyle(Color.cc.destructive) }
             ForEach(items) { Text($0.videoItem.title).ccText(font: .cc.base, color: .cc.foreground) }

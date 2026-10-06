@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerSeekPreviewOverlay: View {
     let presentation: PlayerSeekPreviewPresentation
@@ -7,13 +8,13 @@ struct PlayerSeekPreviewOverlay: View {
         VStack(spacing: 6) {
             if presentation.isCancelPending {
                 Text("松开手指，取消进退")
-                    .font(.caption2.weight(.semibold))
+                    .font(.cc.sm.weight(.semibold))
                     .lineLimit(1)
             } else {
                 previewImage
 
                 Text(timeText)
-                    .font(.caption2.weight(.semibold))
+                    .font(.cc.sm.weight(.semibold))
                     .lineLimit(1)
                     .monospacedDigit()
             }

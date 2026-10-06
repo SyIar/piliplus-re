@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicOriginalPreview: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -53,7 +54,7 @@ struct DynamicOriginalPreview: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground).opacity(0.78))
+        .piliGlassCard()
         .overlay(alignment: .leading) {
             RoundedRectangle(cornerRadius: 2, style: .continuous)
                 .fill(appTintColor.opacity(0.58))

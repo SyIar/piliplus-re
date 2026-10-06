@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliSettingsSearchView: View {
     let onOpenRoute: (MineOverlayRoute) -> Void
@@ -12,12 +13,12 @@ struct PiliSettingsSearchView: View {
         ("多账号设置", "账号 登录 切换 播放 互动 评论 阅读 身份", .multiAccountSettings)
     ]
     var body: some View {
-        List {
+        PiliList {
             ForEach(entries.indices, id: \.self) { index in
                 let entry = entries[index]
                 if query.isEmpty || (entry.0 + " " + entry.1).localizedCaseInsensitiveContains(query.trimmingCharacters(in: .whitespacesAndNewlines)) {
                     Button { onOpenRoute(entry.2) } label: {
-                        VStack(alignment: .leading, spacing: 6) { Text(entry.0).font(.headline); Text(entry.1).font(.caption).foregroundStyle(.secondary) }
+                        VStack(alignment: .leading, spacing: 6) { Text(entry.0).font(.cc.baseBold); Text(entry.1).font(.cc.sm).foregroundStyle(.secondary) }
                     }
                 }
             }

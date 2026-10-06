@@ -1,11 +1,14 @@
 import SwiftUI
+import ChunUI
 
 struct PiliMemberExtrasView: View {
     @EnvironmentObject private var dependencies: AppDependencies
     let owner: VideoOwner
     var body: some View {
-        List(PiliMemberSection.allCases) { section in
-            NavigationLink(section.title) { PiliMemberSectionView(api: dependencies.api, owner: owner, section: section) }
+        PiliList {
+            ForEach(PiliMemberSection.allCases) { section in
+                NavigationLink(section.title) { PiliMemberSectionView(api: dependencies.api, owner: owner, section: section) }
+            }
         }.navigationTitle("更多空间内容")
     }
 }
@@ -24,7 +27,7 @@ private struct PiliMemberSectionView: View {
     @State private var error: String?
     @State private var generation = UUID()
     var body: some View {
-        List {
+        PiliList {
             if !levels.isEmpty {
                 Picker("充电等级", selection: $privilege) {
                     Text("默认").tag(-1)
@@ -34,9 +37,9 @@ private struct PiliMemberSectionView: View {
             ForEach(items, id: \.self) { item in row(item) }
             if let moreURL { AppLinkButton(url: moreURL) { Text("查看店铺更多商品") } }
             if busy { ProgressView() }
-            else if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load() } } }
+            else if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load() } } }
             else if more { Button("加载更多") { Task { await load() } } }
-            else if items.isEmpty { ContentUnavailableView("暂无可查看的内容", systemImage: "rectangle.stack", description: Text("该用户可能尚未发布，或未公开此项内容。")) }
+            else if items.isEmpty { PiliUnavailableView("暂无可查看的内容", systemImage: "rectangle.stack", description: Text("该用户可能尚未发布，或未公开此项内容。")) }
         }.navigationTitle(section.title).task { await load(reset: true) }.refreshable { await load(reset: true) }
             .onChange(of: privilege) { Task { await load(reset: true) } }
     }
@@ -46,7 +49,7 @@ private struct PiliMemberSectionView: View {
             let name = section == .guardList ? item["username"].piliString : item["nickname"].piliString
             let face = section == .guardList ? item["face"].piliString : item["avatar"].piliString
             VideoOwnerRouteLink(owner: .init(mid: mid, name: name, face: face)) {
-                HStack { avatar(face); Text(name); Spacer(); Text(section == .guardList ? guardTitle(item["guard_level"].piliInt) : "\(item["day"].piliInt) 天").font(.caption).foregroundStyle(.secondary) }
+                HStack { avatar(face); Text(name); Spacer(); Text(section == .guardList ? guardTitle(item["guard_level"].piliInt) : "\(item["day"].piliInt) 天").font(.cc.sm).foregroundStyle(.secondary) }
             }
         } else if section == .favorites, let folder = try? item.piliDecode(FavoriteFolder.self) {
             NavigationLink { PiliPublicFavoriteView(api: api, folder: folder) } label: { card(item) }
@@ -63,9 +66,9 @@ private struct PiliMemberSectionView: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text(item["title"].piliString).lineLimit(3)
                 if section == .shop {
-                    Text("\(item["netPrice"]["pricePrefix"].piliString)\(item["netPrice"]["priceSymbol"].piliString)\(item["netPrice"]["netPrice"].piliString)").font(.caption).foregroundStyle(.secondary)
-                    Text(item["itemSourceName"].piliString).font(.caption2)
-                } else if !item["publish_time_text"].piliString.isEmpty { Text(item["publish_time_text"].piliString).font(.caption).foregroundStyle(.secondary) }
+                    Text("\(item["netPrice"]["pricePrefix"].piliString)\(item["netPrice"]["priceSymbol"].piliString)\(item["netPrice"]["netPrice"].piliString)").font(.cc.sm).foregroundStyle(.secondary)
+                    Text(item["itemSourceName"].piliString).font(.cc.sm)
+                } else if !item["publish_time_text"].piliString.isEmpty { Text(item["publish_time_text"].piliString).font(.cc.sm).foregroundStyle(.secondary) }
             }
         }
     }

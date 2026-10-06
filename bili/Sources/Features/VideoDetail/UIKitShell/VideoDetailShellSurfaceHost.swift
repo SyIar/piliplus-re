@@ -865,14 +865,14 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             guard usesNarrowObservation else { return }
             experimentState.recordSettingsStatePublish()
         }
-        .sheet(isPresented: $isVideoListenQueuePresented) {
+        .piliSheet(isPresented: $isVideoListenQueuePresented) {
             NavigationStack {
                 SurfaceOnlyVideoListenQueuePage(
                     detailViewModel: detailViewModel,
                     closeSheet: { isVideoListenQueuePresented = false }
                 )
             }
-            .presentationDetents([.medium, .large])
+            .piliPresentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
     }
@@ -897,7 +897,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                 close: handleBackButton,
                 cast: {
                     visibility.markInteraction()
-                    AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .online(detailViewModel) }) }
+                    PiliPresentation.present(.sheet) { PiliDLNAView(source: { try .online(detailViewModel) }) }
                 },
                 settings: {
                     visibility.markInteraction(keepsVisible: true)
@@ -1290,7 +1290,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
 }
 
 struct SurfaceOnlyMoreControlsSheet: View {
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @ObservedObject var detailViewModel: VideoDetailViewModel
     @ObservedObject var viewModel: PlayerStateViewModel
     @ObservedObject var qualityStore: VideoDetailQualityControlRenderStore
@@ -1324,7 +1324,7 @@ struct SurfaceOnlyMoreControlsSheet: View {
             onToggleDanmaku: onToggleDanmaku,
             close: closeSheet
         )
-        .presentationDetents([.medium])
+        .piliPresentationDetents([.medium])
         .presentationDragIndicator(.visible)
     }
 
@@ -1358,7 +1358,7 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
                     Button {
                         piliPlaybackPreferences.setOrder(order)
                     } label: {
-                        Label(
+                        PiliLabel(
                             order.title,
                             systemImage: piliPlaybackPreferences.order == order
                                 ? "checkmark"
@@ -1367,7 +1367,7 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
                     }
                 }
             } label: {
-                Image(systemName: piliPlaybackPreferences.order.systemImage)
+                PiliIcon(systemName: piliPlaybackPreferences.order.systemImage, size: iconSize)
                     .font(.system(size: iconSize, weight: .semibold))
                     .frame(width: metrics.controlHeight, height: metrics.controlHeight)
             }
@@ -1379,7 +1379,7 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
                     Button {
                         detailViewModel.setVideoListenSleepTimer(option)
                     } label: {
-                        Label(
+                        PiliLabel(
                             option.title,
                             systemImage: detailViewModel.isPiliSleepTimerOptionSelected(option)
                                 ? "checkmark"
@@ -1400,12 +1400,12 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
         if let deadline = detailViewModel.videoListenSleepTimerDeadline {
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 Text(VideoListenSleepTimerCountdownFormatter.text(deadline: deadline, now: context.date))
-                    .font(.caption2.monospacedDigit().weight(.semibold))
+                    .font(.cc.sm.monospacedDigit().weight(.semibold))
                     .lineLimit(1)
                     .frame(width: max(48, metrics.controlHeight + 20), height: metrics.controlHeight)
             }
         } else {
-            Image(systemName: detailViewModel.videoListenSleepTimerOption.systemImage)
+            PiliIcon(systemName: detailViewModel.videoListenSleepTimerOption.systemImage, size: iconSize)
                 .font(.system(size: iconSize, weight: .semibold))
                 .frame(width: metrics.controlHeight, height: metrics.controlHeight)
         }
@@ -1530,18 +1530,18 @@ private struct VideoListenArtworkLayer: View {
         titleLines: Int
     ) -> some View {
         VStack(alignment: alignment, spacing: 6) {
-            Label("听视频中", systemImage: "headphones")
-                .font(.caption.weight(.semibold))
+            PiliLabel("听视频中", systemImage: "headphones")
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.white)
 
             Text(video.title)
-                .font(.headline)
+                .font(.cc.baseBold)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(textAlignment)
                 .lineLimit(titleLines)
 
             Text(ownerName)
-                .font(.subheadline)
+                .font(.cc.base)
                 .foregroundStyle(.white.opacity(0.76))
                 .lineLimit(1)
         }
@@ -1580,9 +1580,9 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                NavigationLink { PiliAudioLanguageView(viewModel: detailViewModel) } label: { Label("原声翻译", systemImage: "waveform") }
-                NavigationLink { PiliSuperResolutionSettingsView() } label: { Label("超分辨率", systemImage: "sparkles.tv") }
+            PiliList {
+                NavigationLink { PiliAudioLanguageView(viewModel: detailViewModel) } label: { PiliLabel("原声翻译", systemImage: "waveform") }
+                NavigationLink { PiliSuperResolutionSettingsView() } label: { PiliLabel("超分辨率", systemImage: "sparkles.tv") }
                 if detailViewModel.isVideoListenModeEnabled,
                    !detailViewModel.videoListenAudioVariants.isEmpty {
                     NavigationLink {
@@ -1592,7 +1592,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            Label("音质", systemImage: "waveform")
+                            PiliLabel("音质", systemImage: "waveform")
                             Spacer()
                             Text(detailViewModel.videoListenAudioAccessoryTitle)
                                 .foregroundStyle(.secondary)
@@ -1607,7 +1607,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            Label("清晰度", systemImage: qualityStore.qualityButtonSystemImage)
+                            PiliLabel("清晰度", systemImage: qualityStore.qualityButtonSystemImage)
                             Spacer()
                             Text(qualityStore.qualityAccessoryButtonTitle)
                                 .foregroundStyle(.secondary)
@@ -1624,7 +1624,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            Label("播放列表", systemImage: "list.bullet")
+                            PiliLabel("播放列表", systemImage: "list.bullet")
                             Spacer()
                             Text(detailViewModel.videoListenQueueAccessoryTitle)
                                 .foregroundStyle(.secondary)
@@ -1638,7 +1638,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            Label("播放顺序", systemImage: piliPlaybackPreferences.order.systemImage)
+                            PiliLabel("播放顺序", systemImage: piliPlaybackPreferences.order.systemImage)
                             Spacer()
                             Text(piliPlaybackPreferences.order.title)
                                 .foregroundStyle(.secondary)
@@ -1652,7 +1652,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            Label("定时关闭", systemImage: "timer")
+                            PiliLabel("定时关闭", systemImage: "timer")
                             Spacer()
                             Text(detailViewModel.videoListenSleepTimerAccessoryTitle)
                                 .foregroundStyle(.secondary)
@@ -1664,7 +1664,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                     if let source = detailViewModel.selectedPlayVariant?.videoURL {
                         NavigationLink {
                             PiliMediaCaptureView(source: source, time: viewModel.currentTime, duration: viewModel.duration ?? 0)
-                        } label: { Label("截图与动图", systemImage: "camera") }
+                        } label: { PiliLabel("截图与动图", systemImage: "camera") }
                     }
                     NavigationLink {
                         SurfaceOnlyDanmakuSettingsPage(
@@ -1672,7 +1672,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                             toggleDanmaku: onToggleDanmaku
                         )
                     } label: {
-                        Label("弹幕设置", systemImage: "text.bubble")
+                        PiliLabel("弹幕设置", systemImage: "text.bubble")
                     }
                 }
 
@@ -1683,7 +1683,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                     )
                 } label: {
                     HStack {
-                        Label("倍速", systemImage: "speedometer")
+                        PiliLabel("倍速", systemImage: "speedometer")
                         Spacer()
                         Text(viewModel.playbackRate.title)
                             .foregroundStyle(.secondary)
@@ -1701,7 +1701,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                                 }
                             }
                         } icon: {
-                            Image(systemName: "headphones")
+                            PiliIcon(systemName: "headphones")
                         }
                     }
                     .disabled(detailViewModel.isSwitchingVideoListenMode)
@@ -1712,7 +1712,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         get: { libraryStore.pictureInPictureEnabled },
                         set: { libraryStore.setPictureInPictureEnabled($0) }
                     )) {
-                        Label("画中画播放", systemImage: "pip")
+                        PiliLabel("画中画播放", systemImage: "pip")
                     }
                 }
 
@@ -1720,27 +1720,27 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                     get: { libraryStore.playerPerformanceOverlayEnabled },
                     set: { libraryStore.setPlayerPerformanceOverlayEnabled($0) }
                 )) {
-                    Label("播放性能诊断", systemImage: "waveform.path.ecg.rectangle")
+                    PiliLabel("播放性能诊断", systemImage: "waveform.path.ecg.rectangle")
                 }
 
                 Toggle(isOn: Binding(
                     get: { libraryStore.playerControlEdgeScrimEnabled },
                     set: { libraryStore.setPlayerControlEdgeScrimEnabled($0) }
                 )) {
-                    Label("播放控件边缘遮罩", systemImage: "rectangle.topthird.inset.filled")
+                    PiliLabel("播放控件边缘遮罩", systemImage: "rectangle.topthird.inset.filled")
                 }
 
-                Label("\(mediaFormatLabel)：\(videoFormatTitle)", systemImage: mediaFormatSystemImage)
+                PiliLabel("\(mediaFormatLabel)：\(videoFormatTitle)", systemImage: mediaFormatSystemImage)
                     .foregroundStyle(.secondary)
 
-                Label("解码：\(decodeTitle)", systemImage: "cpu")
+                PiliLabel("解码：\(decodeTitle)", systemImage: "cpu")
                     .foregroundStyle(.secondary)
 
                 Toggle(isOn: Binding(
                     get: { libraryStore.forceHardwareDecodeEnabled },
                     set: { libraryStore.setForceHardwareDecodeEnabled($0) }
                 )) {
-                    Label("硬解优先", systemImage: "cpu")
+                    PiliLabel("硬解优先", systemImage: "cpu")
                 }
 
                 Picker(selection: Binding(
@@ -1751,7 +1751,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         Text(policy.title).tag(policy)
                     }
                 } label: {
-                    Label("杜比视界渲染", systemImage: "sparkles.tv")
+                    PiliLabel("杜比视界渲染", systemImage: "sparkles.tv")
                 }
                 .pickerStyle(.navigationLink)
             }
@@ -2011,15 +2011,15 @@ private struct SurfaceOnlyLandscapeMoreHeader: View {
     var body: some View {
         ZStack {
             Text(title)
-                .font(.headline)
+                .font(.cc.baseBold)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
             HStack {
                 if canGoBack {
                     Button(action: goBack) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 15, weight: .semibold))
+                        PiliIcon(systemName: "chevron.left", size: 15)
+                            .font(.cc.baseBold)
                             .frame(width: 32, height: 32)
                     }
                     .buttonStyle(.plain)
@@ -2030,8 +2030,8 @@ private struct SurfaceOnlyLandscapeMoreHeader: View {
                 Spacer()
 
                 Button(action: close) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 13, weight: .semibold))
+                    PiliIcon(systemName: "xmark", size: 13)
+                        .font(.cc.smBold)
                         .frame(width: 32, height: 32)
                 }
                 .buttonStyle(.plain)
@@ -2375,11 +2375,11 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                         ProgressView()
                             .controlSize(.small)
                         Text("正在载入播放列表")
-                            .font(.subheadline)
+                            .font(.cc.base)
                             .foregroundStyle(.secondary)
                     } else {
                         Text(detailViewModel.videoListenQueueLoadFailed ? "播放列表载入失败" : "没有可播放内容")
-                            .font(.subheadline)
+                            .font(.cc.base)
                             .foregroundStyle(.secondary)
                         if detailViewModel.videoListenQueueLoadFailed {
                             Button("重新载入") {
@@ -2387,7 +2387,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                                     await detailViewModel.prepareVideoListenQueue()
                                 }
                             }
-                            .font(.subheadline.weight(.semibold))
+                            .font(.cc.base.weight(.semibold))
                         }
                     }
                 }
@@ -2423,7 +2423,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                             ProgressView()
                                 .controlSize(.small)
                             Text("正在载入更多视频")
-                                .font(.subheadline)
+                                .font(.cc.base)
                                 .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
@@ -2436,7 +2436,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                                 await detailViewModel.prepareVideoListenQueue()
                             }
                         }
-                        .font(.subheadline.weight(.semibold))
+                        .font(.cc.base.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                     } else if detailViewModel.videoListenQueueSession.isLoadingMore {
@@ -2573,13 +2573,13 @@ private struct SurfaceOnlyLandscapeToggleRow: View {
     var body: some View {
         Toggle(isOn: $isOn) {
             HStack(spacing: 12) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 16, weight: .semibold))
+                PiliIcon(systemName: systemImage, size: 16)
+                    .font(.cc.baseBold)
                     .foregroundStyle(.secondary)
                     .frame(width: 22)
 
                 Text(title)
-                    .font(.subheadline)
+                    .font(.cc.base)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
@@ -2587,7 +2587,7 @@ private struct SurfaceOnlyLandscapeToggleRow: View {
 
                 if let accessory {
                     Text(accessory)
-                        .font(.subheadline)
+                        .font(.cc.base)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -2628,20 +2628,20 @@ private struct SurfaceOnlyLandscapeMenuRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 16, weight: .semibold))
+                PiliIcon(systemName: systemImage, size: 16)
+                    .font(.cc.baseBold)
                     .foregroundStyle(.secondary)
                     .frame(width: 22)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.subheadline)
+                        .font(.cc.base)
                         .foregroundStyle(.primary)
                         .lineLimit(1)
 
                     if let subtitle, !subtitle.isEmpty {
                         Text(subtitle)
-                            .font(.caption)
+                            .font(.cc.sm)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
@@ -2651,14 +2651,14 @@ private struct SurfaceOnlyLandscapeMenuRow: View {
 
                 if let accessory {
                     Text(accessory)
-                        .font(.subheadline)
+                        .font(.cc.base)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
 
                 if showsChevron {
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
+                    PiliIcon(systemName: "chevron.right")
+                        .font(.cc.sm.weight(.semibold))
                         .foregroundStyle(.tertiary)
                 }
             }
@@ -2677,13 +2677,13 @@ private struct SurfaceOnlyLandscapeInfoRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 16, weight: .semibold))
+            PiliIcon(systemName: systemImage, size: 16)
+                .font(.cc.baseBold)
                 .foregroundStyle(.secondary)
                 .frame(width: 22)
 
             Text(title)
-                .font(.subheadline)
+                .font(.cc.base)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
@@ -2691,7 +2691,7 @@ private struct SurfaceOnlyLandscapeInfoRow: View {
 
             if let value {
                 Text(value)
-                    .font(.subheadline)
+                    .font(.cc.base)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
                     .lineLimit(2)
@@ -2708,7 +2708,7 @@ private struct SurfaceOnlyQualityChoicesPage: View {
     let selectPlayVariant: (PlayVariant) -> Void
 
     var body: some View {
-        List {
+        PiliList {
             if qualityStore.isSwitchingPlayQuality {
                 SurfaceOnlyQualitySwitchingIndicator()
                     .frame(maxWidth: .infinity)
@@ -2727,12 +2727,12 @@ private struct SurfaceOnlyQualityChoicesPage: View {
                             Text(item.title)
                             if let subtitle = item.subtitle, !subtitle.isEmpty {
                                 Text(subtitle)
-                                    .font(.caption)
+                                    .font(.cc.sm)
                                     .foregroundStyle(.secondary)
                             }
                         }
                     } icon: {
-                        Image(systemName: item.systemImage)
+                        PiliIcon(systemName: item.systemImage)
                     }
                 }
                 .disabled(item.isDisabled)
@@ -2754,7 +2754,7 @@ private struct SurfaceOnlyAudioChoicesPage: View {
     let closeSheet: () -> Void
 
     var body: some View {
-        List {
+        PiliList {
             if detailViewModel.isSwitchingVideoListenMode {
                 SurfaceOnlyAudioSwitchingIndicator()
                     .frame(maxWidth: .infinity)
@@ -2811,12 +2811,12 @@ private struct SurfaceOnlyAudioChoicesPage: View {
                 Text(title)
                 if !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(.caption)
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                 }
             }
         } icon: {
-            Image(systemName: systemImage)
+            PiliIcon(systemName: systemImage)
         }
     }
 
@@ -2835,7 +2835,7 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
     let closeSheet: () -> Void
 
     var body: some View {
-        List {
+        PiliList {
             if detailViewModel.videoListenQueueEntries.isEmpty {
                 VStack(spacing: 10) {
                     if detailViewModel.isLoadingVideoListenQueue {
@@ -2868,19 +2868,19 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
                                     Text(entry.title)
                                     if let subtitle = entry.subtitle {
                                         Text(subtitle)
-                                            .font(.caption)
+                                            .font(.cc.sm)
                                             .foregroundStyle(.secondary)
                                     }
                                 }
                                 Spacer()
                                 if entry.isCurrent {
                                     Text("正在播放")
-                                        .font(.caption)
+                                        .font(.cc.sm)
                                         .foregroundStyle(.secondary)
                                 }
                             }
                         } icon: {
-                            Image(systemName: entry.isCurrent ? "checkmark.circle.fill" : "play.circle")
+                            PiliIcon(systemName: entry.isCurrent ? "checkmark.circle.fill" : "play.circle")
                         }
                     }
                     .task {
@@ -2894,7 +2894,7 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
                         ProgressView()
                             .controlSize(.small)
                         Text("正在载入更多视频")
-                            .font(.subheadline)
+                            .font(.cc.base)
                             .foregroundStyle(.secondary)
                         Spacer()
                     }
@@ -2936,7 +2936,7 @@ private struct SurfaceOnlyVideoListenPlaybackOrderPage: View {
     let closeSheet: () -> Void
 
     var body: some View {
-        List {
+        PiliList {
             ForEach(PlaybackOrder.allCases, id: \.rawValue) { order in
                 Button {
                     piliPlaybackPreferences.setOrder(order)
@@ -2946,11 +2946,11 @@ private struct SurfaceOnlyVideoListenPlaybackOrderPage: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(order.title)
                             Text(order.subtitle)
-                                .font(.caption)
+                                .font(.cc.sm)
                                 .foregroundStyle(.secondary)
                         }
                     } icon: {
-                        Image(systemName: piliPlaybackPreferences.order == order
+                        PiliIcon(systemName: piliPlaybackPreferences.order == order
                             ? "checkmark.circle.fill"
                             : order.systemImage)
                     }
@@ -2973,13 +2973,13 @@ private struct SurfaceOnlyVideoListenSleepTimerPage: View {
     let closeSheet: () -> Void
 
     var body: some View {
-        List {
+        PiliList {
             ForEach(VideoListenSleepTimerOption.allCases) { option in
                 Button {
                     detailViewModel.setVideoListenSleepTimer(option)
                     closeSheet()
                 } label: {
-                    Label(
+                    PiliLabel(
                         option.title,
                         systemImage: detailViewModel.isPiliSleepTimerOptionSelected(option)
                             ? "checkmark.circle.fill"
@@ -3218,7 +3218,7 @@ private struct VideoDetailFullscreenClockControl: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
             Text(context.date, format: .dateTime.hour().minute())
-                .font(.caption.monospacedDigit().weight(.semibold))
+                .font(.cc.sm.monospacedDigit().weight(.semibold))
                 .lineLimit(1)
                 .padding(.horizontal, 12)
                 .frame(height: PlayerNativeControlMetrics.landscape.controlHeight)
@@ -3241,9 +3241,9 @@ private struct VideoDetailFullscreenBatteryControl: View {
         HStack(spacing: 4) {
             Text(percentageText)
                 .monospacedDigit()
-            Image(systemName: batterySymbolName)
+            PiliIcon(systemName: batterySymbolName)
         }
-        .font(.caption.weight(.semibold))
+        .font(.cc.sm.weight(.semibold))
         .lineLimit(1)
         .padding(.horizontal, 10)
         .frame(height: PlayerNativeControlMetrics.landscape.controlHeight)
@@ -3302,7 +3302,7 @@ private extension View {
     @ViewBuilder
     func surfaceOnlyLandscapeGlassPanel<S: Shape>(in shape: S) -> some View {
         self
-            .background(Color(.systemBackground).opacity(0.22), in: shape)
+            .background(Color.cc.background.opacity(0.22), in: shape)
             .biliGlassEffect(
                 interactive: false,
                 in: shape
@@ -3313,7 +3313,7 @@ private extension View {
     func surfaceOnlyLandscapeGlassGroup() -> some View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
         self
-            .background(Color(.secondarySystemGroupedBackground).opacity(0.34), in: shape)
+            .background(Color.cc.card.opacity(0.34), in: shape)
             .biliPlayerClearGlass(interactive: false, in: shape)
     }
 }
@@ -3323,13 +3323,13 @@ private struct SurfaceOnlyRateChoicesPage: View {
     let closeSheet: () -> Void
 
     var body: some View {
-        List {
+        PiliList {
             ForEach(BiliPlaybackRate.allCases) { rate in
                 Button {
                     viewModel.setPlaybackRate(rate)
                     closeSheet()
                 } label: {
-                    Label(
+                    PiliLabel(
                         rate.title,
                         systemImage: rate == viewModel.playbackRate ? "checkmark" : "speedometer"
                     )

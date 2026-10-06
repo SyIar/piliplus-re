@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DanmakuSettingsHeaderSectionContent: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -11,8 +12,8 @@ struct DanmakuSettingsHeaderSectionContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Label("弹幕", systemImage: isDanmakuEnabled ? "text.bubble.fill" : "text.bubble")
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel("弹幕", systemImage: isDanmakuEnabled ? "text.bubble.fill" : "text.bubble")
+                    .font(.cc.base.weight(.semibold))
                     .foregroundStyle(isDanmakuEnabled ? appTintColor : .secondary)
 
                 Spacer(minLength: 8)
@@ -32,7 +33,7 @@ struct DanmakuSettingsHeaderSectionContent: View {
             }
 
             Text(summary)
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 

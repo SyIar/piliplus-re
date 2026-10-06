@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerStartupLoadingChrome: View {
     let isBuffering: Bool
@@ -12,7 +13,7 @@ struct PlayerStartupLoadingChrome: View {
                 .accessibilityHidden(true)
 
             Text(isBuffering ? "缓冲中" : "加载中")
-                .font(.caption2.weight(.semibold))
+                .font(.cc.sm.weight(.semibold))
         }
         .biliLiquidGlassForeground(shadowOpacity: 0.20)
         .padding(.horizontal, 14)

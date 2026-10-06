@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct MineContentFilterSettingsView: View {
     @EnvironmentObject private var dependencies: AppDependencies
@@ -9,10 +10,10 @@ struct MineContentFilterSettingsView: View {
     @ObservedObject var libraryStore: LibraryStore
 
     var body: some View {
-        Form {
+        PiliForm {
             Section {
                 NavigationLink("视频弹幕屏蔽规则") { PiliDanmakuRulesView(api: dependencies.api) }
-                NavigationLink { PiliCommentKeywordSettingsView() } label: { Label("评论关键词过滤", systemImage: "text.bubble.badge.minus") }
+                NavigationLink { PiliCommentKeywordSettingsView() } label: { PiliLabel("评论关键词过滤", systemImage: "text.bubble.badge.minus") }
                 Toggle(isOn: Binding(
                     get: { libraryStore.blocksAdDynamics },
                     set: { libraryStore.setBlocksAdDynamics($0) }
@@ -44,7 +45,7 @@ struct MineContentFilterSettingsView: View {
                 }
 
                 Text("广告动态会按常见推广关键词过滤；带货动态会按 B 站商品组件和商品元数据过滤；自定义关键词会匹配动态正文、标题和转发内容。")
-                    .font(.footnote)
+                    .font(.cc.sm)
                     .foregroundStyle(.secondary)
             }
 
@@ -56,7 +57,7 @@ struct MineContentFilterSettingsView: View {
                 NavigationLink("正则、分区与关注豁免") { PiliAdvancedRecommendFilterView(libraryStore: libraryStore) }
                 Toggle("屏蔽黑名单用户的视频", isOn: $blocksCreators)
                 Button("同步黑名单（\(blacklisted.ids.count) 位）") { Task { await blacklisted.refresh(api: dependencies.api, force: true) } }
-                if let error = blacklisted.error { Text(error).font(.caption).foregroundStyle(.secondary) }
+                if let error = blacklisted.error { Text(error).font(.cc.sm).foregroundStyle(.secondary) }
                 Picker(selection: Binding(
                     get: { libraryStore.recommendMinimumDurationSeconds },
                     set: { libraryStore.setRecommendMinimumDurationSeconds($0) }
@@ -110,14 +111,15 @@ struct MineContentFilterSettingsView: View {
                 }
 
                 Text("默认只过滤首页推荐；打开后也会过滤视频详情页相关推荐。")
-                    .font(.footnote)
+                    .font(.cc.sm)
                     .foregroundStyle(.secondary)
             }
         }
         .tint(libraryStore.appTintColor)
         .formStyle(.grouped)
         .nativeTopScrollEdgeEffect()
-        .hiddenInlineNavigationTitle()
+        .navigationTitle("内容过滤")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func recommendDurationTitle(_ seconds: Int) -> String {

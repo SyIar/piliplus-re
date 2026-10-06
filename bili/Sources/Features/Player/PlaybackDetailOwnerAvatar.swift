@@ -52,7 +52,7 @@ private struct PlaybackDetailOwnerAvatarImage: View {
 
     var body: some View {
         AvatarRemoteImage(urlString: urlString, pixelSize: pixelSize) {
-            Image(systemName: "person.crop.circle.fill")
+            PiliIcon(systemName: "person.crop.circle.fill")
                 .resizable()
                 .foregroundStyle(.secondary)
         }

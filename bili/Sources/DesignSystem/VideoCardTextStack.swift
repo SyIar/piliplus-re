@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoCardTextStack: View {
     let display: VideoCardDisplayModel
@@ -51,8 +52,8 @@ struct VideoCardTextStack: View {
             BilibiliUPBadge(size: 14)
         } else {
             AvatarRemoteImage(urlString: display.avatarURLString, pixelSize: 48) {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 13, weight: .medium))
+                PiliIcon(systemName: "person.crop.circle.fill", size: 13)
+                    .font(.cc.sm)
                     .foregroundStyle(.tertiary)
             }
             .frame(width: 14, height: 14)

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct UploaderFollowButton: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -11,12 +12,12 @@ struct UploaderFollowButton: View {
                 Button(action: toggleFollow) {
                     label
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
             } else {
                 Button(action: toggleFollow) {
                     label
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
             }
         }
         .buttonBorderShape(.capsule)
@@ -31,12 +32,12 @@ struct UploaderFollowButton: View {
                 ProgressView()
                     .controlSize(.small)
             } else {
-                Image(systemName: viewModel.isFollowing ? "checkmark" : "plus")
-                    .font(.caption.weight(.bold))
+                PiliIcon(systemName: viewModel.isFollowing ? "checkmark" : "plus")
+                    .font(.cc.sm.weight(.bold))
             }
 
             Text(viewModel.isFollowing ? "已关注" : "关注")
-                .font(.caption.weight(.semibold))
+                .font(.cc.sm.weight(.semibold))
         }
         .frame(minWidth: 62)
     }

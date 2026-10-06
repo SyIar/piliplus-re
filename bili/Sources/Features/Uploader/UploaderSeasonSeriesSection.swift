@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct UploaderSeasonSeriesSection: View {
     @ObservedObject var viewModel: UploaderViewModel
@@ -49,19 +50,19 @@ struct UploaderSeasonSeriesSection: View {
             Button {
                 Task { await viewModel.loadMoreSeasonSeries() }
             } label: {
-                Label("加载更多", systemImage: "chevron.down")
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel("加载更多", systemImage: "chevron.down")
+                    .font(.cc.base.weight(.semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .foregroundStyle(.primary)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
             .padding(.top, 6)
         } else {
             Text("没有更多合集了")
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
@@ -115,7 +116,7 @@ private struct UploaderSeasonSeriesSkeletonCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(10)
-        .background(Color(.secondarySystemGroupedBackground).opacity(0.82), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(Color.cc.card.opacity(0.82), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
@@ -128,7 +129,7 @@ private struct UploaderSeasonSeriesCard: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(item.title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.cc.base.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -142,21 +143,21 @@ private struct UploaderSeasonSeriesCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(10)
-        .background(Color(.secondarySystemGroupedBackground).opacity(0.82), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(Color.cc.card.opacity(0.82), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(item.title)
     }
 
     private var metadata: some View {
         HStack(spacing: 10) {
-            Label("\(item.total ?? 0) 个视频", systemImage: "play.rectangle.stack")
+            PiliLabel("\(item.total ?? 0) 个视频", systemImage: "play.rectangle.stack")
 
             if !BiliFormatters.publishDate(item.updateTime).isEmpty,
                BiliFormatters.publishDate(item.updateTime) != "-" {
-                Label(BiliFormatters.publishDate(item.updateTime), systemImage: "calendar")
+                PiliLabel(BiliFormatters.publishDate(item.updateTime), systemImage: "calendar")
             }
         }
-        .font(.caption)
+        .font(.cc.sm)
         .foregroundStyle(.secondary)
         .lineLimit(1)
     }
@@ -181,8 +182,8 @@ private struct UploaderSeasonSeriesCover: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(Color(.tertiarySystemFill))
                     .overlay {
-                        Image(systemName: "rectangle.stack")
-                            .font(.title3.weight(.semibold))
+                        PiliIcon(systemName: "rectangle.stack")
+                            .font(.cc.baseBold.weight(.semibold))
                             .foregroundStyle(.secondary)
                     }
             }
@@ -190,7 +191,7 @@ private struct UploaderSeasonSeriesCover: View {
             .clipped()
 
             Text("\(item.kindTitle): \(item.total ?? 0)")
-                .font(.caption2.weight(.semibold))
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
@@ -209,18 +210,18 @@ private struct UploaderSeasonSeriesPreview: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text("最新：\(archive.title)")
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
             HStack(spacing: 10) {
-                Label(BiliFormatters.compactCount(archive.stat?.view), systemImage: "play.fill")
+                PiliLabel(BiliFormatters.compactCount(archive.stat?.view), systemImage: "play.fill")
 
                 if archive.duration != nil {
-                    Label(BiliFormatters.duration(archive.duration), systemImage: "clock")
+                    PiliLabel(BiliFormatters.duration(archive.duration), systemImage: "clock")
                 }
             }
-            .font(.caption2)
+            .font(.cc.sm)
             .foregroundStyle(.tertiary)
             .lineLimit(1)
         }

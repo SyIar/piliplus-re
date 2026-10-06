@@ -21,30 +21,30 @@ struct MineAccountSection: View {
                 )
 
                 Button {
-                    AppHelper.shared.presentSheet(.sheet) { PiliProfileView(api: dependencies.api) }
-                } label: { Label("编辑个人资料", systemImage: "person.crop.circle.badge.pencil") }
+                    PiliPresentation.present(.sheet) { PiliProfileView(api: dependencies.api) }
+                } label: { PiliLabel("编辑个人资料", systemImage: "person.crop.circle.badge.pencil") }
 
                 Button {
-                    AppHelper.shared.presentSheet(.sheet) {
+                    PiliPresentation.present(.sheet) {
                         PiliRelationsView(api: dependencies.api)
                             .environmentObject(dependencies)
                             .environmentObject(libraryStore)
                             .environmentObject(sessionStore)
                     }
-                } label: { Label("关注、粉丝与黑名单", systemImage: "person.2") }
+                } label: { PiliLabel("关注、粉丝与黑名单", systemImage: "person.2") }
 
                 if libraryStore.multiAccountExperimentEnabled {
                     MineOverlayNavigationButton {
                         onOpenRoute(.multiAccountSettings)
                     } label: {
-                        Label("多账号与用途", systemImage: "person.2.badge.gearshape")
+                        PiliLabel("多账号与用途", systemImage: "person.2.badge.gearshape")
                     }
                 }
 
                 Button(role: .destructive) {
                     viewModel.logout()
                 } label: {
-                    Label(
+                    PiliLabel(
                         libraryStore.multiAccountExperimentEnabled ? "退出所有账号" : "退出登录",
                         systemImage: "rectangle.portrait.and.arrow.right"
                     )

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 import UIKit
 
 struct PlayerPerformanceOverlayHeaderRow: View {
@@ -8,13 +9,13 @@ struct PlayerPerformanceOverlayHeaderRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: "waveform.path.ecg.rectangle")
-                .font(.caption2.weight(.bold))
+            PiliIcon(systemName: "waveform.path.ecg.rectangle")
+                .font(.cc.sm.weight(.bold))
             Text("播放性能")
-                .font(.caption.weight(.semibold))
+                .font(.cc.sm.weight(.semibold))
             Spacer(minLength: 8)
             Text(PlayerPerformanceOverlayFormatting.shortMetricsID(metricsID))
-                .font(.caption2.monospaced())
+                .font(.cc.sm.monospaced())
                 .foregroundStyle(.secondary)
             if copyTextProvider() != nil {
                 Button {
@@ -26,8 +27,8 @@ struct PlayerPerformanceOverlayHeaderRow: View {
                         didCopy = false
                     }
                 } label: {
-                    Image(systemName: didCopy ? "checkmark.circle.fill" : "doc.on.doc")
-                        .font(.caption.weight(.semibold))
+                    PiliIcon(systemName: didCopy ? "checkmark.circle.fill" : "doc.on.doc")
+                        .font(.cc.sm.weight(.semibold))
                         .foregroundStyle(didCopy ? .green : .secondary)
                         .frame(width: 24, height: 24)
                         .contentShape(Rectangle())

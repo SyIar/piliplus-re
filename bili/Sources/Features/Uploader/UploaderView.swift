@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct UploaderView: View {
     @EnvironmentObject private var dependencies: AppDependencies
@@ -60,7 +61,7 @@ private struct UploaderInitialLoadingView: View {
                 .padding(.vertical, 12)
             }
             .scrollDisabled(true)
-            .background(Color(.systemBackground))
+            .background(Color.cc.background)
         }
         .allowsHitTesting(false)
         .accessibilityLabel("正在加载 UP 主主页")

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayStartupGapsSection: View {
     let message: String
@@ -6,11 +7,11 @@ struct PlayerPerformanceOverlayStartupGapsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Startup gaps")
-                .font(.caption2.weight(.semibold))
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.secondary)
 
             Text(message)
-                .font(.caption2.monospacedDigit())
+                .font(.cc.sm.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)

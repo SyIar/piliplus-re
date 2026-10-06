@@ -10,7 +10,7 @@ struct VideoDetailPlayerBackButton: View {
             Haptics.light()
             action()
         }) {
-            Image(systemName: "chevron.left")
+            PiliIcon(systemName: "chevron.left", size: iconSize)
                 .font(.system(size: iconSize, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(

@@ -20,7 +20,7 @@ struct PiliNotesLibraryView: View {
     }
     var body: some View {
         NavigationStack {
-            List(selection: $selection) {
+            PiliSelectionList(selection: $selection) {
                 if let video, let aid = video.aid {
                     NavigationLink {
                         PiliNoteEditorView(api: api, aid: aid, initialTitle: video.title, noteID: nil, initialText: "", time: nil)
@@ -182,7 +182,7 @@ struct PiliNoteEditorView: View {
         _text = State(initialValue: draft?["text"] as? String ?? initialText)
     }
     var body: some View {
-        Form {
+        PiliForm {
             PiliFullNoteEditorLink(api: api, aid: aid)
             TextField("笔记标题", text: $title)
             TextEditor(text: $text).font(.cc.base).frame(minHeight: 260)

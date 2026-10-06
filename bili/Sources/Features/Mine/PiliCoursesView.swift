@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliCoursesView: View {
     let api: BiliAPIClient
@@ -9,18 +10,18 @@ struct PiliCoursesView: View {
     @State private var busy = false
     @State private var error: String?
     var body: some View {
-        List {
+        PiliList {
             ForEach(items, id: \.self) { item in
                 NavigationLink {
                     PiliCoursePlaybackView(api: api, route: .init(seasonID: item["season_id"].piliInt))
                 } label: {
                     HStack {
                         CachedRemoteImage(url: URL(string: item["cover"].piliString.normalizedBiliURL()), targetPixelSize: 260) { $0.resizable().scaledToFill() } placeholder: { Color.clear }.frame(width: 90, height: 60).clipped()
-                        VStack(alignment: .leading, spacing: 5) { Text(item["title"].piliString); Text(item["status"].piliString).font(.caption).foregroundStyle(.secondary) }
+                        VStack(alignment: .leading, spacing: 5) { Text(item["title"].piliString); Text(item["status"].piliString).font(.cc.sm).foregroundStyle(.secondary) }
                     }
                 }
             }
-            if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load() } } }
+            if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load() } } }
             else if busy { ProgressView() }
             else if hasMore { Button("加载更多") { Task { await load() } } }
             else if items.isEmpty { Text("暂无课程") }
@@ -49,7 +50,7 @@ struct PiliCoursePlaybackView: View {
     var body: some View {
         Group {
             if let video { VideoDetailView(seedVideo: video) }
-            else if let error { ContentUnavailableView { Label("课程加载失败", systemImage: "exclamationmark.triangle") } description: { Text(error) } actions: { Button("重试") { Task { await load() } } } }
+            else if let error { ContentUnavailableView { PiliLabel("课程加载失败", systemImage: "exclamationmark.triangle") } description: { Text(error) } actions: { Button("重试") { Task { await load() } } } }
             else { ProgressView("加载课程") }
         }.task(id: route) { await load() }
     }

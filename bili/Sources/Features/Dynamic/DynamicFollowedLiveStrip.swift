@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicTopUploaderStripItem: Identifiable, Hashable {
     let owner: VideoOwner
@@ -104,8 +105,8 @@ private struct FollowedLiveAvatar: View {
         VStack(spacing: 5) {
             ZStack(alignment: .bottom) {
                 AvatarRemoteImage(urlString: item.owner.face, pixelSize: 96) {
-                    Image(systemName: "person.crop.circle.fill")
-                        .font(.system(size: 44))
+                    PiliIcon(systemName: "person.crop.circle.fill", size: 44)
+                        .font(.cc.lg)
                         .foregroundStyle(.tertiary)
                 }
                 .frame(width: 48, height: 48)
@@ -118,7 +119,7 @@ private struct FollowedLiveAvatar: View {
 
                 if item.isLive {
                     Text("直播中")
-                        .font(.system(size: 8, weight: .bold))
+                        .font(.cc.smBold)
                         .foregroundStyle(.primary)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 2.5)

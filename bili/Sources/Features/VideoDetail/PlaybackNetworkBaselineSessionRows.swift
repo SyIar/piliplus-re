@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlaybackNetworkBaselineSessionRows: View {
     let session: PlayerPerformanceSession?
@@ -12,7 +13,7 @@ struct PlaybackNetworkBaselineSessionRows: View {
             PlaybackNetworkBaselineSessionMessageRows(session: session)
         } else {
             Text("等待播放性能事件")
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
         }
     }

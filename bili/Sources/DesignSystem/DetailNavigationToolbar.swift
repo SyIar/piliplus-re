@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 private enum DetailToolbarMetrics {
     static let avatarSide: CGFloat = 28
@@ -17,7 +18,7 @@ struct DetailNavigationOwnerLabel: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(displayName)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.cc.base.weight(.semibold))
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .foregroundStyle(.primary)
@@ -25,7 +26,7 @@ struct DetailNavigationOwnerLabel: View {
 
                 if let subtitle = displaySubtitle {
                     Text(subtitle)
-                        .font(.caption2)
+                        .font(.cc.sm)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .foregroundStyle(.secondary)
@@ -55,7 +56,7 @@ struct DetailToolbarAvatar: View {
 
     var body: some View {
         AvatarRemoteImage(urlString: urlString, pixelSize: 72) {
-            Image(systemName: "person.crop.circle.fill")
+            PiliIcon(systemName: "person.crop.circle.fill")
                 .resizable()
                 .foregroundStyle(.secondary)
         }
@@ -104,7 +105,7 @@ struct DetailToolbarFollowButton: View {
     private var button: some View {
         Button(action: action) {
             Text(isFollowing ? "已关注" : "关注")
-                .font(.caption.weight(.semibold))
+                .font(.cc.sm.weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.86)
                 .padding(.horizontal, isFollowing ? 8 : 10)

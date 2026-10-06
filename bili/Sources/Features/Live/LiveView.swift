@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LiveView: View {
     @EnvironmentObject private var dependencies: AppDependencies
@@ -19,7 +20,7 @@ struct LiveView: View {
                     }
                 }
                 .nativeTopScrollEdgeEffect()
-                .background(Color(.systemBackground))
+                .background(Color.cc.background)
                 .task {
                     holder.configure(api: dependencies.api)
                 }
@@ -27,7 +28,7 @@ struct LiveView: View {
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink { PiliLiveExploreView(api: dependencies.api) } label: { Label("分区与关注", systemImage: "square.grid.2x2") }
+                NavigationLink { PiliLiveExploreView(api: dependencies.api) } label: { PiliLabel("分区与关注", systemImage: "square.grid.2x2") }
             }
         }
         .task {

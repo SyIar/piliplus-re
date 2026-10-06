@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LiveRoomPlayerHero: View {
     @EnvironmentObject private var dependencies: AppDependencies
@@ -42,7 +43,7 @@ struct LiveRoomPlayerHero: View {
     private var streamFallbackMessage: some View {
         if let message = viewModel.streamFallbackMessage, viewModel.playerViewModel?.hasPresentedPlayback != true {
             Text(message)
-                .font(.caption.weight(.semibold))
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)

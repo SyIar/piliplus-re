@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlaybackNetworkProbeSection: View {
     @ObservedObject var libraryStore: LibraryStore
@@ -32,9 +33,9 @@ struct PlaybackNetworkProbeSection: View {
                 }
 
                 if snapshot.isWeakReferenceOnly {
-                    Label("本次没有真实播放地址，只能判断 Host 是否有响应；403/959 是 CDN 拒绝裸探测，不代表真实播放失败。", systemImage: "exclamationmark.triangle")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                    PiliLabel("本次没有真实播放地址，只能判断 Host 是否有响应；403/959 是 CDN 拒绝裸探测，不代表真实播放失败。", systemImage: "exclamationmark.triangle")
+                        .font(.cc.sm)
+                        .foregroundStyle(Color.cc.warning)
                 }
 
                 if !snapshot.results.isEmpty {
@@ -43,17 +44,17 @@ struct PlaybackNetworkProbeSection: View {
                             PlaybackNetworkProbeResultRow(result: result)
                         }
                     } label: {
-                        Label("测速排行", systemImage: "list.number")
+                        PiliLabel("测速排行", systemImage: "list.number")
                     }
                 }
 
                 if isPlaybackCDNProbeSnapshotExpired(snapshot) {
-                    Label("测速结果超过 \(playbackCDNProbeRefreshIntervalTitle)，自动 CDN 可能需要重新测速。", systemImage: "clock.badge.exclamationmark")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                    PiliLabel("测速结果超过 \(playbackCDNProbeRefreshIntervalTitle)，自动 CDN 可能需要重新测速。", systemImage: "clock.badge.exclamationmark")
+                        .font(.cc.sm)
+                        .foregroundStyle(Color.cc.warning)
                 }
             } else {
-                ContentUnavailableView(
+                PiliUnavailableView(
                     "暂无 CDN 测速结果",
                     systemImage: "network.slash",
                     description: Text("进入我的页面执行一次 CDN 测速后，这里会显示推荐节点和延迟。")

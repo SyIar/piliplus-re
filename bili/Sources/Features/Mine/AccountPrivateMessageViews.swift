@@ -1,6 +1,7 @@
 import ImageIO
 import PhotosUI
 import SwiftUI
+import ChunUI
 import UIKit
 
 struct AccountPrivateMessageSessionsView: View {
@@ -15,11 +16,11 @@ struct AccountPrivateMessageSessionsView: View {
     @State private var isMarkingAllRead = false
 
     var body: some View {
-        List {
+        PiliList {
             if case .failed(let message) = state, !sessions.isEmpty {
                 Section {
                     HStack(spacing: 12) {
-                        Label("刷新失败", systemImage: "exclamationmark.triangle")
+                        PiliLabel("刷新失败", systemImage: "exclamationmark.triangle")
                             .foregroundStyle(.secondary)
 
                         Spacer(minLength: 8)
@@ -27,7 +28,7 @@ struct AccountPrivateMessageSessionsView: View {
                         Button("重试") {
                             Task { await load() }
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.glass)
                         .controlSize(.small)
                     }
                 } footer: {
@@ -56,7 +57,7 @@ struct AccountPrivateMessageSessionsView: View {
                     Button {
                         Task { await togglePinned(session) }
                     } label: {
-                        Label(
+                        PiliLabel(
                             session.isPinned ? "取消置顶" : "置顶聊天",
                             systemImage: session.isPinned ? "pin.slash" : "pin"
                         )
@@ -65,7 +66,7 @@ struct AccountPrivateMessageSessionsView: View {
                     Button {
                         Task { await toggleMuted(session) }
                     } label: {
-                        Label(
+                        PiliLabel(
                             session.isMuted ? "关闭免打扰" : "开启免打扰",
                             systemImage: session.isMuted ? "bell" : "bell.slash"
                         )
@@ -74,7 +75,7 @@ struct AccountPrivateMessageSessionsView: View {
                     Button(role: .destructive) {
                         pendingRemoval = session
                     } label: {
-                        Label("删除会话", systemImage: "trash")
+                        PiliLabel("删除会话", systemImage: "trash")
                     }
                 }
                 .listRowInsets(
@@ -99,18 +100,18 @@ struct AccountPrivateMessageSessionsView: View {
                         Button {
                             Task { await markAllRead() }
                         } label: {
-                            Label("全部已读", systemImage: "checkmark.circle")
+                            PiliLabel("全部已读", systemImage: "checkmark.circle")
                         }
                         .disabled(!hasUnreadSessions || state.isLoading)
 
                         Button {
                             Task { await load() }
                         } label: {
-                            Label("刷新", systemImage: "arrow.clockwise")
+                            PiliLabel("刷新", systemImage: "arrow.clockwise")
                         }
                         .disabled(state.isLoading)
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        PiliIcon(systemName: "ellipsis.circle")
                     }
                     .accessibilityLabel("私信操作")
                 }
@@ -123,7 +124,7 @@ struct AccountPrivateMessageSessionsView: View {
         .refreshable {
             await load()
         }
-        .confirmationDialog(
+        .piliConfirmation(
             "删除与该用户的会话？",
             isPresented: Binding(
                 get: { pendingRemoval != nil },
@@ -132,28 +133,24 @@ struct AccountPrivateMessageSessionsView: View {
             titleVisibility: .visible
         ) {
             if let pendingRemoval {
-                Button("删除会话", role: .destructive) {
+                PiliAlertButton("删除会话", role: .destructive) {
                     self.pendingRemoval = nil
                     Task { await remove(pendingRemoval) }
                 }
             }
-            Button("取消", role: .cancel) {
+            PiliAlertButton("取消", role: .cancel) {
                 pendingRemoval = nil
             }
-        } message: {
-            Text("只会删除会话记录，不会拉黑对方。之后收到或发送新私信时，会话会重新出现。")
-        }
-        .alert(
+        } message: { "只会删除会话记录，不会拉黑对方。之后收到或发送新私信时，会话会重新出现。" }
+        .piliAlert(
             "会话操作失败",
             isPresented: Binding(
                 get: { actionErrorMessage != nil },
                 set: { if !$0 { actionErrorMessage = nil } }
             )
         ) {
-            Button("好") { actionErrorMessage = nil }
-        } message: {
-            Text(actionErrorMessage ?? "请稍后重试")
-        }
+            PiliAlertButton("好") { actionErrorMessage = nil }
+        } message: { actionErrorMessage ?? "请稍后重试" }
     }
 
     @ViewBuilder
@@ -164,17 +161,17 @@ struct AccountPrivateMessageSessionsView: View {
                 ProgressView("正在加载私信")
             case .failed(let message):
                 ContentUnavailableView {
-                    Label("加载私信失败", systemImage: "exclamationmark.triangle")
+                    PiliLabel("加载私信失败", systemImage: "exclamationmark.triangle")
                 } description: {
                     Text(message)
                 } actions: {
                     Button("重试") {
                         Task { await load() }
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.glassProminent)
                 }
             case .idle, .loaded:
-                ContentUnavailableView("暂时没有私信", systemImage: "bubble.left.and.bubble.right")
+                PiliUnavailableView("暂时没有私信", systemImage: "bubble.left.and.bubble.right")
             }
         } else if filteredSessions.isEmpty {
             ContentUnavailableView.search(text: searchText)
@@ -347,8 +344,8 @@ private struct AccountPrivateMessageSessionRow: View {
     var body: some View {
         HStack(spacing: 12) {
             AvatarRemoteImage(urlString: session.actor.avatarURLString, pixelSize: 128) {
-                Image(systemName: "person.crop.circle")
-                    .font(.title3)
+                PiliIcon(systemName: "person.crop.circle")
+                    .font(.cc.baseBold)
                     .foregroundStyle(.secondary)
             }
             .frame(width: 52, height: 52)
@@ -364,14 +361,14 @@ private struct AccountPrivateMessageSessionRow: View {
                         .lineLimit(1)
 
                     if session.isMuted {
-                        Image(systemName: "bell.slash.fill")
-                            .font(.caption2)
+                        PiliIcon(systemName: "bell.slash.fill")
+                            .font(.cc.sm)
                             .foregroundStyle(.secondary)
                     }
 
                     if session.isPinned {
-                        Image(systemName: "pin.fill")
-                            .font(.caption2)
+                        PiliIcon(systemName: "pin.fill")
+                            .font(.cc.sm)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -529,12 +526,12 @@ struct AccountPrivateMessageConversationView: View {
                 NavigationLink {
                     PiliChatSettingsView(api: dependencies.api, talkerID: session.talkerID)
                 } label: {
-                    Image(systemName: "slider.horizontal.3")
+                    PiliIcon(systemName: "slider.horizontal.3")
                 }
                 .accessibilityLabel("聊天设置")
             }
         }
-        .sheet(isPresented: $showsEmotePicker) {
+        .piliSheet(isPresented: $showsEmotePicker) {
             AccountPrivateMessageEmotePicker(
                 emotes: Array(viewModel.inlineEmotes.values),
                 onSelect: { token in
@@ -542,16 +539,16 @@ struct AccountPrivateMessageConversationView: View {
                     isComposerFocused = true
                 }
             )
-            .presentationDetents([.medium, .large])
+            .piliPresentationDetents([.medium, .large])
         }
-        .sheet(item: $reportingMessage) { message in
+        .piliSheet(item: $reportingMessage) { message in
             AccountPrivateMessageReportSheet(
                 message: message,
                 viewModel: viewModel
             )
-            .presentationDetents([.medium, .large])
+            .piliPresentationDetents([.medium, .large])
         }
-        .confirmationDialog(
+        .piliConfirmation(
             "撤回这条私信？",
             isPresented: Binding(
                 get: { pendingWithdrawal != nil },
@@ -560,28 +557,24 @@ struct AccountPrivateMessageConversationView: View {
             titleVisibility: .visible
         ) {
             if let pendingWithdrawal {
-                Button("撤回", role: .destructive) {
+                PiliAlertButton("撤回", role: .destructive) {
                     self.pendingWithdrawal = nil
                     Task { await withdraw(pendingWithdrawal) }
                 }
             }
-            Button("取消", role: .cancel) {
+            PiliAlertButton("取消", role: .cancel) {
                 pendingWithdrawal = nil
             }
-        } message: {
-            Text("撤回后，对方将无法继续查看这条消息。是否能撤回仍由 B站服务器判断。")
-        }
-        .alert(
+        } message: { "撤回后，对方将无法继续查看这条消息。是否能撤回仍由 B站服务器判断。" }
+        .piliAlert(
             "消息操作失败",
             isPresented: Binding(
                 get: { messageActionErrorMessage != nil },
                 set: { if !$0 { messageActionErrorMessage = nil } }
             )
         ) {
-            Button("好") { messageActionErrorMessage = nil }
-        } message: {
-            Text(messageActionErrorMessage ?? "请稍后重试")
-        }
+            PiliAlertButton("好") { messageActionErrorMessage = nil }
+        } message: { messageActionErrorMessage ?? "请稍后重试" }
         .onChange(of: draft) { _, _ in
             scheduleDraftSave()
         }
@@ -596,14 +589,14 @@ struct AccountPrivateMessageConversationView: View {
     private var historyControl: some View {
         if loadMoreState.isLoading {
             ProgressView("正在加载更早消息")
-                .font(.caption)
+                .font(.cc.sm)
                 .padding(.vertical, 8)
         } else if case .failed(let message) = loadMoreState {
             Button {
                 Task { await load(reset: false) }
             } label: {
-                Label("加载更早消息失败", systemImage: "arrow.clockwise")
-                    .font(.caption)
+                PiliLabel("加载更早消息失败", systemImage: "arrow.clockwise")
+                    .font(.cc.sm)
                     .multilineTextAlignment(.center)
             }
             .accessibilityHint(message)
@@ -612,7 +605,7 @@ struct AccountPrivateMessageConversationView: View {
             Button("加载更早消息") {
                 Task { await load(reset: false) }
             }
-            .font(.caption.weight(.medium))
+            .font(.cc.sm.weight(.medium))
             .padding(.vertical, 8)
         }
     }
@@ -624,7 +617,7 @@ struct AccountPrivateMessageConversationView: View {
             ProgressView("正在加载私信内容")
         case .failed(let message):
             ContentUnavailableView {
-                Label("加载私信失败", systemImage: "exclamationmark.triangle")
+                PiliLabel("加载私信失败", systemImage: "exclamationmark.triangle")
             } description: {
                 Text(message)
             } actions: {
@@ -633,7 +626,7 @@ struct AccountPrivateMessageConversationView: View {
                 }
             }
         case .idle, .loaded:
-            ContentUnavailableView("暂无私信内容", systemImage: "bubble.left.and.bubble.right")
+            PiliUnavailableView("暂无私信内容", systemImage: "bubble.left.and.bubble.right")
         }
     }
 
@@ -779,7 +772,7 @@ struct AccountPrivateMessageConversationView: View {
             Button {
                 UIPasteboard.general.string = copyableText
             } label: {
-                Label("复制文字", systemImage: "doc.on.doc")
+                PiliLabel("复制文字", systemImage: "doc.on.doc")
             }
         }
 
@@ -787,7 +780,7 @@ struct AccountPrivateMessageConversationView: View {
             Button {
                 UIPasteboard.general.string = imageURLString
             } label: {
-                Label("复制图片链接", systemImage: "link")
+                PiliLabel("复制图片链接", systemImage: "link")
             }
         }
 
@@ -795,14 +788,14 @@ struct AccountPrivateMessageConversationView: View {
             Button(role: .destructive) {
                 pendingWithdrawal = message
             } label: {
-                Label("撤回", systemImage: "arrow.uturn.backward")
+                PiliLabel("撤回", systemImage: "arrow.uturn.backward")
             }
             .disabled(mutatingMessageIDs.contains(message.id))
         } else if message.canReport {
             Button(role: .destructive) {
                 reportingMessage = message
             } label: {
-                Label("举报", systemImage: "exclamationmark.bubble")
+                PiliLabel("举报", systemImage: "exclamationmark.bubble")
             }
             .disabled(mutatingMessageIDs.contains(message.id))
         }
@@ -845,9 +838,9 @@ struct AccountPrivateMessageConversationView: View {
         VStack(spacing: 8) {
             if let sendErrorMessage {
                 HStack(spacing: 8) {
-                    Label(sendErrorMessage, systemImage: "exclamationmark.circle")
-                        .font(.caption)
-                        .foregroundStyle(.red)
+                    PiliLabel(sendErrorMessage, systemImage: "exclamationmark.circle")
+                        .font(.cc.sm)
+                        .foregroundStyle(Color.cc.destructive)
                         .lineLimit(2)
 
                     Spacer(minLength: 4)
@@ -856,14 +849,14 @@ struct AccountPrivateMessageConversationView: View {
                         Button("重试") {
                             Task { await retryFailedSend(using: proxy) }
                         }
-                        .font(.caption.weight(.semibold))
+                        .font(.cc.sm.weight(.semibold))
                         .disabled(isSending || isSendingImage)
                     }
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
                 .background(
-                    Color.red.opacity(0.08),
+                    Color.cc.destructive.opacity(0.08),
                     in: RoundedRectangle(cornerRadius: 12, style: .continuous)
                 )
             }
@@ -874,13 +867,13 @@ struct AccountPrivateMessageConversationView: View {
                         Button {
                             showsPhotoPicker = true
                         } label: {
-                            Label("照片", systemImage: "photo")
+                            PiliLabel("照片", systemImage: "photo")
                         }
 
                         Button {
                             showsEmotePicker = true
                         } label: {
-                            Label("B站表情", systemImage: "face.smiling")
+                            PiliLabel("B站表情", systemImage: "face.smiling")
                         }
                         .disabled(viewModel.inlineEmotes.isEmpty)
                     } label: {
@@ -889,8 +882,8 @@ struct AccountPrivateMessageConversationView: View {
                                 ProgressView()
                                     .controlSize(.small)
                             } else {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 17, weight: .semibold))
+                                PiliIcon(systemName: "plus", size: 17)
+                                    .font(.cc.baseBold)
                             }
                         }
                         .frame(width: 36, height: 36)
@@ -1076,7 +1069,7 @@ private struct AccountPrivateMessageConversationHeader: View {
     var body: some View {
         HStack(spacing: 7) {
             AvatarRemoteImage(urlString: actor.avatarURLString, pixelSize: 72) {
-                Image(systemName: "person.crop.circle.fill")
+                PiliIcon(systemName: "person.crop.circle.fill")
                     .foregroundStyle(.secondary)
             }
             .frame(width: 26, height: 26)
@@ -1183,7 +1176,7 @@ private struct AccountPrivateMessageReportSheet: View {
     let message: AccountPrivateMessage
     @ObservedObject var viewModel: AccountMessageCenterViewModel
 
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var selectedReason: AccountPrivateMessageReportReason?
     @State private var customReason = ""
     @State private var isSubmitting = false
@@ -1191,7 +1184,7 @@ private struct AccountPrivateMessageReportSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 Section("选择举报原因") {
                     Picker("举报原因", selection: $selectedReason) {
                         Text("请选择").tag(AccountPrivateMessageReportReason?.none)
@@ -1212,9 +1205,9 @@ private struct AccountPrivateMessageReportSheet: View {
 
                 if let errorMessage {
                     Section {
-                        Label(errorMessage, systemImage: "exclamationmark.circle")
-                            .font(.caption)
-                            .foregroundStyle(.red)
+                        PiliLabel(errorMessage, systemImage: "exclamationmark.circle")
+                            .font(.cc.sm)
+                            .foregroundStyle(Color.cc.destructive)
                     }
                 }
             }
@@ -1239,7 +1232,7 @@ private struct AccountPrivateMessageReportSheet: View {
                 }
             }
         }
-        .interactiveDismissDisabled(isSubmitting)
+        .piliInteractiveDismissDisabled(isSubmitting)
     }
 
     private var canSubmit: Bool {
@@ -1286,7 +1279,7 @@ private struct AccountPrivateMessageEmotePicker: View {
     let emotes: [BiliInlineEmote]
     let onSelect: (String) -> Void
 
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
 
     private let columns = Array(
         repeating: GridItem(.flexible(minimum: 44), spacing: 10),
@@ -1297,7 +1290,7 @@ private struct AccountPrivateMessageEmotePicker: View {
         NavigationStack {
             Group {
                 if sortedEmotes.isEmpty {
-                    ContentUnavailableView("暂无可用表情", systemImage: "face.smiling")
+                    PiliUnavailableView("暂无可用表情", systemImage: "face.smiling")
                 } else {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 14) {
@@ -1313,13 +1306,13 @@ private struct AccountPrivateMessageEmotePicker: View {
                                         ) { image in
                                             image.resizable().scaledToFit()
                                         } placeholder: {
-                                            Image(systemName: "face.smiling")
+                                            PiliIcon(systemName: "face.smiling")
                                                 .foregroundStyle(.secondary)
                                         }
                                         .frame(width: 38, height: 38)
 
                                         Text(emote.token)
-                                            .font(.caption2)
+                                            .font(.cc.sm)
                                             .foregroundStyle(.secondary)
                                             .lineLimit(1)
                                             .minimumScaleFactor(0.75)
@@ -1409,11 +1402,11 @@ private struct AccountPrivateMessageBubble: View {
     private var bubble: some View {
         VStack(alignment: .leading, spacing: 7) {
             if message.isWithdrawn {
-                Label(
+                PiliLabel(
                     message.isOutgoing ? "你撤回了一条消息" : "对方撤回了一条消息",
                     systemImage: "arrow.uturn.backward"
                 )
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
             } else if let imageURLString = message.imageURLString {
                 if message.messageType == 2 || message.messageType == 6 {

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayCountersRow: View {
     let session: PlayerPerformanceSession
@@ -27,7 +28,7 @@ struct PlayerPerformanceOverlayCountersRow: View {
                     .lineLimit(1)
             }
         }
-        .font(.caption2)
+        .font(.cc.sm)
         .foregroundStyle(PlayerPerformanceOverlayFormatting.counterColor(for: session))
     }
 }

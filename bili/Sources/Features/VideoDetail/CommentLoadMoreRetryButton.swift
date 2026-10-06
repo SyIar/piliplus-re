@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct CommentLoadMoreRetryButton: View {
     let message: String
@@ -6,8 +7,8 @@ struct CommentLoadMoreRetryButton: View {
 
     var body: some View {
         Button(action: retry) {
-            Label("评论加载失败，点按重试", systemImage: "arrow.clockwise")
-                .font(.caption.weight(.semibold))
+            PiliLabel("评论加载失败，点按重试", systemImage: "arrow.clockwise")
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)

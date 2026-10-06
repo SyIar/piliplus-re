@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliContentWarningView: View {
     let title: String
@@ -10,12 +11,12 @@ struct PiliContentWarningView: View {
     var body: some View {
         if (video ? videoWarnings : dynamicWarnings), !title.isEmpty || !detail.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
-                Label(title.isEmpty ? detail : title, systemImage: "info.circle")
+                PiliLabel(title.isEmpty ? detail : title, systemImage: "info.circle")
                 if !title.isEmpty, !detail.isEmpty, title != detail { Text(detail) }
                 if let url, ["http", "https"].contains(url.scheme ?? "") { AppLinkButton(url: url) { Text("查看说明") } }
-            }.font(.caption).foregroundStyle(.secondary).padding(10)
+            }.font(.cc.sm).foregroundStyle(.secondary).padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
+                .piliGlassCard(radius: 10)
         }
     }
 }

@@ -1,12 +1,13 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceSessionDetailMessages: View {
     let session: PlayerPerformanceSession
 
     var body: some View {
         if let cdnHostMessage = session.cdnHostMessage {
-            Label(cdnHostMessage, systemImage: "network")
-                .font(.caption)
+            PiliLabel(cdnHostMessage, systemImage: "network")
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }
@@ -44,7 +45,7 @@ struct PlayerPerformanceSessionDetailMessages: View {
     private func optionalMessage(_ message: String?, color: Color, lineLimit: Int) -> some View {
         if let message {
             Text(message)
-                .font(.caption2.monospacedDigit())
+                .font(.cc.sm.monospacedDigit())
                 .foregroundStyle(color)
                 .lineLimit(lineLimit)
         }

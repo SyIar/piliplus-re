@@ -14,7 +14,7 @@ struct DanmakuSettingsSheetContent: View {
     let updateExtendedSettings: (DanmakuSettings) -> Void
 
     var body: some View {
-        Form {
+        PiliForm {
             Section {
                 NavigationLink("视频弹幕屏蔽规则") { PiliDanmakuRulesView(api: dependencies.api) }
             }

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DanmakuSettingsSlider: View {
     let title: String
@@ -11,10 +12,10 @@ struct DanmakuSettingsSlider: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label(title, systemImage: systemImage)
+                PiliLabel(title, systemImage: systemImage)
                 Spacer()
                 Text(valueText)
-                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .font(.cc.sm.monospacedDigit().weight(.semibold))
                     .foregroundStyle(.secondary)
             }
             Slider(value: $value, in: range, step: step)

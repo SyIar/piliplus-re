@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 extension BiliAPIClient {
     func piliTriple(video: VideoItem, identity: PiliAccountIdentity) async throws -> DynamicJSONValue {
@@ -44,18 +45,18 @@ struct PiliTripleButton: View {
         } label: {
             HStack(spacing: 5) {
                 ForEach(["hand.thumbsup", "bitcoinsign.circle", "star"], id: \.self) { icon in
-                    Image(systemName: icon + (success > 0 ? ".fill" : ""))
+                    PiliIcon(systemName: icon + (success > 0 ? ".fill" : ""))
                         .symbolEffect(.bounce, options: .nonRepeating, value: reduceMotion ? 0 : success)
                 }
                 Text("三连")
-            }.font(.system(size: 13, weight: .medium)).padding(.horizontal, 12).padding(.vertical, 8)
+            }.font(.cc.sm).padding(.horizontal, 12).padding(.vertical, 8)
         }.buttonStyle(.plain).piliLiquidGlass(in: Capsule(), interactive: true)
             .disabled(store.isMutatingLike || store.isMutatingCoin || store.isMutatingFavorite)
-            .confirmationDialog("点赞、投币并收藏？", isPresented: $confirm, titleVisibility: .visible) {
-                Button("确认三连") {
+            .piliConfirmation("点赞、投币并收藏？", isPresented: $confirm, titleVisibility: .visible) {
+                PiliAlertButton("确认三连") {
                     guard let identity, let subject, subject.bvid == viewModel.detail.bvid, subject.pgcEpisodeID == viewModel.detail.pgcEpisodeID else { return }
                     Task { if await viewModel.piliTriple(identity: identity) { success += 1; Haptics.success() } }
                 }
-            } message: { Text("平台会按当前互动状态最多使用 2 枚硬币，并加入默认收藏夹。") }
+            } message: { "平台会按当前互动状态最多使用 2 枚硬币，并加入默认收藏夹。" }
     }
 }

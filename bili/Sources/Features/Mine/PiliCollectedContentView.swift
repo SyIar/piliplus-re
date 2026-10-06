@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliCollectedContentView: View {
     @EnvironmentObject private var dependencies: AppDependencies
@@ -16,7 +17,7 @@ struct PiliCollectedContentView: View {
     @State private var selected = Set<Int>()
     @State private var deleting: DynamicJSONValue?
     var body: some View {
-        List {
+        PiliList {
             Picker("内容类型", selection: $kind) { ForEach(PiliCollectedKind.allCases) { Text($0.title).tag($0) } }.disabled(mutating)
             if kind.isPGC {
                 Picker("追看状态", selection: $status) { Text("全部").tag(0); Text("想看").tag(1); Text("在看").tag(2); Text("看过").tag(3) }.disabled(mutating)
@@ -26,29 +27,29 @@ struct PiliCollectedContentView: View {
                         Button("想看") { updateStatus(1) }; Button("在看") { updateStatus(2) }; Button("看过") { updateStatus(3) }
                         Button("取消选择") { selected = [] }
                     }.disabled(selected.isEmpty)
-                }.font(.caption).disabled(mutating)
+                }.font(.cc.sm).disabled(mutating)
             }
             ForEach(items, id: \.self) { item in
                 HStack {
                     if kind.isPGC {
                         let id = item["season_id"].piliInt
                         Button { if selected.contains(id) { selected.remove(id) } else if selected.count < 100 { selected.insert(id) } } label: {
-                            Image(systemName: selected.contains(id) ? "checkmark.circle.fill" : "circle")
+                            PiliIcon(systemName: selected.contains(id) ? "checkmark.circle.fill" : "circle")
                         }.buttonStyle(.borderless).accessibilityLabel("选择 \(item["title"].piliString)")
                     }
                     destination(item)
                 }.disabled(mutating).contextMenu { Button("取消收藏或订阅", role: .destructive) { deleting = item } }
             }
             if busy || mutating { ProgressView() }
-            else if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load(reset: identity == nil) } } }
+            else if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load(reset: identity == nil) } } }
             else if more { Button("加载更多") { Task { await load() } } }
             else if items.isEmpty { Text("暂无收藏内容") }
         }.navigationTitle("追番与其他收藏")
             .task(id: sessionStore.playbackCredentialVersion) { identity = nil; await load(reset: true) }
             .onChange(of: kind) { Task { await load(reset: true) } }.onChange(of: status) { Task { await load(reset: true) } }
             .refreshable { await load(reset: true) }
-            .confirmationDialog("确认取消这项收藏或订阅？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
-                if let item = deleting { Button("确认取消", role: .destructive) { remove(item) } }
+            .piliConfirmation("确认取消这项收藏或订阅？", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
+                if let item = deleting { PiliAlertButton("确认取消", role: .destructive) { remove(item) } }
             }
     }
     @ViewBuilder private func destination(_ item: DynamicJSONValue) -> some View {
@@ -64,7 +65,7 @@ struct PiliCollectedContentView: View {
         case .subscriptions:
             if let folder = try? item.piliDecode(FavoriteFolder.self) {
                 NavigationLink { PiliPublicFavoriteView(api: dependencies.api, folder: folder, seasonID: item["type"].piliInt == 11 ? nil : folder.id) } label: {
-                    VStack(alignment: .leading) { Text(folder.displayTitle); Text("\(folder.mediaCount ?? 0) 个内容").font(.caption).foregroundStyle(.secondary) }
+                    VStack(alignment: .leading) { Text(folder.displayTitle); Text("\(folder.mediaCount ?? 0) 个内容").font(.cc.sm).foregroundStyle(.secondary) }
                 }
             }
         }

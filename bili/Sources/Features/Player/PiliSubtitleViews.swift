@@ -77,7 +77,7 @@ struct PiliSubtitleSettingsView: View {
     @AppStorage("piliplus.subtitle.secondaryColor") private var secondaryColor = "#FFE080"
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 Section("字幕语言") {
                     if controller.isLoading { ProgressView("加载字幕") }
                     if let error = controller.errorMessage { Text(error).ccText(font: .cc.sm, color: .cc.mutedForeground) }
@@ -109,7 +109,7 @@ struct PiliSubtitleSettingsView: View {
                         }.disabled(controller.selectedID == nil)
                         if controller.isSecondaryLoading { ProgressView("加载第二语言") }
                         if let error = controller.secondaryError { Text(error).foregroundStyle(.secondary) }
-                        if controller.secondaryID == nil { Text("先开启主字幕，并选择另一条语言轨道；也可导入本地字幕。").font(.footnote).foregroundStyle(.secondary) }
+                        if controller.secondaryID == nil { Text("先开启主字幕，并选择另一条语言轨道；也可导入本地字幕。").font(.cc.sm).foregroundStyle(.secondary) }
                     }
                 }
                 Section("显示") {
@@ -195,6 +195,6 @@ struct PiliSubtitleSettingsView: View {
         catch { message = error.localizedDescription }
     }
     static func present(controller: PiliSubtitleController, seek: ((Double) -> Void)? = nil) {
-        AppHelper.shared.presentSheet(.sheet) { Self(controller: controller, seek: seek) }
+        PiliPresentation.present(.sheet) { Self(controller: controller, seek: seek) }
     }
 }

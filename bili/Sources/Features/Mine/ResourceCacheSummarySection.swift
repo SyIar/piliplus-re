@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct ResourceCacheSummarySection: View {
     let summary: ResourceCacheSummary?
@@ -76,15 +77,15 @@ struct ResourceCacheRow: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.cc.base.weight(.semibold))
                 Spacer()
                 Text(value)
-                    .font(.subheadline.monospacedDigit())
+                    .font(.cc.base.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Text(subtitle)
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }

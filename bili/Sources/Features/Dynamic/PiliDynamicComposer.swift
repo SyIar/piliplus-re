@@ -8,7 +8,7 @@ struct PiliDynamicComposer: View {
     private let identity: PiliAccountIdentity
     private let draftKey: String
     var onPublished: () -> Void = {}
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicType
     @ObservedObject private var sessionStore: SessionStore
     @State private var content: PiliDynamicDraft
@@ -42,9 +42,9 @@ struct PiliDynamicComposer: View {
     private var accountValid: Bool { identity.matches(api.requestSnapshot(purpose: .main)) }
     var body: some View {
         NavigationStack {
-            Form {
-                if !accountValid { Text("账号已切换或未登录，请重新打开编辑器").foregroundStyle(.red) }
-                if let error { Text(error).foregroundStyle(.red).textSelection(.enabled) }
+            PiliForm {
+                if !accountValid { Text("账号已切换或未登录，请重新打开编辑器").foregroundStyle(Color.cc.destructive) }
+                if let error { Text(error).foregroundStyle(Color.cc.destructive).textSelection(.enabled) }
                 if needsDraftRecovery {
                     Button("备份无法读取的草稿并新建") { Task {
                         do { try await PiliDraftStorage.shared.archive(key: draftKey); needsDraftRecovery = false; error = nil; revision += 1 }
@@ -59,12 +59,12 @@ struct PiliDynamicComposer: View {
                         .frame(height: min(320, max(140, height)))
                         .accessibilityIdentifier("pili.dynamic.editor")
                     HStack(spacing: 18) {
-                        Button { inputMode = inputMode == .keyboard ? .emotes : .keyboard; focused = true } label: { Image(systemName: "face.smiling") }.accessibilityLabel("表情")
-                        Button { picker = .mention; focused = false } label: { Image(systemName: "at") }.accessibilityLabel("提及用户")
-                        Button { picker = .topic; focused = false } label: { Image(systemName: "number") }.accessibilityLabel("选择话题")
-                        Button { picker = .vote; focused = false } label: { Image(systemName: "chart.bar.xaxis") }.accessibilityLabel("添加投票")
-                        Button { picker = .reservation; focused = false } label: { Image(systemName: "calendar.badge.plus") }.accessibilityLabel("添加直播预约")
-                        PhotosPicker(selection: $photos, maxSelectionCount: max(1, 9 - content.pictures.count - rich.images.count), matching: .images) { Image(systemName: "photo") }
+                        Button { inputMode = inputMode == .keyboard ? .emotes : .keyboard; focused = true } label: { PiliIcon(systemName: "face.smiling") }.accessibilityLabel("表情")
+                        Button { picker = .mention; focused = false } label: { PiliIcon(systemName: "at") }.accessibilityLabel("提及用户")
+                        Button { picker = .topic; focused = false } label: { PiliIcon(systemName: "number") }.accessibilityLabel("选择话题")
+                        Button { picker = .vote; focused = false } label: { PiliIcon(systemName: "chart.bar.xaxis") }.accessibilityLabel("添加投票")
+                        Button { picker = .reservation; focused = false } label: { PiliIcon(systemName: "calendar.badge.plus") }.accessibilityLabel("添加直播预约")
+                        PhotosPicker(selection: $photos, maxSelectionCount: max(1, 9 - content.pictures.count - rich.images.count), matching: .images) { PiliIcon(systemName: "photo") }
                             .disabled(content.pictures.count + rich.images.count >= 9).accessibilityLabel("添加图片")
                     }.buttonStyle(.borderless)
                     if loadingPhotos { ProgressView("处理图片") }
@@ -80,7 +80,7 @@ struct PiliDynamicComposer: View {
                             Spacer(); Button("移除", role: .destructive) { rich.images.removeAll { $0.id == image.id }; revision += 1 }.buttonStyle(.borderless)
                         }
                     }
-                    if content.repostID != nil { Label("转发动态", systemImage: "arrowshape.turn.up.right") }
+                    if content.repostID != nil { PiliLabel("转发动态", systemImage: "arrowshape.turn.up.right") }
                     if content.topicID != nil {
                         HStack { Text("#\(content.topicName)#"); Spacer(); Button("移除") { content.topicID = nil; content.topicName = "" }.buttonStyle(.borderless) }
                     }
@@ -98,7 +98,7 @@ struct PiliDynamicComposer: View {
                         Toggle("定时发布", isOn: $timed)
                         if timed { DatePicker("发布时间", selection: $publishDate, in: Date()..., displayedComponents: [.date, .hourAndMinute]) }
                     }
-                    Text("草稿按账号保存在本机；发布失败时保留内容。").font(.caption).foregroundStyle(.secondary)
+                    Text("草稿按账号保存在本机；发布失败时保留内容。").font(.cc.sm).foregroundStyle(.secondary)
                 }
             }
             .disabled(!restored || sending || !accountValid)
@@ -112,8 +112,8 @@ struct PiliDynamicComposer: View {
                         .accessibilityIdentifier("pili.dynamic.publish")
                 }
             }
-            .interactiveDismissDisabled(sending)
-            .sheet(item: $picker) { kind in
+            .piliInteractiveDismissDisabled(sending)
+            .piliSheet(item: $picker) { kind in
                 switch kind {
                 case .mention:
                     PiliResourcePicker(title: "提及用户", load: { try await api.piliMentions(keyword: $0) }) { item in
@@ -241,19 +241,19 @@ struct PiliResourcePicker: View {
     let select: (PiliNamedResource) -> Void
     @State private var page = 1
     @State private var hasMore = false
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var query = ""
     @State private var items: [PiliNamedResource] = []
     @State private var error: String?
     @State private var loading = false
     var body: some View {
         NavigationStack {
-            List {
+            PiliList {
                 if loading { ProgressView() }
-                if let error { Text(error).foregroundStyle(.red) }
+                if let error { Text(error).foregroundStyle(Color.cc.destructive) }
                 ForEach(items) { item in
                     Button { select(item); dismiss() } label: {
-                        VStack(alignment: .leading) { Text(item.name); if !item.subtitle.isEmpty { Text(item.subtitle).font(.caption).foregroundStyle(.secondary) } }
+                        VStack(alignment: .leading) { Text(item.name); if !item.subtitle.isEmpty { Text(item.subtitle).font(.cc.sm).foregroundStyle(.secondary) } }
                     }
                 }
                 if hasMore { Button("加载更多") { Task { await nextPage() } }.disabled(loading) }

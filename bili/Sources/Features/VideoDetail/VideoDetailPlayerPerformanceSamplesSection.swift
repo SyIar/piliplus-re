@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlaySamplesSection: View {
     let samples: [PlayerStartupPerformanceSample]
@@ -45,20 +46,20 @@ struct PlayerPerformanceOverlaySamplesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 5) {
-                Label("稳定 \(stableSamples.count)/\(comparableSamples.count) 次首帧", systemImage: "clock.arrow.circlepath")
-                    .font(.caption2.weight(.semibold))
+                PiliLabel("稳定 \(stableSamples.count)/\(comparableSamples.count) 次首帧", systemImage: "clock.arrow.circlepath")
+                    .font(.cc.sm.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 4)
                 if let latest = samples.last?.firstFramePlayerMilliseconds {
                     Text("last \(PlayerPerformanceOverlayFormatting.millisecondsText(latest))")
-                        .font(.caption2.monospacedDigit().weight(.semibold))
+                        .font(.cc.sm.monospacedDigit().weight(.semibold))
                         .foregroundStyle(PlayerPerformanceOverlayFormatting.metricColor(latest))
                 }
             }
 
             if summaries.isEmpty {
                 Text("反复进入同一个视频后会自动累计样本")
-                    .font(.caption2)
+                    .font(.cc.sm)
                     .foregroundStyle(.secondary)
             } else {
                 LazyVGrid(
@@ -78,7 +79,7 @@ struct PlayerPerformanceOverlaySamplesSection: View {
 
                     ForEach(summaries) { summary in
                         Text(summary.title)
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .font(.cc.sm)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
@@ -91,7 +92,7 @@ struct PlayerPerformanceOverlaySamplesSection: View {
 
                 if let sampleNoteText {
                     Text(sampleNoteText)
-                        .font(.system(size: 9, weight: .medium, design: .rounded))
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
@@ -108,14 +109,14 @@ struct PlayerPerformanceOverlaySamplesSection: View {
 
     private func sampleHeader(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 9, weight: .semibold, design: .rounded))
+            .font(.cc.smBold)
             .foregroundStyle(.tertiary)
             .lineLimit(1)
     }
 
     private func sampleValue(_ milliseconds: Int) -> some View {
         Text(PlayerPerformanceOverlayFormatting.millisecondsText(milliseconds))
-            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+            .font(.cc.smBold.monospaced())
             .foregroundStyle(PlayerPerformanceOverlayFormatting.metricColor(milliseconds))
             .lineLimit(1)
             .minimumScaleFactor(0.65)

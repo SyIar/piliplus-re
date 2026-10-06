@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PiliUserArticlesView: View {
     let api: BiliAPIClient
@@ -9,14 +10,14 @@ struct PiliUserArticlesView: View {
     @State private var busy = false
     @State private var error: String?
     var body: some View {
-        List {
+        PiliList {
             ForEach(items, id: \.self) { item in
                 if let url = URL(string: item["uri"].piliString), let route = PiliArticleRoute(url: url) {
                     NavigationLink { PiliArticleView(api: api, route: route) } label: { row(item) }
                 } else if let url = URL(string: item["uri"].piliString) { Link(destination: url) { row(item) } }
                 else { row(item) }
             }
-            if let error { Text(error).foregroundStyle(.red); Button("重试") { Task { await load() } } }
+            if let error { Text(error).foregroundStyle(Color.cc.destructive); Button("重试") { Task { await load() } } }
             else if busy { ProgressView() }
             else if hasMore { Button("加载更多") { Task { await load() } } }
             else if items.isEmpty { Text("暂无图文") }
@@ -27,7 +28,7 @@ struct PiliUserArticlesView: View {
             if let raw = item["origin_image_urls"].piliArray.first?.piliString {
                 CachedRemoteImage(url: URL(string: raw.normalizedBiliURL()), targetPixelSize: 240) { $0.resizable().scaledToFill() } placeholder: { Color.clear }.frame(width: 80, height: 60).clipped()
             }
-            VStack(alignment: .leading, spacing: 5) { Text(item["title"].piliString); Text(item["publish_time_text"].piliString).font(.caption).foregroundStyle(.secondary) }
+            VStack(alignment: .leading, spacing: 5) { Text(item["title"].piliString); Text(item["publish_time_text"].piliString).font(.cc.sm).foregroundStyle(.secondary) }
         }
     }
     private func load() async {

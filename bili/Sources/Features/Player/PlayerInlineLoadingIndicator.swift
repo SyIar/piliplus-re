@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerInlineLoadingIndicator: View {
     let message: String
@@ -12,7 +13,7 @@ struct PlayerInlineLoadingIndicator: View {
                 .accessibilityHidden(true)
 
             Text(message)
-                .font(.caption2.weight(.semibold))
+                .font(.cc.sm.weight(.semibold))
         }
         .biliLiquidGlassForeground(shadowOpacity: 0.20)
         .padding(.horizontal, 12)

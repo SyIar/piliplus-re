@@ -29,7 +29,7 @@ struct PiliLiveFavoriteAreasView: View {
     @State private var error: String?
     init(api: BiliAPIClient) { self.api = api; _session = ObservedObject(wrappedValue: api.sessionStore) }
     var body: some View {
-        List {
+        PiliList {
             Section("我的常用分区") {
                 ForEach(draft) { area in
                     if editing { Text(area.name) }
@@ -44,7 +44,7 @@ struct PiliLiveFavoriteAreasView: View {
                 ForEach(groups) { group in
                     Section(group.name) {
                         ForEach(group.children.filter { area in !draft.contains(where: { $0.id == area.id }) }) { area in
-                            Button { draft.append(area) } label: { Label(area.name, systemImage: "plus.circle") }
+                            Button { draft.append(area) } label: { PiliLabel(area.name, systemImage: "plus.circle") }
                         }
                     }
                 }

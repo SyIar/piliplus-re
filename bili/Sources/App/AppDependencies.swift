@@ -38,6 +38,7 @@ final class AppDependencies: ObservableObject {
         self.api = api
         self.accountMessageService = AccountMessageService(sessionStore: sessionStore, api: api)
         self.sponsorBlockService = SponsorBlockService()
+        PiliPresentation.dependencies = self
         PiliOfflineStore.shared.configure(api: api)
         PiliDanmakuRulesStore.shared.synchronize(api: api)
         sessionStore.$playbackCredentialVersion

@@ -8,7 +8,7 @@ struct AccountLibraryListPage: View {
     @EnvironmentObject private var sessionStore: SessionStore
 
     var body: some View {
-        List {
+        PiliList {
             if kind == .watchLater, sessionStore.isLoggedIn {
                 Section {
                     Picker("查看范围", selection: $viewModel.watchLaterFilter.unfinished) {
@@ -31,7 +31,7 @@ struct AccountLibraryListPage: View {
             if kind == .favorites, sessionStore.isLoggedIn {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("管理收藏夹") {
-                        AppHelper.shared.presentSheet(.sheet) {
+                        PiliPresentation.present(.sheet) {
                             PiliFavoriteFoldersView(api: dependencies.api) { Task { await viewModel.refreshFavorites() } }
                         }
                     }
@@ -40,7 +40,7 @@ struct AccountLibraryListPage: View {
             if kind == .watchLater, sessionStore.isLoggedIn {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("管理") {
-                        AppHelper.shared.presentSheet(.sheet) { PiliWatchLaterToolsView(viewModel: viewModel) }
+                        PiliPresentation.present(.sheet) { PiliWatchLaterToolsView(viewModel: viewModel) }
                     }
                 }
             }
@@ -48,7 +48,7 @@ struct AccountLibraryListPage: View {
                 Button {
                     Task { await reload() }
                 } label: {
-                    Image(systemName: "arrow.clockwise")
+                    PiliIcon(systemName: "arrow.clockwise")
                 }
                 .disabled(!sessionStore.isLoggedIn || state.isLoading)
             }

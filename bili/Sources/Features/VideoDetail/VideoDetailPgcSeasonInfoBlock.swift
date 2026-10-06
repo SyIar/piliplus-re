@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailPgcSeasonInfoBlock: View {
     let season: PgcSeasonInfo
@@ -33,26 +34,26 @@ struct VideoDetailPgcSeasonInfoBlock: View {
 
                 VStack(alignment: .leading, spacing: 7) {
                     Text(season.displayTitle)
-                        .font(.title3.weight(.bold))
+                        .font(.cc.baseBold.weight(.bold))
                         .foregroundStyle(.primary)
                         .lineLimit(2)
 
                     HStack(spacing: 8) {
                         if let score = season.rating?.displayScore {
-                            Label("评分 \(score)", systemImage: "star.fill")
-                                .foregroundStyle(.orange)
+                            PiliLabel("评分 \(score)", systemImage: "star.fill")
+                                .foregroundStyle(Color.cc.warning)
                         }
 
                         if episodeCount > 0 {
                             Text("共 \(episodeCount) 集")
                         }
                     }
-                    .font(.caption.weight(.medium))
+                    .font(.cc.sm.weight(.medium))
                     .foregroundStyle(.secondary)
 
                     if let subtitleText {
                         Text(subtitleText)
-                            .font(.caption)
+                            .font(.cc.sm)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
                     }
@@ -61,12 +62,12 @@ struct VideoDetailPgcSeasonInfoBlock: View {
             }
 
             if let mediaID = season.mediaID, mediaID > 0, !detail.piliIsCourse {
-                Button("评分与点评", systemImage: "star.bubble") { showsReviews = true }
+                PiliIconButton("评分与点评", systemImage: "star.bubble") { showsReviews = true }
             }
             if let descriptionText {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(descriptionText)
-                        .font(.subheadline)
+                        .font(.cc.base)
                         .foregroundStyle(.secondary)
                         .lineLimit(isDescriptionExpanded ? nil : 3)
                         .textSelection(.enabled)
@@ -77,7 +78,7 @@ struct VideoDetailPgcSeasonInfoBlock: View {
                                 isDescriptionExpanded.toggle()
                             }
                         }
-                        .font(.subheadline.weight(.semibold))
+                        .font(.cc.base.weight(.semibold))
                         .foregroundStyle(appTintColor)
                         .buttonStyle(.plain)
                     }
@@ -87,7 +88,7 @@ struct VideoDetailPgcSeasonInfoBlock: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("番剧 \(season.displayTitle)")
-        .sheet(isPresented: $showsReviews) {
+        .piliSheet(isPresented: $showsReviews) {
             if let mediaID = season.mediaID { NavigationStack { PiliPGCReviewsView(api: dependencies.api, mediaID: mediaID, title: season.displayTitle) } }
         }
     }

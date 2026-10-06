@@ -43,7 +43,7 @@ struct VideoDetailDanmakuOverlay: View {
         .padding(.horizontal, usesLandscapePlaybackChrome ? 0 : 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
-        .sheet(item: $selected, onDismiss: {
+        .piliSheet(item: $selected, onDismiss: {
             if resumesAfterSelection, ActivePlaybackCoordinator.shared.isActive(playerViewModel), !playerViewModel.isTerminated { playerViewModel.play() }
             resumesAfterSelection = false
         }) { item in PiliDanmakuActionsView(api: dependencies.api, item: item) }

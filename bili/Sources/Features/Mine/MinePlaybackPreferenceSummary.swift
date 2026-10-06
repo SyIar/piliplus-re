@@ -1,20 +1,21 @@
 import SwiftUI
+import ChunUI
 
 extension MinePlaybackSettingsView {
     var playbackPreferenceSummary: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 MineSettingsLabel("当前策略", systemImage: "wand.and.stars")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.cc.base.weight(.semibold))
                 Spacer(minLength: 8)
                 Text(libraryStore.playbackAutoOptimizationMode.title)
-                    .font(.caption.weight(.semibold))
+                    .font(.cc.sm.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
 
             Text(libraryStore.playbackAutoOptimizationMode.detail)
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 

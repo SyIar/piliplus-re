@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+import ChunUI
 import UIKit
 
 enum RichCommentDraftElement: Equatable, Sendable {
@@ -899,15 +900,15 @@ struct RichCommentAttachmentStrip: View {
                             ProgressView()
                                 .controlSize(.small)
                                 .padding(4)
-                                .background(.regularMaterial, in: Circle())
+                                .ccGlassEffect(.circle)
                         } else {
                             Button {
                                 images.removeAll { $0.id == image.id }
                             } label: {
-                                Image(systemName: "xmark.circle.fill")
+                                PiliIcon(systemName: "xmark.circle.fill")
                                     .symbolRenderingMode(.palette)
                                     .foregroundStyle(.white, .black.opacity(0.65))
-                                    .font(.body)
+                                    .font(.cc.base)
                             }
                             .buttonStyle(.plain)
                             .frame(width: 44, height: 44)
@@ -927,7 +928,7 @@ struct RichCommentAttachmentStrip: View {
 }
 
 struct RichCommentComposerView: View {
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @Environment(\.appThemeTintColor) private var appTintColor
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -992,8 +993,8 @@ struct RichCommentComposerView: View {
         VStack(alignment: .leading, spacing: 10) {
             if let authorName = target.authorName,
                !authorName.isEmpty {
-                Label("回复 @\(authorName)", systemImage: "arrowshape.turn.up.left")
-                    .font(.subheadline)
+                PiliLabel("回复 @\(authorName)", systemImage: "arrowshape.turn.up.left")
+                    .font(.cc.base)
                     .foregroundStyle(.secondary)
             }
 
@@ -1021,7 +1022,7 @@ struct RichCommentComposerView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text("正在读取图片")
-                        .font(.footnote)
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1030,7 +1031,7 @@ struct RichCommentComposerView: View {
 
             HStack(spacing: 12) {
                 Button(action: toggleEmotes) {
-                    Image(systemName: inputMode == .emotes ? "keyboard" : "face.smiling")
+                    PiliIcon(systemName: inputMode == .emotes ? "keyboard" : "face.smiling")
                         .contentTransition(.symbolEffect(.replace))
                         .frame(width: ControlLayout.size, height: ControlLayout.size)
                 }
@@ -1040,13 +1041,13 @@ struct RichCommentComposerView: View {
                 .accessibilityLabel(inputMode == .emotes ? "切换至系统键盘" : "选择表情")
                 .accessibilityIdentifier("dynamic.comment.composer.emote")
 
-                Button { isEditorFocused = false; showsMentionPicker = true } label: { Image(systemName: "at").frame(width: ControlLayout.size, height: ControlLayout.size) }
+                Button { isEditorFocused = false; showsMentionPicker = true } label: { PiliIcon(systemName: "at").frame(width: ControlLayout.size, height: ControlLayout.size) }
                     .buttonStyle(.glass).buttonBorderShape(.circle).accessibilityLabel("提及用户")
 
                 Button {
                     showsPhotoPicker = true
                 } label: {
-                    Image(systemName: "photo")
+                    PiliIcon(systemName: "photo")
                         .frame(width: ControlLayout.size, height: ControlLayout.size)
                 }
                 .buttonStyle(.glass)
@@ -1064,7 +1065,7 @@ struct RichCommentComposerView: View {
                             .controlSize(.small)
                             .frame(width: ControlLayout.size, height: ControlLayout.size)
                     } else {
-                        Image(systemName: "paperplane.fill")
+                        PiliIcon(systemName: "paperplane.fill")
                             .frame(width: ControlLayout.size, height: ControlLayout.size)
                     }
                 }
@@ -1074,7 +1075,7 @@ struct RichCommentComposerView: View {
                 .accessibilityLabel(isSubmitting ? "正在发送评论" : "发送评论")
                 .accessibilityIdentifier("dynamic.comment.composer.send")
             }
-            .font(.body)
+            .font(.cc.base)
             .foregroundStyle(.primary)
         }
         .padding(14)
@@ -1082,9 +1083,9 @@ struct RichCommentComposerView: View {
         .biliGlassEffect(interactive: true, in: .rect(cornerRadius: 24, style: .continuous))
         .padding(12)
         .presentationBackground(Color.clear)
-        .presentationDetents([.medium, .large])
+        .piliPresentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(isSubmitting)
+        .piliInteractiveDismissDisabled(isSubmitting)
         .task {
             if draft.replyTarget == nil {
                 draft.replyTarget = target.authorName == nil ? nil : target
@@ -1105,7 +1106,7 @@ struct RichCommentComposerView: View {
             guard !isPresented else { return }
             processPendingPhotos()
         }
-        .sheet(isPresented: $showsMentionPicker) {
+        .piliSheet(isPresented: $showsMentionPicker) {
             PiliResourcePicker(title: "提及用户", load: { try await api.piliMentions(keyword: $0) }) { user in
                 draft.mentions.removeAll { $0.id == user.id }; draft.mentions.append(user)
                 draft = draft.insertingText("@\(user.name) ", at: draft.selection)
@@ -1123,14 +1124,12 @@ struct RichCommentComposerView: View {
             submitTask?.cancel()
             isEditorFocused = false
         }
-        .alert("评论发送失败", isPresented: Binding(
+        .piliAlert("评论发送失败", isPresented: Binding(
             get: { errorMessage != nil },
             set: { if !$0 { errorMessage = nil } }
         )) {
-            Button("好", role: .cancel) { errorMessage = nil }
-        } message: {
-            Text(errorMessage ?? "请稍后重试")
-        }
+            PiliAlertButton("好", role: .cancel) { errorMessage = nil }
+        } message: { errorMessage ?? "请稍后重试" }
     }
 
     private func focusEditor() {

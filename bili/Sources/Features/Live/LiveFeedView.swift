@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LiveFeedView: View {
     @EnvironmentObject private var libraryStore: LibraryStore
@@ -18,7 +19,7 @@ struct LiveFeedView: View {
         .contentMargins(.top, 0, for: .scrollContent)
         .nativeTopScrollEdgeEffect()
         .scrollBounceBehavior(.always, axes: .vertical)
-        .background(Color(.systemBackground))
+        .background(Color.cc.background)
         .customPullRefreshTracking(
             isEnabled: libraryStore.usesCustomPullRefresh,
             onChange: handlePullRefreshChange
@@ -172,7 +173,7 @@ private struct LiveFeedRefreshButton: View {
                 ProgressView()
                     .controlSize(.small)
             } else {
-                Image(systemName: "arrow.clockwise")
+                PiliIcon(systemName: "arrow.clockwise")
             }
         }
         .disabled(viewModel.isRefreshing || (viewModel.rooms.isEmpty && viewModel.state.isLoading))
@@ -189,7 +190,7 @@ private struct LiveFeedErrorOverlay: View {
                 Task { await viewModel.refresh() }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemBackground).opacity(0.96))
+            .background(Color.cc.background.opacity(0.96))
         }
     }
 }

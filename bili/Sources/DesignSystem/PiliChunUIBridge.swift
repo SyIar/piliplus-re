@@ -9,10 +9,7 @@ enum PiliChunUIBridge {
         var colors = CCColors.default
         colors.primary = tint
         colors.ring = tint
-        colors.success = tint
         colors.info = tint
-        colors.warning = tint
-        colors.destructive = tint
         var strings = CCStrings()
         strings.cancel = "取消"
         strings.confirm = "确定"
@@ -31,6 +28,7 @@ enum PiliChunUIBridge {
         strings.unsavedMessage = "要保存本次修改吗？"
         strings.keepEditing = "继续编辑"
         ChunUI.configure(colors: colors, strings: strings)
+        ChunUI.sheetPresentHook = { host, _ in PiliPresentation.configureSheet(host) }
     }
 
     static func attach(to scene: UIWindowScene?) {

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoDetailPlayURLNotice: View {
     @ObservedObject var placeholderStore: VideoDetailPlayerPlaceholderRenderStore
@@ -22,8 +23,8 @@ struct VideoDetailPlayURLNotice: View {
                 EmptyView()
             }
         } else if placeholderStore.selectedPlayVariant?.isPlayable == false {
-            Label("当前档位暂不可播放", systemImage: "lock.fill")
-                .font(.caption.weight(.semibold))
+            PiliLabel("当前档位暂不可播放", systemImage: "lock.fill")
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.secondary)
         }
     }

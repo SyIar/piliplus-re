@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct HomeFeedLastSeenMarkerCard: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -39,7 +40,7 @@ struct HomeFeedLastSeenMarkerCard: View {
                     )
 
                     Text("点击刷新推荐")
-                        .font(.caption.weight(.medium))
+                        .font(.cc.sm.weight(.medium))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -68,14 +69,14 @@ struct HomeFeedLastSeenMarkerCard: View {
                     markerAvatar(size: 14, iconSize: 8)
 
                     Text("点击刷新")
-                        .font(.caption2)
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 
                     Spacer(minLength: 6)
 
                     Text("推荐")
-                        .font(.caption2)
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -104,14 +105,14 @@ struct HomeFeedLastSeenMarkerCard: View {
                     markerAvatar(size: 14, iconSize: 8)
 
                     Text("点击刷新")
-                        .font(.caption2)
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 
                     Spacer(minLength: 6)
 
                     Text("推荐")
-                        .font(.caption2)
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -141,11 +142,11 @@ struct HomeFeedLastSeenMarkerCard: View {
                 Spacer(minLength: 0)
 
                 HStack(spacing: 4) {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 11, weight: .semibold))
+                    PiliIcon(systemName: "arrow.clockwise", size: 11)
+                        .font(.cc.smBold)
 
                     Text("点击刷新推荐")
-                        .font(.caption2)
+                        .font(.cc.sm)
                         .lineLimit(1)
                 }
                 .foregroundStyle(.secondary)
@@ -166,11 +167,11 @@ struct HomeFeedLastSeenMarkerCard: View {
             .frame(width: size.width, height: size.height)
             .overlay {
                 VStack(spacing: 6) {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 20, weight: .semibold))
+                    PiliIcon(systemName: "arrow.clockwise", size: 20)
+                        .font(.cc.baseBold)
 
                     Text("刷新")
-                        .font(.caption.weight(.semibold))
+                        .font(.cc.sm.weight(.semibold))
                 }
                 .foregroundStyle(appTintColor)
             }
@@ -184,18 +185,18 @@ struct HomeFeedLastSeenMarkerCard: View {
             .overlay {
                 ZStack {
                     shape
-                        .fill(Color(.secondarySystemGroupedBackground).opacity(0.92))
+                        .fill(Color.cc.card.opacity(0.92))
 
                     shape
                         .fill(Color(.tertiarySystemFill).opacity(0.55))
 
                     VStack(spacing: 8) {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 24, weight: .semibold))
+                        PiliIcon(systemName: "arrow.clockwise", size: 24)
+                            .font(.cc.lgBold)
                             .foregroundStyle(appTintColor)
 
                         Text("点击刷新")
-                            .font(.subheadline.weight(.semibold))
+                            .font(.cc.base.weight(.semibold))
                             .foregroundStyle(appTintColor)
                             .lineLimit(1)
                     }
@@ -209,7 +210,7 @@ struct HomeFeedLastSeenMarkerCard: View {
         Circle()
             .fill(Color(.tertiarySystemFill).opacity(0.70))
             .overlay {
-                Image(systemName: "arrow.clockwise")
+                PiliIcon(systemName: "arrow.clockwise", size: iconSize)
                     .font(.system(size: iconSize, weight: .semibold))
                     .foregroundStyle(.secondary)
             }

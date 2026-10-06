@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LiveFeedSkeletonList: View {
     var horizontalPadding: CGFloat = 16
@@ -33,7 +34,7 @@ struct LiveFeedFooter: View {
             }
 
             Text(text)
-                .font(.footnote)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicCommentsFooter: View {
     @ObservedObject var viewModel: DynamicCommentsViewModel
@@ -10,8 +11,8 @@ struct DynamicCommentsFooter: View {
                 .padding(.vertical, 10)
         } else if case .failed(let message) = viewModel.loadMoreState {
             Button(action: loadMore) {
-                Label("评论加载失败，点按重试", systemImage: "arrow.clockwise")
-                    .font(.caption.weight(.semibold))
+                PiliLabel("评论加载失败，点按重试", systemImage: "arrow.clockwise")
+                    .font(.cc.sm.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
@@ -28,7 +29,7 @@ struct DynamicCommentsFooter: View {
                 }
         } else {
             Text("没有更多评论了")
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)

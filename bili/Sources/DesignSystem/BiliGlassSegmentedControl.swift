@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct BiliGlassSegmentedControl<Option: Identifiable & Hashable>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -75,7 +76,7 @@ struct BiliGlassSegmentedControl<Option: Identifiable & Hashable>: View {
             }
         } label: {
             Text(title(option))
-                .font(.subheadline.weight(.medium))
+                .font(.cc.base.weight(.medium))
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
                 .foregroundStyle(Color.primary.opacity(isSelected ? 1 : 0.72))

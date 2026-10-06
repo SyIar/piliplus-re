@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceSessionRow: View {
     let session: PlayerPerformanceSession
@@ -22,23 +23,23 @@ struct PlayerPerformanceExceptionRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Label(session.title ?? session.metricsID, systemImage: exceptionIcon)
-                    .font(.subheadline.weight(.semibold))
+                PiliLabel(session.title ?? session.metricsID, systemImage: exceptionIcon)
+                    .font(.cc.base.weight(.semibold))
                     .lineLimit(2)
                 Spacer(minLength: 8)
                 Text(session.lastUpdatedAt, style: .time)
-                    .font(.caption.monospacedDigit())
+                    .font(.cc.sm.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
 
             Text(exceptionSummary)
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(exceptionColor)
                 .lineLimit(2)
 
             if let last = session.timeline.last {
                 Text(last.compactDescription)
-                    .font(.caption2.monospacedDigit())
+                    .font(.cc.sm.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }

@@ -55,7 +55,7 @@ struct PiliGlassPlayerButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: symbol)
+            PiliIcon(systemName: symbol, size: prominent ? 28 : 18)
                 .font(.system(size: prominent ? 28 : 18, weight: .medium))
                 .frame(width: size, height: size)
                 .contentShape(Circle())

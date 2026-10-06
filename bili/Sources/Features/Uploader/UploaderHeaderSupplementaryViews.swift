@@ -7,7 +7,7 @@ struct UploaderSignatureText: View {
     var body: some View {
         if let sign, !sign.isEmpty {
             Text(sign)
-                .font(.subheadline)
+                .font(.cc.base)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -20,9 +20,9 @@ struct UploaderFollowMessage: View {
 
     var body: some View {
         if let message, !message.isEmpty {
-            Label(message, systemImage: isFollowing ? "checkmark.circle" : "info.circle")
-                .font(.caption)
-                .foregroundStyle(isFollowing ? Color.pink : Color.secondary)
+            PiliLabel(message, systemImage: isFollowing ? "checkmark.circle" : "info.circle")
+                .font(.cc.sm)
+                .foregroundStyle(isFollowing ? Color.cc.primary : Color.secondary)
         }
     }
 }
@@ -32,8 +32,8 @@ struct UploaderProfileStatusMessage: View {
 
     var body: some View {
         if case .failed(let message) = state {
-            Label(message, systemImage: "exclamationmark.triangle")
-                .font(.caption)
+            PiliLabel(message, systemImage: "exclamationmark.triangle")
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
         }
     }
@@ -64,7 +64,7 @@ struct UploaderStatsRow: View {
     }
 
     private func openRelations(_ kind: PiliRelationList) {
-        AppHelper.shared.presentSheet(.sheet) {
+        PiliPresentation.present(.sheet) {
             PiliRelationsView(api: dependencies.api, ownerMID: owner.mid, kind: kind)
                 .environmentObject(dependencies)
                 .environmentObject(libraryStore)
@@ -80,10 +80,10 @@ private struct UploaderStatItem: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(BiliFormatters.compactCount(value))
-                .font(.subheadline.weight(.bold))
+                .font(.cc.base.weight(.bold))
 
             Text(title)
-                .font(.caption2)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

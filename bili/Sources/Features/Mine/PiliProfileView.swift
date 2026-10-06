@@ -23,7 +23,7 @@ struct PiliProfileView: View {
     private var canEditFields: Bool { api.requestSnapshot(purpose: .main).appAccessKey?.isEmpty == false }
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 if let errorMessage {
                     Text(errorMessage).foregroundStyle(Color.cc.destructive)
                     if isCurrent { Button("重新读取") { Task { await load() } } }
@@ -33,7 +33,7 @@ struct PiliProfileView: View {
                     Section {
                         HStack {
                             AvatarRemoteImage(urlString: profile.face, pixelSize: 160) {
-                                Image(systemName: "person.crop.circle").resizable()
+                                PiliIcon(systemName: "person.crop.circle").resizable()
                             }.frame(width: 64, height: 64).clipShape(Circle())
                             Spacer()
                             PhotosPicker("更换头像", selection: $photo, matching: .images).disabled(loadingPhoto || !isCurrent)
@@ -77,12 +77,12 @@ struct PiliProfileView: View {
                     cropPhoto = AvatarPhoto(image: UIImage(cgImage: image))
                 } catch { if !Task.isCancelled { errorMessage = error.localizedDescription } }
             }
-            .sheet(item: $editing) { field in
+            .piliSheet(item: $editing) { field in
                 if let profile {
                     NavigationStack { PiliProfileFieldEditor(api: api, identity: identity, profile: profile, field: field) { changed() } }
                 }
             }
-            .sheet(item: $cropPhoto, onDismiss: { photo = nil }) { image in
+            .piliSheet(item: $cropPhoto, onDismiss: { photo = nil }) { image in
                 NavigationStack { PiliAvatarCropView(api: api, identity: identity, image: image.image) { changed() } }
             }
         }
@@ -93,7 +93,7 @@ struct PiliProfileView: View {
                 Text(field.title).foregroundStyle(Color.cc.foreground)
                 Spacer()
                 Text(value).foregroundStyle(Color.cc.mutedForeground).lineLimit(2).multilineTextAlignment(.trailing)
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(Color.cc.mutedForeground)
+                PiliIcon(systemName: "chevron.right").font(.cc.sm).foregroundStyle(Color.cc.mutedForeground)
             }
         }
     }
@@ -121,7 +121,7 @@ private struct PiliProfileFieldEditor: View {
     let profile: PiliOwnProfile
     let field: PiliProfileField
     let onSaved: () -> Void
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @State private var value = ""
     @State private var birthday = Date()
     @State private var busy = false
@@ -150,7 +150,7 @@ private struct PiliProfileFieldEditor: View {
         }
     }
     var body: some View {
-        Form {
+        PiliForm {
             if let errorMessage { Text(errorMessage).foregroundStyle(Color.cc.destructive) }
             switch field {
             case .uname:
@@ -175,12 +175,12 @@ private struct PiliProfileFieldEditor: View {
                 Button(busy ? "保存中…" : "保存") { if field == .uname { confirmName = true } else { save() } }.disabled(!canSave)
             }
         }
-        .interactiveDismissDisabled(busy)
+        .piliInteractiveDismissDisabled(busy)
         .onAppear { value = currentValue; birthday = formatter.date(from: profile.birthday ?? "") ?? formatter.date(from: "2000-01-01")! }
-        .alert("消耗 6 硬币修改昵称？", isPresented: $confirmName) {
-            Button("取消", role: .cancel) {}
-            Button("确认修改") { save() }
-        } message: { Text("新昵称：\(value)") }
+        .piliAlert("消耗 6 硬币修改昵称？", isPresented: $confirmName) {
+            PiliAlertButton("取消", role: .cancel) {}
+            PiliAlertButton("确认修改") { save() }
+        } message: { "新昵称：\(value)" }
     }
     private func save() {
         guard canSave else { return }

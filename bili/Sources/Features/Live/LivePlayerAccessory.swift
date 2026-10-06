@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LivePlayerLiveEdgeButton: View {
     @Environment(\.playerNativeControlMetrics) private var metrics
@@ -13,7 +14,7 @@ struct LivePlayerLiveEdgeButton: View {
                     ProgressView()
                         .tint(.white)
                 } else {
-                    Image(systemName: "arrow.clockwise")
+                    PiliIcon(systemName: "arrow.clockwise", size: metrics.iconSize)
                         .font(.system(size: metrics.iconSize, weight: .semibold))
                 }
             }
@@ -50,14 +51,14 @@ private struct LivePlayerSimpleLiveRouteMenu: View {
                         viewModel.selectStreamCandidate(id: item.id)
                     } label: {
                         if item.isSelected {
-                            Label(item.title, systemImage: "checkmark")
+                            PiliLabel(item.title, systemImage: "checkmark")
                         } else {
                             Text(item.title)
                         }
                     }
                 }
             } label: {
-                Image(systemName: "antenna.radiowaves.left.and.right")
+                PiliIcon(systemName: "antenna.radiowaves.left.and.right", size: metrics.iconSize)
                     .font(.system(size: metrics.iconSize, weight: .semibold))
                     .frame(width: metrics.controlHeight, height: metrics.controlHeight)
             }
@@ -75,8 +76,8 @@ struct LivePlayerSimpleLiveFullscreenHeader: View {
     var body: some View {
         HStack(spacing: 8) {
             Button(action: onExitFullscreen) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 16, weight: .semibold))
+                PiliIcon(systemName: "chevron.left", size: 16)
+                    .font(.cc.baseBold)
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
@@ -90,10 +91,10 @@ struct LivePlayerSimpleLiveFullscreenHeader: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(viewModel.title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.cc.base.weight(.semibold))
                     .lineLimit(1)
                 Text(viewModel.anchorName)
-                    .font(.caption2)
+                    .font(.cc.sm)
                     .foregroundStyle(.white.opacity(0.72))
                     .lineLimit(1)
             }
@@ -120,7 +121,7 @@ private struct LivePlayerLiveQualityMenu: View {
                         viewModel.selectQuality(qn: item.qn)
                     } label: {
                         if item.isSelected {
-                            Label(item.title, systemImage: "checkmark")
+                            PiliLabel(item.title, systemImage: "checkmark")
                         } else {
                             Text(item.title)
                         }
@@ -128,7 +129,7 @@ private struct LivePlayerLiveQualityMenu: View {
                 }
             } label: {
                 Text(viewModel.currentQualityTitle ?? "画质")
-                    .font(.caption.weight(.semibold))
+                    .font(.cc.sm.weight(.semibold))
                     .lineLimit(1)
                     .padding(.horizontal, 10)
                     .frame(minHeight: metrics.controlHeight)
@@ -178,7 +179,7 @@ struct LivePlayerMoreControlsContent: View {
                         Button {
                             viewModel.selectQuality(qn: item.qn)
                         } label: {
-                            Label(
+                            PiliLabel(
                                 item.title,
                                 systemImage: item.isSelected ? "checkmark" : "slider.horizontal.3"
                             )
@@ -199,7 +200,7 @@ struct LivePlayerMoreControlsContent: View {
                         Button {
                             viewModel.selectStreamCandidate(id: item.id)
                         } label: {
-                            Label(
+                            PiliLabel(
                                 item.title,
                                 systemImage: item.isSelected
                                     ? "checkmark"
@@ -230,7 +231,7 @@ struct LivePlayerMoreControlsContent: View {
                 Button {
                     viewModel.toggleDanmaku()
                 } label: {
-                    Label(
+                    PiliLabel(
                         viewModel.isDanmakuEnabled ? "关闭弹幕" : "开启弹幕",
                         systemImage: viewModel.isDanmakuEnabled ? "text.bubble.fill" : "text.bubble"
                     )
@@ -247,7 +248,7 @@ struct LivePlayerMoreControlsContent: View {
                 Button {
                     viewModel.toggleLiveDanmakuDiagnostics()
                 } label: {
-                    Label(
+                    PiliLabel(
                         viewModel.isLiveDanmakuDiagnosticsEnabled ? "关闭弹幕诊断" : "开启弹幕诊断",
                         systemImage: "waveform.path.ecg"
                     )
@@ -270,7 +271,7 @@ private struct LivePlayerMoreControlsRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Label(title, systemImage: systemImage)
+            PiliLabel(title, systemImage: systemImage)
 
             Spacer(minLength: 12)
 
@@ -280,8 +281,8 @@ private struct LivePlayerMoreControlsRow: View {
                     .lineLimit(1)
             }
 
-            Image(systemName: "chevron.up.chevron.down")
-                .font(.caption.weight(.semibold))
+            PiliIcon(systemName: "chevron.up.chevron.down")
+                .font(.cc.sm.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -300,7 +301,7 @@ private struct LiveCompactSettingsMenu: View {
                         Button {
                             viewModel.selectQuality(qn: item.qn)
                         } label: {
-                            Label(
+                            PiliLabel(
                                 item.title,
                                 systemImage: item.isSelected ? "checkmark" : "slider.horizontal.3"
                             )
@@ -315,7 +316,7 @@ private struct LiveCompactSettingsMenu: View {
                         Button {
                             viewModel.selectStreamCandidate(id: item.id)
                         } label: {
-                            Label(
+                            PiliLabel(
                                 item.title,
                                 systemImage: item.isSelected ? "checkmark" : "antenna.radiowaves.left.and.right"
                             )
@@ -329,7 +330,7 @@ private struct LiveCompactSettingsMenu: View {
             Button {
                 viewModel.showLivePlaybackDiagnostics()
             } label: {
-                Label("播放诊断", systemImage: "waveform.path.ecg.rectangle")
+                PiliLabel("播放诊断", systemImage: "waveform.path.ecg.rectangle")
             }
 
             Divider()
@@ -337,7 +338,7 @@ private struct LiveCompactSettingsMenu: View {
             Button {
                 viewModel.toggleDanmaku()
             } label: {
-                Label(
+                PiliLabel(
                     viewModel.isDanmakuEnabled ? "关闭弹幕" : "开启弹幕",
                     systemImage: viewModel.isDanmakuEnabled ? "text.bubble.fill" : "text.bubble"
                 )
@@ -354,14 +355,14 @@ private struct LiveCompactSettingsMenu: View {
             Button {
                 viewModel.toggleLiveDanmakuDiagnostics()
             } label: {
-                Label(
+                PiliLabel(
                     viewModel.isLiveDanmakuDiagnosticsEnabled ? "关闭弹幕诊断" : "开启弹幕诊断",
                     systemImage: "waveform.path.ecg"
                 )
             }
         } label: {
-            Image(systemName: "slider.horizontal.3")
-                .font(.system(size: 14, weight: .semibold))
+            PiliIcon(systemName: "slider.horizontal.3", size: 14)
+                .font(.cc.smBold)
                 .frame(width: 32, height: 32)
         }
         .biliPlayerGlassButtonStyle()
@@ -381,15 +382,15 @@ struct LiveStreamMenu: View {
                         viewModel.selectStreamCandidate(id: item.id)
                     } label: {
                         if item.isSelected {
-                            Label(item.title, systemImage: "checkmark")
+                            PiliLabel(item.title, systemImage: "checkmark")
                         } else {
                             Text(item.title)
                         }
                     }
                 }
             } label: {
-                Label(viewModel.currentStreamTitle ?? "线路", systemImage: "antenna.radiowaves.left.and.right")
-                    .font(.caption.weight(.semibold))
+                PiliLabel(viewModel.currentStreamTitle ?? "线路", systemImage: "antenna.radiowaves.left.and.right")
+                    .font(.cc.sm.weight(.semibold))
                     .labelStyle(.titleAndIcon)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -411,15 +412,15 @@ struct LiveQualityMenu: View {
                         viewModel.selectQuality(qn: item.qn)
                     } label: {
                         if item.isSelected {
-                            Label(item.title, systemImage: "checkmark")
+                            PiliLabel(item.title, systemImage: "checkmark")
                         } else {
                             Text(item.title)
                         }
                     }
                 }
             } label: {
-                Label(viewModel.currentQualityTitle ?? "画质", systemImage: "slider.horizontal.3")
-                    .font(.caption.weight(.semibold))
+                PiliLabel(viewModel.currentQualityTitle ?? "画质", systemImage: "slider.horizontal.3")
+                    .font(.cc.sm.weight(.semibold))
                     .labelStyle(.titleAndIcon)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -437,11 +438,11 @@ private struct LiveDanmakuToggleButton: View {
         Button {
             viewModel.toggleDanmaku()
         } label: {
-            Label(
+            PiliLabel(
                 viewModel.isDanmakuEnabled ? "弹幕开" : "弹幕关",
                 systemImage: viewModel.isDanmakuEnabled ? "text.bubble.fill" : "text.bubble"
             )
-            .font(.caption.weight(.semibold))
+            .font(.cc.sm.weight(.semibold))
             .labelStyle(.titleAndIcon)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -459,11 +460,11 @@ private struct LiveDanmakuDiagnosticsButton: View {
         Button {
             viewModel.toggleLiveDanmakuDiagnostics()
         } label: {
-            Label(
+            PiliLabel(
                 viewModel.isLiveDanmakuDiagnosticsEnabled ? "诊断开" : "诊断",
                 systemImage: "waveform.path.ecg"
             )
-            .font(.caption.weight(.semibold))
+            .font(.cc.sm.weight(.semibold))
             .labelStyle(.titleAndIcon)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)

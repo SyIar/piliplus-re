@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct VideoCardElevatedBody<Cover: View>: View {
     let display: VideoCardDisplayModel
@@ -21,7 +22,7 @@ struct VideoCardElevatedBody<Cover: View>: View {
             .padding(.top, 7)
             .padding(.bottom, 8)
         }
-        .background(Color(.secondarySystemGroupedBackground))
+        .piliGlassCard()
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(Color(.separator).opacity(0.10), lineWidth: 0.5)
@@ -49,8 +50,10 @@ struct VideoCardBlendedBody<Cover: View>: View {
                 showsAuthorIdentity: showsAuthorIdentity,
                 usesGenericAuthorIcon: usesGenericAuthorIcon
             )
-            .padding(.horizontal, 2)
+            .padding(.horizontal, 10)
+            .padding(.bottom, 10)
         }
+        .piliGlassCard(radius: 15)
     }
 }
 
@@ -177,7 +180,7 @@ struct VideoCardBorderedCompactBody: View, Equatable {
             if !leadingMetadataText.isEmpty || !display.publishTimeText.isEmpty {
                 HStack(spacing: 8) {
                     if !leadingMetadataText.isEmpty {
-                        Label(leadingMetadataText, systemImage: leadingMetadataSystemImage)
+                        PiliLabel(leadingMetadataText, systemImage: leadingMetadataSystemImage)
                             .labelStyle(.titleAndIcon)
                             .lineLimit(1)
                     }
@@ -256,9 +259,7 @@ private struct CompactVideoResultSurfaceModifier: ViewModifier {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
 
         content
-            .background {
-                shape.fill(Color(.secondarySystemGroupedBackground))
-            }
+            .piliGlassCard(radius: cornerRadius)
             .overlay {
                 shape.strokeBorder(Color(.separator).opacity(0.16), lineWidth: 0.5)
             }
@@ -274,16 +275,12 @@ private struct VideoCardBorderedSurfaceModifier: ViewModifier {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
 
         content
-            .background {
-                shape
-                    .fill(.ultraThinMaterial)
-            }
+            .piliGlassCard(radius: cornerRadius)
             .clipShape(shape)
             .overlay {
-                shape.strokeBorder(borderColor, lineWidth: 1)
+                shape.strokeBorder(borderColor, lineWidth: 0.5)
             }
-            .shadow(color: .black.opacity(showsShadow ? shadowOpacity : 0), radius: 18, x: 0, y: 10)
-            .shadow(color: .black.opacity(showsShadow ? 0.06 : 0), radius: 6, x: 0, y: 2)
+            .shadow(color: .black.opacity(showsShadow ? shadowOpacity : 0), radius: 6, x: 0, y: 2)
     }
 
     private var borderColor: Color {
@@ -296,6 +293,6 @@ private struct VideoCardBorderedSurfaceModifier: ViewModifier {
     }
 
     private var shadowOpacity: Double {
-        colorScheme == .dark ? 0.18 : 0.10
+        colorScheme == .dark ? 0.08 : 0.04
     }
 }

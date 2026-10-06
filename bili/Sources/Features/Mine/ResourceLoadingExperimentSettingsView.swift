@@ -4,7 +4,7 @@ struct ResourceLoadingExperimentSettingsView: View {
     @ObservedObject var libraryStore: LibraryStore
 
     var body: some View {
-        Form {
+        PiliForm {
             Section("实验功能") {
                 featureToggle(
                     title: "断点续播预热",

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct LiveRoomCardMetadataRow: View {
     let room: LiveRoom
@@ -17,8 +18,8 @@ struct LiveRoomCardMetadataRow: View {
 
             HStack(spacing: 4) {
                 AvatarRemoteImage(urlString: room.face, pixelSize: 48) {
-                    Image(systemName: "person.crop.circle.fill")
-                        .font(.system(size: 13, weight: .medium))
+                    PiliIcon(systemName: "person.crop.circle.fill", size: 13)
+                        .font(.cc.sm)
                         .foregroundStyle(.tertiary)
                 }
                 .frame(width: 14, height: 14)

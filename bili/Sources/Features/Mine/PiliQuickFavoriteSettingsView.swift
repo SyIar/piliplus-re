@@ -12,7 +12,7 @@ struct PiliQuickFavoriteSettingsView: View {
         self.api = api; self.libraryStore = libraryStore; _session = ObservedObject(wrappedValue: api.sessionStore)
     }
     var body: some View {
-        List {
+        PiliList {
             Section {
                 Button { choose(0) } label: { row("关闭快速收藏", id: 0) }
                 ForEach(folders) { folder in
@@ -28,7 +28,7 @@ struct PiliQuickFavoriteSettingsView: View {
     private func row(_ title: String, id: Int) -> some View {
         HStack {
             Text(title).foregroundStyle(.primary); Spacer()
-            if libraryStore.quickFavoriteFolder(account: identity?.mid ?? 0) == id { Image(systemName: "checkmark") }
+            if libraryStore.quickFavoriteFolder(account: identity?.mid ?? 0) == id { PiliIcon(systemName: "checkmark") }
         }
     }
     private func choose(_ id: Int) {

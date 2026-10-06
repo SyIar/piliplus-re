@@ -8,7 +8,7 @@ struct PlaybackNetworkDiagnosticsFormContent: View {
     let configuration: PlaybackNetworkDiagnosticsFormConfiguration
 
     var body: some View {
-        Form {
+        PiliForm {
             PlaybackNetworkDiagnosticsFormSections(
                 diagnosticsStore: diagnosticsStore,
                 relatedStore: relatedStore,

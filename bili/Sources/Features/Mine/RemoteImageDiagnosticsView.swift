@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import ChunUI
 import UIKit
 
 struct RemoteImageDiagnosticsView: View {
@@ -12,7 +13,7 @@ struct RemoteImageDiagnosticsView: View {
     @State private var didCopy = false
 
     var body: some View {
-        Form {
+        PiliForm {
             if libraryStore.remoteImageDiagnosticsEnabled {
                 cacheSection
                 scrollSection
@@ -39,7 +40,7 @@ struct RemoteImageDiagnosticsView: View {
                         await reload()
                     }
                 } label: {
-                    Image(systemName: "arrow.clockwise")
+                    PiliIcon(systemName: "arrow.clockwise")
                 }
                 .disabled(isLoading || !libraryStore.remoteImageDiagnosticsEnabled)
                 .accessibilityLabel("刷新图片加载诊断")
@@ -64,7 +65,7 @@ struct RemoteImageDiagnosticsView: View {
             Button {
                 copyDiagnostics()
             } label: {
-                Label(didCopy ? "已复制" : "复制测试数据", systemImage: didCopy ? "checkmark" : "doc.on.doc")
+                PiliLabel(didCopy ? "已复制" : "复制测试数据", systemImage: didCopy ? "checkmark" : "doc.on.doc")
             }
             .disabled(
                 isLoading
@@ -79,7 +80,7 @@ struct RemoteImageDiagnosticsView: View {
                     await resetDiagnostics()
                 }
             } label: {
-                Label("重置诊断数据", systemImage: "arrow.counterclockwise")
+                PiliLabel("重置诊断数据", systemImage: "arrow.counterclockwise")
             }
             .disabled(isLoading)
         } footer: {
@@ -143,9 +144,9 @@ struct RemoteImageDiagnosticsView: View {
                 ForEach(cdnStatistics.hosts) { node in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(node.host)
-                            .font(.body.monospaced())
+                            .font(.cc.base.monospaced())
                         Text("请求 \(node.requestCount) · 成功 \(node.successCount) · 瞬时失败 \(node.transientFailureCount)")
-                            .font(.caption.monospacedDigit())
+                            .font(.cc.sm.monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
                 }

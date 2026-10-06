@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlaybackNetworkDiagnosticMultilineRow: View {
     let title: String
@@ -7,9 +8,9 @@ struct PlaybackNetworkDiagnosticMultilineRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.subheadline)
+                .font(.cc.base)
             Text(value)
-                .font(.caption)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)
         }

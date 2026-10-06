@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicLiveCover: View {
     let live: DynamicLive
@@ -28,8 +29,8 @@ struct DynamicLiveCover: View {
                 .clipped()
 
                 if showsCenterBadge {
-                    Label("直播中", systemImage: "dot.radiowaves.left.and.right")
-                        .font(.caption.weight(.bold))
+                    PiliLabel("直播中", systemImage: "dot.radiowaves.left.and.right")
+                        .font(.cc.sm.weight(.bold))
                         .foregroundStyle(.primary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
@@ -38,7 +39,7 @@ struct DynamicLiveCover: View {
                 }
 
                 Text(live.statusText)
-                    .font(.caption2.weight(.bold))
+                    .font(.cc.sm.weight(.bold))
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
@@ -74,7 +75,7 @@ struct DynamicLiveMetadata: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Label(live.statusText, systemImage: "dot.radiowaves.left.and.right")
+            PiliLabel(live.statusText, systemImage: "dot.radiowaves.left.and.right")
                 .foregroundStyle(appTintColor)
 
             if let viewerText = live.viewerText {

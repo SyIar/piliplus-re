@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct YouTubeStyleVideoFeedMetadataRow: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -164,8 +165,8 @@ struct YouTubeStyleVideoFeedMetadataRow: View {
     @ViewBuilder
     private var authorIdentityIcon: some View {
         AvatarRemoteImage(urlString: display.avatarURLString, pixelSize: 68) {
-            Image(systemName: "person.crop.circle.fill")
-                .font(.system(size: 24, weight: .medium))
+            PiliIcon(systemName: "person.crop.circle.fill", size: 24)
+                .font(.cc.lg)
                 .foregroundStyle(.tertiary)
         }
         .frame(width: Self.avatarSide, height: Self.avatarSide)

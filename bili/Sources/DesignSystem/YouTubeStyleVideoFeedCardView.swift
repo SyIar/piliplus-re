@@ -84,8 +84,11 @@ struct YouTubeStyleVideoFeedCardView: View, Equatable {
                 usesGenericAuthorIcon: usesGenericAuthorIcon,
                 placesViewAndPublishTimeTrailing: placesViewAndPublishTimeTrailing
             )
+            .padding(.horizontal, 10)
+            .padding(.bottom, 10)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+        .piliGlassCard()
         .contentShape(Rectangle())
     }
 

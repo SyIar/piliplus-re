@@ -14,7 +14,7 @@ struct PiliDLNAView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            PiliForm {
                 if let device = casting.renderer {
                     Section("正在投屏 · \(device.name)") {
                         Text(casting.title).ccText(font: .cc.baseBold, color: .cc.foreground)
@@ -48,7 +48,7 @@ struct PiliDLNAView: View {
                             if queue.loadMore != nil { Button("加载更多") { casting.loadMoreQueue() } }
                             ForEach(Array(queue.entries.enumerated()), id: \.element.id) { index, entry in
                                 Button { casting.selectQueueItem(index) } label: {
-                                    HStack { Text(entry.title); Spacer(); if index == casting.queueIndex { Image(systemName: "tv.fill") } }
+                                    HStack { Text(entry.title); Spacer(); if index == casting.queueIndex { PiliIcon(systemName: "tv.fill") } }
                                 }
                             }
                         }.disabled(casting.isBusy)
@@ -66,10 +66,10 @@ struct PiliDLNAView: View {
                         ForEach(discovery.devices) { device in
                             Button { start(device) } label: {
                                 HStack {
-                                    Image(systemName: "tv")
+                                    PiliIcon(systemName: "tv")
                                     Text(device.name)
                                     Spacer()
-                                    if casting.renderer?.id == device.id { Image(systemName: "checkmark") }
+                                    if casting.renderer?.id == device.id { PiliIcon(systemName: "checkmark") }
                                 }
                             }.disabled(casting.isBusy)
                         }

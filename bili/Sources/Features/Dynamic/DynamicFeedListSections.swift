@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicFeedItemsList: View {
     let api: BiliAPIClient
@@ -46,20 +47,20 @@ struct DynamicFeedFooter: View {
                 Button {
                     Task { await viewModel.loadMore() }
                 } label: {
-                    Label("加载更多", systemImage: "chevron.down")
-                        .font(.subheadline.weight(.semibold))
+                    PiliLabel("加载更多", systemImage: "chevron.down")
+                        .font(.cc.base.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .foregroundStyle(.primary)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glass)
                 .buttonBorderShape(.capsule)
                 .controlSize(.small)
                 .tint(appTintColor)
                 .padding(.top, 10)
             } else {
                 Text("没有更多动态了")
-                    .font(.caption)
+                    .font(.cc.sm)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)

@@ -26,7 +26,7 @@ struct PiliDiscoveryView: View {
                 if let error { Text(error); Button("重试") { Task { await reload() } } }
                 if loading { ProgressView().frame(maxWidth: .infinity) }
                 else if more { Button("加载更多") { Task { await loadPage() } }.frame(maxWidth: .infinity) }
-                else if error == nil, videos.isEmpty, media.isEmpty { ContentUnavailableView("暂无内容", systemImage: "play.rectangle") }
+                else if error == nil, videos.isEmpty, media.isEmpty { PiliUnavailableView("暂无内容", systemImage: "play.rectangle") }
             }.padding()
         }.navigationTitle("发现好视频").navigationBarTitleDisplayMode(.inline)
             .task(id: queryID) { await reload() }.refreshable { await reload() }

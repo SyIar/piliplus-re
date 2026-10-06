@@ -28,9 +28,9 @@ struct HomeFeedNavigationChrome: ViewModifier {
                         HStack(spacing: 10) {
                             HStack(spacing: 0) {
                                 Button {
-                                    AppHelper.shared.presentSheet(.sheet) { PiliDLNAView() }
+                                    PiliPresentation.present(.sheet) { PiliDLNAView() }
                                 } label: {
-                                    Image(systemName: "tv").frame(width: 42, height: 42)
+                                    PiliIcon(systemName: "tv").frame(width: 42, height: 42)
                                 }
                                 .accessibilityLabel("投屏设备")
                                 accountMessageButton.frame(width: 42, height: 42)
@@ -40,8 +40,8 @@ struct HomeFeedNavigationChrome: ViewModifier {
 
                             NavigationLink(value: MineOverlayRoute.multiAccountSettings) {
                                 AvatarRemoteImage(urlString: sessionStore.user?.face, pixelSize: 88) {
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .font(.system(size: 32, weight: .regular))
+                                    PiliIcon(systemName: "person.crop.circle.fill", size: 32)
+                                        .font(.cc.lg)
                                         .foregroundStyle(.primary)
                                 }
                                 .frame(width: 40, height: 40)
@@ -151,9 +151,9 @@ private struct HomeAccountMessageButtonContent: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "bell")
+            PiliIcon(systemName: "bell")
                 .symbolRenderingMode(.monochrome)
-                .font(.system(size: 18, weight: .medium))
+                .font(.cc.base)
                 .foregroundStyle(Color.primary)
                 .overlay(alignment: .topTrailing) {
                     if hasUnread {

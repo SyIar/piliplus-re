@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct MineHomeSettingsSection: View {
     @EnvironmentObject private var homeRecommendDiagnosticsStore: HomeRecommendDiagnosticsStore
@@ -32,7 +33,7 @@ struct MineHomeSettingsSection: View {
             .pickerStyle(.menu)
 
             Text(recommendSourceHint)
-                .font(.footnote)
+                .font(.cc.sm)
                 .foregroundStyle(.secondary)
 
             NavigationLink {
@@ -125,13 +126,13 @@ private struct MineHomeRefreshDistanceControl: View {
                         ? "系统默认"
                         : "\(Int(libraryStore.homeRefreshTriggerDistance)) pt"
                 )
-                    .font(.subheadline.monospacedDigit())
+                    .font(.cc.base.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
 
             if libraryStore.nativePullRefreshEnabled {
                 Text(refreshDistanceHint)
-                    .font(.footnote)
+                    .font(.cc.sm)
                     .foregroundStyle(.secondary)
             } else {
                 Slider(
@@ -151,7 +152,7 @@ private struct MineHomeRefreshDistanceControl: View {
 
                 HStack {
                     Text(refreshDistanceHint)
-                        .font(.footnote)
+                        .font(.cc.sm)
                         .foregroundStyle(.secondary)
                     Spacer(minLength: 12)
                     Button("默认") {

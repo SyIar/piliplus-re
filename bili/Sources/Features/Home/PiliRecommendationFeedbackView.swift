@@ -11,7 +11,7 @@ struct PiliRecommendationFeedbackView: View {
     @State private var error: String?
     @State private var disliked: Bool?
     @State private var submitted = false
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     init(api: BiliAPIClient, video: VideoItem, onDislike: (() -> Void)? = nil) {
         self.api = api; self.video = video; self.onDislike = onDislike
         identity = PiliAccountIdentity(api.requestSnapshot())
@@ -19,9 +19,9 @@ struct PiliRecommendationFeedbackView: View {
     }
     var body: some View {
         NavigationStack {
-            List {
-                Text(video.title).font(.headline)
-                if submitted { Label("已提交推荐反馈", systemImage: "checkmark.circle") }
+            PiliList {
+                Text(video.title).font(.cc.baseBold)
+                if submitted { PiliLabel("已提交推荐反馈", systemImage: "checkmark.circle") }
                 else if let metadata = video.piliRecommendation, !metadata.reasons.isEmpty {
                     Section("不感兴趣的原因") {
                         ForEach(metadata.reasons) { reason in
@@ -30,7 +30,7 @@ struct PiliRecommendationFeedbackView: View {
                     }
                 } else { Text("当前卡片未提供推荐反馈原因，可使用视频点踩。") }
                 if let disliked {
-                    Button(disliked ? "取消视频点踩" : "视频点踩", systemImage: "hand.thumbsdown") { dislike(!disliked) }.disabled(busy)
+                    PiliIconButton(disliked ? "取消视频点踩" : "视频点踩", systemImage: "hand.thumbsdown") { dislike(!disliked) }.disabled(busy)
                 }
                 if busy { ProgressView() }
                 if let error { Text(error).foregroundStyle(.secondary) }
@@ -74,8 +74,8 @@ struct PiliRecommendationMenu: ViewModifier {
     @EnvironmentObject private var dependencies: AppDependencies
     func body(content: Content) -> some View {
         content.contextMenu {
-            Button("不感兴趣／视频点踩", systemImage: "hand.thumbsdown") {
-                AppHelper.shared.presentSheet(.sheet) { PiliRecommendationFeedbackView(api: dependencies.api, video: video) }
+            PiliIconButton("不感兴趣／视频点踩", systemImage: "hand.thumbsdown") {
+                PiliPresentation.present(.sheet) { PiliRecommendationFeedbackView(api: dependencies.api, video: video) }
             }
         }
     }

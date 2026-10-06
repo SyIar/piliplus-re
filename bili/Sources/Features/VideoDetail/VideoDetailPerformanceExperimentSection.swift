@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct PlayerPerformanceOverlayExperimentSection: View {
     let snapshot: VideoDetailPerformanceExperimentSnapshot
@@ -6,11 +7,11 @@ struct PlayerPerformanceOverlayExperimentSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Image(systemName: "rectangle.on.rectangle.angled")
-                    .font(.caption2.weight(.semibold))
+                PiliIcon(systemName: "rectangle.on.rectangle.angled")
+                    .font(.cc.sm.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Text("刷新优化")
-                    .font(.caption2.weight(.semibold))
+                    .font(.cc.sm.weight(.semibold))
                 Spacer(minLength: 0)
             }
 
@@ -54,7 +55,7 @@ struct PlayerPerformanceOverlayExperimentSection: View {
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .font(.caption2.monospacedDigit())
+        .font(.cc.sm.monospacedDigit())
     }
 
     private func millisecondsText(_ milliseconds: Int) -> String {

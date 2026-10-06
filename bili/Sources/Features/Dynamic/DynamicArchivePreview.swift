@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct DynamicArchivePreview: View {
     @Environment(\.showsVideoCoverDurationBadges) private var showsVideoCoverDurationBadges
@@ -72,7 +73,7 @@ struct DynamicArchivePreview: View {
             .layoutPriority(1)
         }
         .padding(8)
-        .background(Color(.secondarySystemGroupedBackground))
+        .piliGlassCard()
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
@@ -116,7 +117,7 @@ struct DynamicArchivePreview: View {
                     .lineLimit(1)
             }
         }
-        .font(.caption)
+        .font(.cc.sm)
         .foregroundStyle(.secondary)
     }
 }

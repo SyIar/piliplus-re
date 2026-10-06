@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct SearchContentView: View {
     @ObservedObject var viewModel: SearchViewModel
@@ -59,7 +60,7 @@ private struct SearchFilterCapsule: View {
             orderMenu
             if viewModel.selectedScope.supportsOrder { durationMenu }
         }
-        .font(.subheadline.weight(.medium))
+        .font(.cc.base.weight(.medium))
         .lineLimit(1)
         .frame(maxWidth: .infinity, minHeight: 40)
         .foregroundStyle(.primary)
@@ -73,7 +74,7 @@ private struct SearchFilterCapsule: View {
                         await viewModel.selectScope(scope, animation: .smooth(duration: 0.28))
                     }
                 } label: {
-                    Label(
+                    PiliLabel(
                         scope.title,
                         systemImage: scope == viewModel.selectedScope
                             ? "checkmark"
@@ -97,7 +98,7 @@ private struct SearchFilterCapsule: View {
                 Button {
                     Task { await viewModel.selectOrder(order) }
                 } label: {
-                    Label(
+                    PiliLabel(
                         order.title,
                         systemImage: order == viewModel.selectedOrder
                             ? "checkmark"
@@ -121,7 +122,7 @@ private struct SearchFilterCapsule: View {
         Menu {
             ForEach(PiliSearchDuration.allCases) { duration in
                 Button { Task { await viewModel.selectDuration(duration) } } label: {
-                    Label(duration.title, systemImage: duration == viewModel.selectedDuration ? "checkmark" : "clock")
+                    PiliLabel(duration.title, systemImage: duration == viewModel.selectedDuration ? "checkmark" : "clock")
                 }
             }
         } label: { filterLabel(title: viewModel.selectedDuration.title) }
@@ -132,8 +133,8 @@ private struct SearchFilterCapsule: View {
     private func filterLabel(title: String) -> some View {
         HStack(spacing: 4) {
             Text(title)
-            Image(systemName: "chevron.down")
-                .font(.caption2.weight(.bold))
+            PiliIcon(systemName: "chevron.down")
+                .font(.cc.sm.weight(.bold))
         }
         .fixedSize(horizontal: true, vertical: false)
         .contentShape(Rectangle())

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct SettingsNavigationRow: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -8,8 +9,8 @@ struct SettingsNavigationRow: View {
 
     var body: some View {
         HStack(spacing: 13) {
-            Image(systemName: systemImage)
-                .font(.system(size: 19, weight: .regular))
+            PiliIcon(systemName: systemImage, size: 19)
+                .font(.cc.base)
                 .symbolRenderingMode(.monochrome)
                 .foregroundStyle(appTintColor)
                 .frame(width: 30, height: 30)
@@ -73,7 +74,7 @@ struct MinePlaybackPreferenceChip: View {
             .foregroundStyle(.secondary)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(Color(uiColor: .secondarySystemGroupedBackground), in: Capsule())
+            .ccGlassEffect(.capsule)
             .overlay {
                 Capsule()
                     .stroke(Color(uiColor: .separator).opacity(0.10), lineWidth: 0.5)

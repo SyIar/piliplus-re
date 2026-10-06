@@ -67,15 +67,15 @@ struct VideoDetailSummaryCard: View {
                 HStack(spacing: 8) {
                     if !viewModel.detail.piliIsCourse { PiliTripleButton(viewModel: viewModel, store: renderPack.interactionStore) }
                     tool("章节与视频信息", icon: "list.bullet.rectangle") {
-                        AppHelper.shared.presentSheet(.sheet) { PiliVideoToolsView(model: viewModel, store: viewModel.piliVideoTools) }
+                        PiliPresentation.present(.sheet) { PiliVideoToolsView(model: viewModel, store: viewModel.piliVideoTools) }
                     }
                     if !viewModel.detail.isPGCEpisode, !viewModel.detail.piliIsCourse {
                         tool("AI 总结", icon: "text.badge.star") {
-                            AppHelper.shared.presentSheet(.sheet) { PiliAIConclusionView(model: viewModel) }
+                            PiliPresentation.present(.sheet) { PiliAIConclusionView(model: viewModel) }
                         }
                         tool("视频点踩", icon: "hand.thumbsdown") {
                             let video = viewModel.detail
-                            AppHelper.shared.presentSheet(.sheet) {
+                            PiliPresentation.present(.sheet) {
                                 PiliRecommendationFeedbackView(api: viewModel.api, video: video) {
                                     guard viewModel.detail.bvid == video.bvid else { return }
                                     viewModel.interactionState.isLiked = false
@@ -85,16 +85,16 @@ struct VideoDetailSummaryCard: View {
                     }
                     tool("截图与动图", icon: "camera") { PiliMediaCaptureView.present(viewModel) }
                     tool("原声翻译", icon: "waveform") {
-                        AppHelper.shared.presentSheet(.sheet) { NavigationStack { PiliAudioLanguageView(viewModel: viewModel) } }
+                        PiliPresentation.present(.sheet) { NavigationStack { PiliAudioLanguageView(viewModel: viewModel) } }
                     }
                     tool("离线下载", icon: "arrow.down.circle") {
-                        AppHelper.shared.presentSheet(.sheet) { PiliDownloadSheet(viewModel: viewModel) }
+                        PiliPresentation.present(.sheet) { PiliDownloadSheet(viewModel: viewModel) }
                     }
                     tool("投屏", icon: "tv") {
-                        AppHelper.shared.presentSheet(.sheet) { PiliDLNAView(source: { try .online(viewModel) }) }
+                        PiliPresentation.present(.sheet) { PiliDLNAView(source: { try .online(viewModel) }) }
                     }
                     tool("空降助手", icon: "forward.end") {
-                        AppHelper.shared.presentSheet(.sheet) { PiliSponsorView(model: viewModel) }
+                        PiliPresentation.present(.sheet) { PiliSponsorView(model: viewModel) }
                     }
                     tool("字幕", icon: "captions.bubble") {
                         PiliSubtitleSettingsView.present(controller: viewModel.piliSubtitles) { seconds in
@@ -104,15 +104,15 @@ struct VideoDetailSummaryCard: View {
                     }
                     if viewModel.piliPlaybackQueue != nil || viewModel.detail.piliUGCSeason != nil {
                         tool("播放列表", icon: "list.bullet") {
-                            AppHelper.shared.presentSheet(.sheet) { PiliCollectionQueueView(viewModel: viewModel) }
+                            PiliPresentation.present(.sheet) { PiliCollectionQueueView(viewModel: viewModel) }
                         }
                     }
                     tool("互动分支", icon: "point.topleft.down.to.point.bottomright.curvepath") {
-                        AppHelper.shared.presentSheet(.sheet) { PiliInteractiveHistoryView(controller: viewModel.piliInteractive) }
+                        PiliPresentation.present(.sheet) { PiliInteractiveHistoryView(controller: viewModel.piliInteractive) }
                     }
                     if let aid = viewModel.detail.aid {
                         tool("记笔记", icon: "square.and.pencil") {
-                            AppHelper.shared.presentSheet(.sheet) {
+                            PiliPresentation.present(.sheet) {
                                 NavigationStack {
                                     PiliNoteEditorView(api: viewModel.api, aid: aid, initialTitle: viewModel.detail.title,
                                                        noteID: nil, initialText: "", time: viewModel.stablePlayerViewModel?.currentTime)
@@ -120,12 +120,12 @@ struct VideoDetailSummaryCard: View {
                             }
                         }
                         tool("举报视频", icon: "exclamationmark.bubble") {
-                            AppHelper.shared.presentSheet(.sheet) {
+                            PiliPresentation.present(.sheet) {
                                 NavigationStack { PiliAccountWebView(api: viewModel.api, url: URL(string: "https://www.bilibili.com/appeal/?avid=\(aid)")!, title: "举报视频") }
                             }
                         }
                         tool("视频笔记", icon: "note.text") {
-                            AppHelper.shared.presentSheet(.sheet) { PiliNotesLibraryView(api: viewModel.api, video: viewModel.detail) }
+                            PiliPresentation.present(.sheet) { PiliNotesLibraryView(api: viewModel.api, video: viewModel.detail) }
                         }
                     }
                 }
@@ -143,8 +143,8 @@ struct VideoDetailSummaryCard: View {
 
     private func tool(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(title, systemImage: icon)
-                .font(.system(size: 13, weight: .medium))
+            PiliLabel(title, systemImage: icon)
+                .font(.cc.sm)
                 .padding(.horizontal, 14).frame(height: 36)
         }
         .buttonStyle(.plain)

@@ -1,4 +1,5 @@
 import SwiftUI
+import ChunUI
 
 struct CommentsSectionHeader: View {
     @Environment(\.appThemeTintColor) private var appTintColor
@@ -10,11 +11,11 @@ struct CommentsSectionHeader: View {
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
             Text("评论")
-                .font(.headline)
+                .font(.cc.baseBold)
 
             if let count = store.replyCountText {
                 Text(count)
-                    .font(.caption.weight(.semibold))
+                    .font(.cc.sm.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
 
@@ -26,7 +27,7 @@ struct CommentsSectionHeader: View {
                         selectCommentSort(sort)
                     } label: {
                         Text(sort.title)
-                            .font(.caption.weight(.semibold))
+                            .font(.cc.sm.weight(.semibold))
                             .padding(.horizontal, 9)
                             .padding(.vertical, 5)
                             .background(store.selectedSort == sort ? appTintColor.opacity(0.14) : Color.clear)
