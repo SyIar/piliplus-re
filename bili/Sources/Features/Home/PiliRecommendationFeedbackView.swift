@@ -75,11 +75,15 @@ struct PiliRecommendationActions: View {
     let video: VideoItem
     @EnvironmentObject private var dependencies: AppDependencies
     @EnvironmentObject private var session: SessionStore
+    @Environment(\.openVideoOwnerRouteAction) private var openOwner
     @State private var addingToWatchLater = false
 
+    // UIKit-backed menus require native Text/Label action titles. The masked
+    // Pika label is for SwiftUI page controls; wrapping it here loses the title
+    // when SwiftUI converts the actions to UIMenu (including accessibility).
     var body: some View {
         if session.isLoggedIn {
-            PiliIconButton("稍后再看", systemImage: "clock") {
+            Button("稍后再看") {
                 guard !addingToWatchLater else { return }
                 addingToWatchLater = true
                 Task {
@@ -92,20 +96,19 @@ struct PiliRecommendationActions: View {
             }.disabled(addingToWatchLater)
         }
         if let owner = video.owner, owner.mid > 0 {
-            VideoOwnerRouteLink(owner: owner) {
-                PiliLabel("访问 UP 主", systemImage: "person.crop.circle")
-            }
+            if let openOwner { Button("访问 UP 主") { openOwner(owner) } }
+            else { NavigationLink("访问 UP 主", value: owner) }
         }
-        PiliIconButton("复制 BV 号", systemImage: "doc.on.doc") {
+        Button("复制 BV 号") {
             UIPasteboard.general.string = video.bvid
             CCToastCenter.shared.show(.success, "已复制 BV 号")
         }
-        PiliIconButton("复制链接", systemImage: "link") {
+        Button("复制链接") {
             UIPasteboard.general.string = "https://www.bilibili.com/video/\(video.bvid)"
             CCToastCenter.shared.show(.success, "已复制链接")
         }
         Divider()
-        PiliIconButton("不感兴趣", systemImage: "hand.thumbsdown") {
+        Button("不感兴趣") {
             PiliPresentation.present(.sheet) {
                 PiliRecommendationFeedbackView(api: dependencies.api, video: video)
             }

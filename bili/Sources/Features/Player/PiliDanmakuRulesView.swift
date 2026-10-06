@@ -15,12 +15,16 @@ struct PiliDanmakuRulesView: View {
                 Text("请先登录，再管理弹幕屏蔽规则")
             } else {
                 Section("添加规则") {
-                    Picker("规则类型", selection: $type) {
+                    PiliSettingPicker("规则类型", selection: $type) {
                         Text("关键词").tag(0); Text("正则表达式").tag(1); Text("用户 UID").tag(2)
                     }
-                    TextField(type == 2 ? "用户 UID" : "屏蔽内容", text: $text)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    PiliSettingAction(title: type == 2 ? "UID" : "内容") {
+                        TextField("输入屏蔽内容", text: $text)
+                            .textInputAutocapitalization(.never).autocorrectionDisabled()
+                            .multilineTextAlignment(.trailing)
+                    }
                     Button("添加") { mutate { expected in try await store.add(text: text, type: type, api: api, identity: expected); text = "" } }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                         .disabled(store.busy || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
                 ForEach(0..<3) { kind in
@@ -36,7 +40,9 @@ struct PiliDanmakuRulesView: View {
                     }
                 }
                 Section {
-                    Button("同步云端规则") { Task { await store.refresh(api: api, force: true) } }.disabled(store.busy)
+                    PiliSettingAction(title: "云端规则") {
+                        Button("同步") { Task { await store.refresh(api: api, force: true) } }.disabled(store.busy)
+                    }
                 } footer: { Text("规则随账号同步；离线时继续使用本机缓存。删除规则后，当前视频中的对应弹幕会恢复显示。") }
             }
             if store.busy { ProgressView() }
