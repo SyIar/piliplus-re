@@ -47,7 +47,13 @@ struct PiliInteractiveFixture: View {
             }, navigator: { _, _, _ in })
         }
         // Fixture clips finish immediately; branch state and UI remain production code.
-        .onChange(of: controller.history.last?.id) { _, _ in _ = controller.handlePlaybackEnded() }
+        .onChange(of: controller.history.last?.id) { _, _ in
+            _ = controller.handlePlaybackEnded()
+            if ProcessInfo.processInfo.arguments.contains("--ui-test-interactive-hotspots"),
+               controller.edge?.edgeID == 1, let choice = controller.visibleChoices.first {
+                controller.choose(choice)
+            }
+        }
     }
     private static let root = #"""
     {
