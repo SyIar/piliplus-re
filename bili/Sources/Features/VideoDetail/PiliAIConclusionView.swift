@@ -15,7 +15,7 @@ nonisolated struct PiliAIConclusion: Equatable, Sendable {
         summary = result["summary"].piliString
         outline = result["outline"].piliArray.prefix(200).enumerated().map { index, value in
             let points = value["part_outline"].piliArray.prefix(500).enumerated().compactMap { offset, point -> Point? in
-                guard let seconds = Double(point["timestamp"].piliString), seconds.isFinite, seconds >= 0,
+                guard let seconds = Double(point["timestamp"].piliString), seconds.isFinite, seconds >= 0, seconds <= Double(Int32.max),
                       !point["content"].piliString.isEmpty else { return nil }
                 return .init(id: offset, seconds: seconds, content: point["content"].piliString)
             }

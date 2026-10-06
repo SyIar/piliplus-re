@@ -4,6 +4,7 @@ extension BiliAPIClient {
     func piliLiveFavoriteAreas(identity: PiliAccountIdentity) async throws -> [LiveArea] {
         let data = try await piliAccountAppRequest(path: "/xlive/app-interface/v2/second/get_fav_tag", parameters: [:],
             post: false, identity: identity, base: Self.piliLiveBase)
+        if case .object = data, case .null = data["tags"] { return [] }
         guard case .array(let values) = data["tags"] else { throw BiliAPIError.missingPayload }
         var seen = Set<Int>()
         return try values.map { try $0.piliDecode(LiveArea.self) }.filter { $0.id > 0 && seen.insert($0.id).inserted }

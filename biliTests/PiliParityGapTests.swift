@@ -64,7 +64,7 @@ final class PiliParityGapTests: XCTestCase {
     }
 
     func testAIConclusionHandlesUnavailableAndMalformedTimePoints() throws {
-        let raw = try JSONDecoder().decode(DynamicJSONValue.self, from: Data(#"{"code":0,"model_result":{"summary":"摘要","outline":[{"title":"第一章","part_outline":[{"timestamp":65,"content":"重点"},{"timestamp":-1,"content":"负数"},{"content":"缺少时间"}]}]}}"#.utf8))
+        let raw = try JSONDecoder().decode(DynamicJSONValue.self, from: Data(#"{"code":0,"model_result":{"summary":"摘要","outline":[{"title":"第一章","part_outline":[{"timestamp":65,"content":"重点"},{"timestamp":-1,"content":"负数"},{"timestamp":1e300,"content":"溢出"},{"content":"缺少时间"}]}]}}"#.utf8))
         let result = try PiliAIConclusion(raw)
         XCTAssertEqual(result.summary, "摘要")
         XCTAssertEqual(result.outline.first?.points.map(\.seconds), [65])

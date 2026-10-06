@@ -13,6 +13,8 @@ extension VideoDetailViewModel {
         }) {
             let folders = try await api.fetchFavoriteFolders(for: aid)
             guard identity.matches(api.requestSnapshot(purpose: .interaction)), isCurrentVideoContext(aid: aid, bvid: bvid), !isPlaybackInvalidatedForNavigation else { throw CancellationError() }
+            favoriteFolders = folders
+            favoriteFolderState = .loaded
             guard let folder = folders.first(where: { $0.id == folderID }) else {
                 libraryStore.setQuickFavoriteFolder(0, account: identity.mid)
                 interactionMessage = "默认收藏夹已不可用，请重新选择"

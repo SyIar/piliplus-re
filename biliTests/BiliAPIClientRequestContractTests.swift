@@ -5053,6 +5053,39 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     @MainActor
+    func testMissingQuickFavoriteFolderFallsBackWithFreshFolderListAndNoWrite() async throws {
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/v3/fav/folder/created/list-all" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"id":8,"title":"剩余收藏夹","fav_state":0}]}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":-404}"#)
+        }
+        let api = try makeAPI(cookieHeader: "SESSDATA=fav; DedeUserID=1001; bili_jct=fav-csrf")
+        api.libraryStore.setQuickFavoriteFolder(7, account: 1001)
+        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","aid":123,"title":"测试","cid":99}"#.utf8))
+        let model = VideoDetailViewModel(seedVideo: video, api: api, libraryStore: api.libraryStore,
+            sessionStore: api.sessionStore, sponsorBlockService: SponsorBlockService())
+        model.favoriteFolders = [try JSONDecoder().decode(FavoriteFolder.self, from: Data(#"{"id":7,"title":"已删除"}"#.utf8))]
+        let handled = await model.quickFavoriteIfConfigured()
+        XCTAssertFalse(handled)
+        XCTAssertEqual(api.libraryStore.quickFavoriteFolder(account: 1001), 0)
+        XCTAssertEqual(model.favoriteFolders.map(\.id), [8])
+        XCTAssertFalse(recorder.requests.contains { $0.httpMethod == "POST" })
+    }
+
+    @MainActor
+    func testNewAccountsCanStartWithEmptyDanmakuAndLiveFavorites() async throws {
+        RequestContractURLProtocol.install { request in Self.response(for: request, body: #"{"code":0,"data":{}}"#) }
+        let api = try makeAPI(cookieHeader: "SESSDATA=empty; DedeUserID=1001; bili_jct=empty-csrf", accessKey: "empty-access")
+        let identity = PiliAccountIdentity(api.requestSnapshot())
+        let rules = try await api.piliDanmakuRules(identity: identity)
+        let areas = try await api.piliLiveFavoriteAreas(identity: identity)
+        XCTAssertTrue(rules.isEmpty); XCTAssertTrue(areas.isEmpty)
+    }
+
+    @MainActor
     private func makeAPI(
         cookieHeader: String,
         accessKey: String? = nil,

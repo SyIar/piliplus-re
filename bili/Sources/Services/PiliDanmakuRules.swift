@@ -51,6 +51,7 @@ nonisolated struct PiliDanmakuRuleMatcher {
 extension BiliAPIClient {
     func piliDanmakuRules(identity: PiliAccountIdentity) async throws -> [PiliDanmakuRule] {
         let data = try await piliContentRead("/x/dm/filter/user", identity: identity)
+        if case .object = data, case .null = data["rule"] { return [] }
         guard case .array(let values) = data["rule"], values.count <= 5000 else { throw BiliAPIError.missingPayload }
         return try values.map { try $0.piliDecode(PiliDanmakuRule.self) }
     }
