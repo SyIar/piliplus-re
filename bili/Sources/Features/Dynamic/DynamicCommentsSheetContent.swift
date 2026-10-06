@@ -14,7 +14,9 @@ struct DynamicCommentsSheetContent: View {
                 replyCount: viewModel.displayedReplyCount,
                 selectedSort: Binding(
                     get: { viewModel.selectedSort },
-                    set: selectSort
+                    // Keep the MainActor call explicit. Passing the isolated
+                    // function directly triggers a Swift 6.3 IRGen thunk crash.
+                    set: { sort in selectSort(sort) }
                 )
             )
             .padding(.horizontal, 14)
