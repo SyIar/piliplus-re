@@ -52,7 +52,7 @@ struct MinePlaybackToolsSection: View {
                 VStack(alignment: .leading, spacing: 3) {
                     MineSettingsLabel("可播放降级限时实验", systemImage: "timer")
                     Text("已有可播放低档位后，完整取流最多再等待 650ms；超时直接开始播放")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -64,7 +64,7 @@ struct MinePlaybackToolsSection: View {
                     VStack(alignment: .leading, spacing: 3) {
                         MineSettingsLabel("测试视频 \(index + 1)", systemImage: "play.rectangle")
                         Text(video.title)
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
                     }

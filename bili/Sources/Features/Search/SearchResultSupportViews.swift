@@ -26,7 +26,7 @@ struct SearchSoftPill: View {
 
     var body: some View {
         Text(text)
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .foregroundStyle(tint)
             .lineLimit(1)
             .padding(.horizontal, 7)
@@ -43,7 +43,7 @@ struct SearchImagePlaceholder: View {
             .fill(Color(.tertiarySystemFill))
             .overlay {
                 PiliIcon(systemName: systemImage)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
             }
     }

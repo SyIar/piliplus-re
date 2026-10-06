@@ -18,7 +18,7 @@ struct DetailNavigationOwnerLabel: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(displayName)
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .foregroundStyle(.primary)
@@ -26,7 +26,7 @@ struct DetailNavigationOwnerLabel: View {
 
                 if let subtitle = displaySubtitle {
                     Text(subtitle)
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .foregroundStyle(.secondary)
@@ -105,7 +105,7 @@ struct DetailToolbarFollowButton: View {
     private var button: some View {
         Button(action: action) {
             Text(isFollowing ? "已关注" : "关注")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .lineLimit(1)
                 .minimumScaleFactor(0.86)
                 .padding(.horizontal, isFollowing ? 8 : 10)

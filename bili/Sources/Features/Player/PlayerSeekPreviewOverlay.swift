@@ -8,13 +8,13 @@ struct PlayerSeekPreviewOverlay: View {
         VStack(spacing: 6) {
             if presentation.isCancelPending {
                 Text("松开手指，取消进退")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .lineLimit(1)
             } else {
                 previewImage
 
                 Text(timeText)
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .lineLimit(1)
                     .monospacedDigit()
             }

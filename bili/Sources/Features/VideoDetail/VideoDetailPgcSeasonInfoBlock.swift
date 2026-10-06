@@ -34,7 +34,7 @@ struct VideoDetailPgcSeasonInfoBlock: View {
 
                 VStack(alignment: .leading, spacing: 7) {
                     Text(season.displayTitle)
-                        .font(.cc.baseBold.weight(.bold))
+                        .piliFont(.baseBold).fontWeight(.bold)
                         .foregroundStyle(.primary)
                         .lineLimit(2)
 
@@ -48,12 +48,12 @@ struct VideoDetailPgcSeasonInfoBlock: View {
                             Text("共 \(episodeCount) 集")
                         }
                     }
-                    .font(.cc.sm.weight(.medium))
+                    .piliFont(.sm).fontWeight(.medium)
                     .foregroundStyle(.secondary)
 
                     if let subtitleText {
                         Text(subtitleText)
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
                     }
@@ -67,7 +67,7 @@ struct VideoDetailPgcSeasonInfoBlock: View {
             if let descriptionText {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(descriptionText)
-                        .font(.cc.base)
+                        .piliFont(.base)
                         .foregroundStyle(.secondary)
                         .lineLimit(isDescriptionExpanded ? nil : 3)
                         .textSelection(.enabled)
@@ -78,7 +78,7 @@ struct VideoDetailPgcSeasonInfoBlock: View {
                                 isDescriptionExpanded.toggle()
                             }
                         }
-                        .font(.cc.base.weight(.semibold))
+                        .piliFont(.base).fontWeight(.semibold)
                         .foregroundStyle(appTintColor)
                         .buttonStyle(.plain)
                     }

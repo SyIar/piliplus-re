@@ -47,7 +47,7 @@ private struct QRCodeLoginLoadingState: View {
         VStack(spacing: 14) {
             ProgressView()
             Text(message)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
         }
     }
@@ -93,7 +93,7 @@ private struct QRCodeLoginActiveState: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
             PiliLabel(state.message, systemImage: statusIcon)
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(statusColor)
                 .multilineTextAlignment(.center)
 
@@ -135,14 +135,14 @@ private struct QRCodeLoginRetryState: View {
     var body: some View {
         VStack(spacing: 14) {
             PiliIcon(systemName: systemImage, size: 48)
-                .font(.cc.lgBold)
+                .piliFont(.lgBold)
                 .foregroundStyle(.secondary)
 
             Text(title)
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
 
             Text(message)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -161,10 +161,10 @@ private struct QRCodeLoginSucceededState: View {
     var body: some View {
         VStack(spacing: 14) {
             PiliIcon(systemName: "checkmark.circle.fill", size: 54)
-                .font(.cc.lgBold)
+                .piliFont(.lgBold)
                 .foregroundStyle(Color.cc.success)
             Text(message)
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
         }
     }
 }

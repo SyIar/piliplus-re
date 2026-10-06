@@ -25,7 +25,7 @@ struct PiliReservationCreator: View {
                 TextField("直播标题", text: $title)
                 Picker("类型", selection: $subtype) { Text("公开直播").tag(0); Text("大航海直播").tag(1) }
                 DatePicker("开播时间", selection: $date, in: Date()...Date().addingTimeInterval(90 * 86400))
-                Text("至少选择 5 分钟之后；预约发布后可从动态查看。").font(.cc.sm).foregroundStyle(.secondary)
+                Text("至少选择 5 分钟之后；预约发布后可从动态查看。").piliFont(.sm).foregroundStyle(.secondary)
                 if let message { Text(message).foregroundStyle(Color.cc.destructive) }
                 if busy { ProgressView() }
             }.disabled(busy).navigationTitle("直播预约")

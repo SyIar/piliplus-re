@@ -25,15 +25,15 @@ private struct PiliAccountLogView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     switch kind {
                     case .devices:
-                        Text(item["device_name"].piliString).font(.cc.baseBold)
-                        Text([item["source"].piliString, item["latest_login_at"].piliString].joined(separator: " · ")).font(.cc.sm)
-                        if item["is_current_device"].piliInt == 1 { Text("服务端标记的当前设备").font(.cc.sm).foregroundStyle(.secondary) }
+                        Text(item["device_name"].piliString).piliFont(.baseBold)
+                        Text([item["source"].piliString, item["latest_login_at"].piliString].joined(separator: " · ")).piliFont(.sm)
+                        if item["is_current_device"].piliInt == 1 { Text("服务端标记的当前设备").piliFont(.sm).foregroundStyle(.secondary) }
                     case .logins:
-                        Text(item["time_at"].piliString).font(.cc.baseBold)
-                        Text(item["geo"].piliString); Text(item["ip"].piliString).font(.cc.sm).foregroundStyle(.secondary)
+                        Text(item["time_at"].piliString).piliFont(.baseBold)
+                        Text(item["geo"].piliString); Text(item["ip"].piliString).piliFont(.sm).foregroundStyle(.secondary)
                     default:
                         HStack { Text(item["reason"].piliString); Spacer(); Text(item["delta"].piliString).monospacedDigit() }
-                        Text(item["time"].piliString).font(.cc.sm).foregroundStyle(.secondary)
+                        Text(item["time"].piliString).piliFont(.sm).foregroundStyle(.secondary)
                     }
                 }.textSelection(.enabled)
             }

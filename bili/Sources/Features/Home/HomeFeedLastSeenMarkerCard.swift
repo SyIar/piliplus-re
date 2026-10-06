@@ -40,7 +40,7 @@ struct HomeFeedLastSeenMarkerCard: View {
                     )
 
                     Text("点击刷新推荐")
-                        .font(.cc.sm.weight(.medium))
+                        .piliFont(.sm).fontWeight(.medium)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -69,14 +69,14 @@ struct HomeFeedLastSeenMarkerCard: View {
                     markerAvatar(size: 14, iconSize: 8)
 
                     Text("点击刷新")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 
                     Spacer(minLength: 6)
 
                     Text("推荐")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -105,14 +105,14 @@ struct HomeFeedLastSeenMarkerCard: View {
                     markerAvatar(size: 14, iconSize: 8)
 
                     Text("点击刷新")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 
                     Spacer(minLength: 6)
 
                     Text("推荐")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -143,10 +143,10 @@ struct HomeFeedLastSeenMarkerCard: View {
 
                 HStack(spacing: 4) {
                     PiliIcon(systemName: "arrow.clockwise", size: 11)
-                        .font(.cc.smBold)
+                        .piliFont(.smBold)
 
                     Text("点击刷新推荐")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .lineLimit(1)
                 }
                 .foregroundStyle(.secondary)
@@ -168,10 +168,10 @@ struct HomeFeedLastSeenMarkerCard: View {
             .overlay {
                 VStack(spacing: 6) {
                     PiliIcon(systemName: "arrow.clockwise", size: 20)
-                        .font(.cc.baseBold)
+                        .piliFont(.baseBold)
 
                     Text("刷新")
-                        .font(.cc.sm.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                 }
                 .foregroundStyle(appTintColor)
             }
@@ -192,11 +192,11 @@ struct HomeFeedLastSeenMarkerCard: View {
 
                     VStack(spacing: 8) {
                         PiliIcon(systemName: "arrow.clockwise", size: 24)
-                            .font(.cc.lgBold)
+                            .piliFont(.lgBold)
                             .foregroundStyle(appTintColor)
 
                         Text("点击刷新")
-                            .font(.cc.base.weight(.semibold))
+                            .piliFont(.base).fontWeight(.semibold)
                             .foregroundStyle(appTintColor)
                             .lineLimit(1)
                     }

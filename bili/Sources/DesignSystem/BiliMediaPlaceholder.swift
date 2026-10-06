@@ -44,7 +44,7 @@ struct BiliMediaPlaceholder: View {
 
             if phase == .failed {
                 Text("加载失败")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 7)
                     .frame(height: 20)

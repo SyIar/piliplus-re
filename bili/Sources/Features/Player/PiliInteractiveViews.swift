@@ -53,12 +53,12 @@ struct PiliInteractiveChoicesView: View {
                                 Button(listsHotspots ? "画面选择" : "列表选择") { listsHotspots.toggle() }
                                     .buttonStyle(.glass)
                             }
-                        }.font(.cc.sm.weight(.semibold))
+                        }.piliFont(.sm).fontWeight(.semibold)
                         Spacer(minLength: 0)
                         if controller.isLoading {
                             ProgressView("加载分支").tint(.white)
                         } else if let error = controller.errorMessage {
-                            Text(error).font(.cc.sm).multilineTextAlignment(.center)
+                            Text(error).piliFont(.sm).multilineTextAlignment(.center)
                             HStack {
                                 Button("重试") { controller.retry() }.buttonStyle(.glass)
                                 if !controller.history.isEmpty {
@@ -70,7 +70,7 @@ struct PiliInteractiveChoicesView: View {
                             ScrollView {
                                 VStack(spacing: 8) {
                                     if let title = controller.plan?.question.title, !title.isEmpty {
-                                        Text(title).font(.cc.baseBold)
+                                        Text(title).piliFont(.baseBold)
                                     }
                                     ForEach(controller.visibleChoices) { choice in choiceButton(choice) }
                                 }
@@ -79,11 +79,11 @@ struct PiliInteractiveChoicesView: View {
                         }
                         if !controller.isLoading && controller.errorMessage == nil
                             && controller.hasEnded && controller.plan == nil {
-                            Text("剧情已结束").font(.cc.baseBold).accessibilityIdentifier("ui.interactive.finished")
+                            Text("剧情已结束").piliFont(.baseBold).accessibilityIdentifier("ui.interactive.finished")
                             Button("重新开始") { controller.restart() }.buttonStyle(.glassProminent).tint(.cc.primary)
                         }
                         if !shownVariables.isEmpty {
-                            Text(shownVariables).font(.cc.sm).foregroundStyle(.white.opacity(0.85))
+                            Text(shownVariables).piliFont(.sm).foregroundStyle(.white.opacity(0.85))
                                 .accessibilityIdentifier("ui.interactive.variables")
                         }
                     }
@@ -143,7 +143,7 @@ struct PiliInteractiveChoicesView: View {
     private func choiceButton(_ choice: PiliInteractiveEdge.Choice) -> some View {
         Button { controller.choose(choice) } label: {
             Text(choice.option?.isEmpty == false ? choice.option! : "继续")
-                .font(.cc.base.weight(.semibold)).lineLimit(2)
+                .piliFont(.base).fontWeight(.semibold).lineLimit(2)
                 .frame(maxWidth: .infinity, minHeight: 32)
         }
         .buttonStyle(.glassProminent).tint(.cc.primary)

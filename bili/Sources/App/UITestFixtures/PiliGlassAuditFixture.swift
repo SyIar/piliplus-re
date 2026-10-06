@@ -34,11 +34,11 @@ struct PiliGlassAuditFixture: View {
                     Text("已删除 \(deleted) 次").accessibilityIdentifier("glass.deleted")
                 }
                 Section("文字与状态") {
-                    Text("液态玻璃界面").font(.cc.lgBold)
+                    Text("液态玻璃界面").piliFont(.lgBold)
                     Text("使用 ChunUI 的语义颜色与三档字体；较大的文字应能完整换行。")
                     PiliLabel("连接正常", systemImage: "checkmark.circle")
                         .foregroundStyle(Color.cc.success)
-                    Text("无法连接时可以重试").font(.cc.sm).foregroundStyle(Color.cc.mutedForeground)
+                    Text("无法连接时可以重试").piliFont(.sm).foregroundStyle(Color.cc.mutedForeground)
                 }
             }
             .navigationTitle("界面预览")

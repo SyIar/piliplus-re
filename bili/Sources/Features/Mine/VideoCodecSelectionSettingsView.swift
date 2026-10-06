@@ -29,7 +29,7 @@ struct VideoCodecSelectionSettingsView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             MineSettingsLabel(codec.title, systemImage: codec.systemImage)
                             Text(codec.detail)
-                                .font(.cc.sm)
+                                .piliFont(.sm)
                                 .foregroundStyle(.secondary)
                         }
                     }

@@ -22,7 +22,7 @@ struct PiliSeasonActionsView: View {
                     }
                 }
             }.buttonStyle(.glass).disabled(!loaded || busy)
-            if let error { Text(error).font(.cc.sm).foregroundStyle(Color.cc.destructive); if !loaded { Button("重新加载状态") { Task { await load() } } } }
+            if let error { Text(error).piliFont(.sm).foregroundStyle(Color.cc.destructive); if !loaded { Button("重新加载状态") { Task { await load() } } } }
         }.task(id: "\(seasonID):\(isCourse):\(collectionBVID ?? "")") { identity = .init(api.requestSnapshot(purpose: .main)); await load() }
     }
     private var actionTitle: String { collectionBVID != nil ? "订阅合集" : isCourse ? "收藏课程" : "追番" }

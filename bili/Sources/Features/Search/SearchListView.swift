@@ -58,11 +58,11 @@ struct SearchListView: View {
             }
             if !viewModel.searchHistory.isEmpty {
                 SearchContentSection(title: "搜索历史", systemImage: "clock") {
-                    HStack { Spacer(); Button("清空", role: .destructive) { confirmsClearHistory = true }.font(.cc.sm) }
+                    HStack { Spacer(); Button("清空", role: .destructive) { confirmsClearHistory = true }.piliFont(.sm) }
                     LazyVGrid(columns: discoveryColumns, alignment: .leading, spacing: 10) {
                         ForEach(viewModel.searchHistory, id: \.self) { term in
                             Button { Task { await viewModel.search(term) } } label: {
-                                Text(term).font(.cc.base).lineLimit(1).frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+                                Text(term).piliFont(.base).lineLimit(1).frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
                                     .padding(.horizontal, 12).ccGlassEffect(.capsule)
                             }.buttonStyle(.plain)
                                 .contextMenu { PiliIconButton("删除记录", systemImage: "trash", role: .destructive) { viewModel.removeHistory(term) } }
@@ -95,7 +95,7 @@ struct SearchListView: View {
         ForEach(viewModel.results) { result in
             if shouldShowSectionHeader(for: result) {
                 PiliLabel(result.sectionTitle, systemImage: result.sectionSystemImage)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .padding(.top, result == viewModel.results.first ? 0 : 8)
             }
 
@@ -177,7 +177,7 @@ private struct SearchContentSection<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             PiliLabel(title, systemImage: systemImage)
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(.primary)
 
@@ -195,7 +195,7 @@ private struct SearchDiscoveryChip: View {
         Button(action: action) {
             HStack {
                 Text(item.showName ?? item.keyword)
-                    .font(.cc.base.weight(.medium))
+                    .piliFont(.base).fontWeight(.medium)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -277,7 +277,7 @@ struct SearchLoadingContent: View {
         VStack(alignment: .leading, spacing: showsTitle ? 16 : 12) {
             if showsTitle {
                 PiliLabel("正在搜索", systemImage: "magnifyingglass")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .labelStyle(.titleAndIcon)
             }
 

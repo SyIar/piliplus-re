@@ -20,7 +20,7 @@ struct VideoDetailInfoMetadataRow: View {
             if hasDescriptionContent {
                 Button(action: toggleExpansion) {
                     PiliIcon(systemName: isExpanded ? "chevron.up" : "chevron.down", size: 12)
-                        .font(.cc.smBold)
+                        .piliFont(.smBold)
                         .frame(width: 24, height: 24)
                         .contentShape(Rectangle())
                 }

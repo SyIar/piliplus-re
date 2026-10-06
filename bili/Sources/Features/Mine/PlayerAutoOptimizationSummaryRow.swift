@@ -7,11 +7,11 @@ struct PlayerAutoOptimizationSummaryRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             PiliLabel(profileTitle, systemImage: "wand.and.stars")
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(profileColor)
 
             Text(profileMessage)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)

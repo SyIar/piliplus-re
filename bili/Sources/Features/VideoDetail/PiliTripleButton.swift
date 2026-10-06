@@ -49,7 +49,7 @@ struct PiliTripleButton: View {
                         .symbolEffect(.bounce, options: .nonRepeating, value: reduceMotion ? 0 : success)
                 }
                 Text("三连")
-            }.font(.cc.sm).padding(.horizontal, 12).padding(.vertical, 8)
+            }.piliFont(.sm).padding(.horizontal, 12).padding(.vertical, 8)
         }.buttonStyle(.plain).piliLiquidGlass(in: Capsule(), interactive: true)
             .disabled(store.isMutatingLike || store.isMutatingCoin || store.isMutatingFavorite)
             .piliConfirmation("点赞、投币并收藏？", isPresented: $confirm, titleVisibility: .visible) {

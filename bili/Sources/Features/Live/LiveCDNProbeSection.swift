@@ -76,13 +76,13 @@ struct LiveCDNProbeSection: View {
                     model.start(candidates: viewModel.streamCandidates, headers: viewModel.streamHTTPHeaders)
                 }.disabled(viewModel.streamCandidates.isEmpty)
             }
-            if let message = model.message { Text(message).font(.cc.sm).foregroundStyle(.secondary) }
+            if let message = model.message { Text(message).piliFont(.sm).foregroundStyle(.secondary) }
             ForEach(model.rows) { row in
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(row.title).font(.cc.base)
-                    if let error = row.error { Text(error).font(.cc.sm).foregroundStyle(.secondary) }
+                    Text(row.title).piliFont(.base)
+                    if let error = row.error { Text(error).piliFont(.sm).foregroundStyle(.secondary) }
                     else if let progress = row.progress {
-                        Text("\(progress.phase) · \(ByteCountFormatter.string(fromByteCount: Int64(progress.bytes), countStyle: .binary)) · \(Int(progress.bytesPerSecond / 1024)) KB/s").font(.cc.sm).monospacedDigit()
+                        Text("\(progress.phase) · \(ByteCountFormatter.string(fromByteCount: Int64(progress.bytes), countStyle: .binary)) · \(Int(progress.bytesPerSecond / 1024)) KB/s").piliFont(.sm).monospacedDigit()
                         if progress.phase == "完成", !model.isRunning {
                             Button("使用此线路") {
                                 if let index = viewModel.streamCandidates.firstIndex(where: { $0.url == row.id }) {
@@ -90,7 +90,7 @@ struct LiveCDNProbeSection: View {
                                 }
                             }
                         }
-                    } else { Text("等待测速").font(.cc.sm).foregroundStyle(.secondary) }
+                    } else { Text("等待测速").piliFont(.sm).foregroundStyle(.secondary) }
                 }
             }
         }

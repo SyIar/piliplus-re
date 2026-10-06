@@ -29,10 +29,10 @@ struct PiliLiveChatView: View {
                         VStack(alignment: .leading, spacing: 5) {
                             HStack {
                                 Text(item.senderName ?? "观众").font(.cc.base.bold())
-                                if let meta = item.liveMetadata, !meta.medal.isEmpty { Text("\(meta.medal) \(meta.medalLevel)").font(.cc.sm).foregroundStyle(.secondary) }
+                                if let meta = item.liveMetadata, !meta.medal.isEmpty { Text("\(meta.medal) \(meta.medalLevel)").piliFont(.sm).foregroundStyle(.secondary) }
                             }
-                            if let meta = item.liveMetadata, meta.replyUID > 0 { Text("回复 @\(meta.replyName)").font(.cc.sm).foregroundStyle(.secondary) }
-                            Text(item.text).font(.cc.base).textSelection(.enabled)
+                            if let meta = item.liveMetadata, meta.replyUID > 0 { Text("回复 @\(meta.replyName)").piliFont(.sm).foregroundStyle(.secondary) }
+                            Text(item.text).piliFont(.base).textSelection(.enabled)
                         }.contextMenu { actions(item) }
                     }
                 }

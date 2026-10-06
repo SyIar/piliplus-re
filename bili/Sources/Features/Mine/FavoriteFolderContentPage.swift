@@ -25,7 +25,8 @@ struct FavoriteFolderContentPage: View {
                     PiliPresentation.present(.sheet) {
                         PiliFavoriteItemsView(api: dependencies.api, folder: folder) { Task { await reload() } }
                     }
-                }.disabled(!sessionStore.isLoggedIn || state.isLoading)
+                }.accessibilityLabel("刷新")
+                .disabled(!sessionStore.isLoggedIn || state.isLoading)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

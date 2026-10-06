@@ -1400,7 +1400,7 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
         if let deadline = detailViewModel.videoListenSleepTimerDeadline {
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 Text(VideoListenSleepTimerCountdownFormatter.text(deadline: deadline, now: context.date))
-                    .font(.cc.sm.monospacedDigit().weight(.semibold))
+                    .piliFont(.sm).monospacedDigit().fontWeight(.semibold)
                     .lineLimit(1)
                     .frame(width: max(48, metrics.controlHeight + 20), height: metrics.controlHeight)
             }
@@ -1531,17 +1531,17 @@ private struct VideoListenArtworkLayer: View {
     ) -> some View {
         VStack(alignment: alignment, spacing: 6) {
             PiliLabel("听视频中", systemImage: "headphones")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.white)
 
             Text(video.title)
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(textAlignment)
                 .lineLimit(titleLines)
 
             Text(ownerName)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(.white.opacity(0.76))
                 .lineLimit(1)
         }
@@ -2011,7 +2011,7 @@ private struct SurfaceOnlyLandscapeMoreHeader: View {
     var body: some View {
         ZStack {
             Text(title)
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
@@ -2019,24 +2019,26 @@ private struct SurfaceOnlyLandscapeMoreHeader: View {
                 if canGoBack {
                     Button(action: goBack) {
                         PiliIcon(systemName: "chevron.left", size: 15)
-                            .font(.cc.baseBold)
+                            .piliFont(.baseBold)
                             .frame(width: 32, height: 32)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.primary)
                     .contentShape(Circle())
+                    .accessibilityLabel("返回")
                 }
 
                 Spacer()
 
                 Button(action: close) {
                     PiliIcon(systemName: "xmark", size: 13)
-                        .font(.cc.smBold)
+                        .piliFont(.smBold)
                         .frame(width: 32, height: 32)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
                 .contentShape(Circle())
+                .accessibilityLabel("关闭")
             }
         }
         .frame(height: 48)
@@ -2375,11 +2377,11 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                         ProgressView()
                             .controlSize(.small)
                         Text("正在载入播放列表")
-                            .font(.cc.base)
+                            .piliFont(.base)
                             .foregroundStyle(.secondary)
                     } else {
                         Text(detailViewModel.videoListenQueueLoadFailed ? "播放列表载入失败" : "没有可播放内容")
-                            .font(.cc.base)
+                            .piliFont(.base)
                             .foregroundStyle(.secondary)
                         if detailViewModel.videoListenQueueLoadFailed {
                             Button("重新载入") {
@@ -2387,7 +2389,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                                     await detailViewModel.prepareVideoListenQueue()
                                 }
                             }
-                            .font(.cc.base.weight(.semibold))
+                            .piliFont(.base).fontWeight(.semibold)
                         }
                     }
                 }
@@ -2423,7 +2425,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                             ProgressView()
                                 .controlSize(.small)
                             Text("正在载入更多视频")
-                                .font(.cc.base)
+                                .piliFont(.base)
                                 .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
@@ -2436,7 +2438,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                                 await detailViewModel.prepareVideoListenQueue()
                             }
                         }
-                        .font(.cc.base.weight(.semibold))
+                        .piliFont(.base).fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                     } else if detailViewModel.videoListenQueueSession.isLoadingMore {
@@ -2574,12 +2576,12 @@ private struct SurfaceOnlyLandscapeToggleRow: View {
         Toggle(isOn: $isOn) {
             HStack(spacing: 12) {
                 PiliIcon(systemName: systemImage, size: 16)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
                     .frame(width: 22)
 
                 Text(title)
-                    .font(.cc.base)
+                    .piliFont(.base)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
@@ -2587,7 +2589,7 @@ private struct SurfaceOnlyLandscapeToggleRow: View {
 
                 if let accessory {
                     Text(accessory)
-                        .font(.cc.base)
+                        .piliFont(.base)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -2629,19 +2631,19 @@ private struct SurfaceOnlyLandscapeMenuRow: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 PiliIcon(systemName: systemImage, size: 16)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
                     .frame(width: 22)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.cc.base)
+                        .piliFont(.base)
                         .foregroundStyle(.primary)
                         .lineLimit(1)
 
                     if let subtitle, !subtitle.isEmpty {
                         Text(subtitle)
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
@@ -2651,14 +2653,14 @@ private struct SurfaceOnlyLandscapeMenuRow: View {
 
                 if let accessory {
                     Text(accessory)
-                        .font(.cc.base)
+                        .piliFont(.base)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
 
                 if showsChevron {
                     PiliIcon(systemName: "chevron.right")
-                        .font(.cc.sm.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                         .foregroundStyle(.tertiary)
                 }
             }
@@ -2678,12 +2680,12 @@ private struct SurfaceOnlyLandscapeInfoRow: View {
     var body: some View {
         HStack(spacing: 12) {
             PiliIcon(systemName: systemImage, size: 16)
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
                 .foregroundStyle(.secondary)
                 .frame(width: 22)
 
             Text(title)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
@@ -2691,7 +2693,7 @@ private struct SurfaceOnlyLandscapeInfoRow: View {
 
             if let value {
                 Text(value)
-                    .font(.cc.base)
+                    .piliFont(.base)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
                     .lineLimit(2)
@@ -2727,7 +2729,7 @@ private struct SurfaceOnlyQualityChoicesPage: View {
                             Text(item.title)
                             if let subtitle = item.subtitle, !subtitle.isEmpty {
                                 Text(subtitle)
-                                    .font(.cc.sm)
+                                    .piliFont(.sm)
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -2811,7 +2813,7 @@ private struct SurfaceOnlyAudioChoicesPage: View {
                 Text(title)
                 if !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -2868,14 +2870,14 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
                                     Text(entry.title)
                                     if let subtitle = entry.subtitle {
                                         Text(subtitle)
-                                            .font(.cc.sm)
+                                            .piliFont(.sm)
                                             .foregroundStyle(.secondary)
                                     }
                                 }
                                 Spacer()
                                 if entry.isCurrent {
                                     Text("正在播放")
-                                        .font(.cc.sm)
+                                        .piliFont(.sm)
                                         .foregroundStyle(.secondary)
                                 }
                             }
@@ -2894,7 +2896,7 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
                         ProgressView()
                             .controlSize(.small)
                         Text("正在载入更多视频")
-                            .font(.cc.base)
+                            .piliFont(.base)
                             .foregroundStyle(.secondary)
                         Spacer()
                     }
@@ -2946,7 +2948,7 @@ private struct SurfaceOnlyVideoListenPlaybackOrderPage: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(order.title)
                             Text(order.subtitle)
-                                .font(.cc.sm)
+                                .piliFont(.sm)
                                 .foregroundStyle(.secondary)
                         }
                     } icon: {
@@ -3218,7 +3220,7 @@ private struct VideoDetailFullscreenClockControl: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
             Text(context.date, format: .dateTime.hour().minute())
-                .font(.cc.sm.monospacedDigit().weight(.semibold))
+                .piliFont(.sm).monospacedDigit().fontWeight(.semibold)
                 .lineLimit(1)
                 .padding(.horizontal, 12)
                 .frame(height: PlayerNativeControlMetrics.landscape.controlHeight)
@@ -3243,7 +3245,7 @@ private struct VideoDetailFullscreenBatteryControl: View {
                 .monospacedDigit()
             PiliIcon(systemName: batterySymbolName)
         }
-        .font(.cc.sm.weight(.semibold))
+        .piliFont(.sm).fontWeight(.semibold)
         .lineLimit(1)
         .padding(.horizontal, 10)
         .frame(height: PlayerNativeControlMetrics.landscape.controlHeight)

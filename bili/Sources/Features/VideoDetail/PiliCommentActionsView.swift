@@ -57,11 +57,11 @@ private struct PiliCommentActionsContent<Content: View>: View {
         Group {
             if state.deleted {
                 PiliLabel("评论已删除", systemImage: "text.bubble")
-                    .font(.cc.sm).foregroundStyle(.secondary).padding(.vertical, 8)
+                    .piliFont(.sm).foregroundStyle(.secondary).padding(.vertical, 8)
             } else {
                 VStack(alignment: .leading, spacing: 4) {
                     if store.isPinned(comment, subject: subject) {
-                        PiliLabel("UP 主置顶", systemImage: "pin.fill").font(.cc.sm).foregroundStyle(.secondary)
+                        PiliLabel("UP 主置顶", systemImage: "pin.fill").piliFont(.sm).foregroundStyle(.secondary)
                     }
                     content
                 }
@@ -146,7 +146,7 @@ private struct PiliCommentReportSheet: View {
                     }
                     Section("补充说明\(reasonID == 0 || reasonID == 22 ? "（必填）" : "（选填）")") {
                         TextField("说明具体问题", text: $text, axis: .vertical).lineLimit(3...6)
-                        Text("\(text.count)/1000").font(.cc.sm).foregroundStyle(.secondary)
+                        Text("\(text.count)/1000").piliFont(.sm).foregroundStyle(.secondary)
                     }
                     if let errorMessage { Text(errorMessage).foregroundStyle(Color.cc.destructive) }
                 }

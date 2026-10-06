@@ -12,7 +12,7 @@ struct PiliContentImageExportView: View {
     var body: some View {
         NavigationStack {
             PiliForm {
-                Section { Text(document.author).font(.cc.baseBold); Text(document.text).lineLimit(8) }
+                Section { Text(document.author).piliFont(.baseBold); Text(document.text).lineLimit(8) }
                 if loading { ProgressView("生成完整内容图片") }
                 if let error { Text(error).foregroundStyle(.secondary) }
                 if !loading, files.isEmpty { Button("重试") { loadID = UUID() } }

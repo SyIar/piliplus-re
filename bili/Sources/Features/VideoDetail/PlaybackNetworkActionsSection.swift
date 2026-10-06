@@ -21,7 +21,7 @@ struct PlaybackNetworkActionsSection: View {
 
             if let probeMessage {
                 Text(probeMessage)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
         }

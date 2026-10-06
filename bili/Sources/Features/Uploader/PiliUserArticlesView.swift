@@ -28,7 +28,7 @@ struct PiliUserArticlesView: View {
             if let raw = item["origin_image_urls"].piliArray.first?.piliString {
                 CachedRemoteImage(url: URL(string: raw.normalizedBiliURL()), targetPixelSize: 240) { $0.resizable().scaledToFill() } placeholder: { Color.clear }.frame(width: 80, height: 60).clipped()
             }
-            VStack(alignment: .leading, spacing: 5) { Text(item["title"].piliString); Text(item["publish_time_text"].piliString).font(.cc.sm).foregroundStyle(.secondary) }
+            VStack(alignment: .leading, spacing: 5) { Text(item["title"].piliString); Text(item["publish_time_text"].piliString).piliFont(.sm).foregroundStyle(.secondary) }
         }
     }
     private func load() async {

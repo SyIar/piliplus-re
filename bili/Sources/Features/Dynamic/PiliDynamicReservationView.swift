@@ -14,9 +14,9 @@ struct PiliDynamicReservationView: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            PiliLabel(value["title"].piliString, systemImage: "calendar.badge.clock").font(.cc.baseBold)
+            PiliLabel(value["title"].piliString, systemImage: "calendar.badge.clock").piliFont(.baseBold)
             Text(value["desc1"]["text"].piliString + " · " + value["desc2"]["text"].piliString)
-                .font(.cc.sm).foregroundStyle(.secondary)
+                .piliFont(.sm).foregroundStyle(.secondary)
             let button = value["button"]
             let checked = button["status"].piliInt == button["type"].piliInt
             Button {
@@ -28,7 +28,7 @@ struct PiliDynamicReservationView: View {
                     ? button[checked ? "check_text" : "uncheck_text"].piliString : button["jump_text"].piliString
                 PiliLabel(text.isEmpty ? (checked ? "取消预约" : "预约") : text, systemImage: checked ? "checkmark.circle" : "bell.badge")
             }.buttonStyle(.glass).disabled(busy || button["disable"].piliInt == 1)
-            if let error { Text(error).font(.cc.sm).foregroundStyle(.secondary) }
+            if let error { Text(error).piliFont(.sm).foregroundStyle(.secondary) }
         }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
             .piliGlassCard(radius: 14)
             .onAppear { if identity == nil { identity = .init(api.requestSnapshot()) } }

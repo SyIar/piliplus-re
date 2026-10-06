@@ -480,7 +480,7 @@ private struct AccountMessageCategoryRow: View {
     var body: some View {
         HStack(spacing: 13) {
             PiliIcon(systemName: systemImage, size: 18)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(appTintColor)
                 .frame(width: 28, height: 28)
 
@@ -581,7 +581,7 @@ private struct AccountMessageFeedRow: View {
                     .controlSize(.small)
             } else if item.isLikeNotificationMuted {
                 PiliIcon(systemName: "bell.slash.fill")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
         }
@@ -755,7 +755,7 @@ private struct AccountMessageCommentThreadSheet: View {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     if thread.requestedReplyWasUnavailable {
                         PiliLabel("目标回复不可见，已显示所在评论串", systemImage: "exclamationmark.bubble")
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                     }
 
@@ -864,7 +864,7 @@ private struct AccountMessageAvatar: View {
     private var avatar: some View {
         AvatarRemoteImage(urlString: item.avatarURLString, pixelSize: 112) {
             PiliIcon(systemName: item.category.systemImage, size: 17)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .piliGlassCard()

@@ -11,11 +11,11 @@ struct CommentsSectionHeader: View {
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
             Text("评论")
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
 
             if let count = store.replyCountText {
                 Text(count)
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
             }
 
@@ -27,7 +27,7 @@ struct CommentsSectionHeader: View {
                         selectCommentSort(sort)
                     } label: {
                         Text(sort.title)
-                            .font(.cc.sm.weight(.semibold))
+                            .piliFont(.sm).fontWeight(.semibold)
                             .padding(.horizontal, 9)
                             .padding(.vertical, 5)
                             .background(store.selectedSort == sort ? appTintColor.opacity(0.14) : Color.clear)

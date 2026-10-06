@@ -15,7 +15,7 @@ struct VideoDetailShellCollapsedBar: View {
         HStack(spacing: 8) {
             Button(action: onNavigateBack) {
                 PiliIcon(systemName: "chevron.left", size: 16)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
@@ -25,21 +25,21 @@ struct VideoDetailShellCollapsedBar: View {
                 playerViewModel.togglePlayback()
             } label: {
                 PiliIcon(systemName: playerViewModel.isPlaying ? "pause.fill" : "play.fill", size: 15)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(playerViewModel.isPlaying ? "暂停" : "播放")
 
             Text(playerViewModel.title)
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Button(action: onRequestFullscreen) {
                 PiliIcon(systemName: "arrow.up.left.and.arrow.down.right", size: 15)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)

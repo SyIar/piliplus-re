@@ -12,7 +12,7 @@ struct FavoriteFolderRow: View {
             Spacer(minLength: 8)
 
             PiliIcon(systemName: "chevron.right")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.tertiary)
         }
         .padding(.vertical, 3)
@@ -48,7 +48,7 @@ private struct FavoriteFolderPlaceholder: View {
             .frame(width: 54, height: 54)
             .overlay {
                 PiliIcon(systemName: "folder.fill")
-                    .font(.cc.baseBold.weight(.semibold))
+                    .piliFont(.baseBold).fontWeight(.semibold)
                     .foregroundStyle(appTintColor)
             }
     }
@@ -62,7 +62,7 @@ private struct FavoriteFolderInfo: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(folder.displayTitle)
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(.primary)
                 .lineLimit(2)
 
@@ -73,14 +73,14 @@ private struct FavoriteFolderInfo: View {
                         .foregroundStyle(appTintColor)
                 }
             }
-            .font(.cc.sm)
+            .piliFont(.sm)
             .foregroundStyle(.secondary)
             .lineLimit(1)
 
             if let intro = folder.intro?.trimmingCharacters(in: .whitespacesAndNewlines),
                !intro.isEmpty {
                 Text(intro)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }

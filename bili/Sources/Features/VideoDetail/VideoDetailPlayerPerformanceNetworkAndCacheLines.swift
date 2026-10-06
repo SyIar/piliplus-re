@@ -15,7 +15,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let networkMessage = session.networkMessage {
                 Text(networkMessage)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -23,7 +23,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let hlsStartupMessage = session.hlsStartupMessage {
                 Text(hlsStartupMessage)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -31,7 +31,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let accessLogMessage = session.accessLogMessage {
                 Text(accessLogMessage)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle((session.accessLogStallCount ?? 0) > 0 ? .orange : .secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -39,7 +39,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let mediaCacheMessage = session.mediaCacheMessage {
                 Text(mediaCacheMessage)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -47,7 +47,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
 
             if let manifestStageMessage = session.manifestStageMessage {
                 Text(manifestStageMessage)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)

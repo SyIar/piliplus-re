@@ -5,7 +5,7 @@ struct FavoriteFolderSelectionViewActions {
     let store: VideoDetailFavoriteFolderRenderStore
     let loadFavoriteFolders: (Bool) async -> Void
     let saveFavoriteFolders: (Set<Int>) async -> Bool
-    let dismiss: DismissAction
+    let dismiss: @MainActor () -> Void
     let presentationState: Binding<FavoriteFolderSelectionPresentationState>
     let stateActions: FavoriteFolderSelectionStateActions
 

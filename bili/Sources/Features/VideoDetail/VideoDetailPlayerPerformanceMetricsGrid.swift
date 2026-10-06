@@ -31,10 +31,10 @@ private struct PlayerPerformanceOverlayMetricCell: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
             Text(PlayerPerformanceOverlayFormatting.millisecondsText(milliseconds))
-                .font(.cc.sm.monospacedDigit().weight(.semibold))
+                .piliFont(.sm).monospacedDigit().fontWeight(.semibold)
                 .foregroundStyle(PlayerPerformanceOverlayFormatting.metricColor(milliseconds))
         }
         .frame(maxWidth: .infinity, alignment: .leading)

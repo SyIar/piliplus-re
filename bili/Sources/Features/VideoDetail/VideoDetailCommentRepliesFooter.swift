@@ -31,7 +31,7 @@ struct CommentRepliesFooter: View {
                 actions.performLoadMoreReplies()
             } label: {
                 PiliLabel("查看更多回复", systemImage: "chevron.down")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 9)
             }

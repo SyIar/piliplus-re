@@ -30,7 +30,7 @@ struct DynamicLiveCover: View {
 
                 if showsCenterBadge {
                     PiliLabel("直播中", systemImage: "dot.radiowaves.left.and.right")
-                        .font(.cc.sm.weight(.bold))
+                        .piliFont(.sm).fontWeight(.bold)
                         .foregroundStyle(.primary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
@@ -39,7 +39,7 @@ struct DynamicLiveCover: View {
                 }
 
                 Text(live.statusText)
-                    .font(.cc.sm.weight(.bold))
+                    .piliFont(.sm).fontWeight(.bold)
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)

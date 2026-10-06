@@ -33,7 +33,7 @@ struct MineHomeSettingsSection: View {
             .pickerStyle(.menu)
 
             Text(recommendSourceHint)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
 
             NavigationLink {
@@ -126,13 +126,13 @@ private struct MineHomeRefreshDistanceControl: View {
                         ? "系统默认"
                         : "\(Int(libraryStore.homeRefreshTriggerDistance)) pt"
                 )
-                    .font(.cc.base.monospacedDigit())
+                    .piliFont(.base).monospacedDigit()
                     .foregroundStyle(.secondary)
             }
 
             if libraryStore.nativePullRefreshEnabled {
                 Text(refreshDistanceHint)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             } else {
                 Slider(
@@ -152,7 +152,7 @@ private struct MineHomeRefreshDistanceControl: View {
 
                 HStack {
                     Text(refreshDistanceHint)
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                     Spacer(minLength: 12)
                     Button("默认") {

@@ -39,7 +39,7 @@ struct MineOverlayNavigationButton<Label: View>: View {
                 label()
                 Spacer(minLength: 8)
                 PiliIcon(systemName: "chevron.right")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.tertiary)
                     .accessibilityHidden(true)
             }

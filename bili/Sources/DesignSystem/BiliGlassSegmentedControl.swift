@@ -76,7 +76,7 @@ struct BiliGlassSegmentedControl<Option: Identifiable & Hashable>: View {
             }
         } label: {
             Text(title(option))
-                .font(.cc.base.weight(.medium))
+                .piliFont(.base).fontWeight(.medium)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
                 .foregroundStyle(Color.primary.opacity(isSelected ? 1 : 0.72))

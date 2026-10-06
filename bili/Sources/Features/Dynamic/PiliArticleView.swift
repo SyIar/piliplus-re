@@ -18,7 +18,7 @@ struct PiliArticleView: View {
             LazyVStack(alignment: .leading, spacing: 18) {
                 if let document {
                     Text(document.title).font(.cc.lgBold.bold()).textSelection(.enabled)
-                    if let author = document.author { NavigationLink(value: author) { Text(author.name).font(.cc.base) } }
+                    if let author = document.author { NavigationLink(value: author) { Text(author.name).piliFont(.base) } }
                     if !document.blockedText.isEmpty { Text(document.blockedText).foregroundStyle(.secondary) }
                     ForEach(Array(document.paragraphs.enumerated()), id: \.offset) { _, paragraph in PiliArticleParagraph(value: paragraph, api: api) }
                     if !document.html.isEmpty { PiliArticleHTML(html: document.html) }
@@ -90,7 +90,7 @@ struct PiliArticleParagraph: View {
                 } else { cardView(card) }
             }
         case 7:
-            ScrollView(.horizontal) { Text(value["code"]["content"].piliString).font(.cc.base.monospaced()).textSelection(.enabled) }.padding().piliGlassCard(radius: 12)
+            ScrollView(.horizontal) { Text(value["code"]["content"].piliString).piliFont(.base).monospaced().textSelection(.enabled) }.padding().piliGlassCard(radius: 12)
         default:
             if !value.dynamicDisplayText.orEmpty.isEmpty { Text(value.dynamicDisplayText.orEmpty).textSelection(.enabled) }
         }
@@ -108,7 +108,7 @@ struct PiliArticleParagraph: View {
         let content = ["ugc", "opus", "live", "common", "music"].map { card[$0] }.first { !$0.piliObject.isEmpty } ?? card
         if let url = URL(string: content["jump_url"].piliString.normalizedBiliURL()), !content["jump_url"].piliString.isEmpty {
             Link(destination: url) {
-                VStack(alignment: .leading) { Text(content["title"].piliString).font(.cc.baseBold); Text(content["desc"].piliString).font(.cc.sm) }.frame(maxWidth: .infinity, alignment: .leading).padding().piliGlassCard(radius: 12)
+                VStack(alignment: .leading) { Text(content["title"].piliString).piliFont(.baseBold); Text(content["desc"].piliString).piliFont(.sm) }.frame(maxWidth: .infinity, alignment: .leading).padding().piliGlassCard(radius: 12)
             }
         } else if !content["title"].piliString.isEmpty { Text(content["title"].piliString) }
     }

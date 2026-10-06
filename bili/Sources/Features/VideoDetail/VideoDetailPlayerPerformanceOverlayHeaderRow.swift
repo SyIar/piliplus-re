@@ -10,12 +10,12 @@ struct PlayerPerformanceOverlayHeaderRow: View {
     var body: some View {
         HStack(spacing: 6) {
             PiliIcon(systemName: "waveform.path.ecg.rectangle")
-                .font(.cc.sm.weight(.bold))
+                .piliFont(.sm).fontWeight(.bold)
             Text("播放性能")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
             Spacer(minLength: 8)
             Text(PlayerPerformanceOverlayFormatting.shortMetricsID(metricsID))
-                .font(.cc.sm.monospaced())
+                .piliFont(.sm).monospaced()
                 .foregroundStyle(.secondary)
             if copyTextProvider() != nil {
                 Button {
@@ -28,7 +28,7 @@ struct PlayerPerformanceOverlayHeaderRow: View {
                     }
                 } label: {
                     PiliIcon(systemName: didCopy ? "checkmark.circle.fill" : "doc.on.doc")
-                        .font(.cc.sm.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                         .foregroundStyle(didCopy ? .green : .secondary)
                         .frame(width: 24, height: 24)
                         .contentShape(Rectangle())

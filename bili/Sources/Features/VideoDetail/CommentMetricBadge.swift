@@ -61,7 +61,7 @@ struct CommentMetricBadge: View {
 
     var body: some View {
         PiliLabel(text, systemImage: systemImage)
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .lineLimit(1)
             .minimumScaleFactor(0.82)

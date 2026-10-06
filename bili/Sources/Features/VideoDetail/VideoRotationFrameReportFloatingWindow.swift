@@ -32,7 +32,7 @@ struct VideoRotationFrameReportFloatingWindow: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 PiliLabel("旋转报告", systemImage: "rotate.right")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
 
                 Spacer(minLength: 8)
 
@@ -41,7 +41,7 @@ struct VideoRotationFrameReportFloatingWindow: View {
                     didCopy = true
                 } label: {
                     PiliIcon(systemName: didCopy ? "checkmark" : "doc.on.doc")
-                        .font(.cc.sm.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                         .frame(width: 28, height: 24)
                 }
                 .buttonStyle(.plain)
@@ -51,7 +51,7 @@ struct VideoRotationFrameReportFloatingWindow: View {
                     dismissedReportID = report.id
                 } label: {
                     PiliIcon(systemName: "xmark")
-                        .font(.cc.sm.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                         .frame(width: 24, height: 24)
                 }
                 .buttonStyle(.plain)
@@ -64,10 +64,10 @@ struct VideoRotationFrameReportFloatingWindow: View {
                 metric("Hitch", value("hitch", in: report.message))
                 metric("Drop", value("drop", in: report.message))
             }
-            .font(.cc.sm.monospacedDigit())
+            .piliFont(.sm).monospacedDigit()
 
             Text(didCopy ? "已复制完整日志" : "点复制可发送完整日志")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
         .foregroundStyle(.primary)

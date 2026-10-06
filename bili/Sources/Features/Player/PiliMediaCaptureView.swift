@@ -31,7 +31,7 @@ struct PiliMediaCaptureView: View {
                     if animated {
                         Stepper("时长：\(Int(seconds)) 秒", value: $seconds, in: 1...10)
                         Picker("尺寸", selection: $edge) { Text("轻巧 480p").tag(480); Text("标准 640p").tag(640); Text("清晰 960p").tag(960) }
-                        Text("按视频剩余时长截取，最长边为所选尺寸。较长或较大动图会自动降低帧率。").font(.cc.sm).foregroundStyle(.secondary)
+                        Text("按视频剩余时长截取，最长边为所选尺寸。较长或较大动图会自动降低帧率。").piliFont(.sm).foregroundStyle(.secondary)
                     }
                 }.disabled(task != nil || saving)
                 Section {

@@ -17,7 +17,7 @@ struct PiliCoursesView: View {
                 } label: {
                     HStack {
                         CachedRemoteImage(url: URL(string: item["cover"].piliString.normalizedBiliURL()), targetPixelSize: 260) { $0.resizable().scaledToFill() } placeholder: { Color.clear }.frame(width: 90, height: 60).clipped()
-                        VStack(alignment: .leading, spacing: 5) { Text(item["title"].piliString); Text(item["status"].piliString).font(.cc.sm).foregroundStyle(.secondary) }
+                        VStack(alignment: .leading, spacing: 5) { Text(item["title"].piliString); Text(item["status"].piliString).piliFont(.sm).foregroundStyle(.secondary) }
                     }
                 }
             }

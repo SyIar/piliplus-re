@@ -908,7 +908,7 @@ struct RichCommentAttachmentStrip: View {
                                 PiliIcon(systemName: "xmark.circle.fill")
                                     .symbolRenderingMode(.palette)
                                     .foregroundStyle(.white, .black.opacity(0.65))
-                                    .font(.cc.base)
+                                    .piliFont(.base)
                             }
                             .buttonStyle(.plain)
                             .frame(width: 44, height: 44)
@@ -994,7 +994,7 @@ struct RichCommentComposerView: View {
             if let authorName = target.authorName,
                !authorName.isEmpty {
                 PiliLabel("回复 @\(authorName)", systemImage: "arrowshape.turn.up.left")
-                    .font(.cc.base)
+                    .piliFont(.base)
                     .foregroundStyle(.secondary)
             }
 
@@ -1022,7 +1022,7 @@ struct RichCommentComposerView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text("正在读取图片")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1075,7 +1075,7 @@ struct RichCommentComposerView: View {
                 .accessibilityLabel(isSubmitting ? "正在发送评论" : "发送评论")
                 .accessibilityIdentifier("dynamic.comment.composer.send")
             }
-            .font(.cc.base)
+            .piliFont(.base)
             .foregroundStyle(.primary)
         }
         .padding(14)

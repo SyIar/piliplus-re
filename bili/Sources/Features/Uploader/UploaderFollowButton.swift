@@ -33,11 +33,11 @@ struct UploaderFollowButton: View {
                     .controlSize(.small)
             } else {
                 PiliIcon(systemName: viewModel.isFollowing ? "checkmark" : "plus")
-                    .font(.cc.sm.weight(.bold))
+                    .piliFont(.sm).fontWeight(.bold)
             }
 
             Text(viewModel.isFollowing ? "已关注" : "关注")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
         }
         .frame(minWidth: 62)
     }

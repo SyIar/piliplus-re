@@ -14,11 +14,11 @@ struct PlaybackNetworkProbeResultRow: View {
                 Spacer(minLength: 8)
                 if let addressFamily = result.addressFamily {
                     Text(addressFamily.title)
-                        .font(.cc.sm.monospaced())
+                        .piliFont(.sm).monospaced()
                         .foregroundStyle(.tertiary)
                 }
                 Text(result.elapsedMilliseconds.map { "\($0) ms" } ?? "失败")
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -35,13 +35,13 @@ struct PlaybackNetworkProbeResultRow: View {
                     Text("弱参考")
                 }
             }
-            .font(.cc.sm)
+            .piliFont(.sm)
             .foregroundStyle(.secondary)
             .lineLimit(2)
 
             if let probedHost = result.probedHost {
                 Text([probedHost, result.probePathDescription].compactMap { $0 }.joined(separator: " · "))
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
             }

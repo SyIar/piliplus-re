@@ -33,14 +33,14 @@ struct PiliVisibilitySettingsView: View {
             Section {
                 Toggle("评论发布后检查", isOn: $comments)
                 Toggle("动态发布后检查", isOn: $dynamics)
-                Text("对应原版“发评 / 动态反诈”：发布后稍等片刻，检查游客是否可读取内容。检查不使用账号 Cookie，也不会再次发布。").font(.cc.sm).foregroundStyle(.secondary)
+                Text("对应原版“发评 / 动态反诈”：发布后稍等片刻，检查游客是否可读取内容。检查不使用账号 Cookie，也不会再次发布。").piliFont(.sm).foregroundStyle(.secondary)
             }
             Section("本次启动的检查结果") {
                 if center.results.isEmpty { Text("暂无检查记录") }
                 ForEach(center.results) { value in
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(value.title).font(.cc.baseBold); Text(value.message).font(.cc.base)
-                        Text(value.date, style: .time).font(.cc.sm).foregroundStyle(.secondary)
+                        Text(value.title).piliFont(.baseBold); Text(value.message).piliFont(.base)
+                        Text(value.date, style: .time).piliFont(.sm).foregroundStyle(.secondary)
                     }
                 }
             }

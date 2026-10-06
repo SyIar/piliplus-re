@@ -7,11 +7,11 @@ struct VideoDetailNavigationLatencySnapshotRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(snapshot.context.title ?? snapshot.context.mediaID)
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .lineLimit(1)
 
             Text(snapshot.navigationExperimentSummary)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
 
             ForEach(Array(reportEvents.enumerated()), id: \.offset) { _, event in
@@ -25,7 +25,7 @@ struct VideoDetailNavigationLatencySnapshotRow: View {
                     Text(timing.displayText)
                         .foregroundStyle(timing.isSlow ? .orange : .secondary)
                 }
-                .font(.cc.sm.monospacedDigit())
+                .piliFont(.sm).monospacedDigit()
             }
         }
         .padding(.vertical, 3)

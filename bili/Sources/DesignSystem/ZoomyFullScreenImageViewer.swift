@@ -214,7 +214,7 @@ struct ZoomyFullScreenImageViewer: View {
 
             if let toastMessage {
                 Text(toastMessage)
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.white)
                     .lineLimit(1)
                     .padding(.horizontal, 14)
@@ -261,7 +261,7 @@ struct ZoomyFullScreenImageViewer: View {
     ) -> some View {
         Button(action: action) {
             PiliIcon(systemName: systemImage, size: 16)
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
                 .frame(width: 34, height: 30)
                 .contentShape(Rectangle())
         }
@@ -704,7 +704,7 @@ private struct ZoomyViewerImagePage: View {
                 Spacer()
                 Button(action: retryLoading) {
                     PiliIcon(systemName: "arrow.clockwise", size: 15)
-                        .font(.cc.baseBold)
+                        .piliFont(.baseBold)
                         .frame(width: 38, height: 38)
                 }
                 .buttonStyle(.plain)
@@ -721,14 +721,14 @@ private struct ZoomyViewerImagePage: View {
     private var failureIndicator: some View {
         VStack(spacing: 12) {
             PiliIcon(systemName: "photo.badge.exclamationmark", size: 30)
-                .font(.cc.lg)
+                .piliFont(.lg)
 
             Text("图片加载失败")
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
 
             Button(action: retryLoading) {
                 PiliLabel("重新加载", systemImage: "arrow.clockwise")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                     .padding(.horizontal, 14)
                     .frame(height: 38)
             }

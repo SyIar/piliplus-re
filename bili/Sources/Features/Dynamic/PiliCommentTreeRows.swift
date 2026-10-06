@@ -26,7 +26,7 @@ struct PiliCommentTreeRows<Item: Identifiable, Content: View>: View where Item.I
                 .accessibilityIdentifier("ui.comments.tree.mode")
                 if usesTree && !collapsed.isEmpty {
                     Button("全部展开") { collapsed.removeAll() }
-                        .font(.cc.sm).fixedSize()
+                        .piliFont(.sm).fixedSize()
                 }
             }.padding(16)
             if usesTree {
@@ -37,7 +37,7 @@ struct PiliCommentTreeRows<Item: Identifiable, Content: View>: View where Item.I
                                 if !collapsed.insert(row.id).inserted { collapsed.remove(row.id) }
                             } label: {
                                 PiliLabel(collapsed.contains(row.id) ? "展开 \(row.descendantCount) 条回复" : "收起回复", systemImage: collapsed.contains(row.id) ? "chevron.right" : "chevron.down")
-                                    .font(.cc.sm).padding(.vertical, 10).padding(.horizontal, 16)
+                                    .piliFont(.sm).padding(.vertical, 10).padding(.horizontal, 16)
                             }
                             .buttonStyle(.plain)
                             .accessibilityIdentifier("ui.comments.tree.fold.\(row.id)")
@@ -45,7 +45,7 @@ struct PiliCommentTreeRows<Item: Identifiable, Content: View>: View where Item.I
                         if let item = byID[row.id] { content(item) }
                         else {
                             PiliLabel("上级回复尚未加载或已删除", systemImage: "bubble.left")
-                                .font(.cc.sm).foregroundStyle(.secondary).padding(16)
+                                .piliFont(.sm).foregroundStyle(.secondary).padding(16)
                         }
                     }
                     .padding(.leading, CGFloat(min(row.depth, 4)) * 14)

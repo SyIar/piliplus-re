@@ -7,7 +7,7 @@ struct PlayerPerformanceSessionDetailMessages: View {
     var body: some View {
         if let cdnHostMessage = session.cdnHostMessage {
             PiliLabel(cdnHostMessage, systemImage: "network")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }
@@ -45,7 +45,7 @@ struct PlayerPerformanceSessionDetailMessages: View {
     private func optionalMessage(_ message: String?, color: Color, lineLimit: Int) -> some View {
         if let message {
             Text(message)
-                .font(.cc.sm.monospacedDigit())
+                .piliFont(.sm).monospacedDigit()
                 .foregroundStyle(color)
                 .lineLimit(lineLimit)
         }

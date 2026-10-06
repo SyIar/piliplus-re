@@ -82,7 +82,7 @@ struct DynamicPaidContentMetadata: View {
                     .foregroundStyle(appTintColor)
             }
         }
-        .font(.cc.sm)
+        .piliFont(.sm)
         .foregroundStyle(.secondary)
         .lineLimit(1)
     }
@@ -124,7 +124,7 @@ struct DynamicPaidContentBadge: View {
     var body: some View {
         GlassEffectContainer(spacing: 8) {
             PiliLabel(content.badgeText, systemImage: content.isChargeExclusive ? "bolt.fill" : "sparkles")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .labelStyle(.titleAndIcon)
                 .videoCoverBadgeForeground(opacity: 0)
                 .lineLimit(1)

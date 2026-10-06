@@ -28,7 +28,7 @@ struct PlayerPerformanceOverlayCountersRow: View {
                     .lineLimit(1)
             }
         }
-        .font(.cc.sm)
+        .piliFont(.sm)
         .foregroundStyle(PlayerPerformanceOverlayFormatting.counterColor(for: session))
     }
 }

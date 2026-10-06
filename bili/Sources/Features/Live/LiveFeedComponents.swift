@@ -34,7 +34,7 @@ struct LiveFeedFooter: View {
             }
 
             Text(text)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)

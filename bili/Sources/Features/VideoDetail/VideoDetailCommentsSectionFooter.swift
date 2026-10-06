@@ -13,7 +13,7 @@ struct CommentsSectionPreviewFooter: View {
                 showAllComments?()
             } label: {
                 PiliLabel("查看全部评论", systemImage: "bubble.left.and.bubble.right")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .commentPlayerGlassRoundedRectangle()

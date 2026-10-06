@@ -30,7 +30,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             Picker("蜂窝网络音质", selection: Binding(get: { libraryStore.cellularAudioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0, cellular: true) })) {
                 ForEach(PlaybackAudioQualityPreference.allCases) { Text($0.title).tag($0) }
             }
-            Text("最佳音质按可用音轨选择无损、杜比或 AAC；播放失败时回退到兼容音轨。需要对应内容和账号权限，听视频手动选择的音轨优先。").font(.cc.sm).foregroundStyle(.secondary)
+            Text("最佳音质按可用音轨选择无损、杜比或 AAC；播放失败时回退到兼容音轨。需要对应内容和账号权限，听视频手动选择的音轨优先。").piliFont(.sm).foregroundStyle(.secondary)
             av1HardwareDecodeProbeButton
             videoCodecPreferenceLink
             forceHardwareDecodeToggle
@@ -79,7 +79,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             MineSettingsLabel("当前线路", systemImage: "network")
             Spacer(minLength: 8)
             Text(advancedPlaybackSummaryText)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.trailing)
                 .lineLimit(2)
@@ -251,7 +251,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             VStack(alignment: .leading, spacing: 3) {
                 MineSettingsLabel("蜂窝网络 B站定向流量兼容实验", systemImage: "antenna.radiowaves.left.and.right")
                 Text("使用手机流量时优先 B站域名，外部线路仍会在播放失败时兜底；无法确认套餐是否实际免流。")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
         }
@@ -294,11 +294,11 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
 
             if let normalizedCustomCDNHost {
                 LabeledContent("自定义 Host", value: normalizedCustomCDNHost)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             } else if !playbackCustomCDNHostDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 MineSettingsLabel("Host 格式无效", systemImage: "exclamationmark.triangle")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(Color.cc.warning)
             }
 
@@ -350,7 +350,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             }
         } else {
             MineSettingsLabel("App 启动或回到前台时会刷新 CDN 参考；没有真实播放地址时只做 Host 弱参考，不更新自动推荐。", systemImage: "bolt.horizontal")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
     }
@@ -374,7 +374,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
         if libraryStore.playbackNetworkAddressFamilyPreference != .automatic,
            libraryStore.playbackCDNProbeSnapshotForCurrentContext == nil {
             MineSettingsLabel("网络协议已切换，请重新测速 CDN 以生成匹配的新参考。", systemImage: "arrow.triangle.2.circlepath")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(Color.cc.warning)
         }
     }
@@ -390,7 +390,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     private var playbackCDNProbeMessageText: some View {
         if let playbackCDNProbeMessage {
             Text(playbackCDNProbeMessage)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
     }

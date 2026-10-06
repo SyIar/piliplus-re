@@ -60,7 +60,7 @@ private struct SearchFilterCapsule: View {
             orderMenu
             if viewModel.selectedScope.supportsOrder { durationMenu }
         }
-        .font(.cc.base.weight(.medium))
+        .piliFont(.base).fontWeight(.medium)
         .lineLimit(1)
         .frame(maxWidth: .infinity, minHeight: 40)
         .foregroundStyle(.primary)
@@ -134,7 +134,7 @@ private struct SearchFilterCapsule: View {
         HStack(spacing: 4) {
             Text(title)
             PiliIcon(systemName: "chevron.down")
-                .font(.cc.sm.weight(.bold))
+                .piliFont(.sm).fontWeight(.bold)
         }
         .fixedSize(horizontal: true, vertical: false)
         .contentShape(Rectangle())

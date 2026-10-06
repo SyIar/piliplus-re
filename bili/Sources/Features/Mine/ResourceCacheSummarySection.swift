@@ -77,15 +77,15 @@ struct ResourceCacheRow: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack {
                 Text(title)
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                 Spacer()
                 Text(value)
-                    .font(.cc.base.monospacedDigit())
+                    .piliFont(.base).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Text(subtitle)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }

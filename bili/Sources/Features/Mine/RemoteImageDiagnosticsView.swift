@@ -144,9 +144,9 @@ struct RemoteImageDiagnosticsView: View {
                 ForEach(cdnStatistics.hosts) { node in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(node.host)
-                            .font(.cc.base.monospaced())
+                            .piliFont(.base).monospaced()
                         Text("请求 \(node.requestCount) · 成功 \(node.successCount) · 瞬时失败 \(node.transientFailureCount)")
-                            .font(.cc.sm.monospacedDigit())
+                            .piliFont(.sm).monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
                 }

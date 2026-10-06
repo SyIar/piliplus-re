@@ -27,7 +27,7 @@ struct VideoDescriptionOwnerIdentity: View {
 
             if showsChevron {
                 PiliIcon(systemName: "chevron.right")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.tertiary)
             }
         }

@@ -47,19 +47,19 @@ struct PlayerPerformanceOverlaySamplesSection: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 5) {
                 PiliLabel("稳定 \(stableSamples.count)/\(comparableSamples.count) 次首帧", systemImage: "clock.arrow.circlepath")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 4)
                 if let latest = samples.last?.firstFramePlayerMilliseconds {
                     Text("last \(PlayerPerformanceOverlayFormatting.millisecondsText(latest))")
-                        .font(.cc.sm.monospacedDigit().weight(.semibold))
+                        .piliFont(.sm).monospacedDigit().fontWeight(.semibold)
                         .foregroundStyle(PlayerPerformanceOverlayFormatting.metricColor(latest))
                 }
             }
 
             if summaries.isEmpty {
                 Text("反复进入同一个视频后会自动累计样本")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             } else {
                 LazyVGrid(
@@ -79,7 +79,7 @@ struct PlayerPerformanceOverlaySamplesSection: View {
 
                     ForEach(summaries) { summary in
                         Text(summary.title)
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
@@ -92,7 +92,7 @@ struct PlayerPerformanceOverlaySamplesSection: View {
 
                 if let sampleNoteText {
                     Text(sampleNoteText)
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
@@ -109,14 +109,14 @@ struct PlayerPerformanceOverlaySamplesSection: View {
 
     private func sampleHeader(_ text: String) -> some View {
         Text(text)
-            .font(.cc.smBold)
+            .piliFont(.smBold)
             .foregroundStyle(.tertiary)
             .lineLimit(1)
     }
 
     private func sampleValue(_ milliseconds: Int) -> some View {
         Text(PlayerPerformanceOverlayFormatting.millisecondsText(milliseconds))
-            .font(.cc.smBold.monospaced())
+            .piliFont(.smBold).monospaced()
             .foregroundStyle(PlayerPerformanceOverlayFormatting.metricColor(milliseconds))
             .lineLimit(1)
             .minimumScaleFactor(0.65)

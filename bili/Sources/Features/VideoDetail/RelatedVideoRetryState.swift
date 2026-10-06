@@ -8,11 +8,11 @@ struct RelatedVideoRetryState: View {
     var body: some View {
         VStack(spacing: VideoDetailRelatedStyle.retrySpacing) {
             PiliLabel("相关推荐加载失败", systemImage: "rectangle.stack.badge.exclamationmark")
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
 
             Text(message)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
@@ -21,7 +21,7 @@ struct RelatedVideoRetryState: View {
                 retry()
             } label: {
                 PiliLabel("重新加载", systemImage: "arrow.clockwise")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
             }
             .buttonStyle(.glass)
             .controlSize(.small)

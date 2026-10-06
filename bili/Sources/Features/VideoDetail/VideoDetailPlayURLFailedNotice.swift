@@ -14,7 +14,7 @@ struct VideoDetailPlayURLFailedNotice: View {
             )
 
             Text(message)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
     }

@@ -364,9 +364,9 @@ struct PlayerSurfaceVerticalAdjustmentIndicator: View {
     var body: some View {
         VStack(spacing: 8) {
             PiliIcon(systemName: systemImage)
-                .font(.cc.baseBold.weight(.semibold))
+                .piliFont(.baseBold).fontWeight(.semibold)
             Text("\(Int((value * 100).rounded()))%")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .monospacedDigit()
             ProgressView(value: Double(value), total: 1)
                 .tint(.white)

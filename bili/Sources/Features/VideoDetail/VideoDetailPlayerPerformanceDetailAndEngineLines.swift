@@ -16,7 +16,7 @@ struct PlayerPerformanceOverlayDetailAndEngineLines: View {
 
             if let diagnostics = playerViewModel?.engineDiagnostics {
                 Text(diagnostics.compactDescription)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -24,7 +24,7 @@ struct PlayerPerformanceOverlayDetailAndEngineLines: View {
 
             if let decodeLogMessage = session.decodeLogMessage {
                 PiliLabel(decodeLogMessage, systemImage: "cpu")
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(decodeLogMessage.localizedCaseInsensitiveContains("success") ? .green : .orange)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)

@@ -14,10 +14,10 @@ struct VideoDetailCoinSheetHost: View {
         NavigationStack {
             VStack(spacing: 8) {
                 PiliIcon(systemName: "bitcoinsign.circle.fill", size: 32)
-                    .font(.cc.lg).foregroundStyle(appTintColor)
+                    .piliFont(.lg).foregroundStyle(appTintColor)
                     .symbolEffect(.bounce, options: .nonRepeating, value: reduceMotion ? false : didSucceed)
                 Text("已投 \(viewModel.interactionState.coinCount) / 2 枚")
-                    .font(.cc.base)
+                    .piliFont(.base)
                     .foregroundStyle(.secondary)
 
                 Picker("投币数量", selection: $selectedCoinCount) {
@@ -33,7 +33,7 @@ struct VideoDetailCoinSheetHost: View {
 
                 if let message = viewModel.interactionMessage, !message.isEmpty {
                     Text(message)
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(Color.cc.destructive)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)

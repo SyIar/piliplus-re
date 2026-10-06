@@ -8,7 +8,7 @@ struct VideoFeedStoryHeader: View {
         HStack(spacing: 9) {
             AvatarRemoteImage(urlString: display.avatarURLString, pixelSize: 64) {
                 PiliIcon(systemName: "person.crop.circle.fill", size: 26)
-                    .font(.cc.lg)
+                    .piliFont(.lg)
                     .foregroundStyle(.tertiary)
             }
             .frame(width: 32, height: 32)
@@ -23,7 +23,7 @@ struct VideoFeedStoryHeader: View {
             Spacer(minLength: 10)
 
             Text(display.publishTimeText)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }

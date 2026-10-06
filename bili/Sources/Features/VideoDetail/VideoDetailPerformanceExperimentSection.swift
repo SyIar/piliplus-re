@@ -8,10 +8,10 @@ struct PlayerPerformanceOverlayExperimentSection: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 PiliIcon(systemName: "rectangle.on.rectangle.angled")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                 Text("刷新优化")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                 Spacer(minLength: 0)
             }
 
@@ -55,7 +55,7 @@ struct PlayerPerformanceOverlayExperimentSection: View {
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .font(.cc.sm.monospacedDigit())
+        .piliFont(.sm).monospacedDigit()
     }
 
     private func millisecondsText(_ milliseconds: Int) -> String {

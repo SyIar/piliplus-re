@@ -10,7 +10,7 @@ struct PlaybackNetworkHLSBridgeSection: View {
             Section("HLSBridge") {
                 if snapshots.isEmpty {
                     Text("等待 HLSBridge 线路样本")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(snapshots.prefix(8)) { snapshot in

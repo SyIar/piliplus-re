@@ -24,7 +24,7 @@ struct VideoDetailPlayURLNotice: View {
             }
         } else if placeholderStore.selectedPlayVariant?.isPlayable == false {
             PiliLabel("当前档位暂不可播放", systemImage: "lock.fill")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
         }
     }

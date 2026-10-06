@@ -5,9 +5,9 @@ struct DynamicForwardUnavailableView: View {
     var body: some View {
         HStack(spacing: 8) {
             PiliIcon(systemName: "exclamationmark.circle")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
             Text("原动态不可见或已删除")
-                .font(.cc.sm)
+                .piliFont(.sm)
         }
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, alignment: .leading)

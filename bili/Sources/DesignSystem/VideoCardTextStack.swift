@@ -53,7 +53,7 @@ struct VideoCardTextStack: View {
         } else {
             AvatarRemoteImage(urlString: display.avatarURLString, pixelSize: 48) {
                 PiliIcon(systemName: "person.crop.circle.fill", size: 13)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.tertiary)
             }
             .frame(width: 14, height: 14)

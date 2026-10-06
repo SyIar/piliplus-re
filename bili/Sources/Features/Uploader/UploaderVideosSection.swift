@@ -34,7 +34,7 @@ struct UploaderVideosSection: View {
                 }
             } label: {
                 PiliLabel(viewModel.videoOrder.title, systemImage: "arrow.up.arrow.down.circle")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
             }
             .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
@@ -91,7 +91,7 @@ struct UploaderVideosSection: View {
     private var footer: some View {
         if !viewModel.hasMoreVideos {
             Text("没有更多投稿了")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)

@@ -51,7 +51,7 @@ struct VideoCoverGlassBadge<Content: View>: View {
 
     var body: some View {
         content
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .videoCoverBadgeForeground(opacity: 0)
             .lineLimit(1)
             .truncationMode(.tail)
@@ -79,7 +79,7 @@ struct VideoCoverDurationBadge: View {
     var body: some View {
         if showsVideoCoverDurationBadges {
             Text(duration)
-                .font(.cc.smBold)
+                .piliFont(.smBold)
                 .monospacedDigit()
                 .videoCoverBadgeForeground(opacity: 0)
                 .lineLimit(1)
@@ -106,7 +106,7 @@ struct VideoCoverViewCountBadge: View {
 
     var body: some View {
         PiliLabel(viewText, systemImage: "play.fill")
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .videoCoverBadgeForeground(opacity: 0)
             .lineLimit(1)

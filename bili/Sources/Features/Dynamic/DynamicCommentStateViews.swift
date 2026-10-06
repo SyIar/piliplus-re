@@ -9,17 +9,17 @@ struct DynamicCommentPlainEmptyStateView: View {
     var body: some View {
         VStack(spacing: 12) {
             PiliIcon(systemName: systemImage, size: 28)
-                .font(.cc.lgBold)
+                .piliFont(.lgBold)
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 5) {
                 Text(title)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
 
                 Text(message)
-                    .font(.cc.base)
+                    .piliFont(.base)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -43,17 +43,17 @@ struct DynamicCommentErrorView: View {
                 PiliIcon(systemName: "exclamationmark.circle")
                     .foregroundStyle(Color.cc.warning)
                 Text("评论加载失败")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
             }
 
             Text(message)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
             Button(action: retry) {
                 PiliLabel("重试", systemImage: "arrow.clockwise")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
             }
             .dynamicCommentGlassButtonStyle()
             .controlSize(.small)

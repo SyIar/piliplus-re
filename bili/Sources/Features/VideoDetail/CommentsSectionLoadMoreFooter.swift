@@ -31,7 +31,7 @@ struct CommentsSectionLoadMoreFooter: View {
                 }
         } else {
             Text("没有更多评论了")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)

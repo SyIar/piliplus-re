@@ -9,11 +9,11 @@ struct DynamicCommentsHeader: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Text("全部评论")
-                    .font(.cc.baseBold.weight(.semibold))
+                    .piliFont(.baseBold).fontWeight(.semibold)
 
                 if let replyCount, replyCount > 0 {
                     Text(BiliFormatters.compactCount(replyCount))
-                        .font(.cc.sm.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                         .foregroundStyle(.secondary)
                 }
 

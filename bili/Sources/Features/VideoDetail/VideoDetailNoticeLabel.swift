@@ -7,7 +7,7 @@ struct VideoDetailNoticeLabel: View {
 
     var body: some View {
         PiliLabel(message, systemImage: systemImage)
-            .font(.cc.sm)
+            .piliFont(.sm)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
     }

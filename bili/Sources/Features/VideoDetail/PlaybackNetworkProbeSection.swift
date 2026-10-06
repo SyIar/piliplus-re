@@ -34,7 +34,7 @@ struct PlaybackNetworkProbeSection: View {
 
                 if snapshot.isWeakReferenceOnly {
                     PiliLabel("本次没有真实播放地址，只能判断 Host 是否有响应；403/959 是 CDN 拒绝裸探测，不代表真实播放失败。", systemImage: "exclamationmark.triangle")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(Color.cc.warning)
                 }
 
@@ -50,7 +50,7 @@ struct PlaybackNetworkProbeSection: View {
 
                 if isPlaybackCDNProbeSnapshotExpired(snapshot) {
                     PiliLabel("测速结果超过 \(playbackCDNProbeRefreshIntervalTitle)，自动 CDN 可能需要重新测速。", systemImage: "clock.badge.exclamationmark")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(Color.cc.warning)
                 }
             } else {

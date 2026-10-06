@@ -13,7 +13,7 @@ struct DanmakuSettingsHeaderSectionContent: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 PiliLabel("弹幕", systemImage: isDanmakuEnabled ? "text.bubble.fill" : "text.bubble")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                     .foregroundStyle(isDanmakuEnabled ? appTintColor : .secondary)
 
                 Spacer(minLength: 8)
@@ -33,7 +33,7 @@ struct DanmakuSettingsHeaderSectionContent: View {
             }
 
             Text(summary)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 

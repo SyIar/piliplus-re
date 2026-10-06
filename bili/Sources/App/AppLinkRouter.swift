@@ -505,7 +505,7 @@ struct AppLinkButtons: View {
                     ForEach(visibleURLs, id: \.absoluteString) { url in
                         AppLinkButton(url: url) {
                             PiliLabel(AppLinkRouter.displayTitle(for: url), systemImage: "link")
-                                .font(.cc.sm.weight(.semibold))
+                                .piliFont(.sm).fontWeight(.semibold)
                                 .labelStyle(.titleAndIcon)
                                 .foregroundStyle(appTintColor)
                                 .lineLimit(1)
@@ -524,7 +524,7 @@ struct AppLinkButtons: View {
 
                     if hiddenCount > 0 {
                         Text("+\(hiddenCount)")
-                            .font(.cc.sm.weight(.semibold))
+                            .piliFont(.sm).fontWeight(.semibold)
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 9)
                             .frame(height: 24)

@@ -92,12 +92,12 @@ struct PiliOfflineAudioControls: View {
     var body: some View {
         VStack(spacing: 24) {
             PiliIcon(systemName: "music.note", size: 68)
-                .font(.cc.lg).foregroundStyle(.tint)
+                .piliFont(.lg).foregroundStyle(.tint)
                 .frame(width: 180, height: 180).piliGlassCard(radius: 36)
                 .accessibilityHidden(true)
             Text(title).font(.cc.baseBold.bold()).multilineTextAlignment(.center)
-            Text(author).font(.cc.base).foregroundStyle(.secondary)
-            if let error = player.errorMessage { Text(error).font(.cc.sm).foregroundStyle(.secondary) }
+            Text(author).piliFont(.base).foregroundStyle(.secondary)
+            if let error = player.errorMessage { Text(error).piliFont(.sm).foregroundStyle(.secondary) }
             VStack {
                 Slider(value: Binding(get: { isScrubbing ? scrubTime : min(duration, max(0, clock.currentTime)) },
                                       set: { scrubTime = $0 }), in: 0...duration) { editing in
@@ -109,7 +109,7 @@ struct PiliOfflineAudioControls: View {
                     Text(time(isScrubbing ? scrubTime : clock.currentTime))
                     Spacer()
                     Text(time(duration))
-                }.font(.cc.sm.monospacedDigit()).foregroundStyle(.secondary)
+                }.piliFont(.sm).monospacedDigit().foregroundStyle(.secondary)
             }
             HStack(spacing: 32) {
                 Button { player.seek(by: -10) } label: { PiliIcon(systemName: "gobackward.10") }
@@ -119,7 +119,7 @@ struct PiliOfflineAudioControls: View {
                 }.buttonStyle(.glassProminent).accessibilityLabel(player.isPlaying ? "暂停音频" : "播放音频")
                 Button { player.seek(by: 10) } label: { PiliIcon(systemName: "goforward.10") }
                     .accessibilityLabel("前进十秒")
-            }.font(.cc.lgBold)
+            }.piliFont(.lgBold)
         }.padding(24)
     }
     private func time(_ seconds: Double) -> String {

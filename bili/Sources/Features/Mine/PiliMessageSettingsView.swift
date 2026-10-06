@@ -41,7 +41,7 @@ struct PiliMessageSettingsView: View {
             .refreshable { await load() }
     }
     private func label(_ item: PiliIMSetting) -> some View {
-        VStack(alignment: .leading) { Text(item.title); if !item.subtitle.isEmpty { Text(item.subtitle).font(.cc.sm).foregroundStyle(.secondary) } }
+        VStack(alignment: .leading) { Text(item.title); if !item.subtitle.isEmpty { Text(item.subtitle).piliFont(.sm).foregroundStyle(.secondary) } }
     }
     private func load() async {
         guard let identity, !loading else { return }; loading = true; defer { loading = false }
@@ -79,7 +79,7 @@ struct PiliMessageKeywordView: View {
                 TextField("屏蔽词", text: $input)
                 Button("添加") { mutate("KeywordBlockingAdd", word: input.trimmingCharacters(in: .whitespacesAndNewlines)) }
                     .disabled(input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || input.count > characterLimit || words.count >= limit)
-                Text("最多 \(limit) 个，每个最多 \(characterLimit) 字").font(.cc.sm).foregroundStyle(.secondary)
+                Text("最多 \(limit) 个，每个最多 \(characterLimit) 字").piliFont(.sm).foregroundStyle(.secondary)
             }
             Section("已屏蔽") {
                 ForEach(words, id: \.self) { word in HStack { Text(word); Spacer(); Button("删除", role: .destructive) { removal = word } } }

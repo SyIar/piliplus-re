@@ -18,7 +18,7 @@ struct UploaderIdentityRow: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(card?.name ?? owner.name)
-                    .font(.cc.baseBold.weight(.bold))
+                    .piliFont(.baseBold).fontWeight(.bold)
 
                 UploaderFollowButton(owner: owner, viewModel: viewModel)
                     .padding(.top, 2)

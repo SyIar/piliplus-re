@@ -277,7 +277,7 @@ private struct LiveRoomPlainDanmakuTimeline: View {
             if !isDanmakuEnabled || !renderState.snapshot.isEnabled {
                 Button(action: onEnableDanmaku) {
                     PiliLabel("开启弹幕", systemImage: "text.bubble")
-                        .font(.cc.base.weight(.semibold))
+                        .piliFont(.base).fontWeight(.semibold)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
                 }
@@ -334,7 +334,7 @@ private struct LiveRoomPlainDanmakuTimeline: View {
                         scrollToLatest(using: proxy, anchorID: latestAnchorID)
                     } label: {
                         PiliIcon(systemName: "chevron.down", size: 18)
-                            .font(.cc.baseBold)
+                            .piliFont(.baseBold)
                             .frame(width: 38, height: 38)
                     }
                     .buttonStyle(.plain)
@@ -518,7 +518,7 @@ private struct LiveRoomSimpleLiveLayoutView: View {
         HStack(spacing: 12) {
             Button(action: onNavigateBack) {
                 PiliIcon(systemName: "chevron.left", size: 17)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .frame(width: 38, height: 38)
             }
             .buttonStyle(.plain)
@@ -548,7 +548,7 @@ private struct LiveRoomSimpleLiveLayoutView: View {
                 }
             } label: {
                 PiliIcon(systemName: "ellipsis", size: 17)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .frame(width: 38, height: 38)
             }
             .buttonStyle(.plain)
@@ -670,7 +670,7 @@ private struct LiveRoomSimpleLiveLayoutView: View {
     ) -> some View {
         Button(action: action) {
             PiliLabel(title, systemImage: systemImage)
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .frame(maxWidth: .infinity)
                 .frame(height: bottomActionBarHeight)
         }
@@ -684,7 +684,7 @@ private struct LiveRoomSimpleLiveLayoutView: View {
         if let shareURL = URL(string: "https://live.bilibili.com/\(viewModel.roomID)") {
             PiliShareMenu(url: shareURL, title: viewModel.title, message: "来自哔哩哔哩的直播间") {
                 PiliLabel("分享", systemImage: "square.and.arrow.up")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .frame(height: bottomActionBarHeight)
             }
@@ -703,7 +703,7 @@ private struct LiveRoomSimpleLiveInfoPane: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("直播间信息")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
 
                 detailRow("主播", value: viewModel.anchorName)
                 detailRow("热度", value: viewModel.onlineText)
@@ -720,9 +720,9 @@ private struct LiveRoomSimpleLiveInfoPane: View {
                     Divider()
 
                     Text("简介")
-                        .font(.cc.base.weight(.semibold))
+                        .piliFont(.base).fontWeight(.semibold)
                     Text(descriptionText)
-                        .font(.cc.base)
+                        .piliFont(.base)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -736,7 +736,7 @@ private struct LiveRoomSimpleLiveInfoPane: View {
     private func detailRow(_ title: String, value: String) -> some View {
         LabeledContent(title) {
             Text(value)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.trailing)
         }
@@ -868,7 +868,7 @@ private struct LiveRoomPortraitHeader: View {
         HStack(spacing: 12) {
             Button(action: onNavigateBack) {
                 PiliIcon(systemName: "chevron.backward", size: 21)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .frame(width: 40, height: 40)
             }
             .buttonStyle(.plain)
@@ -945,7 +945,7 @@ private struct LiveRoomDanmakuTimeline: View {
             if !isDanmakuEnabled || !snapshot.isEnabled {
                 Button(action: onEnableDanmaku) {
                     PiliLabel("开启弹幕", systemImage: "text.bubble")
-                        .font(.cc.base.weight(.semibold))
+                        .piliFont(.base).fontWeight(.semibold)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
                 }
@@ -1006,7 +1006,7 @@ private struct LiveRoomDanmakuTimeline: View {
                         scrollToLatest(using: proxy)
                     } label: {
                         PiliIcon(systemName: "arrow.down.to.line.compact", size: 16)
-                            .font(.cc.baseBold)
+                            .piliFont(.baseBold)
                             .frame(width: 40, height: 40)
                     }
                     .buttonStyle(.plain)
@@ -1045,17 +1045,17 @@ private struct LiveRoomDanmakuEmptyState: View {
                     .tint(foregroundColor)
             } else {
                 PiliIcon(systemName: systemImage, size: 23)
-                    .font(.cc.lg)
+                    .piliFont(.lg)
                     .foregroundStyle(foregroundColor)
             }
 
             Text(title)
-                .font(.cc.base.weight(.medium))
+                .piliFont(.base).fontWeight(.medium)
                 .foregroundStyle(primaryTextColor)
 
             if let subtitle {
                 Text(subtitle)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(foregroundColor)
                     .multilineTextAlignment(.center)
             }

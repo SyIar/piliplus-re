@@ -68,7 +68,7 @@ struct PiliVideoToolsView: View {
                 if store.loading { ProgressView("加载视频信息") }
                 if let error = store.error { Text(error); Button("重试") { Task { await store.retry(model) } } }
                 if store.energy != nil {
-                    Section("高能进度") { PiliEnergyStrip(store: store).frame(height: 54); Text("由弹幕密度生成，曲线与当前分 P 对应。").font(.cc.sm) }
+                    Section("高能进度") { PiliEnergyStrip(store: store).frame(height: 54); Text("由弹幕密度生成，曲线与当前分 P 对应。").piliFont(.sm) }
                 }
                 Section("视频章节") {
                     if store.chapters.isEmpty { Text("此视频未提供章节") }
@@ -82,7 +82,7 @@ struct PiliVideoToolsView: View {
                                     CachedRemoteImage(url: URL(string: chapter.image), targetPixelSize: 240) { $0.resizable().scaledToFill() }
                                         placeholder: { Color.gray.opacity(0.1) }.frame(width: 80, height: 45).clipped()
                                 }
-                                VStack(alignment: .leading) { Text(chapter.title); Text(BiliFormatters.duration(Int(chapter.start))).font(.cc.sm).foregroundStyle(.secondary) }
+                                VStack(alignment: .leading) { Text(chapter.title); Text(BiliFormatters.duration(Int(chapter.start))).piliFont(.sm).foregroundStyle(.secondary) }
                             }
                         }
                     }

@@ -7,7 +7,7 @@ struct UploaderSignatureText: View {
     var body: some View {
         if let sign, !sign.isEmpty {
             Text(sign)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -21,7 +21,7 @@ struct UploaderFollowMessage: View {
     var body: some View {
         if let message, !message.isEmpty {
             PiliLabel(message, systemImage: isFollowing ? "checkmark.circle" : "info.circle")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(isFollowing ? Color.cc.primary : Color.secondary)
         }
     }
@@ -33,7 +33,7 @@ struct UploaderProfileStatusMessage: View {
     var body: some View {
         if case .failed(let message) = state {
             PiliLabel(message, systemImage: "exclamationmark.triangle")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
     }
@@ -80,10 +80,10 @@ private struct UploaderStatItem: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(BiliFormatters.compactCount(value))
-                .font(.cc.base.weight(.bold))
+                .piliFont(.base).fontWeight(.bold)
 
             Text(title)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

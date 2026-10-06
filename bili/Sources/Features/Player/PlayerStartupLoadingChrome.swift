@@ -13,7 +13,7 @@ struct PlayerStartupLoadingChrome: View {
                 .accessibilityHidden(true)
 
             Text(isBuffering ? "缓冲中" : "加载中")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
         }
         .biliLiquidGlassForeground(shadowOpacity: 0.20)
         .padding(.horizontal, 14)

@@ -94,7 +94,7 @@ struct MineHomeRecommendDiagnosticsView: View {
                     LabeledContent("时间", value: Self.formattedDate(snapshot.fallbackAt))
                     if let errorMessage = snapshot.fallbackErrorMessage, !errorMessage.isEmpty {
                         Text(errorMessage)
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                             .textSelection(.enabled)
                     }
@@ -116,7 +116,7 @@ struct MineHomeRecommendDiagnosticsView: View {
                    !snapshot.guestModeEnabled,
                    !snapshot.hasAccessKey {
                     PiliLabel("缺少移动端 access_key，App 推荐会弱于 PiliPlus/PiliPod。请优先用“App 短信验证码登录”。", systemImage: "exclamationmark.triangle")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(Color.cc.warning)
                 }
             }
@@ -140,7 +140,7 @@ struct MineHomeRecommendDiagnosticsView: View {
                     LabeledContent("网络", value: snapshot.network ?? "-")
                     if let requestProfile = snapshot.requestProfile, !requestProfile.isEmpty {
                         Text(requestProfile)
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                             .textSelection(.enabled)
                     }
@@ -159,7 +159,7 @@ struct MineHomeRecommendDiagnosticsView: View {
             if let errorMessage = snapshot.errorMessage, !errorMessage.isEmpty {
                 Section("错误") {
                     Text(errorMessage)
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                 }

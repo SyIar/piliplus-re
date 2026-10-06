@@ -25,19 +25,19 @@ struct BiliContentStateSurface<Actions: View>: View {
     var body: some View {
         VStack(spacing: 12) {
             PiliIcon(systemName: systemImage, size: 28)
-                .font(.cc.lgBold)
+                .piliFont(.lgBold)
                 .foregroundStyle(tint)
                 .frame(width: 46, height: 46)
                 .background(Color(.tertiarySystemFill), in: Circle())
 
             VStack(spacing: 5) {
                 Text(title)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
 
                 Text(message)
-                    .font(.cc.base)
+                    .piliFont(.base)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)

@@ -46,8 +46,8 @@ final class PiliLiquidGlassUITests: XCTestCase {
         let remove = app.buttons["glass.delete"]
         XCTAssertTrue(remove.waitForExistence(timeout: 15))
         remove.tap()
-        XCTAssertTrue(app.buttons["取消"].waitForExistence(timeout: 10))
-        app.buttons["取消"].tap()
+        XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["取消"].firstMatch.tap()
         XCTAssertTrue(remove.waitForExistence(timeout: 10))
         XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 0 次")
         remove.tap()
@@ -56,8 +56,8 @@ final class PiliLiquidGlassUITests: XCTestCase {
         let once = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "已删除 1 次"), object: app.staticTexts["glass.deleted"])
         XCTAssertEqual(XCTWaiter.wait(for: [once], timeout: 10), .completed)
         remove.tap()
-        XCTAssertTrue(app.buttons["取消"].waitForExistence(timeout: 10))
-        app.buttons["取消"].tap()
+        XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["取消"].firstMatch.tap()
         XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 1 次")
     }
 

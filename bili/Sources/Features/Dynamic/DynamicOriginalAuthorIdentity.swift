@@ -9,16 +9,16 @@ struct DynamicOriginalAuthorIdentity: View {
     var body: some View {
         HStack(spacing: 6) {
             PiliIcon(systemName: "quote.opening")
-                .font(.cc.sm.weight(.bold))
+                .piliFont(.sm).fontWeight(.bold)
                 .foregroundStyle(appTintColor)
 
             Text("转发自")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
             Text("@\(author.name ?? "Unknown")")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
         }

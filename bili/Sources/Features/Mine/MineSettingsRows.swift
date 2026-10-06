@@ -10,7 +10,7 @@ struct SettingsNavigationRow: View {
     var body: some View {
         HStack(spacing: 13) {
             PiliIcon(systemName: systemImage, size: 19)
-                .font(.cc.base)
+                .piliFont(.base)
                 .symbolRenderingMode(.monochrome)
                 .foregroundStyle(appTintColor)
                 .frame(width: 30, height: 30)

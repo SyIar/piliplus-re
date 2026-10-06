@@ -368,7 +368,7 @@ private struct RootFloatingNavigationTitle<Accessory: View>: View {
 
     private var titleView: some View {
         Text(title)
-            .font(.cc.lgBold.weight(.bold))
+            .piliFont(.lgBold).fontWeight(.bold)
             .lineLimit(1)
             .minimumScaleFactor(0.82)
             .opacity(isTitleHidden ? 0 : 1)

@@ -40,7 +40,7 @@ struct MineAboutSection: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
             PiliIcon(systemName: "arrow.up.right")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.tertiary)
         }
     }

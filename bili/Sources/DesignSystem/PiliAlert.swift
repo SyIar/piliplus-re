@@ -25,6 +25,7 @@ enum PiliAlertBuilder {
 /// CCAlertCenter dismisses first and invokes handlers after its exit transition.
 @MainActor
 final class PiliAlertSession: ObservableObject {
+    private static weak var active: PiliAlertSession?
     private var requestID: UUID?
     private var observer: AnyCancellable?
     private var cleanup: Task<Void, Never>?
@@ -41,10 +42,14 @@ final class PiliAlertSession: ObservableObject {
                 finish()
             }
         }
+        requestID = UUID()
+        Self.active = self
         AppHelper.shared.showBottomAlert(title: title, message: message.isEmpty ? nil : message, actions: mapped)
-        requestID = CCAlertCenter.shared.current?.id
-        observer = CCAlertCenter.shared.$current.sink { [weak self] request in
-            guard let self, let requestID, request?.id != requestID else { return }
+        // The package exposes ObservableObject, but keeps its request private.
+        // Any subsequent change means this presentation closed or was replaced.
+        observer = CCAlertCenter.shared.objectWillChange.sink { [weak self] in
+            guard let self, requestID != nil else { return }
+            if Self.active === self { Self.active = nil }
             cleanup?.cancel()
             cleanup = Task { @MainActor [weak self] in
                 // The pinned ChunUI revision dispatches a selected action at 180 ms.
@@ -56,12 +61,13 @@ final class PiliAlertSession: ObservableObject {
     }
 
     func dismiss() {
-        if requestID == CCAlertCenter.shared.current?.id, requestID != nil { CCAlertCenter.shared.dismiss() }
+        if Self.active === self { CCAlertCenter.shared.dismiss() }
         finish()
     }
 
     private func finish() {
         guard requestID != nil else { return }
+        if Self.active === self { Self.active = nil }
         requestID = nil; observer = nil; cleanup?.cancel(); cleanup = nil
         let close = onClose; onClose = nil; close?()
     }

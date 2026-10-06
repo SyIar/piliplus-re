@@ -124,7 +124,7 @@ struct AccountLibraryButtonRow: View {
     var body: some View {
         HStack(spacing: 12) {
             PiliIcon(systemName: systemImage, size: 16)
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
                 .foregroundStyle(appTintColor)
                 .frame(width: 28, height: 28)
 

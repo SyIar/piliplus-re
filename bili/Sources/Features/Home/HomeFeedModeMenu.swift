@@ -19,8 +19,8 @@ struct HomeFeedModeMenu: View {
             NavigationLink { PiliPGCCatalogueView() } label: { PiliLabel("番剧与影视", systemImage: "film") }
         } label: {
             HStack(spacing: 6) {
-                Text(currentMode.title).font(.cc.lgBold)
-                PiliIcon(systemName: "chevron.down", size: 10).font(.cc.smBold)
+                Text(currentMode.title).piliFont(.lgBold)
+                PiliIcon(systemName: "chevron.down", size: 10).piliFont(.smBold)
             }
             .foregroundStyle(.primary)
         }

@@ -8,7 +8,7 @@ struct PiliIcon: View {
     var size: CGFloat = 18
     private var stretches = false
 
-    init(systemName: String, size: CGFloat = 18) { self.systemName = systemName; self.size = size }
+    nonisolated init(systemName: String, size: CGFloat = 18) { self.systemName = systemName; self.size = size }
     var body: some View {
         Group {
             if stretches {
@@ -28,7 +28,7 @@ struct PiliIcon: View {
 struct PiliLabel: View {
     let title: String
     let systemImage: String
-    init(_ title: String, systemImage: String) { self.title = title; self.systemImage = systemImage }
+    nonisolated init(_ title: String, systemImage: String) { self.title = title; self.systemImage = systemImage }
     var body: some View {
         Label { Text(title) } icon: { PiliIcon(systemName: systemImage) }
     }
@@ -54,9 +54,9 @@ struct PiliUnavailableView: View {
     }
     var body: some View {
         ContentUnavailableView {
-            Label { Text(title).font(.cc.baseBold) } icon: { PiliIcon(systemName: systemImage, size: 44) }
+            Label { Text(title).piliFont(.baseBold) } icon: { PiliIcon(systemName: systemImage, size: 44) }
         } description: {
-            description?.font(.cc.sm).foregroundStyle(Color.cc.mutedForeground)
+            description?.piliFont(.sm).foregroundStyle(Color.cc.mutedForeground)
         }
     }
 }

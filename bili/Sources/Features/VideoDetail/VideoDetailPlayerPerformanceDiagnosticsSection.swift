@@ -12,6 +12,6 @@ struct PlayerPerformanceOverlayDiagnosticsSection: View {
                 playerViewModel: playerViewModel
             )
         }
-        .font(.cc.sm)
+        .piliFont(.sm)
     }
 }

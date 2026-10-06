@@ -7,7 +7,7 @@ struct VideoDetailRelatedHeader: View {
     var body: some View {
         HStack(spacing: VideoDetailRelatedStyle.headerSpacing) {
             Text("相关推荐")
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
 
             Spacer()
 

@@ -144,7 +144,7 @@ private struct BiliPlayerMoreControlsButton: View {
 }
 
 private struct BiliPlayerMoreControlsSheet: View {
-    @Environment(\.dismiss) private var dismiss
+    @PiliDismiss private var dismiss
     @EnvironmentObject private var libraryStore: LibraryStore
     @ObservedObject var viewModel: PlayerStateViewModel
     let configuration: BiliPlayerViewConfiguration
@@ -190,7 +190,7 @@ private struct BiliPlayerMoreControlsSheet: View {
                             Text(viewModel.playbackRate.title)
                                 .foregroundStyle(.secondary)
                             PiliIcon(systemName: "chevron.right")
-                                .font(.cc.sm.weight(.semibold))
+                                .piliFont(.sm).fontWeight(.semibold)
                                 .foregroundStyle(.tertiary)
                         }
                     }

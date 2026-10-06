@@ -38,9 +38,9 @@ struct PiliPlaybackToolsView: View {
                     Text("定时停止").ccText(font: .cc.baseBold, color: .cc.foreground)
                     Text(sleepTimer.summary).ccText(font: .cc.sm, color: .cc.mutedForeground)
                     Stepper("\(minutes) 分钟", value: $minutes, in: 5...180, step: 5)
-                        .font(.cc.base)
+                        .piliFont(.base)
                     Toggle("到点后播完当前视频", isOn: $finishCurrent)
-                        .font(.cc.base)
+                        .piliFont(.base)
                         .tint(.cc.primary)
                     CCNeoButton("开始计时", icon: "timer-default", fullWidth: true) {
                         sleepTimer.schedule(minutes: minutes, finishCurrent: finishCurrent)

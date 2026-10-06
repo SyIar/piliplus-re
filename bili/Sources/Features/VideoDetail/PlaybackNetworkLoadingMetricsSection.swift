@@ -29,7 +29,7 @@ struct PlaybackNetworkLoadingMetricsSection: View {
 
             if didRelatedLoadTimeOut {
                 PiliLabel("相关推荐最近一次加载超时，已停止等待并保留主播放优先。", systemImage: "clock.badge.exclamationmark")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(Color.cc.warning)
             }
         }

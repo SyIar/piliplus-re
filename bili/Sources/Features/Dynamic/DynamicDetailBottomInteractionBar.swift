@@ -56,7 +56,7 @@ struct DynamicDetailBottomInteractionBar: ToolbarContent {
     private var likeButton: some View {
         Button(action: toggleLike) {
             PiliIcon(systemName: likeState.isLiked ? "hand.thumbsup.fill" : "hand.thumbsup")
-                .font(.cc.base)
+                .piliFont(.base)
         }
         .controlSize(.small)
         .imageScale(.medium)
@@ -83,9 +83,9 @@ struct DynamicDetailBottomInteractionBar: ToolbarContent {
         Button(action: openComment) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 PiliIcon(systemName: "bubble.left")
-                    .font(.cc.base)
+                    .piliFont(.base)
                 Text("点击发送电波")
-                    .font(.cc.base)
+                    .piliFont(.base)
             }
             .padding(.horizontal, 6)
         }
@@ -103,7 +103,7 @@ struct DynamicDetailBottomInteractionBar: ToolbarContent {
     private var shareButton: some View {
         ShareLink(item: dynamicShareURL) {
             PiliIcon(systemName: "square.and.arrow.up")
-                .font(.cc.base)
+                .piliFont(.base)
         }
         .controlSize(.small)
         .imageScale(.medium)

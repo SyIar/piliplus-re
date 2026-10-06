@@ -50,6 +50,7 @@ struct AccountLibraryListPage: View {
                 } label: {
                     PiliIcon(systemName: "arrow.clockwise")
                 }
+                .accessibilityLabel("刷新")
                 .disabled(!sessionStore.isLoggedIn || state.isLoading)
             }
         }

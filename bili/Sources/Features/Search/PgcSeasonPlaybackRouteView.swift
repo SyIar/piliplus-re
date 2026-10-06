@@ -82,10 +82,10 @@ private struct PgcSeasonPlaybackRouteLoadingView: View {
         VStack(spacing: 12) {
             if case .failed(let message) = state {
                 PiliIcon(systemName: "exclamationmark.triangle")
-                    .font(.cc.lgBold)
+                    .piliFont(.lgBold)
                     .foregroundStyle(.secondary)
                 Text(message)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                 Button("重试", action: retry)
@@ -93,7 +93,7 @@ private struct PgcSeasonPlaybackRouteLoadingView: View {
             } else {
                 ProgressView()
                 Text(route.title)
-                    .font(.cc.base)
+                    .piliFont(.base)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }

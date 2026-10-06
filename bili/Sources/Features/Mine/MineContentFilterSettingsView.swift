@@ -45,7 +45,7 @@ struct MineContentFilterSettingsView: View {
                 }
 
                 Text("广告动态会按常见推广关键词过滤；带货动态会按 B 站商品组件和商品元数据过滤；自定义关键词会匹配动态正文、标题和转发内容。")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
 
@@ -57,7 +57,7 @@ struct MineContentFilterSettingsView: View {
                 NavigationLink("正则、分区与关注豁免") { PiliAdvancedRecommendFilterView(libraryStore: libraryStore) }
                 Toggle("屏蔽黑名单用户的视频", isOn: $blocksCreators)
                 Button("同步黑名单（\(blacklisted.ids.count) 位）") { Task { await blacklisted.refresh(api: dependencies.api, force: true) } }
-                if let error = blacklisted.error { Text(error).font(.cc.sm).foregroundStyle(.secondary) }
+                if let error = blacklisted.error { Text(error).piliFont(.sm).foregroundStyle(.secondary) }
                 Picker(selection: Binding(
                     get: { libraryStore.recommendMinimumDurationSeconds },
                     set: { libraryStore.setRecommendMinimumDurationSeconds($0) }
@@ -111,7 +111,7 @@ struct MineContentFilterSettingsView: View {
                 }
 
                 Text("默认只过滤首页推荐；打开后也会过滤视频详情页相关推荐。")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
         }

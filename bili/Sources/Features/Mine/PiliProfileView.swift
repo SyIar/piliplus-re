@@ -93,7 +93,7 @@ struct PiliProfileView: View {
                 Text(field.title).foregroundStyle(Color.cc.foreground)
                 Spacer()
                 Text(value).foregroundStyle(Color.cc.mutedForeground).lineLimit(2).multilineTextAlignment(.trailing)
-                PiliIcon(systemName: "chevron.right").font(.cc.sm).foregroundStyle(Color.cc.mutedForeground)
+                PiliIcon(systemName: "chevron.right").piliFont(.sm).foregroundStyle(Color.cc.mutedForeground)
             }
         }
     }

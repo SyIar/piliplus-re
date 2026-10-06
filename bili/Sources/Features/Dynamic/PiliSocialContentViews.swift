@@ -12,7 +12,7 @@ struct PiliDynamicAttachments: View {
         let topic = item.modules?.moduleDynamic?.topic ?? .null
         if topic["id"].piliInt > 0 {
             NavigationLink { PiliTopicView(api: api, id: topic["id"].piliInt, name: topic["name"].piliString) }
-                label: { PiliLabel(topic["name"].piliString, systemImage: "number").font(.cc.base) }
+                label: { PiliLabel(topic["name"].piliString, systemImage: "number").piliFont(.base) }
         }
         if vote["vote_id"].piliInt > 0 {
             Button { showsVote = true } label: { PiliLabel(vote["desc"].piliString.isEmpty ? "查看投票" : vote["desc"].piliString, systemImage: "chart.bar.xaxis").frame(maxWidth: .infinity, alignment: .leading) }
@@ -39,7 +39,7 @@ struct PiliVoteView: View {
             if case .null = info { ProgressView() }
             else {
                 Section {
-                    Text(info["title"].piliString.isEmpty ? info["desc"].piliString : info["title"].piliString).font(.cc.baseBold)
+                    Text(info["title"].piliString.isEmpty ? info["desc"].piliString : info["title"].piliString).piliFont(.baseBold)
                     Text("\(info["join_num"].piliInt) 人参与 · 最多选择 \(max(1, info["choice_cnt"].piliInt)) 项").foregroundStyle(.secondary)
                     if info["end_time"].piliInt > 0 { Text(Date(timeIntervalSince1970: Double(info["end_time"].piliInt)), style: .relative) }
                 }

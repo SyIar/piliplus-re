@@ -109,7 +109,7 @@ struct PiliSubtitleSettingsView: View {
                         }.disabled(controller.selectedID == nil)
                         if controller.isSecondaryLoading { ProgressView("加载第二语言") }
                         if let error = controller.secondaryError { Text(error).foregroundStyle(.secondary) }
-                        if controller.secondaryID == nil { Text("先开启主字幕，并选择另一条语言轨道；也可导入本地字幕。").font(.cc.sm).foregroundStyle(.secondary) }
+                        if controller.secondaryID == nil { Text("先开启主字幕，并选择另一条语言轨道；也可导入本地字幕。").piliFont(.sm).foregroundStyle(.secondary) }
                     }
                 }
                 Section("显示") {

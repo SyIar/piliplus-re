@@ -50,7 +50,7 @@ struct SMSLoginView: View {
                 if !message.isEmpty {
                     Section {
                         Text(message)
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(message == "登录成功" ? .green : .secondary)
                     }
                 }

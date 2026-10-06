@@ -8,29 +8,29 @@ struct PlayerPerformanceEventRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
                 PiliLabel(event.kind.title, systemImage: systemImage(for: event.kind))
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                 Spacer(minLength: 8)
                 Text(event.date, style: .time)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
             }
 
             if let title = event.title, !title.isEmpty {
                 Text(title)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
             }
 
             HStack(spacing: 8) {
                 Text(event.metricsID)
-                    .font(.cc.sm.monospaced())
+                    .piliFont(.sm).monospaced()
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
 
                 if let message = event.message, !message.isEmpty {
                     Text(message)
-                        .font(.cc.sm.monospacedDigit())
+                        .piliFont(.sm).monospacedDigit()
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }

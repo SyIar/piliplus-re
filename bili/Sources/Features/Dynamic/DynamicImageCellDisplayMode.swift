@@ -169,7 +169,7 @@ struct DynamicImageMediaBadge: View {
 
     var body: some View {
         Text(title)
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .videoCoverBadgeForeground(opacity: 0)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
@@ -181,7 +181,7 @@ struct DynamicImageMediaBadge: View {
 private struct DynamicImageLongBadgeContent: View {
     var body: some View {
         PiliLabel("长图", systemImage: "scroll")
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .videoCoverBadgeForeground(opacity: 0)
             .padding(.horizontal, 8)

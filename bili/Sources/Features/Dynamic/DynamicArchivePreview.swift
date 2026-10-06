@@ -117,7 +117,7 @@ struct DynamicArchivePreview: View {
                     .lineLimit(1)
             }
         }
-        .font(.cc.sm)
+        .piliFont(.sm)
         .foregroundStyle(.secondary)
     }
 }

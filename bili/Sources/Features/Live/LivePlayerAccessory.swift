@@ -77,10 +77,11 @@ struct LivePlayerSimpleLiveFullscreenHeader: View {
         HStack(spacing: 8) {
             Button(action: onExitFullscreen) {
                 PiliIcon(systemName: "chevron.left", size: 16)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("退出全屏")
 
             PlaybackDetailOwnerAvatar(
                 owner: viewModel.anchorOwner,
@@ -91,10 +92,10 @@ struct LivePlayerSimpleLiveFullscreenHeader: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(viewModel.title)
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                     .lineLimit(1)
                 Text(viewModel.anchorName)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.white.opacity(0.72))
                     .lineLimit(1)
             }
@@ -129,7 +130,7 @@ private struct LivePlayerLiveQualityMenu: View {
                 }
             } label: {
                 Text(viewModel.currentQualityTitle ?? "画质")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .lineLimit(1)
                     .padding(.horizontal, 10)
                     .frame(minHeight: metrics.controlHeight)
@@ -282,7 +283,7 @@ private struct LivePlayerMoreControlsRow: View {
             }
 
             PiliIcon(systemName: "chevron.up.chevron.down")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -362,7 +363,7 @@ private struct LiveCompactSettingsMenu: View {
             }
         } label: {
             PiliIcon(systemName: "slider.horizontal.3", size: 14)
-                .font(.cc.smBold)
+                .piliFont(.smBold)
                 .frame(width: 32, height: 32)
         }
         .biliPlayerGlassButtonStyle()
@@ -390,7 +391,7 @@ struct LiveStreamMenu: View {
                 }
             } label: {
                 PiliLabel(viewModel.currentStreamTitle ?? "线路", systemImage: "antenna.radiowaves.left.and.right")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .labelStyle(.titleAndIcon)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -420,7 +421,7 @@ struct LiveQualityMenu: View {
                 }
             } label: {
                 PiliLabel(viewModel.currentQualityTitle ?? "画质", systemImage: "slider.horizontal.3")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .labelStyle(.titleAndIcon)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -442,7 +443,7 @@ private struct LiveDanmakuToggleButton: View {
                 viewModel.isDanmakuEnabled ? "弹幕开" : "弹幕关",
                 systemImage: viewModel.isDanmakuEnabled ? "text.bubble.fill" : "text.bubble"
             )
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -464,7 +465,7 @@ private struct LiveDanmakuDiagnosticsButton: View {
                 viewModel.isLiveDanmakuDiagnosticsEnabled ? "诊断开" : "诊断",
                 systemImage: "waveform.path.ecg"
             )
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)

@@ -57,7 +57,9 @@ jobs:
       - name: Test playback policy
         run: swift test --package-path Packages/PiliPlaybackCore
       - name: Validate repository
-        run: python3 Scripts/validate-project.py
+        run: |
+          python3 Scripts/validate-project.py
+          python3 Scripts/validate-ui.py
       - name: Build iOS test bundle
         run: bash Scripts/test-ios.sh build
       - name: Run iOS tests
@@ -86,7 +88,9 @@ jobs:
       - name: Select Xcode
         run: bash Scripts/select-xcode.sh
       - name: Validate repository
-        run: python3 Scripts/validate-project.py
+        run: |
+          python3 Scripts/validate-project.py
+          python3 Scripts/validate-ui.py
       - name: Build unsigned IPA
         run: bash Scripts/build-ipa.sh
       - name: Include license and source provenance

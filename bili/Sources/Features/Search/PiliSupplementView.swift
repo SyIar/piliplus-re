@@ -32,7 +32,7 @@ struct PiliMusicView: View {
                     Text(detail["music_title"].piliString).font(.cc.lgBold.bold())
                     Text(detail["origin_artist"].piliString).foregroundStyle(.secondary)
                     ForEach(["album", "music_publish", "music_source"], id: \.self) { key in
-                        if !detail[key].piliString.isEmpty { Text(detail[key].piliString).font(.cc.base) }
+                        if !detail[key].piliString.isEmpty { Text(detail[key].piliString).piliFont(.base) }
                     }
                     ForEach(detail["artists_list"].piliArray, id: \.self) { artist in
                         if let owner = try? artist.piliDecode(VideoOwner.self), owner.mid > 0 {
@@ -63,7 +63,7 @@ struct PiliMusicView: View {
                 Section("使用这首音乐的视频") {
                     ForEach(recommendations, id: \.self) { item in
                         if let url = URL(string: "https://www.bilibili.com/video/\(item["bvid"].piliString)"), !item["bvid"].piliString.isEmpty {
-                            AppLinkButton(url: url) { VStack(alignment: .leading) { Text(item["title"].piliString); Text(item["up_nick_name"].piliString).font(.cc.sm).foregroundStyle(.secondary) } }
+                            AppLinkButton(url: url) { VStack(alignment: .leading) { Text(item["title"].piliString); Text(item["up_nick_name"].piliString).piliFont(.sm).foregroundStyle(.secondary) } }
                         }
                     }
                 }
@@ -121,8 +121,8 @@ struct PiliBubbleView: View {
                     AppLinkButton(url: url) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(item["title"].piliString)
-                            Text("\(item["meta"]["author"].piliString) · \(item["meta"]["time_text"].piliString)").font(.cc.sm).foregroundStyle(.secondary)
-                            Text("\(item["meta"]["view_stat"].piliString) · \(item["meta"]["reply_count"].piliString) 评论").font(.cc.sm).foregroundStyle(.secondary)
+                            Text("\(item["meta"]["author"].piliString) · \(item["meta"]["time_text"].piliString)").piliFont(.sm).foregroundStyle(.secondary)
+                            Text("\(item["meta"]["view_stat"].piliString) · \(item["meta"]["reply_count"].piliString) 评论").piliFont(.sm).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -160,7 +160,7 @@ struct PiliMatchView: View {
     var body: some View {
         PiliList {
             if !contest.piliObject.isEmpty {
-                Text(contest["season"]["title"].piliString).font(.cc.baseBold)
+                Text(contest["season"]["title"].piliString).piliFont(.baseBold)
                 Text(contest["game_stage"].piliString).foregroundStyle(.secondary)
                 HStack(alignment: .top) {
                     team(contest["home_team"])
@@ -184,7 +184,7 @@ struct PiliMatchView: View {
         VStack {
             let logo = value["logo"].piliString
             CachedRemoteImage(url: URL(string: logo.hasPrefix("/") ? "https://i1.hdslb.com" + logo : logo), targetPixelSize: 150) { $0.resizable().scaledToFit() } placeholder: { Color.clear }.frame(width: 50, height: 50)
-            Text(value["title"].piliString).font(.cc.base)
+            Text(value["title"].piliString).piliFont(.base)
         }.frame(maxWidth: .infinity)
     }
     private func load() async {

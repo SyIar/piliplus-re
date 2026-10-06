@@ -98,7 +98,7 @@ struct PiliDynamicComposer: View {
                         Toggle("定时发布", isOn: $timed)
                         if timed { DatePicker("发布时间", selection: $publishDate, in: Date()..., displayedComponents: [.date, .hourAndMinute]) }
                     }
-                    Text("草稿按账号保存在本机；发布失败时保留内容。").font(.cc.sm).foregroundStyle(.secondary)
+                    Text("草稿按账号保存在本机；发布失败时保留内容。").piliFont(.sm).foregroundStyle(.secondary)
                 }
             }
             .disabled(!restored || sending || !accountValid)
@@ -253,7 +253,7 @@ struct PiliResourcePicker: View {
                 if let error { Text(error).foregroundStyle(Color.cc.destructive) }
                 ForEach(items) { item in
                     Button { select(item); dismiss() } label: {
-                        VStack(alignment: .leading) { Text(item.name); if !item.subtitle.isEmpty { Text(item.subtitle).font(.cc.sm).foregroundStyle(.secondary) } }
+                        VStack(alignment: .leading) { Text(item.name); if !item.subtitle.isEmpty { Text(item.subtitle).piliFont(.sm).foregroundStyle(.secondary) } }
                     }
                 }
                 if hasMore { Button("加载更多") { Task { await nextPage() } }.disabled(loading) }

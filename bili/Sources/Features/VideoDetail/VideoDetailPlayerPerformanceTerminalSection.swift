@@ -8,7 +8,7 @@ struct PlayerPerformanceOverlayTerminalSection: View {
         VStack(alignment: .leading, spacing: 4) {
             if let qualitySupplementMessage = session.qualitySupplementMessage {
                 Text(qualitySupplementMessage)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(Color.cc.warning)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -16,7 +16,7 @@ struct PlayerPerformanceOverlayTerminalSection: View {
 
             if let failure = session.failureMessage {
                 Text(failure)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(Color.cc.destructive)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)

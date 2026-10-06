@@ -7,7 +7,7 @@ struct VideoDetailNetworkDiagnosticsButton: View {
     var body: some View {
         Button(action: action) {
             PiliLabel("网络诊断", systemImage: "waveform.path.ecg.rectangle")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.glass)

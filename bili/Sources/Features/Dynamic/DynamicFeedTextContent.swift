@@ -35,7 +35,7 @@ struct DynamicFeedTextContent: View {
                     HStack(spacing: 4) {
                         Text(isExpanded ? "收起" : "展开")
                         PiliIcon(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.cc.sm.weight(.bold))
+                            .piliFont(.sm).fontWeight(.bold)
                     }
                     .appTypography(.action, fallback: .footnote.weight(.semibold))
                     .foregroundStyle(appTintColor)

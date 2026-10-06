@@ -144,7 +144,7 @@ struct PiliNoteOperationView: View {
         let attributes = object["attributes"]?.objectValueForDynamicParsing ?? [:]
         if let text = object["insert"]?.textValue {
             Text(text)
-                .font(.cc.base)
+                .piliFont(.base)
                 .bold(attributes["bold"] == .bool(true))
                 .italic(attributes["italic"] == .bool(true))
                 .underline(attributes["underline"] == .bool(true))
@@ -185,7 +185,7 @@ struct PiliNoteEditorView: View {
         PiliForm {
             PiliFullNoteEditorLink(api: api, aid: aid)
             TextField("笔记标题", text: $title)
-            TextEditor(text: $text).font(.cc.base).frame(minHeight: 260)
+            TextEditor(text: $text).piliFont(.base).frame(minHeight: 260)
             if let time {
                 Button("插入当前时间 \(Int(time) / 60):\(String(format: "%02d", Int(time) % 60))") {
                     text += "\n[\(Int(time) / 60):\(String(format: "%02d", Int(time) % 60))] "

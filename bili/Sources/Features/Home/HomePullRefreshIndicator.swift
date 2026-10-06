@@ -28,7 +28,7 @@ struct HomePullRefreshIndicator: View {
             ZStack {
                 if isVisible {
                     PiliIcon(systemName: "arrow.clockwise", size: 15)
-                        .font(.cc.baseBold)
+                        .piliFont(.baseBold)
                         .foregroundStyle(appTintColor)
                         .rotationEffect(
                             .degrees(

@@ -37,9 +37,9 @@ struct PiliCookieLoginView: View {
     var body: some View {
         PiliForm {
             Section("粘贴 Cookie") {
-                TextEditor(text: $input).font(.cc.base.monospaced()).frame(minHeight: 180)
+                TextEditor(text: $input).piliFont(.base).monospaced().frame(minHeight: 180)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive()
-                Text("至少包含 SESSDATA；验证账号成功后保存到系统钥匙串。").font(.cc.sm).foregroundStyle(.secondary)
+                Text("至少包含 SESSDATA；验证账号成功后保存到系统钥匙串。").piliFont(.sm).foregroundStyle(.secondary)
             }
             Button("验证并登录") { Task { await login() } }.disabled(busy || input.isEmpty)
             if busy { ProgressView("验证账号") }

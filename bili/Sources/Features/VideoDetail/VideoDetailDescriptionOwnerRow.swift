@@ -35,7 +35,7 @@ struct VideoDescriptionOwnerRow: View {
 
             Button(action: toggleFollow) {
                 Text(isFollowing ? "已关注" : "+ 关注")
-                    .font(.cc.sm.weight(.bold))
+                    .piliFont(.sm).fontWeight(.bold)
                     .frame(minWidth: 58)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)

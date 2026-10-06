@@ -28,7 +28,7 @@ struct VideoDetailToolbarSegmentedPickerView: View {
             }
         } label: {
             Text(title)
-                .font(.cc.base.weight(.medium))
+                .piliFont(.base).fontWeight(.medium)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Capsule())
                 .background {

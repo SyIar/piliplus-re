@@ -14,7 +14,7 @@ struct PlayerPerformanceSampleGroupRow: View {
             )
 
             Text(group.subtitle)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
@@ -22,7 +22,7 @@ struct PlayerPerformanceSampleGroupRow: View {
 
             if group.issueCount > 0 {
                 Text(issueSummary)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(issueColor)
                     .lineLimit(2)
             }
@@ -73,7 +73,7 @@ private struct PlayerPerformanceSampleGroupHeader: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             PiliLabel(title, systemImage: isRecommended ? "checkmark.seal.fill" : "chart.bar.xaxis")
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(headerColor)
                 .lineLimit(1)
 
@@ -81,7 +81,7 @@ private struct PlayerPerformanceSampleGroupHeader: View {
 
             if isRecommended {
                 Text("样本较优")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(Color.cc.success)
             }
         }

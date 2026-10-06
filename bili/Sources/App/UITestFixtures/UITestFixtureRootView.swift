@@ -39,7 +39,7 @@ struct UITestFixtureRootView: View {
             }
         }
         .modifier(PiliAppChrome())
-        .environment(\.accessibilityReduceTransparency, ProcessInfo.processInfo.arguments.contains("--glass-reduce-transparency"))
+        .environment(\.piliReduceTransparencyPreview, ProcessInfo.processInfo.arguments.contains("--glass-reduce-transparency"))
         .environmentObject(dependencies.homeRecommendDiagnosticsStore)
         .environmentObject(dependencies)
         .environmentObject(dependencies.libraryStore)
@@ -562,7 +562,7 @@ private struct UITestPlayerFixtureView: View {
                     }
 
                     Text(isFullscreen ? "Fullscreen Player" : "Player Ready")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .accessibilityIdentifier(
                             isFullscreen ? "ui.player.fullscreenSurface" : "ui.player.ready"
                         )

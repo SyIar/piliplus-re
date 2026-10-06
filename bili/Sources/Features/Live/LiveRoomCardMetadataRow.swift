@@ -19,7 +19,7 @@ struct LiveRoomCardMetadataRow: View {
             HStack(spacing: 4) {
                 AvatarRemoteImage(urlString: room.face, pixelSize: 48) {
                     PiliIcon(systemName: "person.crop.circle.fill", size: 13)
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.tertiary)
                 }
                 .frame(width: 14, height: 14)

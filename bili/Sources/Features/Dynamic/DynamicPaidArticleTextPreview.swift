@@ -28,7 +28,7 @@ struct DynamicPaidArticleTextPreview: View {
                     Text("需解锁")
                 }
             }
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .foregroundStyle(appTintColor)
             .lineLimit(1)
         }

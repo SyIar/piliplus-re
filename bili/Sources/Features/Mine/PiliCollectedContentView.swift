@@ -27,7 +27,7 @@ struct PiliCollectedContentView: View {
                         Button("想看") { updateStatus(1) }; Button("在看") { updateStatus(2) }; Button("看过") { updateStatus(3) }
                         Button("取消选择") { selected = [] }
                     }.disabled(selected.isEmpty)
-                }.font(.cc.sm).disabled(mutating)
+                }.piliFont(.sm).disabled(mutating)
             }
             ForEach(items, id: \.self) { item in
                 HStack {
@@ -65,7 +65,7 @@ struct PiliCollectedContentView: View {
         case .subscriptions:
             if let folder = try? item.piliDecode(FavoriteFolder.self) {
                 NavigationLink { PiliPublicFavoriteView(api: dependencies.api, folder: folder, seasonID: item["type"].piliInt == 11 ? nil : folder.id) } label: {
-                    VStack(alignment: .leading) { Text(folder.displayTitle); Text("\(folder.mediaCount ?? 0) 个内容").font(.cc.sm).foregroundStyle(.secondary) }
+                    VStack(alignment: .leading) { Text(folder.displayTitle); Text("\(folder.mediaCount ?? 0) 个内容").piliFont(.sm).foregroundStyle(.secondary) }
                 }
             }
         }

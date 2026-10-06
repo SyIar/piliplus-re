@@ -9,7 +9,7 @@ struct LibraryLoadingRow: View {
             ProgressView()
                 .controlSize(.small)
             Text(title)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 6)
@@ -25,7 +25,7 @@ struct LibraryLoadMoreTriggerRow: View {
             PiliIcon(systemName: "arrow.down.circle")
             Text(title)
         }
-        .font(.cc.sm)
+        .piliFont(.sm)
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
@@ -41,17 +41,17 @@ struct LibraryErrorRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             PiliLabel(title, systemImage: "exclamationmark.circle")
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .foregroundStyle(Color.cc.warning)
 
             Text(message)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
             Button(action: retry) {
                 PiliLabel("重试", systemImage: "arrow.clockwise")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
             }
             .buttonStyle(.glass)
         }

@@ -12,17 +12,17 @@ struct CommentErrorView: View {
                 PiliIcon(systemName: "exclamationmark.circle")
                     .foregroundStyle(Color.cc.warning)
                 Text("评论加载失败")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
             }
 
             Text(message)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
             Button(action: retry) {
                 PiliLabel("重试", systemImage: "arrow.clockwise")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
             }
             .buttonStyle(.glass)
             .buttonBorderShape(.capsule)

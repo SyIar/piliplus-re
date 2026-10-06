@@ -18,7 +18,7 @@ struct ErrorStateView: View {
                 Button(action: retry) {
                     PiliLabel("重试", systemImage: "arrow.clockwise")
                 }
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .buttonStyle(.glass)
                 .buttonBorderShape(.capsule)
                 .tint(appTintColor)
@@ -53,7 +53,7 @@ struct InlineLoadingStateView: View {
 
             PiliLabel(title, systemImage: systemImage)
                 .labelStyle(.titleOnly)
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)

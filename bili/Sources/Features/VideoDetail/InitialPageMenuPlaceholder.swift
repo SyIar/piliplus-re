@@ -8,12 +8,12 @@ struct InitialPageMenuPlaceholder: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 Text("分P")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
 
                 if let pageCount {
                     Text("\(pageCount) P")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.tertiary)
                 }
 

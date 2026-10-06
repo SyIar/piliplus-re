@@ -72,7 +72,7 @@ private struct PiliPresentationRoot<Content: View>: View {
             } else { content }
         }
         .environment(\.piliPresentedPage, true)
-        .font(.cc.base)
+        .piliFont(.base)
     }
 }
 
@@ -142,7 +142,7 @@ final class PiliSheetSession: ObservableObject {
     }
 }
 
-private struct PiliBoundSheet<Item: Identifiable, Sheet: View>: ViewModifier {
+private struct PiliBoundSheet<Item: Identifiable, Sheet: View>: ViewModifier where Item.ID: Sendable {
     @Binding var item: Item?
     let config: CCSheetConfig
     let onDismiss: (() -> Void)?
@@ -208,7 +208,7 @@ private struct PiliBooleanSheetItem: Identifiable { let id = true }
 extension View {
     func piliSheet<Item: Identifiable, Content: View>(item: Binding<Item?>,
         config: CCSheetConfig = .form, onDismiss: (() -> Void)? = nil,
-        @ViewBuilder content: @escaping (Item) -> Content) -> some View {
+        @ViewBuilder content: @escaping (Item) -> Content) -> some View where Item.ID: Sendable {
         modifier(PiliBoundSheet(item: item, config: config, onDismiss: onDismiss, sheet: content))
     }
 

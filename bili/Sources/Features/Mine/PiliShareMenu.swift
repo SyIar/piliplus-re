@@ -41,7 +41,7 @@ struct PiliShareSheet: View {
     var body: some View {
         NavigationStack {
             PiliForm {
-                Section("分享内容") { Text(title); Text(url.absoluteString).font(.cc.sm).foregroundStyle(.secondary) }
+                Section("分享内容") { Text(title); Text(url.absoluteString).piliFont(.sm).foregroundStyle(.secondary) }
                 Section("发送给") {
                     if let selected { PiliLabel(selected.name, systemImage: "person.crop.circle.fill") }
                     Button("搜索用户") { search = true }

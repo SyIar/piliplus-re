@@ -345,7 +345,7 @@ private struct AccountPrivateMessageSessionRow: View {
         HStack(spacing: 12) {
             AvatarRemoteImage(urlString: session.actor.avatarURLString, pixelSize: 128) {
                 PiliIcon(systemName: "person.crop.circle")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
             }
             .frame(width: 52, height: 52)
@@ -362,13 +362,13 @@ private struct AccountPrivateMessageSessionRow: View {
 
                     if session.isMuted {
                         PiliIcon(systemName: "bell.slash.fill")
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                     }
 
                     if session.isPinned {
                         PiliIcon(systemName: "pin.fill")
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -589,14 +589,14 @@ struct AccountPrivateMessageConversationView: View {
     private var historyControl: some View {
         if loadMoreState.isLoading {
             ProgressView("正在加载更早消息")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .padding(.vertical, 8)
         } else if case .failed(let message) = loadMoreState {
             Button {
                 Task { await load(reset: false) }
             } label: {
                 PiliLabel("加载更早消息失败", systemImage: "arrow.clockwise")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .multilineTextAlignment(.center)
             }
             .accessibilityHint(message)
@@ -605,7 +605,7 @@ struct AccountPrivateMessageConversationView: View {
             Button("加载更早消息") {
                 Task { await load(reset: false) }
             }
-            .font(.cc.sm.weight(.medium))
+            .piliFont(.sm).fontWeight(.medium)
             .padding(.vertical, 8)
         }
     }
@@ -839,7 +839,7 @@ struct AccountPrivateMessageConversationView: View {
             if let sendErrorMessage {
                 HStack(spacing: 8) {
                     PiliLabel(sendErrorMessage, systemImage: "exclamationmark.circle")
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(Color.cc.destructive)
                         .lineLimit(2)
 
@@ -849,7 +849,7 @@ struct AccountPrivateMessageConversationView: View {
                         Button("重试") {
                             Task { await retryFailedSend(using: proxy) }
                         }
-                        .font(.cc.sm.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                         .disabled(isSending || isSendingImage)
                     }
                 }
@@ -883,7 +883,7 @@ struct AccountPrivateMessageConversationView: View {
                                     .controlSize(.small)
                             } else {
                                 PiliIcon(systemName: "plus", size: 17)
-                                    .font(.cc.baseBold)
+                                    .piliFont(.baseBold)
                             }
                         }
                         .frame(width: 36, height: 36)
@@ -1206,7 +1206,7 @@ private struct AccountPrivateMessageReportSheet: View {
                 if let errorMessage {
                     Section {
                         PiliLabel(errorMessage, systemImage: "exclamationmark.circle")
-                            .font(.cc.sm)
+                            .piliFont(.sm)
                             .foregroundStyle(Color.cc.destructive)
                     }
                 }
@@ -1312,7 +1312,7 @@ private struct AccountPrivateMessageEmotePicker: View {
                                         .frame(width: 38, height: 38)
 
                                         Text(emote.token)
-                                            .font(.cc.sm)
+                                            .piliFont(.sm)
                                             .foregroundStyle(.secondary)
                                             .lineLimit(1)
                                             .minimumScaleFactor(0.75)
@@ -1406,7 +1406,7 @@ private struct AccountPrivateMessageBubble: View {
                     message.isOutgoing ? "你撤回了一条消息" : "对方撤回了一条消息",
                     systemImage: "arrow.uturn.backward"
                 )
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
             } else if let imageURLString = message.imageURLString {
                 if message.messageType == 2 || message.messageType == 6 {

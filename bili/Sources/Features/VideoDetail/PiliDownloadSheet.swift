@@ -43,7 +43,7 @@ struct PiliDownloadSheet: View {
                             ForEach(audios) { audio in Text(audio.title).tag(audio.id) }
                         }
                         Text(audios.isEmpty ? "当前视频没有可独立下载的音频流" : "只下载音频轨，离线打开后进入音频播放器")
-                            .font(.cc.sm).foregroundStyle(.secondary)
+                            .piliFont(.sm).foregroundStyle(.secondary)
                     }
                     Toggle("允许使用蜂窝网络下载", isOn: $allowsCellular)
                 }

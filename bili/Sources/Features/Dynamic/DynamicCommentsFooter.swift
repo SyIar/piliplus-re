@@ -12,7 +12,7 @@ struct DynamicCommentsFooter: View {
         } else if case .failed(let message) = viewModel.loadMoreState {
             Button(action: loadMore) {
                 PiliLabel("评论加载失败，点按重试", systemImage: "arrow.clockwise")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
@@ -29,7 +29,7 @@ struct DynamicCommentsFooter: View {
                 }
         } else {
             Text("没有更多评论了")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)

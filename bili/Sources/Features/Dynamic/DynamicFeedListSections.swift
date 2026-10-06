@@ -48,7 +48,7 @@ struct DynamicFeedFooter: View {
                     Task { await viewModel.loadMore() }
                 } label: {
                     PiliLabel("加载更多", systemImage: "chevron.down")
-                        .font(.cc.base.weight(.semibold))
+                        .piliFont(.base).fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .foregroundStyle(.primary)
@@ -60,7 +60,7 @@ struct DynamicFeedFooter: View {
                 .padding(.top, 10)
             } else {
                 Text("没有更多动态了")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)

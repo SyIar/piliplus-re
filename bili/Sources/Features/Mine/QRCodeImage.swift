@@ -14,7 +14,7 @@ struct QRCodeImage: View {
                 .scaledToFit()
         } else {
             PiliIcon(systemName: "qrcode", size: 96)
-                .font(.cc.lg)
+                .piliFont(.lg)
                 .foregroundStyle(.secondary)
         }
     }

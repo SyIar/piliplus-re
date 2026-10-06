@@ -48,10 +48,10 @@ private struct VideoDetailPageMenuHeader: View {
     var body: some View {
         HStack(spacing: 10) {
             Text("分P")
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
 
             Text("\(pageCount) P")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
 
             Spacer()
@@ -60,7 +60,7 @@ private struct VideoDetailPageMenuHeader: View {
                 showsPageSheet = true
             } label: {
                 PiliIcon(systemName: "triangle.fill")
-                    .font(.cc.sm.weight(.bold))
+                    .piliFont(.sm).fontWeight(.bold)
                     .rotationEffect(.degrees(180))
                     .frame(width: 28, height: 28)
                     .contentShape(Circle())
@@ -135,7 +135,7 @@ private struct VideoDetailPageTile: View {
 
                     if usesGlassBackground, isSelected {
                         PiliIcon(systemName: "checkmark.circle.fill")
-                            .font(.cc.sm.weight(.bold))
+                            .piliFont(.sm).fontWeight(.bold)
                             .foregroundStyle(appTintColor)
                             .accessibilityHidden(true)
                     }
@@ -273,10 +273,10 @@ private struct VideoDetailPageSheetHeader: View {
         GlassEffectContainer(spacing: 8) {
             HStack(spacing: 10) {
                 Text("全部分P")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
 
                 Text("\(pageCount) P")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
 
                 Spacer()

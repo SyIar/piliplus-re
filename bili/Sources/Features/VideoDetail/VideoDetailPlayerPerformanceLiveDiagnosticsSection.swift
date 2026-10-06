@@ -72,10 +72,10 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 PiliIcon(systemName: isFailure ? "exclamationmark.triangle.fill" : "stethoscope")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(isFailure ? .orange : .secondary)
                 Text("现场诊断")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                 Spacer(minLength: 0)
             }
 
@@ -89,7 +89,7 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
                         .lineLimit(nil)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.cc.sm.monospacedDigit())
+                .piliFont(.sm).monospacedDigit()
             }
         }
         .padding(8)

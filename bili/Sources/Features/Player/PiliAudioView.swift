@@ -99,7 +99,7 @@ struct PiliAudioView: View {
                 if let player = model.player { PiliOfflineAudioControls(player: player, title: track.title, author: track.owner.name).listRowBackground(Color.clear) }
                 else if model.error == nil { ProgressView("正在获取音轨") }
                 VideoOwnerRouteLink(owner: track.owner) { PiliLabel(track.owner.name, systemImage: "person.crop.circle") }
-                if !track.description.isEmpty { Text(track.description).font(.cc.base).textSelection(.enabled) }
+                if !track.description.isEmpty { Text(track.description).piliFont(.base).textSelection(.enabled) }
                 HStack {
                     PiliIconButton("赞", systemImage: model.liked ? "hand.thumbsup.fill" : "hand.thumbsup") { action("ThumbUp") }
                         .contextMenu { Button("三连") { confirmTriple = true } }

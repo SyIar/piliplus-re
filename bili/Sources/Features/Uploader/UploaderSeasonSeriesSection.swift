@@ -51,7 +51,7 @@ struct UploaderSeasonSeriesSection: View {
                 Task { await viewModel.loadMoreSeasonSeries() }
             } label: {
                 PiliLabel("加载更多", systemImage: "chevron.down")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .foregroundStyle(.primary)
@@ -62,7 +62,7 @@ struct UploaderSeasonSeriesSection: View {
             .padding(.top, 6)
         } else {
             Text("没有更多合集了")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
@@ -129,7 +129,7 @@ private struct UploaderSeasonSeriesCard: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(item.title)
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -157,7 +157,7 @@ private struct UploaderSeasonSeriesCard: View {
                 PiliLabel(BiliFormatters.publishDate(item.updateTime), systemImage: "calendar")
             }
         }
-        .font(.cc.sm)
+        .piliFont(.sm)
         .foregroundStyle(.secondary)
         .lineLimit(1)
     }
@@ -183,7 +183,7 @@ private struct UploaderSeasonSeriesCover: View {
                     .fill(Color(.tertiarySystemFill))
                     .overlay {
                         PiliIcon(systemName: "rectangle.stack")
-                            .font(.cc.baseBold.weight(.semibold))
+                            .piliFont(.baseBold).fontWeight(.semibold)
                             .foregroundStyle(.secondary)
                     }
             }
@@ -191,7 +191,7 @@ private struct UploaderSeasonSeriesCover: View {
             .clipped()
 
             Text("\(item.kindTitle): \(item.total ?? 0)")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.white)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
@@ -210,7 +210,7 @@ private struct UploaderSeasonSeriesPreview: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text("最新：\(archive.title)")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 
@@ -221,7 +221,7 @@ private struct UploaderSeasonSeriesPreview: View {
                     PiliLabel(BiliFormatters.duration(archive.duration), systemImage: "clock")
                 }
             }
-            .font(.cc.sm)
+            .piliFont(.sm)
             .foregroundStyle(.tertiary)
             .lineLimit(1)
         }

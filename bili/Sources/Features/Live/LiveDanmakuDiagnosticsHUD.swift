@@ -28,7 +28,7 @@ struct LiveDanmakuDiagnosticsHUD: View {
             LiveDanmakuDiagnosticsHeader(snapshot: snapshot)
 
             Text(snapshot.conclusion)
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.white.opacity(0.9))
                 .lineLimit(isExpanded ? 2 : 3)
                 .fixedSize(horizontal: false, vertical: true)
@@ -37,7 +37,7 @@ struct LiveDanmakuDiagnosticsHUD: View {
 
             if isExpanded, let lastCommandName = snapshot.lastCommandName {
                 Text("最后命令 \(lastCommandName)")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.white.opacity(0.58))
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
@@ -45,7 +45,7 @@ struct LiveDanmakuDiagnosticsHUD: View {
 
             if isExpanded, let lastEndpointError = snapshot.lastEndpointError {
                 Text("节点失败 \(lastEndpointError)")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.white.opacity(0.58))
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -69,18 +69,18 @@ private struct LiveDanmakuDiagnosticsHeader: View {
     var body: some View {
         HStack(spacing: 8) {
             PiliIcon(systemName: snapshot.phase.systemImage)
-                .font(.cc.sm.weight(.bold))
+                .piliFont(.sm).fontWeight(.bold)
                 .foregroundStyle(snapshot.phase.tintColor)
                 .frame(width: 18, height: 18)
 
             Text("弹幕诊断")
-                .font(.cc.sm.weight(.bold))
+                .piliFont(.sm).fontWeight(.bold)
                 .foregroundStyle(.white)
 
             Spacer(minLength: 8)
 
             Text(snapshot.phase.title)
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .monospacedDigit()
                 .foregroundStyle(snapshot.phase.tintColor)
                 .padding(.horizontal, 7)
@@ -109,12 +109,12 @@ private struct LiveDanmakuDiagnosticsRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(title)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.white.opacity(0.58))
                 .frame(width: 44, alignment: .leading)
 
             Text(value)
-                .font(.cc.sm.weight(.medium))
+                .piliFont(.sm).fontWeight(.medium)
                 .monospacedDigit()
                 .foregroundStyle(.white.opacity(0.86))
                 .lineLimit(1)

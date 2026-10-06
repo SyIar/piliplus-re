@@ -136,11 +136,11 @@ private struct VideoDetailPgcEpisodeHeader: View {
     var body: some View {
         HStack(spacing: 10) {
             Text("分集")
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
 
             if episodeCount > 0 {
                 Text("\(episodeCount) 集")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
 
@@ -150,7 +150,7 @@ private struct VideoDetailPgcEpisodeHeader: View {
                 order.toggle()
             } label: {
                 PiliLabel(order.title, systemImage: "arrow.up.arrow.down")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
@@ -159,7 +159,7 @@ private struct VideoDetailPgcEpisodeHeader: View {
                 showsEpisodeSheet = true
             } label: {
                 PiliIcon(systemName: "triangle.fill")
-                    .font(.cc.sm.weight(.bold))
+                    .piliFont(.sm).fontWeight(.bold)
                     .rotationEffect(.degrees(180))
                     .frame(width: 28, height: 28)
                     .contentShape(Circle())
@@ -295,7 +295,7 @@ private struct VideoDetailPgcEpisodeTile: View {
 
                     if usesGlassBackground, isSelected {
                         PiliIcon(systemName: "checkmark.circle.fill")
-                            .font(.cc.sm.weight(.bold))
+                            .piliFont(.sm).fontWeight(.bold)
                             .foregroundStyle(appTintColor)
                             .accessibilityHidden(true)
                     }
@@ -440,10 +440,10 @@ private struct VideoDetailPgcEpisodeSheetHeader: View {
         GlassEffectContainer(spacing: 8) {
             HStack(spacing: 10) {
                 Text("全部分集")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
 
                 Text("\(episodeCount) 集")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
 
                 Spacer()
@@ -452,7 +452,7 @@ private struct VideoDetailPgcEpisodeSheetHeader: View {
                     order.toggle()
                 } label: {
                     PiliLabel(order.title, systemImage: "arrow.up.arrow.down")
-                        .font(.cc.sm.weight(.semibold))
+                        .piliFont(.sm).fontWeight(.semibold)
                         .padding(.horizontal, 10)
                         .frame(height: 30)
                 }
@@ -472,7 +472,7 @@ private struct VideoDetailPgcEpisodeLoadingSection: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("分集")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
 
                 Spacer()
@@ -503,16 +503,16 @@ private struct VideoDetailPgcEpisodeFailedSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("分集")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                 Spacer()
                 Button("重试", action: retry)
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .buttonStyle(.plain)
                     .foregroundStyle(appTintColor)
             }
 
             Text(message)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
         }

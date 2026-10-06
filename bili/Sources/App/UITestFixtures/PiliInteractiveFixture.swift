@@ -11,7 +11,7 @@ struct PiliInteractiveFixture: View {
                 ZStack {
                     LinearGradient(colors: [Color(red: 0.05, green: 0.12, blue: 0.28), .black],
                                    startPoint: .topLeading, endPoint: .bottomTrailing)
-                    PiliIcon(systemName: "sparkles", size: 110).font(.cc.lg).foregroundStyle(.white.opacity(0.12))
+                    PiliIcon(systemName: "sparkles", size: 110).piliFont(.lg).foregroundStyle(.white.opacity(0.12))
                     PiliInteractiveChoicesView(controller: controller)
                 }
                 .frame(height: 340).clipShape(RoundedRectangle(cornerRadius: 24))
@@ -26,7 +26,7 @@ struct PiliInteractiveFixture: View {
                 .disabled(controller.isLoading || controller.isBacktrackingRestricted || controller.history.count < 2)
                 .accessibilityIdentifier("ui.interactive.revisit")
                 if controller.isBacktrackingRestricted {
-                    PiliLabel("作者已限制本段剧情回溯", systemImage: "lock").font(.cc.sm)
+                    PiliLabel("作者已限制本段剧情回溯", systemImage: "lock").piliFont(.sm)
                 }
                 Spacer(minLength: 0)
             }

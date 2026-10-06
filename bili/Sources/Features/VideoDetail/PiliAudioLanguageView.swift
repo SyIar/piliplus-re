@@ -44,7 +44,7 @@ struct PiliAudioLanguageView: View {
             }.disabled(viewModel.piliAudioLanguageBusy || viewModel.isSwitchingPlayQuality)
             if viewModel.piliAudioLanguageBusy || viewModel.isSwitchingPlayQuality { ProgressView("正在切换音轨") }
             if let message = viewModel.piliAudioLanguageError { Text(message).foregroundStyle(.secondary) }
-            Text("仅显示当前视频提供的语言。切换会保留播放位置和倍速，需要登录播放账号。").font(.cc.sm).foregroundStyle(.secondary)
+            Text("仅显示当前视频提供的语言。切换会保留播放位置和倍速，需要登录播放账号。").piliFont(.sm).foregroundStyle(.secondary)
         }.navigationTitle("原声翻译").onDisappear { task?.cancel() }
     }
     private func choice(_ title: String, language: String?) -> some View {

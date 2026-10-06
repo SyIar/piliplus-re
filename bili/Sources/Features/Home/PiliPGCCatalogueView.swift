@@ -25,7 +25,7 @@ struct PiliPGCCatalogueView: View {
                 }
                 NavigationLink { PiliPGCTimelineView(api: dependencies.api, type: type) } label: { PiliLabel("更新日历", systemImage: "calendar") }
                 ForEach(items) { media in SearchResultRouteRow(result: type == 1 || type == 4 ? .bangumi(media) : .movie(media)) }
-                if let error { Text(error).font(.cc.sm); Button("重试") { Task { if conditions == nil { await reload() } else { await loadPage() } } } }
+                if let error { Text(error).piliFont(.sm); Button("重试") { Task { if conditions == nil { await reload() } else { await loadPage() } } } }
                 if loading { ProgressView().frame(maxWidth: .infinity) }
                 else if more { Button("加载更多") { Task { await loadPage() } }.frame(maxWidth: .infinity) }
                 else if items.isEmpty { PiliUnavailableView("暂无符合条件的内容", systemImage: "film") }
@@ -104,7 +104,7 @@ private struct PiliPGCTimelineView: View {
                                 HStack {
                                     SearchPosterCover(sourceURLString: episode.cover, thumbnailWidth: 144, thumbnailHeight: 192,
                                                       targetPixelSize: 192, size: CGSize(width: 48, height: 64), placeholderSystemImage: "film")
-                                    VStack(alignment: .leading) { Text(episode.title).lineLimit(2); Text(episode.detail).font(.cc.sm).foregroundStyle(.secondary) }
+                                    VStack(alignment: .leading) { Text(episode.title).lineLimit(2); Text(episode.detail).piliFont(.sm).foregroundStyle(.secondary) }
                                 }
                             }
                         }

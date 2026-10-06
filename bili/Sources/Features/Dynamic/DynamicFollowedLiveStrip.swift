@@ -106,7 +106,7 @@ private struct FollowedLiveAvatar: View {
             ZStack(alignment: .bottom) {
                 AvatarRemoteImage(urlString: item.owner.face, pixelSize: 96) {
                     PiliIcon(systemName: "person.crop.circle.fill", size: 44)
-                        .font(.cc.lg)
+                        .piliFont(.lg)
                         .foregroundStyle(.tertiary)
                 }
                 .frame(width: 48, height: 48)
@@ -119,7 +119,7 @@ private struct FollowedLiveAvatar: View {
 
                 if item.isLive {
                     Text("直播中")
-                        .font(.cc.smBold)
+                        .piliFont(.smBold)
                         .foregroundStyle(.primary)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 2.5)

@@ -7,13 +7,13 @@ struct PlayerPerformanceSessionHeader: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(session.title ?? session.metricsID)
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .lineLimit(2)
 
             Spacer(minLength: 8)
 
             Text(session.lastUpdatedAt, style: .time)
-                .font(.cc.sm.monospacedDigit())
+                .piliFont(.sm).monospacedDigit()
                 .foregroundStyle(.secondary)
         }
     }
@@ -44,7 +44,7 @@ struct PlayerPerformanceSessionSummary: View {
                     .lineLimit(1)
             }
         }
-        .font(.cc.sm)
+        .piliFont(.sm)
         .foregroundStyle(summaryColor)
     }
 
@@ -63,12 +63,12 @@ struct PlayerPerformanceSessionTimeline: View {
         if !session.timeline.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
                 Text("时间线")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
 
                 ForEach(session.timeline.suffix(6)) { entry in
                     Text(entry.compactDescription)
-                        .font(.cc.sm.monospacedDigit())
+                        .piliFont(.sm).monospacedDigit()
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -83,7 +83,7 @@ struct PlayerPerformanceSessionFailureLabel: View {
     var body: some View {
         if let failureMessage = session.failureMessage {
             PiliLabel(failureMessage, systemImage: "exclamationmark.triangle")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(Color.cc.destructive)
                 .lineLimit(2)
         }

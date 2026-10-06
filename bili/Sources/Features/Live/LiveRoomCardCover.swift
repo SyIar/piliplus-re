@@ -50,7 +50,7 @@ struct LiveRoomCardCover: View {
         Color.gray.opacity(0.14)
             .overlay {
                 PiliIcon(systemName: "play.tv")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .foregroundStyle(.secondary)
             }
     }

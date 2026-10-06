@@ -105,17 +105,17 @@ private struct PlayerPerformanceMetricCell: View {
     var body: some View {
         HStack(spacing: 6) {
             PiliIcon(systemName: icon)
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
                 .frame(width: 14)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
 
                 Text(value)
-                    .font(.cc.sm.monospacedDigit().weight(.semibold))
+                    .piliFont(.sm).monospacedDigit().fontWeight(.semibold)
                     .foregroundStyle(color)
             }
         }

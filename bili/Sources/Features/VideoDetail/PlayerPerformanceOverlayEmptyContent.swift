@@ -14,7 +14,7 @@ struct PlayerPerformanceOverlayEmptyContent: View {
         PlayerPerformanceOverlayExperimentSection(snapshot: experimentSnapshot)
 
         Text("等待播放事件")
-            .font(.cc.sm)
+            .piliFont(.sm)
             .foregroundStyle(.secondary)
     }
 }

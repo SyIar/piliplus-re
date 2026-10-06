@@ -47,11 +47,11 @@ struct PiliSuperChatCard: View {
                     .frame(width: 28, height: 28).clipShape(Circle())
                 Text(item.name).font(.cc.base.bold()).lineLimit(1)
                 Spacer(minLength: 4)
-                Text("¥\(item.price)").font(.cc.baseBold).monospacedDigit()
+                Text("¥\(item.price)").piliFont(.baseBold).monospacedDigit()
             }
-            Text(item.message).font(.cc.base).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+            Text(item.message).piliFont(.base).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
             Text(item.end > date ? "剩余 \(Int(ceil(item.end.timeIntervalSince(date)))) 秒" : "展示已结束")
-                .font(.cc.sm).foregroundStyle(.secondary).monospacedDigit()
+                .piliFont(.sm).foregroundStyle(.secondary).monospacedDigit()
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(red: Double((item.color >> 16) & 255) / 255, green: Double((item.color >> 8) & 255) / 255,
@@ -88,7 +88,7 @@ struct PiliSuperChatHistoryView: View {
                             }
                     }
                 }
-                Text("保留本次进入直播间接收到的最近 200 条，历史接口返回范围以平台为准。").font(.cc.sm).foregroundStyle(.secondary)
+                Text("保留本次进入直播间接收到的最近 200 条，历史接口返回范围以平台为准。").piliFont(.sm).foregroundStyle(.secondary)
             }.navigationTitle("醒目留言").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
                 .onChange(of: store.mode) { _, _ in onModeChange() }
@@ -168,8 +168,8 @@ struct PiliLiveComposer: View {
                                     CachedRemoteImage(url: URL(string: emote.image), targetPixelSize: 160) { $0.resizable().scaledToFit() }
                                         placeholder: { PiliIcon(systemName: "face.smiling") }
                                         .frame(height: 44)
-                                    Text(emote.text).font(.cc.sm).lineLimit(1)
-                                    if !emote.allowed { PiliIcon(systemName: "lock.fill").font(.cc.sm) }
+                                    Text(emote.text).piliFont(.sm).lineLimit(1)
+                                    if !emote.allowed { PiliIcon(systemName: "lock.fill").piliFont(.sm) }
                                 }.frame(maxWidth: .infinity)
                             }.buttonStyle(.plain).disabled(!emote.allowed || busy)
                                 .accessibilityLabel(emote.text + (emote.allowed ? "" : "，" + emote.reason))

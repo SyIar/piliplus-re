@@ -295,7 +295,7 @@ private struct MultiAccountExperimentAccountRow: View {
                 .disabled(!canDelete)
             } label: {
                 PiliIcon(systemName: "ellipsis.circle")
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                     .frame(width: 32, height: 32)
                     .contentShape(Circle())
             }

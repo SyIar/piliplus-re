@@ -99,9 +99,9 @@ struct PiliMedalWallView: View {
             if loaded && medals.isEmpty { Text("暂无公开的粉丝勋章") }
             ForEach(medals, id: \.self) { medal in
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("\(medal["uinfo_medal"]["name"].piliString) · Lv\(medal["uinfo_medal"]["level"].piliInt)").font(.cc.baseBold)
+                    Text("\(medal["uinfo_medal"]["name"].piliString) · Lv\(medal["uinfo_medal"]["level"].piliInt)").piliFont(.baseBold)
                     Text(medal["target_name"].piliString).foregroundStyle(.secondary)
-                    if medal["medal_info"]["wearing_status"].piliInt == 1 { Text("正在佩戴").font(.cc.sm) }
+                    if medal["medal_info"]["wearing_status"].piliInt == 1 { Text("正在佩戴").piliFont(.sm) }
                     if let url = URL(string: medal["link"].piliString), ["https", "http", "bilibili"].contains(url.scheme ?? "") {
                         AppLinkButton(url: url) { PiliLabel("进入直播间", systemImage: "dot.radiowaves.left.and.right") }
                     }

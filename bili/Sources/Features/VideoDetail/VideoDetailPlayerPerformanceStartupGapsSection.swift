@@ -7,11 +7,11 @@ struct PlayerPerformanceOverlayStartupGapsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Startup gaps")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
 
             Text(message)
-                .font(.cc.sm.monospacedDigit())
+                .piliFont(.sm).monospacedDigit()
                 .foregroundStyle(.secondary)
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)

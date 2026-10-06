@@ -18,9 +18,9 @@ struct MineLoggedInHeaderView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(username)
-                    .font(.cc.baseBold)
+                    .piliFont(.baseBold)
                 Text(uidText)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
         }
@@ -39,11 +39,11 @@ struct MineLoginPanelView: View {
     var body: some View {
         VStack(spacing: 16) {
             PiliIcon(systemName: "person.crop.circle.badge.checkmark", size: 42)
-                .font(.cc.lgBold)
+                .piliFont(.lgBold)
                 .foregroundStyle(appTintColor)
 
             Text(message.isEmpty ? "想让 App 端首页推荐更接近官方，优先用短信验证码；想稳定登录可用扫码。" : message)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -97,18 +97,18 @@ private struct LoginOptionButton: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 PiliIcon(systemName: systemImage)
-                    .font(.cc.baseBold.weight(.semibold))
+                    .piliFont(.baseBold).fontWeight(.semibold)
                     .foregroundStyle(tint)
                     .frame(width: 26)
 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(title)
-                            .font(.cc.base.weight(.semibold))
+                            .piliFont(.base).fontWeight(.semibold)
                             .foregroundStyle(.primary)
 
                         Text(badge)
-                            .font(.cc.sm.weight(.semibold))
+                            .piliFont(.sm).fontWeight(.semibold)
                             .foregroundStyle(isProminent ? .white : tint)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -119,7 +119,7 @@ private struct LoginOptionButton: View {
                     }
 
                     Text(subtitle)
-                        .font(.cc.sm)
+                        .piliFont(.sm)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
@@ -127,7 +127,7 @@ private struct LoginOptionButton: View {
                 Spacer(minLength: 8)
 
                 PiliIcon(systemName: "chevron.right")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.tertiary)
             }
             .padding(12)

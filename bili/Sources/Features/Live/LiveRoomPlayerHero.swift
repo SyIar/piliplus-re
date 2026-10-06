@@ -43,7 +43,7 @@ struct LiveRoomPlayerHero: View {
     private var streamFallbackMessage: some View {
         if let message = viewModel.streamFallbackMessage, viewModel.playerViewModel?.hasPresentedPlayback != true {
             Text(message)
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)

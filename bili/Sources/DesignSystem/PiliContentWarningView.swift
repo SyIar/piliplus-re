@@ -14,7 +14,7 @@ struct PiliContentWarningView: View {
                 PiliLabel(title.isEmpty ? detail : title, systemImage: "info.circle")
                 if !title.isEmpty, !detail.isEmpty, title != detail { Text(detail) }
                 if let url, ["http", "https"].contains(url.scheme ?? "") { AppLinkButton(url: url) { Text("查看说明") } }
-            }.font(.cc.sm).foregroundStyle(.secondary).padding(10)
+            }.piliFont(.sm).foregroundStyle(.secondary).padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .piliGlassCard(radius: 10)
         }

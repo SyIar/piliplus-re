@@ -8,7 +8,7 @@ struct PlayerPlaybackErrorChrome: View {
         VStack(spacing: 12) {
             PiliIcon(systemName: "exclamationmark.triangle")
             Text(message)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .multilineTextAlignment(.center)
         }
         .padding()

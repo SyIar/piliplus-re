@@ -6,16 +6,16 @@ extension MinePlaybackSettingsView {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 MineSettingsLabel("当前策略", systemImage: "wand.and.stars")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                 Spacer(minLength: 8)
                 Text(libraryStore.playbackAutoOptimizationMode.title)
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
 
             Text(libraryStore.playbackAutoOptimizationMode.detail)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
 

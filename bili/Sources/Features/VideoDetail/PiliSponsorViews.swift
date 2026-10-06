@@ -7,7 +7,7 @@ struct PiliSponsorSettingsView: View {
         PiliList {
             Section {
                 Text("自动：按片段动作跳过或临时静音。手动：显示操作按钮。忽略：不处理此分类。整个视频标记和精彩时刻可在片段列表查看，不会自动跳过整部视频。")
-                    .font(.cc.sm).foregroundStyle(.secondary)
+                    .piliFont(.sm).foregroundStyle(.secondary)
             }
             ForEach(PiliSponsorCategory.allCases) { category in
                 Picker(category.title, selection: Binding(get: { preferences.mode(category.rawValue) }, set: { preferences.set($0, category: category.rawValue) })) {
@@ -71,7 +71,7 @@ struct PiliSponsorView: View {
                     if action == "full" { Button("标记整个视频") { start = 0; end = duration } }
                     if action == "poi" { Button("设为当前精彩时刻") { start = model.stablePlayerViewModel?.currentTime ?? 0; end = start } }
                     Button("提交到空降社区") { confirmsSubmit = true }.disabled(!valid || busy)
-                    Text("提交内容会公开到空降社区。请先核对时间和分类；社区身份独立于 B 站账号，保存在钥匙串中。").font(.cc.sm).foregroundStyle(.secondary)
+                    Text("提交内容会公开到空降社区。请先核对时间和分类；社区身份独立于 B 站账号，保存在钥匙串中。").piliFont(.sm).foregroundStyle(.secondary)
                 }
             }.disabled(busy).navigationTitle("空降助手").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.disabled(busy) } }
@@ -83,17 +83,17 @@ struct PiliSponsorView: View {
     }
     private func segmentRow(_ segment: SponsorBlockSegment) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(PiliSponsorCategory(rawValue: segment.category)?.title ?? segment.title).font(.cc.baseBold)
-            Text("\(BiliFormatters.duration(Int(segment.startTime)))–\(BiliFormatters.duration(Int(segment.endTime))) · \(actionTitle(segment.actionType))").font(.cc.sm)
+            Text(PiliSponsorCategory(rawValue: segment.category)?.title ?? segment.title).piliFont(.baseBold)
+            Text("\(BiliFormatters.duration(Int(segment.startTime)))–\(BiliFormatters.duration(Int(segment.endTime))) · \(actionTitle(segment.actionType))").piliFont(.sm)
             HStack {
                 Button("预览") { model.stablePlayerViewModel?.previewSponsorBlockSegment(segment) }
                 Button("跳转") { model.stablePlayerViewModel?.manuallySkipSponsorBlockSegment(segment) }
                 PiliIconButton("赞成", systemImage: "hand.thumbsup") { vote(segment, type: 1) }
                 PiliIconButton("反对", systemImage: "hand.thumbsdown") { vote(segment, type: 0) }
-            }.buttonStyle(.borderless).font(.cc.sm)
+            }.buttonStyle(.borderless).piliFont(.sm)
             Menu("修改分类") { ForEach(PiliSponsorCategory.allCases.filter { $0.actions.contains(segment.actionType) }) { category in
                 Button(category.title) { change { try await model.sponsorBlockService.vote(uuid: segment.uuid, category: category.rawValue, userID: $0) } }
-            } }.font(.cc.sm)
+            } }.piliFont(.sm)
         }
     }
     private func actionTitle(_ value: String) -> String { ["skip": "跳过", "mute": "静音", "full": "整个视频标记", "poi": "精彩时刻"][value] ?? value }

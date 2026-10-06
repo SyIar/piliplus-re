@@ -8,7 +8,7 @@ struct CommentLoadMoreRetryButton: View {
     var body: some View {
         Button(action: retry) {
             PiliLabel("评论加载失败，点按重试", systemImage: "arrow.clockwise")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)

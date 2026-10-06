@@ -76,8 +76,8 @@ struct PiliGlassFullscreenControls: View {
     private var header: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.cc.baseBold).lineLimit(1)
-                Text(author).font(.cc.sm).foregroundStyle(.white.opacity(0.65)).lineLimit(1)
+                Text(title).piliFont(.baseBold).lineLimit(1)
+                Text(author).piliFont(.sm).foregroundStyle(.white.opacity(0.65)).lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -85,7 +85,7 @@ struct PiliGlassFullscreenControls: View {
                 HStack(spacing: 10) {
                     if let shareURL {
                         ShareLink(item: shareURL) {
-                            PiliIcon(systemName: "square.and.arrow.up", size: 18).font(.cc.base)
+                            PiliIcon(systemName: "square.and.arrow.up", size: 18).piliFont(.base)
                                 .frame(width: 44, height: 44)
                         }
                         .buttonStyle(.plain)
@@ -95,7 +95,7 @@ struct PiliGlassFullscreenControls: View {
                     HStack(spacing: 0) {
                         PiliGlassPlayerButton(symbol: "tv", title: "投屏", grouped: true, action: actions.cast)
                         Button(action: actions.settings) {
-                            PiliIcon(systemName: "4k.tv", size: 20).font(.cc.base).frame(width: 44, height: 44)
+                            PiliIcon(systemName: "4k.tv", size: 20).piliFont(.base).frame(width: 44, height: 44)
                         }
                         .buttonStyle(.plain).accessibilityLabel("画质与播放设置")
                         PiliGlassPlayerButton(symbol: "slider.horizontal.3", title: "更多播放设置", grouped: true, action: actions.settings)
@@ -169,7 +169,7 @@ struct PiliGlassProgressBar: View {
             )
             Text(BiliFormatters.duration(Int(clock.duration ?? 0))).monospacedDigit()
         }
-        .font(.cc.sm)
+        .piliFont(.sm)
         .padding(.horizontal, 16)
         .frame(height: 44)
         .piliLiquidGlass(in: Capsule(), overVideo: true)

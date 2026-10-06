@@ -27,13 +27,13 @@ struct PiliCommentArchiveView: View {
         PiliList {
             Section {
                 Text("保存在本机的已发送评论，可导入原版 PiliPlus 导出的 JSON。最多保留最近 2,000 条；不会自动获取账号的全部历史评论。")
-                    .font(.cc.sm).foregroundStyle(.secondary)
-                if let message { Text(message).font(.cc.sm) }
+                    .piliFont(.sm).foregroundStyle(.secondary)
+                if let message { Text(message).piliFont(.sm) }
             }
             ForEach(items.filter { query.isEmpty || $0.message.localizedCaseInsensitiveContains(query) }) { comment in
                 VStack(alignment: .leading, spacing: 8) {
                     Text(comment.message).textSelection(.enabled)
-                    Text(Date(timeIntervalSince1970: Double(comment.created)), style: .date).font(.cc.sm).foregroundStyle(.secondary)
+                    Text(Date(timeIntervalSince1970: Double(comment.created)), style: .date).piliFont(.sm).foregroundStyle(.secondary)
                     HStack {
                         if let url = comment.contextURL { AppLinkButton(url: url) { PiliLabel("查看内容", systemImage: "arrow.up.right") } }
                         Button("评论区") { comments = try? piliCommentTarget(oid: comment.oid, type: comment.type) }
@@ -43,7 +43,7 @@ struct PiliCommentArchiveView: View {
                             Button("仅移除本机记录") { remove(comment, server: false) }
                             Button("删除已发送评论", role: .destructive) { deleting = comment }
                         }
-                    }.font(.cc.sm).buttonStyle(.borderless).disabled(busy)
+                    }.piliFont(.sm).buttonStyle(.borderless).disabled(busy)
                 }.padding(.vertical, 5)
             }
             if busy { ProgressView() }

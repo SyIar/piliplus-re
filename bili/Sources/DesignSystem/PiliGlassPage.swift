@@ -5,7 +5,13 @@ private struct PiliPresentedPageKey: EnvironmentKey {
     static let defaultValue = false
 }
 
+private struct PiliReduceTransparencyPreviewKey: EnvironmentKey { static let defaultValue = false }
+
 extension EnvironmentValues {
+    var piliReduceTransparencyPreview: Bool {
+        get { self[PiliReduceTransparencyPreviewKey.self] }
+        set { self[PiliReduceTransparencyPreviewKey.self] = newValue }
+    }
     var piliPresentedPage: Bool {
         get { self[PiliPresentedPageKey.self] }
         set { self[PiliPresentedPageKey.self] = newValue }
@@ -17,10 +23,11 @@ extension EnvironmentValues {
 struct PiliGlassRowBackground: View {
     @Environment(\.piliPresentedPage) private var presented
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.piliReduceTransparencyPreview) private var previewReduceTransparency
 
     var body: some View {
         Group {
-            if reduceTransparency {
+            if reduceTransparency || previewReduceTransparency {
                 Color.cc.card
             } else if presented {
                 Color.cc.card.opacity(0.35)
@@ -77,7 +84,7 @@ private struct PiliPageChrome: ViewModifier {
     @Environment(\.piliPresentedPage) private var presented
     func body(content: Content) -> some View {
         content
-            .font(.cc.base)
+            .piliFont(.base)
             .foregroundStyle(Color.cc.foreground)
             .scrollContentBackground(.hidden)
             .background(presented ? Color.clear : Color.cc.background)
@@ -87,10 +94,11 @@ private struct PiliPageChrome: ViewModifier {
 
 private struct PiliGlassCard: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.piliReduceTransparencyPreview) private var previewReduceTransparency
     @Environment(\.piliPresentedPage) private var presented
     let radius: CGFloat
     func body(content: Content) -> some View {
-        if reduceTransparency {
+        if reduceTransparency || previewReduceTransparency {
             content.background(Color.cc.card, in: RoundedRectangle(cornerRadius: radius))
         } else if presented {
             content.background(Color.cc.card.opacity(0.35), in: RoundedRectangle(cornerRadius: radius))
@@ -108,7 +116,7 @@ extension View {
 struct PiliAppChrome: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.cc.base)
+            .piliFont(.base)
             .foregroundStyle(Color.cc.foreground)
             .buttonStyle(.glass)
             .tint(Color.cc.primary)

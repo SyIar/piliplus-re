@@ -8,9 +8,9 @@ struct PlaybackNetworkDiagnosticMultilineRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.cc.base)
+                .piliFont(.base)
             Text(value)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)
         }

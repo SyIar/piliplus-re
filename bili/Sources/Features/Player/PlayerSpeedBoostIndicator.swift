@@ -7,7 +7,7 @@ struct PlayerSpeedBoostIndicator: View {
 
     var body: some View {
         PiliLabel(displayedRate.title, systemImage: systemImage)
-            .font(.cc.sm.weight(.bold))
+            .piliFont(.sm).fontWeight(.bold)
             .labelStyle(.titleAndIcon)
             .contentTransition(.numericText())
             .biliLiquidGlassForeground(shadowOpacity: 0.20)

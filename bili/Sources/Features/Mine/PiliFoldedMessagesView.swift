@@ -34,7 +34,7 @@ struct PiliFoldedMessagesView: View {
     private func label(_ item: PiliFoldedSession) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack { Text(item.name); Spacer(); if item.unread > 0 { Text("\(item.unread)").foregroundStyle(.tint) } }
-            Text(item.summary).font(.cc.sm).foregroundStyle(.secondary).lineLimit(2)
+            Text(item.summary).piliFont(.sm).foregroundStyle(.secondary).lineLimit(2)
         }
     }
     private func load(reset: Bool) async {

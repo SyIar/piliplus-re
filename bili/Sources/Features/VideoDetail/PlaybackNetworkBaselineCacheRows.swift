@@ -25,7 +25,7 @@ struct PlaybackNetworkBaselineCacheRows: View {
             )
         } else {
             Text("正在读取缓存基线...")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
     }

@@ -74,14 +74,14 @@ struct CommentAuthorIdentity: View {
                 .lineLimit(1)
 
             if let level = member?.levelInfo?.currentLevel, (1...7).contains(level) {
-                Text("LV\(level)").font(.cc.smBold)
+                Text("LV\(level)").piliFont(.smBold)
                     .foregroundStyle(.secondary).accessibilityLabel("等级 \(level)")
             }
             if member?.isVIP == true {
-                Text("大会员").font(.cc.sm).foregroundStyle(Color.cc.primary)
+                Text("大会员").piliFont(.sm).foregroundStyle(Color.cc.primary)
             }
             if let type = member?.verificationType {
-                PiliIcon(systemName: "checkmark.seal.fill", size: 11).font(.cc.sm).foregroundStyle(type == 0 ? .orange : .blue)
+                PiliIcon(systemName: "checkmark.seal.fill", size: 11).piliFont(.sm).foregroundStyle(type == 0 ? .orange : .blue)
                     .accessibilityLabel(type == 0 ? "个人认证" : "机构认证")
             }
             if showsUPBadge {

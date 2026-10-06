@@ -15,7 +15,7 @@ struct DanmakuSettingsSlider: View {
                 PiliLabel(title, systemImage: systemImage)
                 Spacer()
                 Text(valueText)
-                    .font(.cc.sm.monospacedDigit().weight(.semibold))
+                    .piliFont(.sm).monospacedDigit().fontWeight(.semibold)
                     .foregroundStyle(.secondary)
             }
             Slider(value: $value, in: range, step: step)

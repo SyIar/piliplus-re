@@ -11,7 +11,7 @@ struct PlayerPerformanceOverlayStartupWaterfallSection: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("First frame")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.secondary)
 
                 ForEach(stages) { stage in

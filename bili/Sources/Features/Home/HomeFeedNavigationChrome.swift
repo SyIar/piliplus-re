@@ -41,7 +41,7 @@ struct HomeFeedNavigationChrome: ViewModifier {
                             NavigationLink(value: MineOverlayRoute.multiAccountSettings) {
                                 AvatarRemoteImage(urlString: sessionStore.user?.face, pixelSize: 88) {
                                     PiliIcon(systemName: "person.crop.circle.fill", size: 32)
-                                        .font(.cc.lg)
+                                        .piliFont(.lg)
                                         .foregroundStyle(.primary)
                                 }
                                 .frame(width: 40, height: 40)
@@ -153,7 +153,7 @@ private struct HomeAccountMessageButtonContent: View {
         Button(action: action) {
             PiliIcon(systemName: "bell")
                 .symbolRenderingMode(.monochrome)
-                .font(.cc.base)
+                .piliFont(.base)
                 .foregroundStyle(Color.primary)
                 .overlay(alignment: .topTrailing) {
                     if hasUnread {

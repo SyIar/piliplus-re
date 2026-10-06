@@ -48,9 +48,9 @@ struct PiliPGCReviewsView: View {
     }
     private func row(_ review: PiliPGCReview) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            VideoOwnerRouteLink(owner: review.author) { Text(review.author.name).font(.cc.baseBold) }
-            Text("\(review.score) 分 · \(review.date)").font(.cc.sm).foregroundStyle(.secondary)
-            if !review.title.isEmpty { Text(review.title).font(.cc.baseBold) }
+            VideoOwnerRouteLink(owner: review.author) { Text(review.author.name).piliFont(.baseBold) }
+            Text("\(review.score) 分 · \(review.date)").piliFont(.sm).foregroundStyle(.secondary)
+            if !review.title.isEmpty { Text(review.title).piliFont(.baseBold) }
             Text(review.text).textSelection(.enabled)
             if isLong, review.articleID > 0, let url = URL(string: "https://www.bilibili.com/read/cv\(review.articleID)") {
                 AppLinkButton(url: url) { PiliLabel("阅读长评", systemImage: "doc.text") }
@@ -68,7 +68,7 @@ struct PiliPGCReviewsView: View {
                             PiliAccountWebView(api: api, url: URL(string: "https://www.bilibili.com/appeal/?reviewId=\(review.id)&type=shortComment&mediaId=\(mediaID)")!, title: "举报点评")
                         } label: { Text("举报") }
                     }
-                }.buttonStyle(.borderless).font(.cc.sm)
+                }.buttonStyle(.borderless).piliFont(.sm)
             }
         }.padding(.vertical, 6)
     }
@@ -129,7 +129,7 @@ private struct PiliPGCReviewEditor: View {
             PiliForm {
                 Picker("评分", selection: $score) { ForEach([2, 4, 6, 8, 10], id: \.self) { Text("\($0) 分").tag($0) } }
                 TextEditor(text: $content).frame(minHeight: 120)
-                Text("\(content.count) / 100 字").font(.cc.sm).foregroundStyle(content.count > 100 ? .red : .secondary)
+                Text("\(content.count) / 100 字").piliFont(.sm).foregroundStyle(content.count > 100 ? .red : .secondary)
                 if review == nil { Toggle("同时分享到动态", isOn: $share) }
                 if let error { Text(error) }
             }.disabled(saving).navigationTitle(review == nil ? "写短评" : "编辑短评")

@@ -25,13 +25,13 @@ private struct LivePlayerLoadingContent: View {
 
             VStack(spacing: 4) {
                 Text(title)
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
                     .foregroundStyle(.white.opacity(0.90))
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
 
                 Text(subtitle)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.white.opacity(0.58))
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)
@@ -49,15 +49,15 @@ struct LivePlayerFailurePlaceholder: View {
     var body: some View {
         VStack(spacing: 10) {
             PiliIcon(systemName: "exclamationmark.triangle.fill")
-                .font(.cc.baseBold)
+                .piliFont(.baseBold)
                 .foregroundStyle(Color.cc.warning)
 
             Text("直播加载失败")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.white.opacity(0.92))
 
             Text(message)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.white.opacity(0.62))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -65,7 +65,7 @@ struct LivePlayerFailurePlaceholder: View {
 
             Button(action: retry) {
                 PiliLabel("重试", systemImage: "arrow.clockwise")
-                    .font(.cc.sm.weight(.semibold))
+                    .piliFont(.sm).fontWeight(.semibold)
             }
             .buttonStyle(.glassProminent)
             .controlSize(.small)

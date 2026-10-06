@@ -49,7 +49,7 @@ private struct PiliMemberSectionView: View {
             let name = section == .guardList ? item["username"].piliString : item["nickname"].piliString
             let face = section == .guardList ? item["face"].piliString : item["avatar"].piliString
             VideoOwnerRouteLink(owner: .init(mid: mid, name: name, face: face)) {
-                HStack { avatar(face); Text(name); Spacer(); Text(section == .guardList ? guardTitle(item["guard_level"].piliInt) : "\(item["day"].piliInt) 天").font(.cc.sm).foregroundStyle(.secondary) }
+                HStack { avatar(face); Text(name); Spacer(); Text(section == .guardList ? guardTitle(item["guard_level"].piliInt) : "\(item["day"].piliInt) 天").piliFont(.sm).foregroundStyle(.secondary) }
             }
         } else if section == .favorites, let folder = try? item.piliDecode(FavoriteFolder.self) {
             NavigationLink { PiliPublicFavoriteView(api: api, folder: folder) } label: { card(item) }
@@ -66,9 +66,9 @@ private struct PiliMemberSectionView: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text(item["title"].piliString).lineLimit(3)
                 if section == .shop {
-                    Text("\(item["netPrice"]["pricePrefix"].piliString)\(item["netPrice"]["priceSymbol"].piliString)\(item["netPrice"]["netPrice"].piliString)").font(.cc.sm).foregroundStyle(.secondary)
-                    Text(item["itemSourceName"].piliString).font(.cc.sm)
-                } else if !item["publish_time_text"].piliString.isEmpty { Text(item["publish_time_text"].piliString).font(.cc.sm).foregroundStyle(.secondary) }
+                    Text("\(item["netPrice"]["pricePrefix"].piliString)\(item["netPrice"]["priceSymbol"].piliString)\(item["netPrice"]["netPrice"].piliString)").piliFont(.sm).foregroundStyle(.secondary)
+                    Text(item["itemSourceName"].piliString).piliFont(.sm)
+                } else if !item["publish_time_text"].piliString.isEmpty { Text(item["publish_time_text"].piliString).piliFont(.sm).foregroundStyle(.secondary) }
             }
         }
     }

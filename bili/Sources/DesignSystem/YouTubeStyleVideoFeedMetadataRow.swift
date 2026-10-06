@@ -166,7 +166,7 @@ struct YouTubeStyleVideoFeedMetadataRow: View {
     private var authorIdentityIcon: some View {
         AvatarRemoteImage(urlString: display.avatarURLString, pixelSize: 68) {
             PiliIcon(systemName: "person.crop.circle.fill", size: 24)
-                .font(.cc.lg)
+                .piliFont(.lg)
                 .foregroundStyle(.tertiary)
         }
         .frame(width: Self.avatarSide, height: Self.avatarSide)

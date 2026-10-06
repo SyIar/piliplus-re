@@ -54,7 +54,7 @@ struct CompactDynamicImageTile: View {
             ZStack {
                 Color.clear
                 Text("+\(context.imageCount - 9)")
-                    .font(.cc.baseBold.weight(.semibold))
+                    .piliFont(.baseBold).fontWeight(.semibold)
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)

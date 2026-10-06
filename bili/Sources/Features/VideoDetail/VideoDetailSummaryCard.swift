@@ -144,7 +144,7 @@ struct VideoDetailSummaryCard: View {
     private func tool(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             PiliLabel(title, systemImage: icon)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .padding(.horizontal, 14).frame(height: 36)
         }
         .buttonStyle(.plain)

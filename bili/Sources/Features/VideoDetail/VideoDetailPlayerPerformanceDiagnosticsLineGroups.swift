@@ -31,12 +31,12 @@ private struct PlayerPerformanceOverlayStartupBreakdownSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             PiliLabel("Startup breakdown", systemImage: "chart.bar.xaxis")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.secondary)
 
             if metrics.isEmpty {
                 Text(message)
-                    .font(.cc.sm.monospaced())
+                    .piliFont(.sm).monospaced()
                     .foregroundStyle(.secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
@@ -70,7 +70,7 @@ private struct PlayerPerformanceOverlayStartupBreakdownMetricRow: View {
     var body: some View {
         HStack(spacing: 3) {
             Text(metric.name)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -78,7 +78,7 @@ private struct PlayerPerformanceOverlayStartupBreakdownMetricRow: View {
             Spacer(minLength: 2)
 
             Text(metric.value)
-                .font(.cc.smBold.monospaced())
+                .piliFont(.smBold).monospaced()
                 .foregroundStyle(
                     PlayerPerformanceOverlayFormatting.metricColor(
                         PlayerPerformanceOverlayFormatting.millisecondsValue(from: metric.value)

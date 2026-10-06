@@ -7,7 +7,7 @@ struct DanmakuSettingsChip: View {
 
     var body: some View {
         PiliLabel(title, systemImage: systemImage)
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .lineLimit(1)
             .minimumScaleFactor(0.78)

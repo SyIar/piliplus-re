@@ -42,7 +42,7 @@ struct UploaderSeasonSeriesDetailView: View {
                 }
             } label: {
                 PiliLabel(viewModel.sort.title, systemImage: "arrow.up.arrow.down.circle")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
             }
             .buttonStyle(.glass)
             .buttonBorderShape(.capsule)
@@ -52,7 +52,7 @@ struct UploaderSeasonSeriesDetailView: View {
 
             if let totalCount = viewModel.totalCount ?? viewModel.item.total {
                 Text("\(totalCount) 个视频")
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
         }
@@ -125,7 +125,7 @@ struct UploaderSeasonSeriesDetailView: View {
                 Task { await viewModel.loadMore(api: dependencies.api) }
             } label: {
                 PiliLabel("加载更多", systemImage: "chevron.down")
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .foregroundStyle(.primary)
@@ -136,7 +136,7 @@ struct UploaderSeasonSeriesDetailView: View {
             .padding(.vertical, 10)
         } else {
             Text("没有更多视频了")
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.tertiary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)

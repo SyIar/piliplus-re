@@ -39,12 +39,12 @@ private struct LibraryVideoInfo: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(item.title)
-                .font(.cc.base.weight(.semibold))
+                .piliFont(.base).fontWeight(.semibold)
                 .lineLimit(2)
 
             if let ownerName = item.owner?.name, !ownerName.isEmpty {
                 Text(ownerName)
-                    .font(.cc.sm)
+                    .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
 
@@ -52,7 +52,7 @@ private struct LibraryVideoInfo: View {
                 PiliLabel(BiliFormatters.compactCount(item.stat?.view), systemImage: "play.rectangle")
                 Text("\(timestampTitle) \(item.savedAt.formatted(date: .numeric, time: .shortened))")
             }
-            .font(.cc.sm)
+            .piliFont(.sm)
             .foregroundStyle(.secondary)
             .lineLimit(1)
 
@@ -72,7 +72,7 @@ private struct LibraryVideoProgress: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("看到 \(BiliFormatters.duration(Int(resumeTime)))")
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(appTintColor)
 
             if let progress {

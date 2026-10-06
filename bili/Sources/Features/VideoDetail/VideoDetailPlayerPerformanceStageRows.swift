@@ -7,7 +7,7 @@ struct PlayerPerformanceOverlayPrepareStageMetricRow: View {
     var body: some View {
         HStack(spacing: 3) {
             Text(stage.name)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -15,7 +15,7 @@ struct PlayerPerformanceOverlayPrepareStageMetricRow: View {
             Spacer(minLength: 2)
 
             Text(stage.value)
-                .font(.cc.smBold.monospaced())
+                .piliFont(.smBold).monospaced()
                 .foregroundStyle(PlayerPerformanceOverlayFormatting.metricColor(stage.milliseconds))
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -30,7 +30,7 @@ struct PlayerPerformanceOverlayStartupWaterfallStageRow: View {
     var body: some View {
         HStack(spacing: 5) {
             Text(stage.title)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .frame(width: 48, alignment: .leading)
@@ -43,7 +43,7 @@ struct PlayerPerformanceOverlayStartupWaterfallStageRow: View {
             Spacer(minLength: 2)
 
             Text(PlayerPerformanceOverlayFormatting.millisecondsText(stage.milliseconds))
-                .font(.cc.smBold.monospaced())
+                .piliFont(.smBold).monospaced()
                 .foregroundStyle(PlayerPerformanceOverlayFormatting.metricColor(stage.milliseconds))
                 .lineLimit(1)
                 .frame(width: 43, alignment: .trailing)

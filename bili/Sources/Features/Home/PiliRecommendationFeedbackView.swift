@@ -20,7 +20,7 @@ struct PiliRecommendationFeedbackView: View {
     var body: some View {
         NavigationStack {
             PiliList {
-                Text(video.title).font(.cc.baseBold)
+                Text(video.title).piliFont(.baseBold)
                 if submitted { PiliLabel("已提交推荐反馈", systemImage: "checkmark.circle") }
                 else if let metadata = video.piliRecommendation, !metadata.reasons.isEmpty {
                     Section("不感兴趣的原因") {

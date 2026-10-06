@@ -18,7 +18,7 @@ struct PiliSettingsSearchView: View {
                 let entry = entries[index]
                 if query.isEmpty || (entry.0 + " " + entry.1).localizedCaseInsensitiveContains(query.trimmingCharacters(in: .whitespacesAndNewlines)) {
                     Button { onOpenRoute(entry.2) } label: {
-                        VStack(alignment: .leading, spacing: 6) { Text(entry.0).font(.cc.baseBold); Text(entry.1).font(.cc.sm).foregroundStyle(.secondary) }
+                        VStack(alignment: .leading, spacing: 6) { Text(entry.0).piliFont(.baseBold); Text(entry.1).piliFont(.sm).foregroundStyle(.secondary) }
                     }
                 }
             }

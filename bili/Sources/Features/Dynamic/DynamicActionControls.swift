@@ -11,7 +11,7 @@ struct DynamicActionButton: View {
     var body: some View {
         Button(action: action) {
             PiliLabel(title, systemImage: systemImage)
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(isSelected ? appTintColor : .secondary)
                 .frame(maxWidth: .infinity)
@@ -33,7 +33,7 @@ struct DynamicActionPill: View {
     var body: some View {
         Button(action: action) {
             PiliLabel(title, systemImage: systemImage)
-                .font(.cc.sm.weight(.semibold))
+                .piliFont(.sm).fontWeight(.semibold)
                 .labelStyle(.titleAndIcon)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
@@ -54,7 +54,7 @@ struct DynamicActionPillLabel: View {
 
     var body: some View {
         PiliLabel(title, systemImage: systemImage)
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .labelStyle(.titleAndIcon)
             .lineLimit(1)
             .minimumScaleFactor(0.78)
@@ -69,7 +69,7 @@ struct DynamicActionFeedbackToast: View {
 
     var body: some View {
         Text(message)
-            .font(.cc.sm.weight(.semibold))
+            .piliFont(.sm).fontWeight(.semibold)
             .foregroundStyle(.primary)
             .lineLimit(1)
             .padding(.horizontal, 12)

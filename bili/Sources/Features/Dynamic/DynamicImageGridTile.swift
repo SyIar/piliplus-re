@@ -31,7 +31,7 @@ struct DynamicImageGridTile: View {
             ZStack {
                 Color.clear
                 Text("+\(imagesCount - 9)")
-                    .font(.cc.baseBold.weight(.bold))
+                    .piliFont(.baseBold).fontWeight(.bold)
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 7)

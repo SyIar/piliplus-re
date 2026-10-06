@@ -24,22 +24,22 @@ struct PlayerPerformanceExceptionRow: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 PiliLabel(session.title ?? session.metricsID, systemImage: exceptionIcon)
-                    .font(.cc.base.weight(.semibold))
+                    .piliFont(.base).fontWeight(.semibold)
                     .lineLimit(2)
                 Spacer(minLength: 8)
                 Text(session.lastUpdatedAt, style: .time)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
             }
 
             Text(exceptionSummary)
-                .font(.cc.sm)
+                .piliFont(.sm)
                 .foregroundStyle(exceptionColor)
                 .lineLimit(2)
 
             if let last = session.timeline.last {
                 Text(last.compactDescription)
-                    .font(.cc.sm.monospacedDigit())
+                    .piliFont(.sm).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }

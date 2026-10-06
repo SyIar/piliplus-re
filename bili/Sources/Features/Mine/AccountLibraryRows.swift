@@ -7,7 +7,7 @@ struct LibraryEmptyRow: View {
 
     var body: some View {
         PiliLabel(title, systemImage: systemImage)
-            .font(.cc.base)
+            .piliFont(.base)
             .foregroundStyle(.secondary)
         .padding(.vertical, 6)
     }
