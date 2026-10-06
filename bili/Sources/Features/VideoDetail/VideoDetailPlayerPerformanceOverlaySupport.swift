@@ -1,3 +1,4 @@
+import ChunUI
 import Foundation
 import SwiftUI
 
@@ -30,12 +31,12 @@ enum PlayerPerformanceOverlayFormatting {
     static func metricColor(_ value: Int?) -> Color {
         guard let value else { return .secondary }
         if value >= 2500 {
-            return .red
+            return Color.cc.destructive
         }
         if value >= 1400 {
-            return .orange
+            return Color.cc.warning
         }
-        return .green
+        return Color.cc.success
     }
 
     static func counterColor(for session: PlayerPerformanceSession) -> Color {
@@ -43,7 +44,7 @@ enum PlayerPerformanceOverlayFormatting {
             || session.speedBoostInterruptionCount > 0
             || session.resumeRecoverySlowCount > 0
             || session.seekRecoverySlowCount > 0)
-            ? .orange
+            ? Color.cc.warning
             : .secondary
     }
 

@@ -304,28 +304,41 @@ private struct MineThemeColorControl: View {
     }
 
     private var currentSelectionFooter: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                currentColorIdentity
+                Spacer(minLength: 12)
+                resetColorButton
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                currentColorIdentity
+                resetColorButton
+            }
+        }
+    }
+
+    private var currentColorIdentity: some View {
         HStack(spacing: 10) {
             Circle()
                 .fill(libraryStore.appTintColor)
                 .frame(width: 18, height: 18)
-                .overlay {
-                    Circle()
-                        .stroke(Color(.separator).opacity(0.30), lineWidth: 0.8)
-                }
-
+                .overlay { Circle().stroke(Color(.separator).opacity(0.30), lineWidth: 0.8) }
             Text(libraryStore.appTintColorHex)
                 .piliFont(.sm).monospaced()
                 .foregroundStyle(.secondary)
-
-            Spacer(minLength: 0)
-
-            Button("恢复默认") {
-                libraryStore.resetAppTintColor()
-                tintHexDraft = libraryStore.appTintColorHex
-                selectionMode = .tone
-            }
-            .buttonStyle(.borderless)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
+    }
+
+    private var resetColorButton: some View {
+        Button("恢复默认") {
+            libraryStore.resetAppTintColor()
+            tintHexDraft = libraryStore.appTintColorHex
+            selectionMode = .tone
+        }
+        .buttonStyle(.borderless)
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     private var normalizedDraftHex: String? {

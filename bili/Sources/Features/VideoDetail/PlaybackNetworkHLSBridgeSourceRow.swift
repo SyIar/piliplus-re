@@ -26,7 +26,7 @@ struct PlaybackNetworkHLSBridgeSourceRow: View {
 
             Text(PlaybackNetworkDiagnosticFormat.hlsBridgeSourceSummary(snapshot))
                 .piliFont(.sm)
-                .foregroundStyle(snapshot.isSessionAvoided || snapshot.failureCount > 0 ? .orange : .secondary)
+                .foregroundStyle(snapshot.isSessionAvoided || snapshot.failureCount > 0 ? Color.cc.warning : .secondary)
                 .lineLimit(2)
         }
         .padding(.vertical, 3)

@@ -70,3 +70,32 @@ xcrun simctl ui "$device_id" appearance light
 xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings --glass-reduce-transparency -UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL
 sleep 3
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-settings-accessibility.png"
+
+# Check the same production form and presentation adapters on a tablet.
+ipad_id="$(xcrun simctl list devices available -j | python3 -c '
+import json,re,sys
+values=[]
+for runtime, devices in json.load(sys.stdin)["devices"].items():
+    if "iOS" not in runtime: continue
+    version=tuple(int(n) for n in re.findall(r"\d+", runtime))
+    for d in devices:
+        if d.get("isAvailable") and "iPad" in d["name"]:
+            values.append(((version, "Pro" in d["name"], d["name"]), d["udid"]))
+if not values: raise SystemExit("No available iPad simulator for preview verification")
+print(max(values)[1])
+')"
+xcrun simctl shutdown "$device_id"
+xcrun simctl boot "$ipad_id"
+xcrun simctl bootstatus "$ipad_id" -b
+xcrun simctl install "$ipad_id" "$app_path"
+xcrun simctl status_bar "$ipad_id" override --time '9:41' --batteryState charged --batteryLevel 100
+xcrun simctl ui "$ipad_id" appearance light
+xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift
+sleep 5
+xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-home-ipad.png"
+xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings
+sleep 3
+xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-settings-ipad.png"
+xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-sheet
+sleep 3
+xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-sheet-ipad.png"

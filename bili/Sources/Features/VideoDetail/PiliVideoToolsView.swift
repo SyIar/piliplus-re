@@ -52,7 +52,7 @@ private struct PiliEnergyGraph: View, Equatable {
                 path.addLine(to: CGPoint(x: Double(index) / Double(values.count - 1) * size.width, y: (1 - value) * size.height))
             }
             path.addLine(to: CGPoint(x: size.width, y: size.height)); path.closeSubpath()
-            context.fill(path, with: .linearGradient(Gradient(colors: [.blue.opacity(0.7), .blue.opacity(0.1)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+            context.fill(path, with: .linearGradient(Gradient(colors: [Color.cc.primary.opacity(0.7), Color.cc.primary.opacity(0.1)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
         }.allowsHitTesting(false)
     }
 }

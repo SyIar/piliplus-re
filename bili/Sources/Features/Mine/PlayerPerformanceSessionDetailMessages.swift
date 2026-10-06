@@ -19,26 +19,26 @@ struct PlayerPerformanceSessionDetailMessages: View {
         optionalMessage(session.mediaCacheMessage, color: .secondary, lineLimit: 2)
         optionalMessage(session.manifestStageMessage, color: .secondary, lineLimit: 3)
         optionalMessage(session.prepareStageMessage, color: .secondary, lineLimit: 2)
-        optionalMessage(session.qualitySupplementMessage, color: .orange, lineLimit: 3)
+        optionalMessage(session.qualitySupplementMessage, color: Color.cc.warning, lineLimit: 3)
         optionalMessage(session.resumeRecoveryMessage, color: resumeRecoveryColor, lineLimit: 3)
         optionalMessage(session.seekRecoveryMessage, color: seekRecoveryColor, lineLimit: 3)
         optionalMessage(session.playbackRecoveryMessage, color: playbackRecoveryColor, lineLimit: 3)
     }
 
     private var accessLogColor: Color {
-        (session.accessLogStallCount ?? 0) > 0 ? .orange : .secondary
+        (session.accessLogStallCount ?? 0) > 0 ? Color.cc.warning : .secondary
     }
 
     private var resumeRecoveryColor: Color {
-        session.resumeRecoverySlowCount > 0 ? .orange : .secondary
+        session.resumeRecoverySlowCount > 0 ? Color.cc.warning : .secondary
     }
 
     private var seekRecoveryColor: Color {
-        session.seekRecoverySlowCount > 0 ? .orange : .secondary
+        session.seekRecoverySlowCount > 0 ? Color.cc.warning : .secondary
     }
 
     private var playbackRecoveryColor: Color {
-        session.playbackRecoveryFailureCount > 0 ? .orange : .secondary
+        session.playbackRecoveryFailureCount > 0 ? Color.cc.warning : .secondary
     }
 
     @ViewBuilder

@@ -31,7 +31,7 @@ struct SearchSoftPill: View {
             .lineLimit(1)
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .background(Color(.tertiarySystemFill), in: Capsule())
+            .ccGlassEffect(.capsule)
     }
 }
 

@@ -157,7 +157,7 @@ private struct HomeAccountMessageButtonContent: View {
                 .foregroundStyle(Color.primary)
                 .overlay(alignment: .topTrailing) {
                     if hasUnread {
-                        Circle().fill(.red).frame(width: 7, height: 7).offset(x: 4, y: -2)
+                        Circle().fill(Color.cc.destructive).frame(width: 7, height: 7).offset(x: 4, y: -2)
                     }
                 }
         }

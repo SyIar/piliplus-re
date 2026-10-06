@@ -73,7 +73,7 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
             HStack(spacing: 6) {
                 PiliIcon(systemName: isFailure ? "exclamationmark.triangle.fill" : "stethoscope")
                     .piliFont(.sm).fontWeight(.semibold)
-                    .foregroundStyle(isFailure ? .orange : .secondary)
+                    .foregroundStyle(isFailure ? Color.cc.warning : .secondary)
                 Text("现场诊断")
                     .piliFont(.sm).fontWeight(.semibold)
                 Spacer(minLength: 0)
@@ -109,9 +109,9 @@ private struct PlayerPerformanceOverlayLiveDiagnosticsRows: View {
         case .normal:
             return .primary
         case .warning:
-            return .orange
+            return Color.cc.warning
         case .failure:
-            return .red
+            return Color.cc.destructive
         case .secondary:
             return .secondary
         }

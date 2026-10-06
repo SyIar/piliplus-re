@@ -407,7 +407,7 @@ private struct AccountPrivateMessageSessionRow: View {
                         .monospacedDigit()
                         .padding(.horizontal, 6)
                         .frame(minWidth: 20, minHeight: 20)
-                        .background(.red, in: Capsule())
+                        .background(Color.cc.destructive, in: Capsule())
                         .accessibilityLabel("\(session.unreadCount) 条未读私信")
                 }
             }

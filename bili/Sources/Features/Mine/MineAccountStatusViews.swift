@@ -63,7 +63,7 @@ struct MineLoginPanelView: View {
                     subtitle: "更稳定；当前更适合配合网页端推荐",
                     badge: "稳定",
                     systemImage: "qrcode",
-                    tint: .blue,
+                    tint: Color.cc.primary,
                     isProminent: false,
                     action: onQRCodeLogin
                 )

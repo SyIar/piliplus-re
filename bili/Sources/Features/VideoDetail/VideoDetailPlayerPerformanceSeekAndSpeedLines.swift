@@ -17,7 +17,7 @@ struct PlayerPerformanceOverlaySeekAndSpeedLines: View {
             if let seekRecoveryMessage = session.seekRecoveryMessage {
                 PiliLabel(seekRecoveryMessage, systemImage: "speedometer")
                     .piliFont(.sm).monospacedDigit()
-                    .foregroundStyle(session.seekRecoverySlowCount > 0 ? .orange : .secondary)
+                    .foregroundStyle(session.seekRecoverySlowCount > 0 ? Color.cc.warning : .secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -25,7 +25,7 @@ struct PlayerPerformanceOverlaySeekAndSpeedLines: View {
             if let speedBoostMessage = session.speedBoostMessage {
                 PiliLabel(speedBoostMessage, systemImage: "forward.fill")
                     .piliFont(.sm).monospacedDigit()
-                    .foregroundStyle(session.speedBoostInterruptionCount > 0 ? .orange : .secondary)
+                    .foregroundStyle(session.speedBoostInterruptionCount > 0 ? Color.cc.warning : .secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
             }

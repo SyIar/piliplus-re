@@ -12,7 +12,7 @@ struct ErrorStateView: View {
             title: title,
             message: message,
             systemImage: "exclamationmark.triangle",
-            tint: .orange
+            tint: Color.cc.warning
         ) {
             if let retry {
                 Button(action: retry) {

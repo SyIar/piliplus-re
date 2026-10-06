@@ -23,7 +23,7 @@ struct VideoDetailNavigationLatencySnapshotRow: View {
                         in: snapshot
                     )
                     Text(timing.displayText)
-                        .foregroundStyle(timing.isSlow ? .orange : .secondary)
+                        .foregroundStyle(timing.isSlow ? Color.cc.warning : .secondary)
                 }
                 .piliFont(.sm).monospacedDigit()
             }

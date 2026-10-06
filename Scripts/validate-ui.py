@@ -23,7 +23,7 @@ for path in source.rglob("*.swift"):
             reason = "Use bounded, accessibility-aware motion"
         if reason:
             errors.append(f"{name}:{line_number}: {reason}")
-    for match in re.finditer(r'Pili(?:Icon|Label|IconButton|UnavailableView)\([^\n]*?system(?:Name|Image):\s*"([^"\\]+)"', text):
+    for match in re.finditer(r'(?:systemName|systemImage|symbol):\s*"([^"\\]+)"', text):
         if match[1] not in known:
             errors.append(f"{name}: unmapped Pika icon alias {match[1]}")
 if errors:

@@ -54,7 +54,7 @@ extension MinePlaybackSettingsView {
                 Text("\(snapshot.attemptCount) 样本")
             }
             .piliFont(.sm)
-            .foregroundStyle(snapshot.failureCount > 0 ? .orange : .secondary)
+            .foregroundStyle(snapshot.failureCount > 0 ? Color.cc.warning : .secondary)
             .lineLimit(1)
 
             Text("最近 \(snapshot.lastUpdatedAt.formatted(date: .abbreviated, time: .shortened))")

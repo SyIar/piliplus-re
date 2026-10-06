@@ -42,7 +42,7 @@ extension MinePlaybackSettingsView {
 
                 Text("上次测速 \(snapshot.probedAt.formatted(date: .abbreviated, time: .shortened))")
                     .piliFont(.sm)
-                    .foregroundStyle(isPlaybackCDNProbeSnapshotExpired(snapshot) ? AnyShapeStyle(.orange) : AnyShapeStyle(.tertiary))
+                    .foregroundStyle(isPlaybackCDNProbeSnapshotExpired(snapshot) ? AnyShapeStyle(Color.cc.warning) : AnyShapeStyle(.tertiary))
 
                 if snapshot.isWeakReferenceOnly {
                     PiliLabel("本次没有真实播放地址，只是 Host 连通性弱参考；403/959 不代表真实播放失败。", systemImage: "exclamationmark.triangle")

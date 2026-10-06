@@ -38,7 +38,20 @@ enum PiliPresentation {
         @ViewBuilder content: () -> Content) {
         let root = content()
         let owner = PiliSheetOwner()
-        AppHelper.shared.presentSheet(config, onDismiss: onDismiss, onPresent: { host in
+        var glassConfig = config
+        // Request transparency before the hosting hierarchy is created; clearing
+        // an already opaque hosting root leaves a solid safe-area seam.
+        glassConfig.frostedGlass = true
+        if !config.frostedGlass {
+            let detents: Set<PiliSheetDetent> = switch config.detent {
+            case .large: [.large]
+            case .medium: [.medium]
+            case .mediumAndLarge: [.medium, .large]
+            case .compact(let height): [.height(height)]
+            }
+            owner.setDetents(detents, selection: nil)
+        }
+        AppHelper.shared.presentSheet(glassConfig, onDismiss: onDismiss, onPresent: { host in
             owner.attach(host)
             onPresent?(host)
         }) {
@@ -53,12 +66,14 @@ enum PiliPresentation {
     static func configureSheet(_ host: UIViewController) {
         host.loadViewIfNeeded()
         host.view.backgroundColor = .clear
+        host.view.isOpaque = false
         for child in host.children {
             child.view.backgroundColor = .clear
             child.view.isOpaque = false
         }
         if let sheet = host.sheetPresentationController {
             sheet.backgroundEffect = UIGlassEffect(style: .regular)
+            for detent in sheet.detents { detent.backgroundEffect = UIGlassEffect(style: .regular) }
         }
     }
 }
@@ -72,7 +87,7 @@ private struct PiliPresentationRoot<Content: View>: View {
             } else { content }
         }
         .environment(\.piliPresentedPage, true)
-        .piliFont(.base)
+        .modifier(PiliAppChrome())
     }
 }
 
@@ -122,7 +137,12 @@ final class PiliSheetSession: ObservableObject {
             if activeID != desiredID { host?.dismiss(animated: true) }
             return
         }
-        guard let id = desiredID, let makeContent else { return }
+        guard let id = desiredID, let makeContent else {
+            // Release source view/binding captures after the presentation ends.
+            self.makeContent = nil
+            didClose = nil
+            return
+        }
         let current = UUID()
         token = current
         activeID = id

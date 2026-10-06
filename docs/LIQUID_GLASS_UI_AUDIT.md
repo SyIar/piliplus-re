@@ -34,8 +34,10 @@ ChunUI 固定 revision `b240cbbdb9c6d7afc9f02d9ce4ddff5a25ce73bb`，依据其 [S
 
 ## 验证与预览
 
+[CI 37474567894](https://github.com/SyIar/piliplus-re/actions/runs/37474567894)（`59df4f4`）完成首轮 UI 验证：39 core、837 iOS 单元、10 UI、设备 Release 均通过，已实际查看 14 张预览。视觉检查进一步修正表单行间距、超大字号颜色代码/重置按钮布局及弹层底部背景接缝，并补充 iPad 预览。最终收尾提交仍须通过同一门禁。
+
 完整门禁包含核心包测试、iOS 单元测试、`PiliLiquidGlassUITests`、设备 Release 构建和真实模拟器截图。UI 回归覆盖原有播放/字幕/评论/互动/发布路径，并增加嵌套面板、重开、替换目标、提交保护、确认取消/只执行一次、多选列表及大字设置导航。
 
-`Scripts/capture-preview.sh` 导出首页明暗、横屏播放器、字幕、评论、互动、设置明暗、面板明暗、确认明暗以及减少透明度/大字设置的截图。预览 artifact 和最终测试状态以 [PR #4](https://github.com/SyIar/piliplus-re/pull/4) 的对应提交 [Actions](https://github.com/SyIar/piliplus-re/actions) 为准；失败构建不计为验收。
+`Scripts/capture-preview.sh` 导出首页明暗、横屏播放器、字幕、评论、互动、设置明暗、面板明暗、确认明暗以及减少透明度/大字设置、iPad 首页、设置和面板的截图。预览 artifact 和最终测试状态以 [PR #4](https://github.com/SyIar/piliplus-re/pull/4) 的对应提交 [Actions](https://github.com/SyIar/piliplus-re/actions) 为准；失败构建不计为验收。
 
 模拟器截图可检查布局与材质效果，不代表真实账号写操作、照片库、电视兼容性或真机 GPU/滚动性能已经验收。合入 main 后，完整测试和设备打包成功才生成预发布。

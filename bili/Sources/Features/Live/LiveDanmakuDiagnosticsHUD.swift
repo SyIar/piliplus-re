@@ -129,13 +129,13 @@ private extension LiveDanmakuDiagnosticPhase {
     var tintColor: Color {
         switch self {
         case .rendering:
-            return .green
+            return Color.cc.success
         case .receiving, .waitingForPackets:
             return .cyan
         case .fetchingConfig, .connecting, .authenticating, .reconnecting:
-            return .yellow
+            return Color.cc.warning
         case .failed:
-            return .red
+            return Color.cc.destructive
         case .idle, .stopped:
             return .white.opacity(0.72)
         }

@@ -32,7 +32,7 @@ struct PlayerPerformanceOverlayNetworkAndCacheLines: View {
             if let accessLogMessage = session.accessLogMessage {
                 Text(accessLogMessage)
                     .piliFont(.sm).monospacedDigit()
-                    .foregroundStyle((session.accessLogStallCount ?? 0) > 0 ? .orange : .secondary)
+                    .foregroundStyle((session.accessLogStallCount ?? 0) > 0 ? Color.cc.warning : .secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
             }

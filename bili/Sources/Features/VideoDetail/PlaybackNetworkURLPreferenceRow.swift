@@ -18,7 +18,7 @@ struct PlaybackNetworkURLPreferenceRow: View {
 
             Text(PlaybackNetworkDiagnosticFormat.playbackURLPreferenceSummary(snapshot))
                 .piliFont(.sm)
-                .foregroundStyle(snapshot.failureCount > 0 ? .orange : .secondary)
+                .foregroundStyle(snapshot.failureCount > 0 ? Color.cc.warning : .secondary)
                 .lineLimit(2)
         }
         .padding(.vertical, 3)

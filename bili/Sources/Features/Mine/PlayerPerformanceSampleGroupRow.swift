@@ -32,13 +32,13 @@ struct PlayerPerformanceSampleGroupRow: View {
 
     private var headerColor: Color {
         if group.failedCount > 0 || group.slowStartupCount > 1 || group.accessLogStallCount > 0 {
-            return .orange
+            return Color.cc.warning
         }
-        return isRecommended ? .green : .primary
+        return isRecommended ? Color.cc.success : .primary
     }
 
     private var issueColor: Color {
-        group.failedCount > 0 ? .red : .orange
+        group.failedCount > 0 ? Color.cc.destructive : Color.cc.warning
     }
 
     private var issueSummary: String {

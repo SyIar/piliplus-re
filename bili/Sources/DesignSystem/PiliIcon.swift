@@ -20,7 +20,16 @@ struct PiliIcon: View {
     private func glyph(size: CGFloat) -> some View {
         Rectangle().fill(.foreground)
             .frame(width: size, height: size)
-            .mask { PikaIcon(PiliSymbols.pika(systemName), size: size, color: .white) }
+            .mask {
+                ZStack {
+                    PikaIcon(PiliSymbols.pika(systemName), size: size, color: .white)
+                    if systemName == "gobackward.10" || systemName == "goforward.10" {
+                        // The bundled skip glyph outlines every digit twice.
+                        // Compose its Pika rotation glyph with legible media numerals.
+                        Text("10").font(.system(size: size * 0.42, weight: .semibold)).foregroundStyle(.white)
+                    }
+                }
+            }
     }
     func resizable() -> Self { var copy = self; copy.stretches = true; return copy }
 }

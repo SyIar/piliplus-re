@@ -51,7 +51,7 @@ struct SMSLoginView: View {
                     Section {
                         Text(message)
                             .piliFont(.sm)
-                            .foregroundStyle(message == "登录成功" ? .green : .secondary)
+                            .foregroundStyle(message == "登录成功" ? Color.cc.success : .secondary)
                     }
                 }
 

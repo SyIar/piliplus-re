@@ -106,7 +106,7 @@ private struct QRCodeLoginActiveState: View {
                     PiliLabel("用 B 站打开", systemImage: "arrow.up.forward.app")
                 }
                 .buttonStyle(.glassProminent)
-                .tint(.pink)
+                .tint(Color.cc.primary)
 
                 Button(action: refresh) {
                     PiliLabel("刷新", systemImage: "arrow.clockwise")

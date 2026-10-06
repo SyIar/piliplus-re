@@ -61,9 +61,9 @@ private struct PlayerPerformanceSeekCoverageMetric: View {
     private var coverageColor: Color {
         guard let coverage else { return .secondary }
         if coverage < 70 {
-            return .orange
+            return Color.cc.warning
         }
-        return .green
+        return Color.cc.success
     }
 }
 
@@ -90,9 +90,9 @@ private struct PlayerPerformanceBitrateMetric: View {
     private var bitrateColor: Color {
         guard let kbps = kilobitsPerSecond, kbps > 0 else { return .secondary }
         if kbps < 900 {
-            return .orange
+            return Color.cc.warning
         }
-        return .green
+        return Color.cc.success
     }
 }
 

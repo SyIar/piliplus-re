@@ -17,7 +17,7 @@ struct PlayerPerformanceOverlayResumeLines: View {
             if let resumeRecoveryMessage = session.resumeRecoveryMessage {
                 PiliLabel(resumeRecoveryMessage, systemImage: "checkmark.circle")
                     .piliFont(.sm).monospacedDigit()
-                    .foregroundStyle(session.resumeRecoverySlowCount > 0 ? .orange : .secondary)
+                    .foregroundStyle(session.resumeRecoverySlowCount > 0 ? Color.cc.warning : .secondary)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
             }

@@ -8,7 +8,7 @@ struct PlaybackNetworkProbeResultRow: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 8) {
                 PiliIcon(systemName: result.didSucceed ? "checkmark.circle.fill" : "xmark.circle")
-                    .foregroundStyle(result.didSucceed ? .green : .secondary)
+                    .foregroundStyle(result.didSucceed ? Color.cc.success : .secondary)
                 Text(result.preference.title)
                     .lineLimit(1)
                 Spacer(minLength: 8)

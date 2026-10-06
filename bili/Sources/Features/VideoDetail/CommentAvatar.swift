@@ -81,7 +81,7 @@ struct CommentAuthorIdentity: View {
                 Text("大会员").piliFont(.sm).foregroundStyle(Color.cc.primary)
             }
             if let type = member?.verificationType {
-                PiliIcon(systemName: "checkmark.seal.fill", size: 11).piliFont(.sm).foregroundStyle(type == 0 ? .orange : .blue)
+                PiliIcon(systemName: "checkmark.seal.fill", size: 11).piliFont(.sm).foregroundStyle(type == 0 ? Color.cc.warning : Color.cc.primary)
                     .accessibilityLabel(type == 0 ? "个人认证" : "机构认证")
             }
             if showsUPBadge {

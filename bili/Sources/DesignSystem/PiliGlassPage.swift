@@ -35,6 +35,8 @@ struct PiliGlassRowBackground: View {
                 Color.clear.ccGlassEffect(.roundedRectangle(CGFloat.cc.base))
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: CGFloat.cc.base))
+        .padding(.vertical, 3)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -45,7 +47,7 @@ struct PiliForm<Content: View>: View {
     init(@ViewBuilder content: () -> Content) { self.content = content() }
     var body: some View {
         Form {
-            content.listRowBackground(PiliGlassRowBackground())
+            content.listRowBackground(PiliGlassRowBackground()).listRowSeparator(.hidden)
         }
         .buttonStyle(.borderless)
         .piliPageChrome()
@@ -57,7 +59,7 @@ struct PiliList<Content: View>: View {
     init(@ViewBuilder content: () -> Content) { self.content = content() }
     var body: some View {
         List {
-            content.listRowBackground(PiliGlassRowBackground())
+            content.listRowBackground(PiliGlassRowBackground()).listRowSeparator(.hidden)
         }
         .buttonStyle(.borderless)
         .piliPageChrome()
@@ -73,7 +75,7 @@ struct PiliSelectionList<Selection: Hashable, Content: View>: View {
     }
     var body: some View {
         List(selection: $selection) {
-            content.listRowBackground(PiliGlassRowBackground())
+            content.listRowBackground(PiliGlassRowBackground()).listRowSeparator(.hidden)
         }
         .buttonStyle(.borderless)
         .piliPageChrome()

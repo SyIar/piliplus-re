@@ -129,7 +129,7 @@ private struct PiliPGCReviewEditor: View {
             PiliForm {
                 Picker("评分", selection: $score) { ForEach([2, 4, 6, 8, 10], id: \.self) { Text("\($0) 分").tag($0) } }
                 TextEditor(text: $content).frame(minHeight: 120)
-                Text("\(content.count) / 100 字").piliFont(.sm).foregroundStyle(content.count > 100 ? .red : .secondary)
+                Text("\(content.count) / 100 字").piliFont(.sm).foregroundStyle(content.count > 100 ? Color.cc.destructive : .secondary)
                 if review == nil { Toggle("同时分享到动态", isOn: $share) }
                 if let error { Text(error) }
             }.disabled(saving).navigationTitle(review == nil ? "写短评" : "编辑短评")

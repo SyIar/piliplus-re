@@ -496,7 +496,7 @@ private struct AccountMessageCategoryRow: View {
                     .monospacedDigit()
                     .padding(.horizontal, 6)
                     .frame(minWidth: 20, minHeight: 20)
-                    .background(.red, in: Capsule())
+                    .background(Color.cc.destructive, in: Capsule())
                     .accessibilityLabel("\(unreadText) 条未读")
             }
         }

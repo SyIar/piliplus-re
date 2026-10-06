@@ -31,7 +31,7 @@ struct SearchListView: View {
         .scrollDismissesKeyboard(.immediately)
         .scrollBounceBehavior(.always, axes: .vertical)
         .defersRemoteImageLoadsDuringFastScroll()
-        .background(Color(.systemGroupedBackground))
+        .background(Color.cc.background)
         .nativeTopScrollEdgeEffect()
         .piliConfirmation("清空搜索历史？", isPresented: $confirmsClearHistory, titleVisibility: .visible) {
             PiliAlertButton("清空", role: .destructive) { viewModel.clearHistory() }

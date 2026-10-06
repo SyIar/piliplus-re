@@ -55,13 +55,13 @@ struct PlayerAutoOptimizationSummaryRow: View {
         }
         switch profile.level {
         case .normal:
-            return .green
+            return Color.cc.success
         case .fallback:
-            return .blue
+            return Color.cc.primary
         case .cautious:
-            return .orange
+            return Color.cc.warning
         case .slow:
-            return .red
+            return Color.cc.destructive
         }
     }
 }

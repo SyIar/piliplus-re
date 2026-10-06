@@ -76,6 +76,6 @@ struct PlayerPerformanceExceptionRow: View {
     }
 
     private var exceptionColor: Color {
-        session.failureMessage != nil ? .red : .orange
+        session.failureMessage != nil ? Color.cc.destructive : Color.cc.warning
     }
 }

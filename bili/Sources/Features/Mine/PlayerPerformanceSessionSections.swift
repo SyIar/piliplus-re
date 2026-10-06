@@ -52,7 +52,7 @@ struct PlayerPerformanceSessionSummary: View {
         session.bufferCount > 0
             || session.resumeRecoverySlowCount > 0
             || session.seekRecoverySlowCount > 0
-            || (session.accessLogStallCount ?? 0) > 0 ? .orange : .secondary
+            || (session.accessLogStallCount ?? 0) > 0 ? Color.cc.warning : .secondary
     }
 }
 

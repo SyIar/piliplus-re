@@ -1,3 +1,4 @@
+import ChunUI
 import SwiftUI
 
 struct DynamicCommentText: View {
@@ -22,7 +23,7 @@ struct DynamicCommentText: View {
         textColor: Color,
         emoteSize: CGFloat,
         leadingName: String? = nil,
-        leadingNameColor: Color = .pink,
+        leadingNameColor: Color = Color.cc.primary,
         lineSpacing: CGFloat = 2,
         typographyRole: AppTypography.Role? = nil,
         onNonLinkTap: (() -> Void)? = nil

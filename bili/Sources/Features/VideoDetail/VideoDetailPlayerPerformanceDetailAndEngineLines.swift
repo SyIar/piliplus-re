@@ -25,7 +25,7 @@ struct PlayerPerformanceOverlayDetailAndEngineLines: View {
             if let decodeLogMessage = session.decodeLogMessage {
                 PiliLabel(decodeLogMessage, systemImage: "cpu")
                     .piliFont(.sm).monospacedDigit()
-                    .foregroundStyle(decodeLogMessage.localizedCaseInsensitiveContains("success") ? .green : .orange)
+                    .foregroundStyle(decodeLogMessage.localizedCaseInsensitiveContains("success") ? Color.cc.success : Color.cc.warning)
                     .lineLimit(nil)
                     .fixedSize(horizontal: false, vertical: true)
             }

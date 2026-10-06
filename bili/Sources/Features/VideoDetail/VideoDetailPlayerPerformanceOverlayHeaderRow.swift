@@ -29,7 +29,7 @@ struct PlayerPerformanceOverlayHeaderRow: View {
                 } label: {
                     PiliIcon(systemName: didCopy ? "checkmark.circle.fill" : "doc.on.doc")
                         .piliFont(.sm).fontWeight(.semibold)
-                        .foregroundStyle(didCopy ? .green : .secondary)
+                        .foregroundStyle(didCopy ? Color.cc.success : .secondary)
                         .frame(width: 24, height: 24)
                         .contentShape(Rectangle())
                 }
