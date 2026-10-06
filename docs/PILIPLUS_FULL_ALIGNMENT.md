@@ -43,10 +43,13 @@
 - 投屏测试继续校验实际 HTTP 状态/Range/字节内容，增加托管模拟器请求时间预算并禁用代理；没有跳过断言或用自动重试遮盖失败。
 - CI `37424439648` 的测试构建发现重复 `@MainActor` 注解，已修复；设备 Release 编译通过。不计为完整通过。
 - CI `37425506737`（`7f26521`）完整成功：39 core + 806 iOS 单元 + 7 UI，设备 Release、原生预览全部通过。此前超时的回环 Range 测试在保留原断言后通过。
-- CI `37426772417` 验证 AU/社区详情/更多空间/评论归档增量；新增收藏管理、评论关键词与内容提示继续验证，不以语法解析代替 iOS 构建。
+- CI `37426772417` 发现新收藏页 catch 变量遮蔽，已修复并停止过期构建；不计为通过。
+- [CI `37428611871`](https://github.com/SyIar/piliplus-re/actions/runs/37428611871)（`d29b043`）完整成功：39 core + 816 iOS 单元 + 7 UI，设备 Release、原生预览均通过；包含 AU、社区详情、更多空间、收藏管理、评论归档/关键词与内容提示增量。
+- [最终代码验收 CI `37430767177`](https://github.com/SyIar/piliplus-re/actions/runs/37430767177)（`01c11f2`）完整成功：**39 core（5 XCTest + 34 Swift Testing）、817 iOS 单元、7 UI**，设备 Release 和原生预览均通过。新增首页回归确认旧列表不能恢复屏蔽内容，已看边界随过滤正确更新；WebKit 代理签名、字幕解码和 URLProtocol 隔离修正已编译通过。
+- 已下载并检查 build 66 的实际 IPA：ZIP 完整性与 SHA-256 均通过，`SOURCE_COMMIT.txt` 为 `01c11f2ae6e20bf5265934615b0eca8ff08f2bfa`，Release Bundle ID `cc.bili`，最低 iOS 26.1，未签名。剩余 Swift 语言模式/SDK 警告列入性能报告。
 - 新增请求契约验证 endpoint、账号/匿名身份、数字 JSON/protobuf、单次写入、课程评论类型、评分状态与分页；归档测试检查账号隔离、去重、原版 JSON、坏文件和大小上界。
 
-最终合入 main、完整 CI 与 Release 的结果将在收尾时更新到本节。当前开发分支 `feat/native-full-parity`。
+本轮应用代码验收提交为 `01c11f2`，随后仅更新交付文档和发布说明。`main` 保留完整测试与设备构建流程，二者成功后自动生成 [预发布与下载](https://github.com/SyIar/piliplus-re/releases)；最终发布提交以包内 `SOURCE_COMMIT.txt` 和 [main Actions](https://github.com/SyIar/piliplus-re/actions?query=branch%3Amain) 为准。每份发布同时附对应源码、许可证与 IPA 的 SHA-256。
 
 ## 用户后续验收
 

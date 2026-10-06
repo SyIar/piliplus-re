@@ -34,6 +34,8 @@
 
 缩图的收益是可验证的像素数量上界下降。没有在此报告声称实测节省多少 MB；JPEG/HEIF 解码缓冲、色彩空间、操作系统缓存和设备差异均会影响进程峰值。
 
+主应用仍使用 Swift 5 语言模式和 Swift 6 工具链。当前 Release 编译仍有 AVFoundation 媒体取消闭包捕获 `AVAssetReader`、`AVAssetWriter`、`AVAssetImageGenerator` 的 Sendable 警告，以及多余 `await` 等警告。升级至 Swift 6 语言模式前，需按 SDK 的线程约定继续审查媒体对象的访问与取消隔离；本轮不宣称已完成严格并发迁移。
+
 ## 检查后保留的已有实现
 
 - 下载进度 `receivedProgress` 已限频到每 250 ms，且进度回调不写完整磁盘索引；不能把它误判成“每次下载回调都落盘”。

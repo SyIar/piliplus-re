@@ -6,9 +6,9 @@
 
 应用显示名称为「哔哩哔哩」，图标采用用户指定的白底黑色小电视高清版本，见 [图标来源与生成记录](docs/APP_ICON.md)。这是本仓库的第三方原生客户端。
 
-**当前为 0.1 开发版本，尚未实现 PiliPlus 全部功能，也尚未完成真机验收。** 功能状态见 [迁移对照](docs/FEATURE_PARITY.md) 和 [原版逐项清单](docs/PILIPLUS_FEATURE_INVENTORY.md)。构建通过只证明编译和自动化测试通过，不代表全部业务可用。
+**当前为 0.1 开发版本，已接入下述业务，仍需签名后的真机与线上账号验收。** 对照 PiliPlus v2.1.6，按用户要求排除一起看、人像防挡和 Chromecast；iOS 实现与平台差异见 [交付记录](docs/PILIPLUS_FULL_ALIGNMENT.md) 和 [原版逐项清单](docs/PILIPLUS_FEATURE_INVENTORY.md)。构建通过只证明编译和自动化测试通过，不代表全部线上业务已验收。
 
-2026-10-05 本轮新增参考图风格的首页/横屏液态玻璃界面、评论点踩/置顶/删除/举报、聊天内容推送设置。实现范围和剩余缺口见 [本轮源码对比](docs/UPSTREAM_AUDIT_2026-10-05.md)，当前提交的编译与测试结果以 Actions 为准。
+2026-10-06：保留参考图风格的首页、浮动底栏和横屏液态玻璃控件，默认强调色为 `#3264F0`。本轮继续补齐动态发布、社区与收藏、空间内容、播放工具和账号设置；[Swift 性能核查](docs/SWIFT_PERFORMANCE_AUDIT.md) 记录官方依据、已处理热点及需要真机采样的项目。当前提交的编译与测试结果以 Actions 为准。
 
 ## 原生实现
 
@@ -18,17 +18,19 @@
 - 全局定时停止：按实际截止时间计时，支持播完当前再停；到点停止优先于连播，并持久化状态。
 - 空降助手沿用 SponsorBlock 服务，合并重叠区间，减少连续 seek。
 - 稍后再看支持加入、移除，以及清理已看完和失效条目；写操作需登录对应账号。
-- 新增离线下载队列、多 P 与画质选择、暂停续传、后台传输、音视频合并、离线播放与弹幕、批量管理；首轮设备与模拟器测试包编译通过，等待功能验收。
-- 新增字幕时间轴与文件导入导出、互动视频分支、文本笔记及 WebDAV 设置备份；这批增量等待云端编译，细项差异以迁移清单为准。
-- ChunUI 主题、13/17/24 字号层级、Pika 图标、播放设置与原生玻璃按钮已接入，其他页面仍在迁移。
+- 离线下载队列、多 P 与画质选择、暂停续传、后台传输、音视频合并、离线播放与弹幕、整合集与批量管理；DLNA 支持双轨/离线转发、分页连播和定时停止。
+- 双语字幕、时间轴与文件导入导出、AI 翻译音轨、高级/会员弹幕、重复弹幕合并；复杂互动视频支持条件变量、画面热点与回溯。
+- 树状评论、完整内容长图、带图动态/投票/预约、消息设置与内容卡片；原生图文、课程、追番与收藏管理、AU 音频、BGM、小站、赛事及更多空间内容。
+- 章节/高能曲线、GIF/Live Photo、MetalFX SDR 超分、社区空降分类和投票、笔记及 WebDAV 设置备份；完整能力和资源限制见逐项清单。
+- ChunUI 主题、13/17/24 字号层级、Pika 图标与原生玻璃按钮；设置搜索、内容过滤、评论归档、账号记录/隐私和高刷新率偏好。
 
-DLNA 的后台/队列/设备适配、笔记富文本、高级字幕、图像导出及其他细项仍有明确缺口；详情以迁移清单为准。此前反馈的退出视频瞬态爆音，必须在目标 iPhone 和 iOS 上复测，不能仅凭更换播放器宣称修复。
+真实后台、锁屏/PiP、照片库、HDR/GPU 功耗和电视兼容性仍待真机验收。富文本笔记、举报表单、漫画阅读与商品详情复用官方网页；DLNA 转发有前台、网络与接收端要求；Android/mpv 专属能力不等同于 iOS。详见交付记录。此前反馈的退出视频瞬态爆音，必须在目标 iPhone 和 iOS 上复测，不能仅凭更换播放器宣称修复。
 
 ## 开发与构建
 
 - iOS 26.1+，macOS + Xcode 26.5 或更新版本。
 - Swift 6 工具链；主应用使用 Swift 5 语言模式、默认 MainActor 隔离和 Approachable Concurrency。
-- Xcode 项目与 scheme 暂保留内部名 `bili`，应用显示名为 `哔哩哔哩`，Bundle ID 为 `io.github.syiar.PiliPlusSwift`。
+- Xcode 项目与 scheme 暂保留内部名 `bili`，应用显示名为 `哔哩哔哩`；Debug Bundle ID 为 `io.github.syiar.PiliPlusSwift`，Release 为 `cc.bili`。
 - ChunUI 固定到源码 revision；Swift Package Manager 在首次构建时解析依赖。
 
 ```bash
@@ -51,7 +53,7 @@ bash Scripts/build-ipa.sh
 3. 并行编译设备 Release 包并生成 `PiliPlusSwift-unsigned.ipa`，上传 Actions artifact。
 4. `main` 和标签的成功构建自动创建预发布，附 IPA、SHA-256、对应源代码和许可说明。PR 只构建，不发布。
 
-下载入口：[Releases](https://github.com/SyIar/piliplus-re/releases)。`f057aef` 和个人资料版本 `79cb740` 已通过完整流水线并自动发布；后续提交继续独立执行构建与测试。
+下载入口：[Releases](https://github.com/SyIar/piliplus-re/releases)。每份构建附 `SOURCE_COMMIT.txt`，可核对对应提交；完整验证记录见 [交付记录](docs/PILIPLUS_FULL_ALIGNMENT.md)。
 
 IPA **未签名**，需要自行签名后安装。流水线不需要个人证书，也不会发布到 App Store 或 TestFlight。只有全部构建与测试成功才会执行发布任务。
 

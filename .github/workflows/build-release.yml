@@ -132,8 +132,11 @@ jobs:
           tar -czf dist/ThirdParty-Licenses.tar.gz -C dist Licenses
           rm -r dist/Licenses
           cat > release-notes.txt <<'NOTES'
-          Swift / AVPlayer 原生迁移构建，仍在迁移与验证中。
-          功能进度见仓库 docs/FEATURE_PARITY.md；不代表已完整替代 PiliPlus。
+          Swift / AVPlayer 原生客户端，蓝色主题与 iOS Liquid Glass 界面。
+          已接入播放工具、动态/评论/消息、AU 音频、空间/收藏及离线投屏等业务。
+          逐项范围、平台差异和验证记录见 docs/PILIPLUS_FULL_ALIGNMENT.md 与 docs/PILIPLUS_FEATURE_INVENTORY.md。
+          Swift 性能优化依据与待真机采样项目见 docs/SWIFT_PERFORMANCE_AUDIT.md。
+          本构建已通过自动化测试与设备 Release 编译，线上账号与真机功能仍待验收。
           IPA 未签名，需要自行签名安装；不需要在构建中提供个人证书。
           附带对应源代码、GPL-3.0 许可证和 SHA-256 校验值。
           NOTES

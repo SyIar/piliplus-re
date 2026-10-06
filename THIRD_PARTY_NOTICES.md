@@ -14,7 +14,7 @@ PiliPlus Swift 是独立的 Swift 原生迁移项目，不是 PiliPlus、cilicil
 
 - 来源：<https://github.com/bggRGjQaUbCoE/PiliPlus>
 - 用户安装版本基线：`a30fcc31043e10cd38c198f47ddd7b23fd6e6163`（2.1.5）。
-- 本次功能盘点同时参考当前源码 `e5ede1a8f7227d35dd24454c9c206dcb175e754a`。
+- 早期功能盘点参考 `e5ede1a8f7227d35dd24454c9c206dcb175e754a`；2026-10-06 本轮迁移对照 `4ed5968f37af8b4aa7e0f13178cb8d8c2f86defc`（2.1.6），逐项来源见 `docs/PILIPLUS_FEATURE_INVENTORY.md`。
 - 许可：GPL-3.0，许可文本见 `Licenses/PiliPlus-LICENSE`。
 - 用途：功能迁移对照与接口行为参考；不包含 Flutter 或 mpv 运行时。旧版应用图标取自上述 2.1.5 基线的 iOS 资源，现已替换；新图标来源与处理记录见 `docs/APP_ICON.md`。
 
