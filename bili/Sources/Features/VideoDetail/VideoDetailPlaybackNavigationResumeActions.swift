@@ -11,6 +11,7 @@ extension VideoDetailViewModel {
         navigationState.playbackStopTask = nil
         isPlaybackInvalidatedForNavigation = false
         isPlaybackTerminatedForNavigation = false
+        piliInteractive.resumeAfterNavigation(self)
 
         if let player = stablePlayerViewModel {
             isAwaitingRelatedVideoReturnPlayback = false

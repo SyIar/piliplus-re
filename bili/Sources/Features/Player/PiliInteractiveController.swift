@@ -54,6 +54,27 @@ final class PiliInteractiveController: ObservableObject {
         reset(context: nil)
         return true
     }
+    func suspendForNavigation() {
+        guard context != nil else { return }
+        task?.cancel(); token = UUID(); task = nil
+        setPresentationActive(false)
+        guard isLoading else { return }
+        isLoading = false; pendingPlaybackEnd = false
+        if graphVersion == nil {
+            context = nil
+        } else {
+            // A covered detail page can be reused on back navigation. Preserve
+            // the last committed checkpoint, but invalidate every in-flight I/O.
+            if let checkpoint = history.last { retryRequest = .restore(checkpoint, history) }
+            fail(BiliAPIError.api(code: -1, message: "剧情加载已中断，点击重试恢复当前分支"))
+        }
+    }
+    func resumeAfterNavigation(_ viewModel: VideoDetailViewModel) {
+        // Models without a mounted interactive surface need no metadata request.
+        guard self.viewModel != nil else { return }
+        setPresentationActive(true)
+        prepare(viewModel)
+    }
 
     func prepare(_ viewModel: VideoDetailViewModel) {
         let credential = viewModel.api.requestSnapshot(purpose: .playback)

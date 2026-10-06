@@ -3,6 +3,7 @@ import Foundation
 extension VideoDetailViewModel {
     func stopPlaybackForNavigation() {
         guard !isPlaybackInvalidatedForNavigation else { return }
+        piliInteractive.suspendForNavigation()
         let resumeTime = currentPlaybackResumeTime()
         capturePlaybackStateForNavigation(resumeTime: resumeTime)
         flushPlaybackProgressForNavigation(resumeTime: resumeTime)

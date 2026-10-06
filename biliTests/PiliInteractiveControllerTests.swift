@@ -271,4 +271,34 @@ final class PiliInteractiveControllerTests: XCTestCase {
         XCTAssertEqual(opened, [20])
         XCTAssertFalse(PiliSleepTimer.shared.policy.preventsAutomaticPlayback)
     }
+
+    func testLeavingAndReturningToSamePageDiscardsPendingBranchAndCanRestoreCheckpoint() async throws {
+        let root = try decode(rootJSON), next = try decode(nextJSON)
+        let controller = PiliInteractiveController(defaults: defaults())
+        var continuation: CheckedContinuation<PiliInteractiveEdge, Error>?
+        var opened: [Int] = []
+        controller.start(context: "same.page", saveKey: "save", graphVersion: 1, cid: 10,
+                         loader: { id in
+            if id == nil || id == 1 { return root }
+            return try await withCheckedThrowingContinuation { continuation = $0 }
+        }, navigator: { cid, _, _ in opened.append(cid) })
+        try await settle(controller)
+        _ = controller.handlePlaybackEnded()
+        controller.choose(try XCTUnwrap(controller.visibleChoices.first))
+        try await waitUntil { continuation != nil }
+        controller.suspendForNavigation()
+        controller.setPresentationActive(true)
+        continuation?.resume(returning: next)
+        await Task.yield()
+        await Task.yield()
+        XCTAssertFalse(controller.isLoading)
+        XCTAssertTrue(opened.isEmpty)
+        XCTAssertEqual(controller.edge?.edgeID, 1)
+        XCTAssertEqual(controller.session.values["score"], 0)
+        controller.retry()
+        try await settle(controller)
+        XCTAssertEqual(opened, [10])
+        XCTAssertEqual(controller.history.count, 1)
+        XCTAssertNil(controller.errorMessage)
+    }
 }
