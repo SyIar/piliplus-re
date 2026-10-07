@@ -22,7 +22,10 @@ xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.Pil
 sleep 5
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-light.png"
 xcrun simctl ui "$device_id" appearance dark
-sleep 2
+# Launch in the requested appearance, as with the other light/dark previews.
+# A short wait on the existing process can capture its previous light frame.
+xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift
+sleep 5
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-dark.png"
 xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassPlayer
 sleep 4
@@ -95,7 +98,12 @@ for runtime, devices in json.load(sys.stdin)["devices"].items():
     version=tuple(int(n) for n in re.findall(r"\d+", runtime))
     for d in devices:
         if d.get("isAvailable") and "iPad" in d["name"]:
-            values.append(((version, "Pro" in d["name"], d["name"]), d["udid"]))
+            name=d["name"]
+            diagonal=re.search(r"(\d+(?:\.\d+)?)-inch", name)
+            size=float(diagonal[1]) if diagonal else (8.3 if "mini" in name else 10.9)
+            # The chip name in "iPad mini (A17 Pro)" is not the Pro model.
+            # Prefer a wide display so previews exercise the wider grid/form.
+            values.append(((version, size, name.startswith("iPad Pro"), name), d["udid"]))
 if not values: raise SystemExit("No available iPad simulator for preview verification")
 print(max(values)[1])
 ')"
