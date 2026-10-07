@@ -122,21 +122,27 @@ xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliP
 sleep 3
 xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-alert-ipad.png"
 
-# Keep the actual system menu opened by XCUITest as a reviewable screenshot.
+# Keep the menus actually opened by XCUITest as reviewable screenshots.
 attachment_dir="$result_dir/ui-attachments"
 xcrun xcresulttool export attachments --path "$result_dir/PiliPlusSwift.xcresult" --output-path "$attachment_dir"
 python3 - "$attachment_dir" "$project_root/dist" <<'PYEXPORT'
 import json, pathlib, shutil, sys
 root, destination = map(pathlib.Path, sys.argv[1:])
+screenshots = {
+    "Recommendation card overflow menu": "preview-video-menu.png",
+    "Fullscreen player action panel": "preview-player-menu.png",
+}
 def visit(value):
     if isinstance(value, dict):
-        if value.get("suggestedHumanReadableName", "").startswith("Recommendation card overflow menu"):
-            source = root / value["exportedFileName"]
-            shutil.copyfile(source, destination / "preview-video-menu.png")
+        for title, filename in screenshots.items():
+            if value.get("suggestedHumanReadableName", "").startswith(title):
+                source = root / value["exportedFileName"]
+                shutil.copyfile(source, destination / filename)
         for child in value.values(): visit(child)
     elif isinstance(value, list):
         for child in value: visit(child)
 visit(json.loads((root / "manifest.json").read_text()))
-if not (destination / "preview-video-menu.png").exists():
-    raise SystemExit("Missing recommendation menu test screenshot")
+for filename in screenshots.values():
+    if not (destination / filename).exists():
+        raise SystemExit(f"Missing menu test screenshot: {filename}")
 PYEXPORT

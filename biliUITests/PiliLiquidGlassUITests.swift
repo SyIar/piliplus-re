@@ -298,6 +298,10 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertTrue(app.buttons["画质与播放设置"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["定时停止与连播"].exists)
         XCTAssertTrue(app.buttons["分享视频"].exists)
+        let actionsPanel = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        actionsPanel.name = "Fullscreen player action panel"
+        actionsPanel.lifetime = .keepAlways
+        add(actionsPanel)
         app.buttons["完成"].tap()
         XCTAssertTrue(play.waitForExistence(timeout: 5))
         app.buttons["ui.player.glass.more"].tap()
