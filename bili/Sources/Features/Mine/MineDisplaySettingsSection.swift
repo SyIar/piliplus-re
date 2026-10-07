@@ -2,6 +2,7 @@ import SwiftUI
 import ChunUI
 
 struct MineDisplaySettingsSection: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ObservedObject var libraryStore: LibraryStore
     @AppStorage(VideoCoverBadgeContrastBacking.storageKey) private var videoCoverBadgeContrastBackingOpacity = VideoCoverBadgeContrastBacking.defaultOpacity
 
@@ -35,15 +36,22 @@ struct MineDisplaySettingsSection: View {
             NavigationLink {
                 MineThemeColorSettingsView(libraryStore: libraryStore)
             } label: {
-                LabeledContent("主色调") {
-                    HStack(spacing: 8) {
-                        Circle().fill(libraryStore.appTintColor).frame(width: 16, height: 16)
-                        Text(libraryStore.appTintColorHex)
-                            .piliFont(.sm).monospaced().foregroundStyle(.secondary)
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("主色调")
+                        themeColorValue.frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                } else {
+                    HStack(spacing: 16) {
+                        Text("主色调")
+                        Spacer(minLength: 8)
+                        themeColorValue
                     }
                 }
             }
             .accessibilityIdentifier("settings.theme")
+            .accessibilityLabel("主色调")
+            .accessibilityValue(libraryStore.appTintColorHex)
 
             Toggle(isOn: Binding(
                 get: { libraryStore.followsSystemFontSize },
@@ -209,6 +217,15 @@ struct MineDisplaySettingsSection: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+        }
+    }
+
+    private var themeColorValue: some View {
+        HStack(spacing: 8) {
+            Circle().fill(libraryStore.appTintColor).frame(width: 16, height: 16)
+            Text(libraryStore.appTintColorHex)
+                .piliFont(.sm).monospaced().foregroundStyle(.secondary)
+                .fixedSize(horizontal: true, vertical: false)
         }
     }
 

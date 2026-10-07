@@ -69,7 +69,7 @@ final class PiliLiquidGlassUITests: XCTestCase {
         app.buttons["选择颜色 #AF52DE"].tap()
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(app.navigationBars["界面设置"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["#AF52DE"].exists, "The parent row must show the selected color")
+        XCTAssertEqual(theme.value as? String, "#AF52DE", "The parent row must expose the selected color")
         app.navigationBars.buttons.firstMatch.tap()
         remove.tap()
         XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
