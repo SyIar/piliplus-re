@@ -13,10 +13,13 @@ struct PiliGlassFullscreenActions {
     let next: () -> Void
     let skip: (Double) -> Void
     let interaction: () -> Void
+    var menuPresentationChanged: (Bool) -> Void = { _ in }
 }
 
 /// Shared by the real video surface and the deterministic visual regression fixture.
 struct PiliGlassFullscreenControls: View {
+    @State private var showsMoreActions = false
+    @State private var pendingMoreAction: (() -> Void)?
     let title: String
     let author: String
     let shareURL: URL?
@@ -71,6 +74,31 @@ struct PiliGlassFullscreenControls: View {
         }
         .foregroundStyle(.white)
         .environment(\.colorScheme, .dark)
+        .piliSheet(isPresented: $showsMoreActions, onDismiss: {
+            actions.menuPresentationChanged(false)
+            let action = pendingMoreAction
+            pendingMoreAction = nil
+            action?()
+        }) {
+            NavigationStack {
+                PiliList {
+                    Button("画质与播放设置") { selectMoreAction(actions.settings) }
+                    Button("投屏") { selectMoreAction(actions.cast) }
+                    Button("定时停止与连播") { selectMoreAction { PiliPlaybackToolsView.present() } }
+                    if let shareURL {
+                        ShareLink(item: shareURL) { Text("分享视频") }
+                    }
+                }
+                .navigationTitle("更多播放操作")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("完成") { showsMoreActions = false }
+                    }
+                }
+            }
+            .piliPresentationDetents([.height(320), .large])
+        }
     }
 
     private var header: some View {
@@ -91,16 +119,9 @@ struct PiliGlassFullscreenControls: View {
     }
 
     private var moreMenu: some View {
-        Menu {
-            Section {
-                // Native Text titles survive SwiftUI's conversion to UIMenu.
-                Button("画质与播放设置", action: actions.settings)
-                Button("投屏", action: actions.cast)
-                Button("定时停止与连播") { PiliPlaybackToolsView.present() }
-            }
-            if let shareURL {
-                ShareLink(item: shareURL) { Text("分享视频") }
-            }
+        Button {
+            actions.menuPresentationChanged(true)
+            showsMoreActions = true
         } label: {
             PiliIcon(systemName: "ellipsis", size: 20)
                 .frame(width: 44, height: 44)
@@ -109,7 +130,12 @@ struct PiliGlassFullscreenControls: View {
         .buttonStyle(.plain)
         .accessibilityLabel("更多播放操作")
         .accessibilityIdentifier("ui.player.glass.more")
-        .simultaneousGesture(TapGesture().onEnded { actions.interaction() })
+    }
+
+    private func selectMoreAction(_ action: @escaping () -> Void) {
+        // Finish dismissing this sheet before presenting the requested panel.
+        pendingMoreAction = action
+        showsMoreActions = false
     }
 
     private var transport: some View {
