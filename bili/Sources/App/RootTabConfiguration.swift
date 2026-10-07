@@ -29,9 +29,9 @@ enum AppTab: String, CaseIterable, Codable, Identifiable, Hashable {
         case .home:
             return "house"
         case .dynamic:
-            return "sparkles"
+            return "rectangle.stack"
         case .live:
-            return "play.tv"
+            return "play.rectangle"
         case .mine:
             return "person.crop.circle"
         case .search:

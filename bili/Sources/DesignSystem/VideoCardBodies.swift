@@ -29,7 +29,6 @@ struct VideoCardElevatedBody<Cover: View>: View {
                 .stroke(Color(.separator).opacity(0.10), lineWidth: 0.5)
         }
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .mediaShadow(.subtle)
     }
 }
 

@@ -22,7 +22,10 @@ xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.Pil
 sleep 5
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-light.png"
 xcrun simctl ui "$device_id" appearance dark
-sleep 2
+# Launch in the requested appearance, as with the other light/dark previews.
+# A short wait on the existing process can capture its previous light frame.
+xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift
+sleep 5
 xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-dark.png"
 xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassPlayer
 sleep 4
@@ -59,6 +62,9 @@ for appearance in light dark; do
   xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings
   sleep 3
   xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-settings-$appearance.png"
+  xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings --glass-preview-theme
+  sleep 2
+  xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-theme-$appearance.png"
   xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-sheet
   sleep 3
   xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-sheet-$appearance.png"
@@ -92,7 +98,12 @@ for runtime, devices in json.load(sys.stdin)["devices"].items():
     version=tuple(int(n) for n in re.findall(r"\d+", runtime))
     for d in devices:
         if d.get("isAvailable") and "iPad" in d["name"]:
-            values.append(((version, "Pro" in d["name"], d["name"]), d["udid"]))
+            name=d["name"]
+            diagonal=re.search(r"(\d+(?:\.\d+)?)-inch", name)
+            size=float(diagonal[1]) if diagonal else (8.3 if "mini" in name else 10.9)
+            # The chip name in "iPad mini (A17 Pro)" is not the Pro model.
+            # Prefer a wide display so previews exercise the wider grid/form.
+            values.append(((version, size, name.startswith("iPad Pro"), name), d["udid"]))
 if not values: raise SystemExit("No available iPad simulator for preview verification")
 print(max(values)[1])
 ')"
@@ -108,6 +119,9 @@ xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-home-ipad.png"
 xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings
 sleep 3
 xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-settings-ipad.png"
+xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings --glass-preview-theme
+sleep 2
+xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-theme-ipad.png"
 xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-sheet
 sleep 3
 xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-sheet-ipad.png"
@@ -116,21 +130,27 @@ xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliP
 sleep 3
 xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-alert-ipad.png"
 
-# Keep the actual system menu opened by XCUITest as a reviewable screenshot.
+# Keep the menus actually opened by XCUITest as reviewable screenshots.
 attachment_dir="$result_dir/ui-attachments"
 xcrun xcresulttool export attachments --path "$result_dir/PiliPlusSwift.xcresult" --output-path "$attachment_dir"
 python3 - "$attachment_dir" "$project_root/dist" <<'PYEXPORT'
 import json, pathlib, shutil, sys
 root, destination = map(pathlib.Path, sys.argv[1:])
+screenshots = {
+    "Recommendation card overflow menu": "preview-video-menu.png",
+    "Fullscreen player action panel": "preview-player-menu.png",
+}
 def visit(value):
     if isinstance(value, dict):
-        if value.get("suggestedHumanReadableName", "").startswith("Recommendation card overflow menu"):
-            source = root / value["exportedFileName"]
-            shutil.copyfile(source, destination / "preview-video-menu.png")
+        for title, filename in screenshots.items():
+            if value.get("suggestedHumanReadableName", "").startswith(title):
+                source = root / value["exportedFileName"]
+                shutil.copyfile(source, destination / filename)
         for child in value.values(): visit(child)
     elif isinstance(value, list):
         for child in value: visit(child)
 visit(json.loads((root / "manifest.json").read_text()))
-if not (destination / "preview-video-menu.png").exists():
-    raise SystemExit("Missing recommendation menu test screenshot")
+for filename in screenshots.values():
+    if not (destination / filename).exists():
+        raise SystemExit(f"Missing menu test screenshot: {filename}")
 PYEXPORT

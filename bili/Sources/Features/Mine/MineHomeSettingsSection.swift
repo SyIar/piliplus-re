@@ -16,7 +16,13 @@ struct MineHomeSettingsSection: View {
                     Text(layout.title).tag(layout)
                 }
             } label: {
-                MineSettingsLabel("首页布局", systemImage: "rectangle.grid.1x2")
+                VStack(alignment: .leading, spacing: 4) {
+                    MineSettingsLabel("首页布局", systemImage: "rectangle.grid.1x2")
+                    Text("双列布局在 iPad 上随窗口宽度调整。")
+                        .appTypography(.settingsSubtitle, fallback: .caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .pickerStyle(.menu)
 

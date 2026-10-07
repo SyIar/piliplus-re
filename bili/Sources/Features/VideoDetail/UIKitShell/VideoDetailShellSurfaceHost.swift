@@ -542,6 +542,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
     @State private var isMoreControlsButtonPressed = false
     @State private var isVideoListenQueuePresented = false
     @State private var isGlassControlsLocked = false
+    @State private var isGlassMenuPresented = false
     @AppStorage("piliplus.player.lockOrientation") private var locksOrientation = true
 
     private var isLandscape: Bool {
@@ -818,6 +819,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                 isVideoListenQueuePresented = false
             } else {
                 isMoreControlsPresented = false
+                isGlassMenuPresented = false
             }
         }
         .onChange(of: overlaySnapshot.playbackContentMode) { _, mode in
@@ -826,6 +828,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             }
             guard mode == .audioOnly else { return }
             isMoreControlsPresented = false
+            isGlassMenuPresented = false
             portraitMoreControlsRequestID = nil
             onDismissMoreControls()
             if isLandscape {
@@ -839,6 +842,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             withTransaction(transaction) {
                 isMoreControlsPresented = false
                 isVideoListenQueuePresented = false
+                isGlassMenuPresented = false
             }
             playbackControlsVisibility.cancelAutoHide()
         }
@@ -917,7 +921,11 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                     holdCurrentFrameForSeek()
                     viewModel.seek(by: seconds)
                 },
-                interaction: { visibility.markInteraction() }
+                interaction: { visibility.markInteraction() },
+                menuPresentationChanged: { presented in
+                    isGlassMenuPresented = presented
+                    visibility.markInteraction(keepsVisible: presented)
+                }
             ),
             interactionAccessory: AnyView(PiliFullscreenVideoReactions(
                 viewModel: detailViewModel, store: detailViewModel.interactionRenderStore,
@@ -1005,6 +1013,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                 && (isMoreControlsPresented
                     || portraitMoreControlsRequestID != nil
                     || isVideoListenQueuePresented
+                    || isGlassMenuPresented
                     || isGlassControlsLocked),
             ignoresContainerSafeArea: true,
             keepsPlayerSurfaceStable: true,

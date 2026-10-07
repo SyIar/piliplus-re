@@ -119,8 +119,7 @@ struct RootTabView: View {
                     Label {
                         Text(tab.title)
                     } icon: {
-                        Image(systemName: tab.systemImage)
-                            .symbolVariant(selectedTab == tab && tab != .search ? .fill : .none)
+                        Image(uiImage: RootTabBarIcon.image(for: tab))
                     }
                 }
             }

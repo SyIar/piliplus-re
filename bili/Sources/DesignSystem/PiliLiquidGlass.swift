@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Clear floating controls above media; content cards keep their own solid surface.
+/// One glass surface per group of floating controls; content uses quiet material.
 struct PiliLiquidGlassSurface<S: InsettableShape>: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.piliReduceTransparencyPreview) private var previewReduceTransparency
     @Environment(\.colorSchemeContrast) private var contrast
     let shape: S
     var overVideo = false
@@ -13,29 +14,24 @@ struct PiliLiquidGlassSurface<S: InsettableShape>: ViewModifier {
 
     func body(content: Content) -> some View {
         Group {
-            if reduceTransparency {
+            if reduceTransparency || previewReduceTransparency {
                 content.background(dark ? Color(white: 0.12) : Color(white: 0.96), in: shape)
-            } else {
+            } else if overVideo {
                 content.glassEffect(
-                    .clear.tint(dark ? .black.opacity(0.18) : .white.opacity(0.22))
+                    .clear.tint(.black.opacity(0.22))
                         .interactive(interactive),
                     in: shape
                 )
+            } else {
+                content.glassEffect(.regular.interactive(interactive), in: shape)
             }
         }
         .overlay {
-            shape.strokeBorder(
-                LinearGradient(
-                    colors: [
-                        .white.opacity(contrast == .increased ? 0.7 : (dark ? 0.32 : 0.7)),
-                        .white.opacity(0.06),
-                        .white.opacity(dark ? 0.18 : 0.42)
-                    ], startPoint: .topLeading, endPoint: .bottomTrailing
-                ), lineWidth: contrast == .increased ? 1 : 0.6
-            )
-            .allowsHitTesting(false)
+            if contrast == .increased {
+                shape.strokeBorder(dark ? .white.opacity(0.7) : .black.opacity(0.4), lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
         }
-        .shadow(color: .black.opacity(dark ? 0.2 : 0.08), radius: 12, y: 5)
     }
 }
 
