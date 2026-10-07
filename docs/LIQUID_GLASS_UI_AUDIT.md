@@ -9,7 +9,7 @@
 ChunUI 固定 revision `b240cbbdb9c6d7afc9f02d9ce4ddff5a25ce73bb`，依据其 [SKILL.md](https://github.com/liseami/ChunUI/blob/b240cbbdb9c6d7afc9f02d9ce4ddff5a25ce73bb/skills/chunui/SKILL.md)、presentation 和 components 规范。
 
 - 默认品牌色为蓝色 `#3264F0`，普通表面、文字使用灰阶语义色；确认按钮及功能反馈随用户选择的主题色更新，取消保持灰阶。色调选择的八个选项在同一行等分排列。
-- 文本使用 13 / 17 / 24 基线与相应粗体。`PiliTypography` 在 ChunUI 字体上保留 Dynamic Type 缩放；媒体字幕、弹幕与用户自定义颜色继续服从内容设置。
+- 文本使用 13 / 17 / 24 基线与相应粗体；按用户要求，推荐视频标题单独采用 14pt 常规字重。`PiliTypography` 在 ChunUI 字体上保留 Dynamic Type 缩放；媒体字幕、弹幕与用户自定义颜色继续服从内容设置。
 - 业务图标使用包内 Pika 资产。`PiliSymbols` 显式映射旧业务标识，`PiliIcon` 继承前景色，保证视频上的白色按钮和浅色页按钮都可辨认；系统原生 Tab 保留系统图标接口。
 - 页内表单、列表及多选列表集中到 `PiliForm` / `PiliList` / `PiliSelectionList`；原生分组拥有外轮廓，组内是连续半透明材质与细分隔线，取消逐行玻璃圆角、描边和间隙，避免椭圆卡片连续堆叠。内容卡片使用 `piliGlassCard`，按钮使用原生 glass / glassProminent 或 ChunUI 控件。
 - 弹层经 `PiliPresentation` 调用 ChunUI `AppHelper.presentSheet`，UIKit 管理一层 Liquid Glass 背景。内部行避免重复模糊；减少透明度时退回清晰语义底色。
@@ -43,3 +43,15 @@ ChunUI 固定 revision `b240cbbdb9c6d7afc9f02d9ce4ddff5a25ce73bb`，依据其 [S
 `Scripts/capture-preview.sh` 导出首页明暗、横屏播放器、字幕、评论、互动、设置明暗、面板明暗、确认明暗与紫色主题确认，以及减少透明度/大字设置、iPad 首页、设置、面板、确认以及大字确认和卡片实际菜单的截图。预览 artifact 和最终测试状态以 [PR #4](https://github.com/SyIar/piliplus-re/pull/4) 的对应提交 [Actions](https://github.com/SyIar/piliplus-re/actions) 为准；失败构建不计为验收。
 
 模拟器截图可检查布局与材质效果，不代表真实账号写操作、照片库、电视兼容性或真机 GPU/滚动性能已经验收。合入 main 后，完整测试和设备打包成功才生成预发布。
+
+## 2026-10-07：内容层级与宽屏调整
+
+根据 [YouTube 的设计原则](https://blog.youtube/inside-youtube/design-principles-use-put-creators-center-stage/)、[Instagram 的导航示例](https://about.fb.com/news/2025/09/in-india-instagram-debuts-a-reels-first-experience-for-its-mobile-app/)、[Spotify 的设置分组](https://newsroom.spotify.com/2026-04-09/video-control-settings-update/)及[平板布局](https://newsroom.spotify.com/2026-04-16/new-tablet-app-experience/)，调整现有页面的主次关系。材质依据 [Apple Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/) 的内容层与操作层区分；保留 ChunUI 的主题、组件和呈现适配。
+
+- 内容卡片使用单层轻材质，取消额外玻璃高光和叠加阴影；有边框布局保留其边界。减少透明度和增加对比度仍有对应语义底色、边框。
+- 原生 Tab 使用统一尺寸的轮廓图标与更轻的文字，动态改用内容叠层图标；账户图标缩小，点击区域仍保持 44pt。搜索保留系统独立入口和键盘行为。
+- 界面设置分为外观、内容与导航、图片与存储、高级与诊断。主色调通过独立页面编辑，父级显示当前色值；八色仍同排，色板、恢复默认和主题联动保留。所有 `PiliForm` 在宽屏中限制为 760pt 内容列。
+- 全屏播放器将画质、投屏、定时与分享集中到更多菜单，保留播放、进度、选集、弹幕、字幕、锁定及视频互动。底部操作与进度共用一层玻璃；跳转按钮不再各自套一层玻璃，三连也不在玻璃组内叠加自己的背景。
+- 手机普通字号保持双列，iPad 网格根据窗口在两至四列间变化。封面尺寸与实际列数一起计算，单列偏好与既有无障碍字号布局保持原行为。
+
+回归范围：手机横竖屏双列、iPad 窄窗口和宽窗口封面宽度、单列偏好；设置进入主题编辑与返回后的色值、八色同排及紫色确认；播放器更多菜单的实际操作、快进、播放、锁定与旋转。预览脚本额外导出主题选择页的浅色、深色和 iPad 截图。上述是本轮验证范围，实际通过状态以对应提交的 Actions 和 PR 记录为准；不将代表截图检查视为全应用逐页验收。

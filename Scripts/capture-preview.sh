@@ -59,6 +59,9 @@ for appearance in light dark; do
   xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings
   sleep 3
   xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-settings-$appearance.png"
+  xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings --glass-preview-theme
+  sleep 2
+  xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-theme-$appearance.png"
   xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-sheet
   sleep 3
   xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-sheet-$appearance.png"
@@ -108,6 +111,9 @@ xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-home-ipad.png"
 xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings
 sleep 3
 xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-settings-ipad.png"
+xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings --glass-preview-theme
+sleep 2
+xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-theme-ipad.png"
 xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassAudit --glass-preview-sheet
 sleep 3
 xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-sheet-ipad.png"

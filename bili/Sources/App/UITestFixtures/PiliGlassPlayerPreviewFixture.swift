@@ -32,7 +32,7 @@ struct PiliGlassPlayerPreviewFixture: View {
                 interactionAccessory: AnyView(HStack(spacing: 0) {
                     PiliGlassPlayerButton(symbol: "hand.thumbsup", title: "点赞", grouped: true) { message = "点赞" }
                     PiliGlassPlayerButton(symbol: "bookmark", title: "收藏", grouped: true) { message = "收藏" }
-                }.piliLiquidGlass(in: Capsule(), overVideo: true))
+                })
             )
         }
         .ignoresSafeArea()

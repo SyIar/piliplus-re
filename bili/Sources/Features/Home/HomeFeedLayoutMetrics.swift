@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct HomeFeedLayoutMetrics {
     let mode: HomeFeedLayout
@@ -11,14 +12,18 @@ struct HomeFeedLayoutMetrics {
     let doubleColumnFixedCoverSize: CGSize?
     let borderedSingleColumnCoverSize: CGSize?
 
-    init(mode: HomeFeedLayout, containerWidth: CGFloat) {
+    init(mode: HomeFeedLayout, containerWidth: CGFloat,
+         allowsWideGrid: Bool = UIDevice.current.userInterfaceIdiom == .pad) {
         self.mode = mode
         let doubleColumnSpacing: CGFloat = 12
         let doubleColumnCoverHeightRatio: CGFloat = mode == .borderedDoubleColumn ? 10 / 16 : 9 / 16
-        doubleColumns = [
-            GridItem(.flexible(), spacing: doubleColumnSpacing),
-            GridItem(.flexible(), spacing: doubleColumnSpacing)
-        ]
+        // Phones keep two columns, including landscape. Tablet windows add
+        // columns only when each card can retain a comfortable reading width.
+        let availableWidth = max(0, containerWidth - 24)
+        let columnCount = allowsWideGrid
+            ? min(4, max(2, Int((availableWidth + doubleColumnSpacing) / (240 + doubleColumnSpacing))))
+            : 2
+        doubleColumns = Array(repeating: GridItem(.flexible(), spacing: doubleColumnSpacing), count: columnCount)
         singleColumnHorizontalPadding = 16
 
         switch mode {
@@ -45,7 +50,8 @@ struct HomeFeedLayoutMetrics {
             singleColumnFixedCoverSize = nil
         }
 
-        let doubleWidth = (containerWidth - (feedHorizontalPadding * 2) - doubleColumnSpacing) / 2
+        let doubleWidth = (containerWidth - (feedHorizontalPadding * 2)
+            - doubleColumnSpacing * CGFloat(columnCount - 1)) / CGFloat(columnCount)
         if doubleWidth > 0 {
             doubleColumnFixedCoverSize = CGSize(width: doubleWidth, height: doubleWidth * doubleColumnCoverHeightRatio)
         } else {

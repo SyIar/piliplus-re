@@ -50,6 +50,8 @@ struct PiliForm<Content: View>: View {
                 .listRowSeparatorTint(Color.cc.mutedForeground.opacity(0.16))
         }
         .buttonStyle(.borderless)
+        .frame(maxWidth: 760)
+        .frame(maxWidth: .infinity)
         .piliPageChrome()
     }
 }
@@ -100,15 +102,28 @@ private struct PiliGlassCard: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.piliReduceTransparencyPreview) private var previewReduceTransparency
     @Environment(\.piliPresentedPage) private var presented
+    @Environment(\.colorSchemeContrast) private var contrast
     let radius: CGFloat
     func body(content: Content) -> some View {
-        if reduceTransparency || previewReduceTransparency {
-            content.background(Color.cc.card, in: RoundedRectangle(cornerRadius: radius))
-        } else if presented {
-            content.background(Color.cc.card.opacity(0.35), in: RoundedRectangle(cornerRadius: radius))
-        } else {
-            content.ccGlassEffect(.roundedRectangle(radius))
-        }
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        content
+            .background {
+                if reduceTransparency || previewReduceTransparency {
+                    shape.fill(Color.cc.card)
+                } else if presented {
+                    shape.fill(Color.cc.card.opacity(0.35))
+                } else {
+                    // Content stays on one quiet material plane. Navigation and
+                    // floating controls own the refractive Liquid Glass layer.
+                    shape.fill(.ultraThinMaterial)
+                }
+            }
+            .overlay {
+                if contrast == .increased {
+                    shape.strokeBorder(Color.cc.mutedForeground.opacity(0.45), lineWidth: 1)
+                        .allowsHitTesting(false)
+                }
+            }
     }
 }
 

@@ -6,7 +6,7 @@ struct MineDisplaySettingsSection: View {
     @AppStorage(VideoCoverBadgeContrastBacking.storageKey) private var videoCoverBadgeContrastBackingOpacity = VideoCoverBadgeContrastBacking.defaultOpacity
 
     var body: some View {
-        Section("显示") {
+        Section("外观") {
             PiliSettingPicker(selection: Binding(
                 get: { libraryStore.appearanceMode },
                 set: { libraryStore.setAppearanceMode($0) }
@@ -32,7 +32,18 @@ struct MineDisplaySettingsSection: View {
             }
             .pickerStyle(.menu)
 
-            MineThemeColorControl(libraryStore: libraryStore)
+            NavigationLink {
+                MineThemeColorSettingsView(libraryStore: libraryStore)
+            } label: {
+                LabeledContent("主色调") {
+                    HStack(spacing: 8) {
+                        Circle().fill(libraryStore.appTintColor).frame(width: 16, height: 16)
+                        Text(libraryStore.appTintColorHex)
+                            .piliFont(.sm).monospaced().foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .accessibilityIdentifier("settings.theme")
 
             Toggle(isOn: Binding(
                 get: { libraryStore.followsSystemFontSize },
@@ -73,53 +84,14 @@ struct MineDisplaySettingsSection: View {
                     .accessibilityValue(libraryStore.manualFontSize.title)
                 }
             }
+        }
 
-            PiliSettingPicker(selection: Binding(
-                get: { libraryStore.remoteImageQualityPreference },
-                set: { libraryStore.setRemoteImageQualityPreference($0) }
-            )) {
-                ForEach(RemoteImageQualityPreference.allCases) { preference in
-                    Text(preference.title).tag(preference)
-                }
-            } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("图片质量", systemImage: "photo")
-
-                    Text(libraryStore.remoteImageQualityPreference.detail)
-                        .appTypography(.settingsSubtitle, fallback: .caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .pickerStyle(.menu)
-
-            MineImageCacheControl()
-
+        Section("内容与导航") {
             Toggle(isOn: Binding(
                 get: { libraryStore.showsVideoCoverDurationBadges },
                 set: { libraryStore.setShowsVideoCoverDurationBadges($0) }
             )) {
                 MineSettingsLabel("封面时长", systemImage: "timer")
-            }
-
-            Toggle(isOn: Binding(
-                get: { libraryStore.remoteImageDiagnosticsEnabled },
-                set: { libraryStore.setRemoteImageDiagnosticsEnabled($0) }
-            )) {
-                VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("图片诊断", systemImage: "chart.bar.xaxis")
-
-                    Text("记录加载统计，不含图片、链接或账号信息。")
-                        .appTypography(.settingsSubtitle, fallback: .caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            NavigationLink {
-                RemoteImageDiagnosticsView(libraryStore: libraryStore)
-            } label: {
-                MineSettingsLabel("查看图片诊断", systemImage: "chart.bar.xaxis")
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -164,7 +136,32 @@ struct MineDisplaySettingsSection: View {
                 MineSettingsLabel("底栏玻璃", systemImage: "circle.lefthalf.filled")
             }
             .pickerStyle(.menu)
+        }
 
+        Section("图片与存储") {
+            PiliSettingPicker(selection: Binding(
+                get: { libraryStore.remoteImageQualityPreference },
+                set: { libraryStore.setRemoteImageQualityPreference($0) }
+            )) {
+                ForEach(RemoteImageQualityPreference.allCases) { preference in
+                    Text(preference.title).tag(preference)
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    MineSettingsLabel("图片质量", systemImage: "photo")
+
+                    Text(libraryStore.remoteImageQualityPreference.detail)
+                        .appTypography(.settingsSubtitle, fallback: .caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .pickerStyle(.menu)
+
+            MineImageCacheControl()
+        }
+
+        Section("高级与诊断") {
             Toggle(isOn: Binding(
                 get: { libraryStore.force120HzScrollingEnabled },
                 set: { libraryStore.setForce120HzScrollingEnabled($0) }
@@ -175,12 +172,30 @@ struct MineDisplaySettingsSection: View {
                     Text("可能增加耗电。")
                         .appTypography(.settingsSubtitle, fallback: .caption)
                         .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-        }
 
-        Section("实验功能") {
+            Toggle(isOn: Binding(
+                get: { libraryStore.remoteImageDiagnosticsEnabled },
+                set: { libraryStore.setRemoteImageDiagnosticsEnabled($0) }
+            )) {
+                VStack(alignment: .leading, spacing: 4) {
+                    MineSettingsLabel("图片诊断", systemImage: "chart.bar.xaxis")
+
+                    Text("记录加载统计，不含图片、链接或账号信息。")
+                        .appTypography(.settingsSubtitle, fallback: .caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            NavigationLink {
+                RemoteImageDiagnosticsView(libraryStore: libraryStore)
+            } label: {
+                MineSettingsLabel("查看图片诊断", systemImage: "chart.bar.xaxis")
+            }
+
             Toggle(isOn: Binding(
                 get: { libraryStore.dynamicCommentHitAreaVisualizationExperimentEnabled },
                 set: { libraryStore.setDynamicCommentHitAreaVisualizationExperimentEnabled($0) }
@@ -191,10 +206,9 @@ struct MineDisplaySettingsSection: View {
                     Text("标记回复与操作的点击区域。")
                         .appTypography(.settingsSubtitle, fallback: .caption)
                         .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-
         }
     }
 
@@ -213,6 +227,23 @@ struct MineDisplaySettingsSection: View {
     }
 }
 
+struct MineThemeColorSettingsView: View {
+    @ObservedObject var libraryStore: LibraryStore
+
+    var body: some View {
+        PiliForm {
+            Section {
+                MineThemeColorControl(libraryStore: libraryStore)
+            } footer: {
+                Text("用于选中状态与控件高亮。")
+            }
+        }
+        .tint(libraryStore.appTintColor)
+        .navigationTitle("主色调")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
 private struct MineThemeColorControl: View {
     @ObservedObject var libraryStore: LibraryStore
     @State private var selectionMode: ThemeColorSelectionMode = .tone
@@ -222,8 +253,6 @@ private struct MineThemeColorControl: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            MineSettingsLabel("主色调", systemImage: "paintpalette")
-
             Picker("选择方式", selection: $selectionMode) {
                 ForEach(ThemeColorSelectionMode.allCases) { mode in
                     Text(mode.title).tag(mode)
@@ -234,10 +263,6 @@ private struct MineThemeColorControl: View {
             selectedModeContent
 
             currentSelectionFooter
-
-            Text("用于选中状态与控件高亮。")
-                .piliFont(.sm)
-                .foregroundStyle(.secondary)
         }
         .onAppear {
             tintHexDraft = libraryStore.appTintColorHex

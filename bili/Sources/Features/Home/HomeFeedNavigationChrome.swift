@@ -30,22 +30,23 @@ struct HomeFeedNavigationChrome: ViewModifier {
                                 Button {
                                     PiliPresentation.present(.sheet) { PiliDLNAView() }
                                 } label: {
-                                    PiliIcon(systemName: "tv").frame(width: 42, height: 42)
+                                    PiliIcon(systemName: "tv", size: 20).frame(width: 44, height: 44)
                                 }
                                 .accessibilityLabel("投屏设备")
-                                accountMessageButton.frame(width: 42, height: 42)
+                                accountMessageButton
                             }
                             .buttonStyle(.plain)
                             .piliLiquidGlass(in: Capsule(), interactive: true)
 
                             NavigationLink(value: MineOverlayRoute.multiAccountSettings) {
                                 AvatarRemoteImage(urlString: sessionStore.user?.face, pixelSize: 88) {
-                                    PiliIcon(systemName: "person.crop.circle.fill", size: 32)
-                                        .piliFont(.lg)
+                                    PiliIcon(systemName: "person.crop.circle", size: 24)
                                         .foregroundStyle(.primary)
                                 }
-                                .frame(width: 40, height: 40)
+                                .frame(width: 28, height: 28)
                                 .clipShape(Circle())
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("账号管理")
@@ -151,7 +152,7 @@ private struct HomeAccountMessageButtonContent: View {
 
     var body: some View {
         Button(action: action) {
-            PiliIcon(systemName: "bell")
+            PiliIcon(systemName: "bell", size: 20)
                 .symbolRenderingMode(.monochrome)
                 .piliFont(.base)
                 .foregroundStyle(Color.primary)
@@ -160,6 +161,8 @@ private struct HomeAccountMessageButtonContent: View {
                         Circle().fill(Color.cc.destructive).frame(width: 7, height: 7).offset(x: 4, y: -2)
                     }
                 }
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
         }
         .accessibilityLabel("账号消息")
         .accessibilityValue(hasUnread ? "有未读消息" : "全部已读")

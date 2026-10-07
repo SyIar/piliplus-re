@@ -35,7 +35,13 @@ struct UITestFixtureRootView: View {
             case .glassFeed:
                 PiliGlassFeedFixture()
             case .glassSettings:
-                NavigationStack { MineInterfaceSettingsView(libraryStore: dependencies.libraryStore) }
+                NavigationStack {
+                    if ProcessInfo.processInfo.arguments.contains("--glass-preview-theme") {
+                        MineThemeColorSettingsView(libraryStore: dependencies.libraryStore)
+                    } else {
+                        MineInterfaceSettingsView(libraryStore: dependencies.libraryStore)
+                    }
+                }
             case .dynamicComposer:
                 PiliDynamicComposerFixture()
             }

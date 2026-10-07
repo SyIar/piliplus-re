@@ -55,6 +55,10 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertTrue(remove.waitForExistence(timeout: 15))
         app.buttons["glass.settings"].tap()
         let swatches = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "选择颜色 #"))
+        let theme = app.buttons["settings.theme"]
+        XCTAssertTrue(theme.waitForExistence(timeout: 10))
+        XCTAssertFalse(swatches.firstMatch.exists, "The parent settings page keeps the color editor collapsed")
+        theme.tap()
         XCTAssertTrue(swatches.firstMatch.waitForExistence(timeout: 10))
         XCTAssertEqual(swatches.count, 8)
         let rowY = swatches.firstMatch.frame.midY
@@ -63,6 +67,9 @@ final class PiliLiquidGlassUITests: XCTestCase {
             XCTAssertEqual(swatch.frame.midY, rowY, accuracy: 1, "All eight colors must fit one row")
         }
         app.buttons["选择颜色 #AF52DE"].tap()
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["界面设置"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["#AF52DE"].exists, "The parent row must show the selected color")
         app.navigationBars.buttons.firstMatch.tap()
         remove.tap()
         XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
@@ -92,6 +99,8 @@ final class PiliLiquidGlassUITests: XCTestCase {
         app.buttons["取消"].firstMatch.tap()
         XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 1 次")
         app.buttons["glass.settings"].tap()
+        XCTAssertTrue(theme.waitForExistence(timeout: 10))
+        theme.tap()
         XCTAssertTrue(app.buttons["选择颜色 #3264F0"].waitForExistence(timeout: 10))
         app.buttons["选择颜色 #3264F0"].tap()
     }
@@ -284,6 +293,15 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["00:52"].waitForExistence(timeout: 3) || app.staticTexts["0:52"].exists)
         play.tap()
         XCTAssertEqual(play.label, "暂停")
+        app.buttons["ui.player.glass.more"].tap()
+        XCTAssertTrue(app.buttons["画质与播放设置"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["定时停止与连播"].exists)
+        XCTAssertTrue(app.buttons["分享视频"].exists)
+        app.buttons["投屏"].tap()
+        XCTAssertTrue(app.buttons["好"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["投屏"].exists)
+        app.buttons["好"].tap()
+        XCTAssertTrue(app.buttons["ui.player.glass.lock"].waitForExistence(timeout: 5))
         app.buttons["ui.player.glass.lock"].tap()
         let unlock = app.buttons["ui.player.glass.unlock"]
         XCTAssertTrue(unlock.waitForExistence(timeout: 3))

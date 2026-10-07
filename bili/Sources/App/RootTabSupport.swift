@@ -49,6 +49,26 @@ extension View {
     }
 }
 
+/// Rasterize the native navigation symbols to a consistent optical size so
+/// TabView does not turn every unselected icon into an oversized filled glyph.
+@MainActor
+enum RootTabBarIcon {
+    private static let images: [AppTab: UIImage] = Dictionary(uniqueKeysWithValues: AppTab.allCases.map { tab in
+        let configuration = UIImage.SymbolConfiguration(pointSize: 22, weight: .regular)
+        let symbol = UIImage(systemName: tab.systemImage, withConfiguration: configuration)
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 24, height: 24)).image { _ in
+            guard let symbol else { return }
+            let scale = min(22 / symbol.size.width, 22 / symbol.size.height)
+            let size = CGSize(width: symbol.size.width * scale, height: symbol.size.height * scale)
+            symbol.draw(in: CGRect(x: (24 - size.width) / 2, y: (24 - size.height) / 2,
+                                  width: size.width, height: size.height))
+        }.withRenderingMode(.alwaysTemplate)
+        return (tab, image)
+    })
+
+    static func image(for tab: AppTab) -> UIImage { images[tab] ?? UIImage() }
+}
+
 struct RootTabBarAppearanceInstaller: UIViewControllerRepresentable {
     @Environment(\.colorScheme) private var colorScheme
     let tintColorHex: String
@@ -131,9 +151,7 @@ struct RootTabBarAppearanceInstaller: UIViewControllerRepresentable {
             tabBar.isTranslucent = true
             tabBar.backgroundColor = .clear
             tabBar.layer.shadowColor = UIColor.black.cgColor
-            tabBar.layer.shadowOpacity = interfaceStyle == .dark ? 0.14 : 0.05
-            tabBar.layer.shadowRadius = 14
-            tabBar.layer.shadowOffset = CGSize(width: 0, height: -2)
+            tabBar.layer.shadowOpacity = 0
 
             appliedTabBar = tabBar
             appliedTintColorHex = tintColorHex
@@ -149,12 +167,12 @@ struct RootTabBarAppearanceInstaller: UIViewControllerRepresentable {
             itemAppearance.normal.iconColor = normalColor
             itemAppearance.normal.titleTextAttributes = [
                 .foregroundColor: normalColor,
-                .font: UIFont.systemFont(ofSize: 11.5, weight: .semibold)
+                .font: UIFont.systemFont(ofSize: 11.5, weight: .regular)
             ]
             itemAppearance.selected.iconColor = selectedColor
             itemAppearance.selected.titleTextAttributes = [
                 .foregroundColor: selectedColor,
-                .font: UIFont.systemFont(ofSize: 11.5, weight: .bold)
+                .font: UIFont.systemFont(ofSize: 11.5, weight: .medium)
             ]
         }
 

@@ -34,6 +34,7 @@ extension VideoDetailViewModel {
 struct PiliTripleButton: View {
     let viewModel: VideoDetailViewModel
     @ObservedObject var store: VideoDetailInteractionRenderStore
+    var grouped = false
     @State private var confirm = false
     @State private var identity: PiliAccountIdentity?
     @State private var success = 0
@@ -50,7 +51,10 @@ struct PiliTripleButton: View {
                 }
                 Text("三连")
             }.piliFont(.sm).padding(.horizontal, 12).padding(.vertical, 8)
-        }.buttonStyle(.plain).piliLiquidGlass(in: Capsule(), interactive: true)
+        }.buttonStyle(.plain)
+            .background {
+                if !grouped { Color.clear.piliLiquidGlass(in: Capsule(), interactive: true) }
+            }
             .disabled(store.isMutatingLike || store.isMutatingCoin || store.isMutatingFavorite)
             .piliConfirmation("点赞、投币并收藏？", isPresented: $confirm, titleVisibility: .visible) {
                 PiliAlertButton("确认三连") {
