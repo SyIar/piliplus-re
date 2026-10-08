@@ -10,14 +10,12 @@ struct VideoDetailActionStripShareButton: View {
         if let shareURL {
             PiliShareMenu(url: shareURL, title: shareSubject, message: shareMessage) {
                 VideoDetailActionStripIconLabel(
+                    title: "\u{5206}\u{4eab}",
                     systemImage: "square.and.arrow.up",
                     foregroundStyle: .primary
                 )
             }
-            .buttonBorderShape(.circle)
-            .controlSize(.mini)
-            .biliGlassButtonStyle()
-            .contentShape(Circle())
+            .buttonStyle(.plain)
             .simultaneousGesture(TapGesture().onEnded { _ in onShareTap() })
             .accessibilityLabel("分享视频")
         } else {

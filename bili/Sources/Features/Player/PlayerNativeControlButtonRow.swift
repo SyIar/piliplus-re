@@ -20,7 +20,7 @@ struct PlayerNativeControlButtonRow: View {
                 if layout.showsPlaybackToggle {
                     PlayerNativeGlassIconButton(
                         systemName: isPlaying ? "pause.fill" : "play.fill",
-                        accessibilityLabel: isPlaying ? "暂停" : "播放",
+                        accessibilityLabel: isPlaying ? "\u{6682}\u{505c}" : "\u{64ad}\u{653e}",
                         metrics: metrics,
                         action: {
                             if !isPlaying { PiliSleepTimer.shared.resumeManually() }
@@ -35,11 +35,7 @@ struct PlayerNativeControlButtonRow: View {
                             width: metrics.timeLabelWidth,
                             height: metrics.controlHeight
                         )
-                        .biliPlayerClearGlass(
-                            interactive: false,
-                            in: Capsule(),
-                            isEnabled: true
-                        )
+
                 }
 
                 if layout.isLive, let controlsAccessory {
@@ -57,26 +53,17 @@ struct PlayerNativeControlButtonRow: View {
                 if showsDanmakuButton {
                     PlayerNativeGlassIconButton(
                         systemName: danmakuControlSymbol,
-                        accessibilityLabel: "弹幕设置",
+                        accessibilityLabel: "\u{5f39}\u{5e55}\u{8bbe}\u{7f6e}",
                         accessibilityIdentifier: "ui.player.danmaku.toggle",
                         metrics: metrics,
                         action: actions.onToggleDanmaku
                     )
                 }
 
-                if !layout.isLive {
-                    Button { PiliPlaybackToolsView.present() } label: {
-                        PikaIcon("timer-default", size: 18, color: .white)
-                            .frame(width: metrics.controlHeight, height: metrics.controlHeight)
-                    }
-                    .buttonStyle(.glass)
-                    .accessibilityLabel("自动连播与定时停止")
-                }
-
                 if canToggleFullscreen {
                     PlayerNativeGlassIconButton(
                         systemName: isFullscreenActive ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right",
-                        accessibilityLabel: isFullscreenActive ? "退出全屏" : "全屏",
+                        accessibilityLabel: isFullscreenActive ? "\u{9000}\u{51fa}\u{5168}\u{5c4f}" : "\u{5168}\u{5c4f}",
                         accessibilityIdentifier: "ui.player.fullscreen.toggle",
                         metrics: metrics,
                         action: actions.onToggleFullscreen
@@ -84,10 +71,7 @@ struct PlayerNativeControlButtonRow: View {
                 }
             }
 
-            if let controlsCenterAccessory {
-                controlsCenterAccessory
-                    .frame(height: metrics.controlHeight)
-            }
+
         }
         .frame(maxWidth: .infinity)
         .frame(height: metrics.controlHeight)

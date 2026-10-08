@@ -13,7 +13,7 @@ struct SearchContentView: View {
         )
         .overlay {
             if case .failed(let message) = viewModel.state, viewModel.results.isEmpty {
-                ErrorStateView(title: "搜索失败", message: message) {
+                ErrorStateView(title: "\u{641c}\u{7d22}\u{5931}\u{8d25}", message: message) {
                     Task { await viewModel.search() }
                 }
             }
@@ -26,9 +26,15 @@ struct SearchContentView: View {
             accessoryStore.isSearchFocused = false
             accessoryStore.isKeyboardVisible = false
         }
+        .onChange(of: viewModel.showsDiscovery) { _, discovery in
+            if !discovery {
+                accessoryStore.isSearchFocused = false
+                accessoryStore.isKeyboardVisible = false
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .keyboard) {
-                SearchFilterCapsule(viewModel: viewModel)
+                SearchFilterButton(viewModel: viewModel)
             }
         }
     }
@@ -44,99 +50,59 @@ struct SearchTabBottomAccessory: View {
     @ViewBuilder
     var body: some View {
         if let viewModel = store.viewModel {
-            SearchFilterCapsule(viewModel: viewModel)
-                .frame(maxWidth: .infinity, minHeight: 40)
-                .padding(.horizontal, 16)
+            SearchFilterButton(viewModel: viewModel)
+                .padding(.horizontal, 12)
         }
     }
 }
 
-private struct SearchFilterCapsule: View {
+struct SearchFilterButton: View {
     @ObservedObject var viewModel: SearchViewModel
+    @State private var showsFilters = false
 
     var body: some View {
-        HStack(spacing: 0) {
-            scopeMenu
-            orderMenu
-            if viewModel.selectedScope.supportsOrder { durationMenu }
-        }
-        .piliFont(.base).fontWeight(.medium)
-        .lineLimit(1)
-        .frame(maxWidth: .infinity, minHeight: 40)
-        .foregroundStyle(.primary)
-    }
-
-    private var scopeMenu: some View {
-        Menu {
-            ForEach(SearchScope.allCases) { scope in
-                Button {
-                    Task {
-                        await viewModel.selectScope(scope, animation: .smooth(duration: 0.28))
-                    }
-                } label: {
-                    PiliLabel(
-                        scope.title,
-                        systemImage: scope == viewModel.selectedScope
-                            ? "checkmark"
-                            : scope.systemImage
-                    )
+        Button {
+            showsFilters = true
+        } label: {
+            HStack(spacing: 8) {
+                PiliIcon(systemName: "slider.horizontal.3", size: 20)
+                Text("\u{7b5b}\u{9009}")
+                    .fontWeight(.semibold)
+                    .fixedSize()
+                Text(viewModel.selectedScope.title)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if activeFilterCount > 0 {
+                    Text(activeFilterCount, format: .number)
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(.tint.opacity(0.12), in: Capsule())
                 }
             }
-        } label: {
-            filterLabel(title: viewModel.selectedScope.title)
+            .font(.subheadline)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, minHeight: 40)
-        .contentShape(Rectangle())
-        .accessibilityLabel("搜索类型")
-        .accessibilityValue(viewModel.selectedScope.title)
-    }
-
-    private var orderMenu: some View {
-        Menu {
-            ForEach(SearchSortOrder.allCases) { order in
-                Button {
-                    Task { await viewModel.selectOrder(order) }
-                } label: {
-                    PiliLabel(
-                        order.title,
-                        systemImage: order == viewModel.selectedOrder
-                            ? "checkmark"
-                            : "arrow.up.arrow.down"
-                    )
-                }
-            }
-        } label: {
-            filterLabel(title: viewModel.selectedOrder.title)
+        .accessibilityLabel("\u{641c}\u{7d22}\u{7b5b}\u{9009}")
+        .accessibilityValue(selectionDescription)
+        .accessibilityIdentifier("search.filters.open")
+        .piliSheet(isPresented: $showsFilters) {
+            SearchFiltersSheet(viewModel: viewModel)
         }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, minHeight: 40)
-        .contentShape(Rectangle())
-        .disabled(!viewModel.selectedScope.supportsOrder)
-        .foregroundStyle(viewModel.selectedScope.supportsOrder ? .primary : .secondary)
-        .accessibilityLabel("排序方式")
-        .accessibilityValue(viewModel.selectedOrder.title)
     }
 
-    private var durationMenu: some View {
-        Menu {
-            ForEach(PiliSearchDuration.allCases) { duration in
-                Button { Task { await viewModel.selectDuration(duration) } } label: {
-                    PiliLabel(duration.title, systemImage: duration == viewModel.selectedDuration ? "checkmark" : "clock")
-                }
-            }
-        } label: { filterLabel(title: viewModel.selectedDuration.title) }
-            .frame(maxWidth: .infinity, minHeight: 40).buttonStyle(.plain)
-            .accessibilityLabel("视频时长").accessibilityValue(viewModel.selectedDuration.title)
+    private var activeFilterCount: Int {
+        (viewModel.selectedScope == .video ? 0 : 1)
+            + (viewModel.selectedScope.supportsOrder && viewModel.selectedOrder != .comprehensive ? 1 : 0)
+            + (viewModel.selectedScope.supportsOrder && viewModel.selectedDuration != .any ? 1 : 0)
     }
 
-    private func filterLabel(title: String) -> some View {
-        HStack(spacing: 4) {
-            Text(title)
-            PiliIcon(systemName: "chevron.down")
-                .piliFont(.sm).fontWeight(.bold)
-        }
-        .fixedSize(horizontal: true, vertical: false)
-        .contentShape(Rectangle())
+    private var selectionDescription: String {
+        guard viewModel.selectedScope.supportsOrder else { return viewModel.selectedScope.title }
+        return [viewModel.selectedScope.title, viewModel.selectedOrder.title, viewModel.selectedDuration.title]
+            .joined(separator: ", ")
     }
 }

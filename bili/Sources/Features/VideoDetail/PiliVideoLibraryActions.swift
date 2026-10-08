@@ -5,20 +5,39 @@ struct PiliVideoLibraryActions: View {
     let viewModel: VideoDetailViewModel
     @ObservedObject var descriptionStore: VideoDetailDescriptionRenderStore
     @State private var isAdding = false
+    @State private var wasAdded = false
 
     var body: some View {
-        CCNeoButton("加入稍后再看", variant: .ghost, icon: "playlist-add", disabled: isAdding) {
-            guard !isAdding else { return }
+        Button {
+            guard !isAdding, !wasAdded else { return }
             isAdding = true
-            defer { isAdding = false }
-            let bvid = viewModel.detail.bvid
-            do {
-                try await viewModel.api.addToWatchLater(bvid: bvid)
-                CCToastCenter.shared.show(.success, "已加入稍后再看")
-            } catch {
-                CCToastCenter.shared.show(.error, error.localizedDescription)
+            Task { await addToWatchLater() }
+        } label: {
+            HStack(spacing: 12) {
+                if isAdding { ProgressView() }
+                else { PiliIcon(systemName: wasAdded ? "checkmark" : "clock") }
+                Text(wasAdded ? "\u{5df2}\u{6dfb}\u{52a0}" : "\u{7a0d}\u{540e}\u{518d}\u{770b}")
             }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         }
-        .accessibilityLabel("将\(descriptionStore.titleText)加入稍后再看")
+        .buttonStyle(.plain)
+        .foregroundStyle(wasAdded ? Color.cc.primary : .primary)
+        .disabled(isAdding || wasAdded)
+        .accessibilityLabel("\u{5c06}\(descriptionStore.titleText)\u{52a0}\u{5165}\u{7a0d}\u{540e}\u{518d}\u{770b}")
+        .accessibilityIdentifier("video.tools.watchLater")
+        .onChange(of: viewModel.detail.bvid) { _, _ in wasAdded = false }
+    }
+
+    private func addToWatchLater() async {
+        defer { isAdding = false }
+        let bvid = viewModel.detail.bvid
+        do {
+            try await viewModel.api.addToWatchLater(bvid: bvid)
+            guard viewModel.detail.bvid == bvid else { return }
+            wasAdded = true
+            CCToastCenter.shared.show(.success, "\u{5df2}\u{52a0}\u{5165}\u{7a0d}\u{540e}\u{518d}\u{770b}")
+        } catch {
+            CCToastCenter.shared.show(.error, error.localizedDescription)
+        }
     }
 }

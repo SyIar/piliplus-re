@@ -3,6 +3,10 @@ import Combine
 
 @MainActor
 final class MineViewModel: ObservableObject {
+    @Published var statistics: MineStatistics?
+    private var statisticsCredentialVersion: Int?
+    private var favoritesGeneration = UUID()
+    private var favoritesCredentialVersion: Int?
     @Published var state: LoadingState = .idle
     @Published var loginMessage = ""
     @Published var qrLoginState: QRCodeLoginState = .idle
@@ -56,13 +60,13 @@ final class MineViewModel: ObservableObject {
     func watchLaterDownloadRequest(selected: Set<Int>?) throws -> PiliBatchDownloadRequest {
         guard let version = watchLaterRequestCredentialVersion,
               api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion == version else {
-            throw PiliOfflineError.message("账号已切换，请重新加载稍后再看")
+            throw PiliOfflineError.message("\u{8d26}\u{53f7}\u{5df2}\u{5207}\u{6362}，\u{8bf7}\u{91cd}\u{65b0}\u{52a0}\u{8f7d}\u{7a0d}\u{540e}\u{518d}\u{770b}")
         }
         let source: PiliBatchDownloadSource
         if let selected {
             source = .selected(accountWatchLater.filter { $0.aid.map(selected.contains) ?? false }.map(\.videoItem))
         } else { source = .watchLater(appliedWatchLaterFilter) }
-        return PiliBatchDownloadRequest(source: source, title: "稍后再看", purpose: .historyRead, credentialVersion: version)
+        return PiliBatchDownloadRequest(source: source, title: "\u{7a0d}\u{540e}\u{518d}\u{770b}", purpose: .historyRead, credentialVersion: version)
     }
     private let sessionStore: SessionStore
     private var qrLoginTask: Task<Void, Never>?
@@ -86,7 +90,7 @@ final class MineViewModel: ObservableObject {
                 await refreshAccountLibrary()
             } else {
                 try? sessionStore.logout()
-                loginMessage = "登录已失效，请重新登录"
+                loginMessage = "\u{767b}\u{5f55}\u{5df2}\u{5931}\u{6548}，\u{8bf7}\u{91cd}\u{65b0}\u{767b}\u{5f55}"
             }
         } catch {
             sessionStore.updateUser(nil)
@@ -99,10 +103,11 @@ final class MineViewModel: ObservableObject {
             return
         }
 
+        async let stats: Void = refreshStatistics()
         async let history: Void = refreshHistory()
         async let favorites: Void = refreshFavorites()
         async let watchLater: Void = refreshWatchLater()
-        _ = await (history, favorites, watchLater)
+        _ = await (history, favorites, watchLater, stats)
     }
 
     func refreshHistory() async {
@@ -122,14 +127,36 @@ final class MineViewModel: ObservableObject {
         }
     }
 
+    func refreshStatistics() async {
+        let version = sessionStore.playbackCredentialVersion
+        if statisticsCredentialVersion != version { statistics = nil }
+        statisticsCredentialVersion = version
+        guard sessionStore.isLoggedIn else { return }
+        let result = try? await api.fetchMineStatistics()
+        guard !Task.isCancelled, version == sessionStore.playbackCredentialVersion else { return }
+        if let result { statistics = result }
+    }
+
     func refreshFavorites() async {
         guard sessionStore.isLoggedIn else { return }
+        let version = sessionStore.interactionAccountCredentialVersion
+        if favoritesCredentialVersion != version { favoriteFolders = []; accountFavorites = [] }
+        favoritesCredentialVersion = version
+        favoritesGeneration = UUID(); let generation = favoritesGeneration
         favoriteState = .loading
         do {
-            favoriteFolders = try await api.fetchFavoriteFolders()
-            accountFavorites = try await api.fetchAccountFavorites()
+            let folders = try await api.fetchFavoriteFolders()
+            guard !Task.isCancelled, version == sessionStore.interactionAccountCredentialVersion,
+                  favoritesGeneration == generation else { return }
+            favoriteFolders = folders
+            let entries = try await api.fetchAccountFavorites()
+            guard !Task.isCancelled, version == sessionStore.interactionAccountCredentialVersion,
+                  favoritesGeneration == generation else { return }
+            accountFavorites = entries
             favoriteState = .loaded
         } catch {
+            guard !Task.isCancelled, version == sessionStore.interactionAccountCredentialVersion,
+                  favoritesGeneration == generation else { return }
             favoriteState = .failed(error.localizedDescription)
         }
     }
@@ -190,7 +217,7 @@ final class MineViewModel: ObservableObject {
         guard !isMutatingWatchLater, !watchLaterState.isLoading,
               watchLaterCredentialVersion == sessionStore.historyAccountCredentialVersion,
               let requestVersion = watchLaterRequestCredentialVersion else {
-            throw PiliOfflineError.message("列表正在更新或账号已切换，请重新加载")
+            throw PiliOfflineError.message("\u{5217}\u{8868}\u{6b63}\u{5728}\u{66f4}\u{65b0}\u{6216}\u{8d26}\u{53f7}\u{5df2}\u{5207}\u{6362}，\u{8bf7}\u{91cd}\u{65b0}\u{52a0}\u{8f7d}")
         }
         isMutatingWatchLater = true
         defer { isMutatingWatchLater = false }
@@ -230,7 +257,7 @@ final class MineViewModel: ObservableObject {
         guard !isMutatingWatchLater, !watchLaterState.isLoading,
               watchLaterCredentialVersion == sessionStore.historyAccountCredentialVersion,
               watchLaterRequestCredentialVersion == api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion else {
-            throw PiliOfflineError.message("列表正在更新或账号已切换，请重新加载")
+            throw PiliOfflineError.message("\u{5217}\u{8868}\u{6b63}\u{5728}\u{66f4}\u{65b0}\u{6216}\u{8d26}\u{53f7}\u{5df2}\u{5207}\u{6362}，\u{8bf7}\u{91cd}\u{65b0}\u{52a0}\u{8f7d}")
         }
         isMutatingWatchLater = true
         defer { isMutatingWatchLater = false }
@@ -332,7 +359,7 @@ final class MineViewModel: ObservableObject {
         do {
             cancelQRCodeLogin()
             try sessionStore.saveLoginCookies(cookies, credentialKind: .web)
-            loginMessage = "网页登录成功，首页推荐建议优先选择网页端。"
+            loginMessage = "\u{7f51}\u{9875}\u{767b}\u{5f55}\u{6210}\u{529f}，\u{9996}\u{9875}\u{63a8}\u{8350}\u{5efa}\u{8bae}\u{4f18}\u{5148}\u{9009}\u{62e9}\u{7f51}\u{9875}\u{7aef}。"
             await refreshUser()
         } catch {
             loginMessage = error.localizedDescription
@@ -365,9 +392,9 @@ final class MineViewModel: ObservableObject {
             }
             guard !Task.isCancelled else { return }
             if autoConfirmMessage.isEmpty {
-                qrLoginState = .scanned(info, "已用当前账号确认，正在获取移动端凭证")
+                qrLoginState = .scanned(info, "\u{5df2}\u{7528}\u{5f53}\u{524d}\u{8d26}\u{53f7}\u{786e}\u{8ba4}，\u{6b63}\u{5728}\u{83b7}\u{53d6}\u{79fb}\u{52a8}\u{7aef}\u{51ed}\u{8bc1}")
             } else {
-                qrLoginState = .waiting(info, "自动确认未完成：\(autoConfirmMessage)。可用 B 站扫码或打开确认")
+                qrLoginState = .waiting(info, "\u{81ea}\u{52a8}\u{786e}\u{8ba4}\u{672a}\u{5b8c}\u{6210}：\(autoConfirmMessage)。\u{53ef}\u{7528} B \u{7ad9}\u{626b}\u{7801}\u{6216}\u{6253}\u{5f00}\u{786e}\u{8ba4}")
             }
             qrLoginTask = Task { [weak self] in
                 await self?.pollQRCodeLogin(info)
@@ -416,9 +443,9 @@ final class MineViewModel: ObservableObject {
             throw BiliAPIError.missingSESSDATA
         }
         if sessionStore.appAccessKey() == nil {
-            loginMessage = "登录成功，但没有拿到 access_key"
+            loginMessage = "\u{767b}\u{5f55}\u{6210}\u{529f}，\u{4f46}\u{6ca1}\u{6709}\u{62ff}\u{5230} access_key"
         } else {
-            loginMessage = "短信登录成功，App 端推荐会更接近官方客户端。"
+            loginMessage = "\u{77ed}\u{4fe1}\u{767b}\u{5f55}\u{6210}\u{529f}，App \u{7aef}\u{63a8}\u{8350}\u{4f1a}\u{66f4}\u{63a5}\u{8fd1}\u{5b98}\u{65b9}\u{5ba2}\u{6237}\u{7aef}。"
         }
         await refreshUser()
     }
@@ -438,38 +465,38 @@ final class MineViewModel: ObservableObject {
                     if case .waiting = qrLoginState {
                         break
                     }
-                    qrLoginState = .waiting(info, result.message ?? "请使用 B 站客户端扫码")
+                    qrLoginState = .waiting(info, result.message ?? "\u{8bf7}\u{4f7f}\u{7528} B \u{7ad9}\u{5ba2}\u{6237}\u{7aef}\u{626b}\u{7801}")
                 case .waitingForConfirm:
-                    qrLoginState = .scanned(info, result.message ?? "已扫码，请在手机上确认")
+                    qrLoginState = .scanned(info, result.message ?? "\u{5df2}\u{626b}\u{7801}，\u{8bf7}\u{5728}\u{624b}\u{673a}\u{4e0a}\u{786e}\u{8ba4}")
                 case .expired:
-                    qrLoginState = .expired(result.message ?? "二维码已过期")
+                    qrLoginState = .expired(result.message ?? "\u{4e8c}\u{7ef4}\u{7801}\u{5df2}\u{8fc7}\u{671f}")
                     return
                 case .confirmed:
                     guard let loginData = result.loginData else {
-                        qrLoginState = .failed("登录成功但没有拿到移动端凭证，请改用网页登录。")
+                        qrLoginState = .failed("\u{767b}\u{5f55}\u{6210}\u{529f}\u{4f46}\u{6ca1}\u{6709}\u{62ff}\u{5230}\u{79fb}\u{52a8}\u{7aef}\u{51ed}\u{8bc1}，\u{8bf7}\u{6539}\u{7528}\u{7f51}\u{9875}\u{767b}\u{5f55}。")
                         return
                     }
                     let cookieValues = loginData.loginCookieValues
                     guard !cookieValues.isEmpty else {
-                        qrLoginState = .failed("登录成功但没有拿到 Cookie，请改用网页登录。")
+                        qrLoginState = .failed("\u{767b}\u{5f55}\u{6210}\u{529f}\u{4f46}\u{6ca1}\u{6709}\u{62ff}\u{5230} Cookie，\u{8bf7}\u{6539}\u{7528}\u{7f51}\u{9875}\u{767b}\u{5f55}。")
                         return
                     }
                     try sessionStore.saveLoginCookies(cookieValues, credentialKind: .appQRCodeTV)
                     guard sessionStore.isLoggedIn else {
-                        qrLoginState = .failed("登录成功但没有拿到 Cookie，请改用网页登录。")
+                        qrLoginState = .failed("\u{767b}\u{5f55}\u{6210}\u{529f}\u{4f46}\u{6ca1}\u{6709}\u{62ff}\u{5230} Cookie，\u{8bf7}\u{6539}\u{7528}\u{7f51}\u{9875}\u{767b}\u{5f55}。")
                         return
                     }
                     if sessionStore.appAccessKey() == nil {
-                        loginMessage = "登录成功，但没有拿到 access_key"
-                        qrLoginState = .succeeded("登录成功，但移动端凭证缺失")
+                        loginMessage = "\u{767b}\u{5f55}\u{6210}\u{529f}，\u{4f46}\u{6ca1}\u{6709}\u{62ff}\u{5230} access_key"
+                        qrLoginState = .succeeded("\u{767b}\u{5f55}\u{6210}\u{529f}，\u{4f46}\u{79fb}\u{52a8}\u{7aef}\u{51ed}\u{8bc1}\u{7f3a}\u{5931}")
                     } else {
-                        loginMessage = "扫码登录成功；如 App 端推荐不准，可改用短信登录或网页端推荐。"
-                        qrLoginState = .succeeded("扫码登录成功")
+                        loginMessage = "\u{626b}\u{7801}\u{767b}\u{5f55}\u{6210}\u{529f}；\u{5982} App \u{7aef}\u{63a8}\u{8350}\u{4e0d}\u{51c6}，\u{53ef}\u{6539}\u{7528}\u{77ed}\u{4fe1}\u{767b}\u{5f55}\u{6216}\u{7f51}\u{9875}\u{7aef}\u{63a8}\u{8350}。"
+                        qrLoginState = .succeeded("\u{626b}\u{7801}\u{767b}\u{5f55}\u{6210}\u{529f}")
                     }
                     await refreshUser()
                     return
                 case .unknown(let code):
-                    let message = result.message ?? "未知状态"
+                    let message = result.message ?? "\u{672a}\u{77e5}\u{72b6}\u{6001}"
                     qrLoginState = .waiting(info, "\(message) (\(code))")
                 }
             } catch {
@@ -504,6 +531,8 @@ final class MineViewModel: ObservableObject {
     }
 
     private func resetAccountLibraryState() {
+        statistics = nil; statisticsCredentialVersion = nil
+        favoritesGeneration = UUID(); favoritesCredentialVersion = nil
         accountHistory = []
         accountFavorites = []
         accountWatchLater = []
@@ -563,7 +592,7 @@ enum QRCodeLoginState: Equatable {
         case .idle:
             return ""
         case .loading:
-            return "正在生成二维码"
+            return "\u{6b63}\u{5728}\u{751f}\u{6210}\u{4e8c}\u{7ef4}\u{7801}"
         case .waiting(_, let message), .scanned(_, let message), .expired(let message), .succeeded(let message), .failed(let message):
             return message
         }

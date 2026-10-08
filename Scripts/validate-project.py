@@ -22,7 +22,7 @@ for relative in [
     require((ROOT / relative).is_file(), f"Missing required file: {relative}")
 
 info = plistlib.loads((ROOT / "Config/bili-Info.plist").read_bytes())
-require(info["CFBundleDisplayName"] == "哔哩哔哩", "Unexpected app display name")
+require(info["CFBundleDisplayName"] == "\u54d4\u54e9\u54d4\u54e9", "Unexpected app display name")
 require("audio" in info.get("UIBackgroundModes", []), "Background audio mode is required")
 project = (ROOT / "bili.xcodeproj/project.pbxproj").read_text()
 require("io.github.syiar.PiliPlusSwift" in project, "Missing bundle identity")
@@ -31,9 +31,9 @@ for product in ["ChunUI", "PiliPlaybackCore"]:
 require("b240cbbdb9c6d7afc9f02d9ce4ddff5a25ce73bb" in project, "ChunUI revision must be pinned")
 require("mpv" not in project.lower(), "The iOS target must use AVPlayer")
 language_modes = re.findall(r"SWIFT_VERSION = ([^;]+);", project)
-require(len(language_modes) == 6 and set(language_modes) == {"6.0"},
-        "App, unit tests and UI tests must use Swift 6 in Debug and Release")
-require(project.count("SWIFT_STRICT_CONCURRENCY = complete;") == 6,
+require(len(language_modes) == 8 and set(language_modes) == {"6.0"},
+        "App, widget, unit tests and UI tests must use Swift 6 in Debug and Release")
+require(project.count("SWIFT_STRICT_CONCURRENCY = complete;") == 8,
         "All Swift targets must keep complete concurrency checking")
 
 for contents_path in (ROOT / "bili/Assets.xcassets").rglob("Contents.json"):

@@ -7,6 +7,7 @@ root = Path(__file__).resolve().parents[1]
 source = root / "bili/Sources"
 symbols = (source / "DesignSystem/PiliSymbols.swift").read_text()
 known = set(re.findall(r'^\s*"([^"]+)":', symbols, re.M))
+bundled = set(re.findall(r'^\s*"[^"]+":\s*"([^"]+)"', symbols, re.M))
 errors = []
 for path in source.rglob("*.swift"):
     text = path.read_text()
@@ -23,8 +24,8 @@ for path in source.rglob("*.swift"):
             reason = "Use bounded, accessibility-aware motion"
         if reason:
             errors.append(f"{name}:{line_number}: {reason}")
-    for match in re.finditer(r'(?:systemName|systemImage|symbol):\s*"([^"\\]+)"', text):
-        if match[1] not in known:
+    for match in re.finditer(r'(?:systemName|systemImage|symbol|icon):\s*"([^"\\]+)"', text):
+        if match[1] not in known and match[1] not in bundled:
             errors.append(f"{name}: unmapped Pika icon alias {match[1]}")
 if errors:
     raise SystemExit("\n".join(errors))

@@ -2,14 +2,14 @@ import SwiftUI
 import ChunUI
 
 struct SearchListView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ObservedObject var viewModel: SearchViewModel
     let showsHotSearches: Bool
     @State private var confirmsClearHistory = false
 
-    private let discoveryColumns = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10),
-    ]
+    private var discoveryColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 10), count: dynamicTypeSize.isAccessibilitySize ? 1 : 2)
+    }
 
     var body: some View {
         ScrollView {
@@ -27,21 +27,24 @@ struct SearchListView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 18)
         }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if !viewModel.showsDiscovery { SearchResultTabs(viewModel: viewModel) }
+        }
         .contentMargins(.top, 0, for: .scrollContent)
         .scrollDismissesKeyboard(.immediately)
         .scrollBounceBehavior(.always, axes: .vertical)
         .defersRemoteImageLoadsDuringFastScroll()
         .background(Color.cc.background)
         .nativeTopScrollEdgeEffect()
-        .piliConfirmation("清空搜索历史？", isPresented: $confirmsClearHistory, titleVisibility: .visible) {
-            PiliAlertButton("清空", role: .destructive) { viewModel.clearHistory() }
+        .piliConfirmation("\u{6e05}\u{7a7a}\u{641c}\u{7d22}\u{5386}\u{53f2}？", isPresented: $confirmsClearHistory, titleVisibility: .visible) {
+            PiliAlertButton("\u{6e05}\u{7a7a}", role: .destructive) { viewModel.clearHistory() }
         }
     }
 
     @ViewBuilder
     private var discoveryContent: some View {
         if viewModel.showsSuggestions {
-            SearchContentSection(title: "搜索建议", systemImage: "sparkle.magnifyingglass") {
+            SearchContentSection(title: "\u{641c}\u{7d22}\u{5efa}\u{8bae}", systemImage: "sparkle.magnifyingglass") {
                 VStack(spacing: 0) {
                     ForEach(viewModel.suggestions.prefix(8)) { item in
                         SearchSuggestionRow(item: item) {
@@ -54,30 +57,30 @@ struct SearchListView: View {
             if let word = viewModel.defaultSearch {
                 Button { Task { await viewModel.search(word.keyword) } } label: {
                     PiliLabel(word.display, systemImage: "magnifyingglass").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                }.buttonStyle(.plain).accessibilityLabel("默认搜索：\(word.display)")
+                }.buttonStyle(.plain).accessibilityLabel("\u{9ed8}\u{8ba4}\u{641c}\u{7d22}：\(word.display)")
             }
             if !viewModel.searchHistory.isEmpty {
-                SearchContentSection(title: "搜索历史", systemImage: "clock") {
-                    HStack { Spacer(); Button("清空", role: .destructive) { confirmsClearHistory = true }.piliFont(.sm) }
+                SearchContentSection(title: "\u{641c}\u{7d22}\u{5386}\u{53f2}", systemImage: "clock", clearAction: { confirmsClearHistory = true }) {
                     LazyVGrid(columns: discoveryColumns, alignment: .leading, spacing: 10) {
                         ForEach(viewModel.searchHistory, id: \.self) { term in
                             Button { Task { await viewModel.search(term) } } label: {
-                                Text(term).piliFont(.base).lineLimit(1).frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
-                                    .padding(.horizontal, 12).ccGlassEffect(.capsule)
+                                Text(term).piliFont(.base).lineLimit(1).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                    .padding(.horizontal, 12).background(.quaternary, in: Capsule()).contentShape(Capsule())
                             }.buttonStyle(.plain)
-                                .contextMenu { PiliIconButton("删除记录", systemImage: "trash", role: .destructive) { viewModel.removeHistory(term) } }
+                                .accessibilityIdentifier("search.history.\(term)")
+                                .contextMenu { PiliIconButton("\u{5220}\u{9664}\u{8bb0}\u{5f55}", systemImage: "trash", role: .destructive) { viewModel.removeHistory(term) } }
                         }
                     }
                 }
             }
             if !showsHotSearches {
-                SearchDiscoveryEmptyCard(title: "开始搜索", message: "输入关键词后搜索内容。")
+                SearchDiscoveryEmptyCard(title: "\u{5f00}\u{59cb}\u{641c}\u{7d22}", message: "\u{8f93}\u{5165}\u{5173}\u{952e}\u{8bcd}\u{540e}\u{641c}\u{7d22}\u{5185}\u{5bb9}。")
             } else if viewModel.hotSearchState.isLoading {
                 SearchDiscoveryLoadingCard()
             } else if viewModel.hotSearches.isEmpty {
-                SearchDiscoveryEmptyCard(title: "暂无热门搜索", message: "输入关键词后搜索。")
+                SearchDiscoveryEmptyCard(title: "\u{6682}\u{65e0}\u{70ed}\u{95e8}\u{641c}\u{7d22}", message: "\u{8f93}\u{5165}\u{5173}\u{952e}\u{8bcd}\u{540e}\u{641c}\u{7d22}。")
             } else {
-                SearchContentSection(title: "大家都在搜", systemImage: "flame.fill") {
+                SearchContentSection(title: "\u{5927}\u{5bb6}\u{90fd}\u{5728}\u{641c}", systemImage: "flame.fill") {
                     LazyVGrid(columns: discoveryColumns, alignment: .leading, spacing: 10) {
                         ForEach(displayedHotSearches) { item in
                             SearchDiscoveryChip(item: item) {
@@ -132,7 +135,7 @@ struct SearchListView: View {
         EmptyStateView(
             title: viewModel.emptyResultsTitle,
             systemImage: viewModel.selectedScope.systemImage,
-            message: "换个关键词或切换搜索类型试试。"
+            message: "\u{6362}\u{4e2a}\u{5173}\u{952e}\u{8bcd}\u{6216}\u{5207}\u{6362}\u{641c}\u{7d22}\u{7c7b}\u{578b}\u{8bd5}\u{8bd5}。"
         )
         .padding(.top, 10)
     }
@@ -159,7 +162,7 @@ private struct SearchSuggestionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("搜索建议：\(item.value)")
+        .accessibilityLabel("\u{641c}\u{7d22}\u{5efa}\u{8bae}：\(item.value)")
     }
 }
 
@@ -167,19 +170,29 @@ private struct SearchContentSection<Content: View>: View {
     let title: String
     let systemImage: String
     let content: Content
+    let clearAction: (() -> Void)?
 
-    init(title: String, systemImage: String, @ViewBuilder content: () -> Content) {
+    init(title: String, systemImage: String, clearAction: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
         self.title = title
+        self.clearAction = clearAction
         self.systemImage = systemImage
         self.content = content()
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PiliLabel(title, systemImage: systemImage)
-                .piliFont(.baseBold)
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(.primary)
+            HStack {
+                PiliLabel(title, systemImage: systemImage)
+                    .piliFont(.baseBold)
+                    .foregroundStyle(.primary)
+                Spacer(minLength: 12)
+                if let clearAction {
+                    Button("\u{6e05}\u{7a7a}", action: clearAction)
+                        .font(.subheadline)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .accessibilityIdentifier("search.history.clear")
+                }
+            }
 
             content
         }
@@ -212,13 +225,13 @@ private struct SearchDiscoveryChip: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("热门搜索，\(item.showName ?? item.keyword)")
+        .accessibilityLabel("\u{70ed}\u{95e8}\u{641c}\u{7d22}，\(item.showName ?? item.keyword)")
     }
 }
 
 private struct SearchDiscoveryLoadingCard: View {
     var body: some View {
-        SearchContentSection(title: "大家都在搜", systemImage: "flame.fill") {
+        SearchContentSection(title: "\u{5927}\u{5bb6}\u{90fd}\u{5728}\u{641c}", systemImage: "flame.fill") {
             LazyVGrid(
                 columns: [
                     GridItem(.flexible(), spacing: 10),
@@ -231,7 +244,7 @@ private struct SearchDiscoveryLoadingCard: View {
                 }
             }
         }
-        .accessibilityLabel("正在加载热门搜索")
+        .accessibilityLabel("\u{6b63}\u{5728}\u{52a0}\u{8f7d}\u{70ed}\u{95e8}\u{641c}\u{7d22}")
     }
 }
 
@@ -276,7 +289,7 @@ struct SearchLoadingContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: showsTitle ? 16 : 12) {
             if showsTitle {
-                PiliLabel("正在搜索", systemImage: "magnifyingglass")
+                PiliLabel("\u{6b63}\u{5728}\u{641c}\u{7d22}", systemImage: "magnifyingglass")
                     .piliFont(.baseBold)
                     .labelStyle(.titleAndIcon)
             }
@@ -325,7 +338,7 @@ private struct SearchNonVideoResultSkeletonRow: View {
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .compactVideoResultSurface(cornerRadius: cornerRadius)
         .allowsHitTesting(false)
-        .accessibilityLabel("正在加载搜索结果")
+        .accessibilityLabel("\u{6b63}\u{5728}\u{52a0}\u{8f7d}\u{641c}\u{7d22}\u{7ed3}\u{679c}")
     }
 
     @ViewBuilder

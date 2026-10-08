@@ -1,23 +1,31 @@
 import SwiftUI
 
 struct DynamicView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @EnvironmentObject private var dependencies: AppDependencies
     @EnvironmentObject private var libraryStore: LibraryStore
     @State private var showsComposer = false
     @State private var category = PiliDynamicCategory.all
 
+    private var categoryPicker: some View {
+        Picker("\u{52a8}\u{6001}\u{5206}\u{7c7b}", selection: $category) {
+            ForEach(PiliDynamicCategory.allCases) { Text($0.title).tag($0) }
+        }
+    }
     var body: some View {
         VStack(spacing: 0) {
-            Picker("动态分类", selection: $category) {
-                ForEach(PiliDynamicCategory.allCases) { Text($0.title).tag($0) }
-            }.pickerStyle(.segmented).padding(.horizontal).padding(.vertical, 8)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    categoryPicker.pickerStyle(.menu).frame(maxWidth: .infinity, alignment: .leading)
+                } else { categoryPicker.pickerStyle(.segmented) }
+            }.padding(.horizontal).padding(.vertical, 8)
             DynamicContentRoot(api: dependencies.api, libraryStore: libraryStore,
                 sessionStore: dependencies.sessionStore, category: category).id(category)
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showsComposer = true } label: { PiliIcon(systemName: "square.and.pencil") }
-                    .accessibilityLabel("发布动态").accessibilityIdentifier("pili.dynamic.compose")
+                    .accessibilityLabel("\u{53d1}\u{5e03}\u{52a8}\u{6001}").accessibilityIdentifier("pili.dynamic.compose")
             }
         }
         .piliSheet(isPresented: $showsComposer) {

@@ -15,6 +15,12 @@ enum UITestFixtureScenario: String {
     case glassFeed
     case glassSettings
     case dynamicComposer
+    case layoutSearch
+    case searchHistory
+    case layoutVideo
+    case layoutMine
+    case layoutSettings
+    case layoutComments
 
     static var current: Self? {
         let arguments = ProcessInfo.processInfo.arguments

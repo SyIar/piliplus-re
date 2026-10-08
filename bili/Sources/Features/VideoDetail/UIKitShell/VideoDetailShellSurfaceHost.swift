@@ -5,11 +5,11 @@ import SwiftUI
 import PiliPlaybackCore
 import UIKit
 
-/// 详情页 UIKit 外壳：播放器宿主（surface-only + 独立控件浮层）。
+/// UIKit detail host with an independent SwiftUI controls overlay.
 ///
-/// 对齐原型：UIKit 容器只驱动 frame，SwiftUI 根视图里直接铺 `VideoSurfaceView`，
-/// 控件/手势/加载态作为 overlay 叠上去，不再让完整 `BiliPlayerView` 的
-/// presentation 切换参与旋转。
+/// UIKit owns the frame; SwiftUI renders VideoSurfaceView directly.
+/// Controls, gestures and loading indicators remain separate overlays.
+/// Rotation does not replace the entire BiliPlayerView presentation.
 @MainActor
 final class VideoDetailShellSurfaceHost: UIView {
     @MainActor
@@ -27,11 +27,11 @@ final class VideoDetailShellSurfaceHost: UIView {
 
         func setBareSurfaceTransitionActive(_ active: Bool, retainsChromeTree: Bool) {
             if active {
-                // 保留控件树时，先设标志再进入 bare state，避免 SwiftUI 删除子树。
+                // Retain the controls before entering the bare-surface state.
                 retainsChromeDuringBareSurfaceTransition = retainsChromeTree
                 isBareSurfaceTransitionActive = true
             } else {
-                // 先退出 bare state，再清标志，保证控件树连续存在。
+                // Exit the bare state before releasing the retained controls.
                 isBareSurfaceTransitionActive = false
                 retainsChromeDuringBareSurfaceTransition = false
             }
@@ -179,8 +179,8 @@ final class VideoDetailShellSurfaceHost: UIView {
         isRotationChromePrewarmed = true
     }
 
-    /// 系统旋转期间退化成 bare surface，但始终保留弹幕层以避免重建和闪烁。
-    /// 实验路径可保留不可见的控件树，避免旋转结束时集中重建 SwiftUI 叠层。
+    /// Keep danmaku mounted while the system rotates the bare video surface.
+    /// Retain hidden controls to avoid rebuilding every overlay after rotation.
     func setBareSurfaceTransitionActive(_ active: Bool, retainsChromeTree: Bool = false) {
         guard state.isBareSurfaceTransitionActive != active
             || state.retainsChromeDuringBareSurfaceTransition != retainsChromeTree
@@ -256,7 +256,7 @@ final class VideoDetailShellSurfaceHost: UIView {
         }
     }
 
-    /// 清晰度切换等场景会替换 player 实例，UIKit 直连路径会原位重绑叠层。
+    /// Rebind the overlay in place when quality changes replace the player.
     func setPlayerViewModel(_ playerViewModel: PlayerStateViewModel) {
         guard state.playerViewModel !== playerViewModel else { return }
         state.playerViewModel = playerViewModel
@@ -810,8 +810,8 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             experimentState.recordPlayerRebind()
         }
         .onChange(of: isLandscape) { _, isLandscape in
-            // 旋转控件预热会在 bare transition 中短暂翻转该值，不能把它当成
-            // 用户真实进入横屏，否则刚弹出的竖屏菜单会被预热流程立即关闭。
+            // Prewarming can briefly toggle this state during a bare transition.
+            // It must not dismiss a newly presented portrait menu.
             guard !isBareSurfaceTransitionActive else { return }
             if isLandscape {
                 portraitMoreControlsRequestID = nil
@@ -922,6 +922,8 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
                     viewModel.seek(by: seconds)
                 },
                 interaction: { visibility.markInteraction() },
+                rateChanged: { rate in viewModel.setPlaybackRate(rate) },
+                capture: { PiliMediaCaptureView.present(detailViewModel) },
                 menuPresentationChanged: { presented in
                     isGlassMenuPresented = presented
                     visibility.markInteraction(keepsVisible: presented)
@@ -930,7 +932,8 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             interactionAccessory: AnyView(PiliFullscreenVideoReactions(
                 viewModel: detailViewModel, store: detailViewModel.interactionRenderStore,
                 markInteraction: { visibility.markInteraction() }
-            ))
+            )),
+            playbackRate: viewModel.playbackRate
         )
     }
 
@@ -977,7 +980,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
     private var centerPlaybackControl: some View {
         PlayerNativeGlassIconButton(
             systemName: "play.fill",
-            accessibilityLabel: "播放",
+            accessibilityLabel: "\u{64ad}\u{653e}",
             metrics: centerPlaybackControlMetrics
         ) {
             viewModel.play()
@@ -1002,9 +1005,7 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             pausesOnDisappear: false,
             controlsAccessory: isAudioOnlyPlayback
                 ? AnyView(videoListenQuickControls)
-                : usesFullscreenStatusChrome
-                    ? AnyView(moreControlsButton)
-                    : nil,
+                : AnyView(PlayerInlineQuickControls(player: viewModel, subtitles: showSubtitles)),
             topLeadingControlsAccessory: keepsChromeMounted ? AnyView(backButton) : nil,
             isDanmakuEnabled: keepsChromeMounted && overlaySnapshot.isDanmakuEnabled && !isAudioOnlyPlayback,
             onToggleDanmaku: isAudioOnlyPlayback ? nil : onToggleDanmaku,
@@ -1065,7 +1066,8 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
     private var moreControlsButton: some View {
         SurfaceOnlyUIKitMoreControlsButton(
             metrics: controlMetrics,
-            systemImageName: usesFullscreenStatusChrome ? "gearshape.fill" : "ellipsis.circle",
+            systemImageName: "ellipsis",
+            usesGlass: isAudioOnlyPlayback,
             onPressBegan: {
                 isMoreControlsButtonPressed = true
                 playbackControlsVisibility.cancelAutoHide()
@@ -1098,7 +1100,26 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
         .frame(width: controlMetrics.controlHeight, height: controlMetrics.controlHeight)
         .frame(width: 44, height: controlMetrics.controlHeight, alignment: .trailing)
         .biliPlayerExpandedHitTarget(horizontal: 0, vertical: 8)
-        .accessibilityLabel("更多播放设置")
+        .accessibilityLabel("\u{66f4}\u{591a}\u{64ad}\u{653e}\u{8bbe}\u{7f6e}")
+    }
+
+    private func showSubtitles() {
+        playbackControlsVisibility.cancelAutoHide()
+        PiliSubtitleSettingsView.present(controller: detailViewModel.piliSubtitles) { seconds in
+            viewModel.seek(by: seconds - viewModel.currentTime)
+        }
+    }
+
+    private var inlineTopControls: some View {
+        HStack(spacing: 0) {
+            PiliGlassPlayerButton(symbol: "airplayvideo", title: "\u{6295}\u{5c4f}", grouped: true) {
+                PiliPresentation.present(.sheet) { PiliDLNAView(source: { try .online(detailViewModel) }) }
+            }
+            PiliGlassPlayerButton(symbol: "text.bubble", title: "\u{5f39}\u{5e55}\u{8bbe}\u{7f6e}", grouped: true,
+                                  action: onShowDanmakuSettings)
+            moreControlsButton
+        }
+        .piliLiquidGlass(in: Capsule(), overVideo: true)
     }
 
     private func persistentMoreControlsButton(contentInsets: EdgeInsets) -> some View {
@@ -1254,9 +1275,9 @@ private struct SurfaceOnlyPlayerOverlayRoot: View {
             topCenterControlsAccessory: showsFullscreenStatusControls
                 ? AnyView(VideoDetailFullscreenClockControl())
                 : nil,
-            topTrailingControlsAccessory: showsFullscreenStatusControls
-                ? AnyView(VideoDetailFullscreenBatteryControl())
-                : nil,
+            topTrailingControlsAccessory: !isLandscape && !isAudioOnlyPlayback
+                ? AnyView(inlineTopControls)
+                : (showsFullscreenStatusControls ? AnyView(VideoDetailFullscreenBatteryControl()) : nil),
             isFullscreenActive: context.configuration.isFullscreenActive,
             controlsBottomLift: context.configuration.controlsBottomLift,
             controlsHorizontalInset: context.configuration.controlsHorizontalInset,
@@ -1357,7 +1378,7 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
         HStack(spacing: metrics.controlSpacing) {
             PlayerNativeGlassIconButton(
                 systemName: "list.bullet",
-                accessibilityLabel: "播放列表，\(detailViewModel.videoListenQueueAccessoryTitle)",
+                accessibilityLabel: "\u{64ad}\u{653e}\u{5217}\u{8868}，\(detailViewModel.videoListenQueueAccessoryTitle)",
                 metrics: metrics,
                 action: showQueue
             )
@@ -1381,7 +1402,7 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
                     .frame(width: metrics.controlHeight, height: metrics.controlHeight)
             }
             .biliPlayerCompactGlassCircle(metrics: metrics)
-            .accessibilityLabel("播放顺序，\(piliPlaybackPreferences.order.title)")
+            .accessibilityLabel("\u{64ad}\u{653e}\u{987a}\u{5e8f}，\(piliPlaybackPreferences.order.title)")
 
             Menu {
                 ForEach(VideoListenSleepTimerOption.allCases) { option in
@@ -1400,7 +1421,7 @@ private struct SurfaceOnlyVideoListenQuickControls: View {
                 sleepTimerLabel
             }
             .biliPlayerCompactGlassCapsule(metrics: metrics)
-            .accessibilityLabel("定时关闭，\(detailViewModel.videoListenSleepTimerAccessoryTitle)")
+            .accessibilityLabel("\u{5b9a}\u{65f6}\u{5173}\u{95ed}，\(detailViewModel.videoListenSleepTimerAccessoryTitle)")
         }
     }
 
@@ -1451,7 +1472,7 @@ private struct VideoListenArtworkLayer: View {
         }
         .clipped()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("听视频中，\(video.title)，\(ownerName)")
+        .accessibilityLabel("\u{542c}\u{89c6}\u{9891}\u{4e2d}，\(video.title)，\(ownerName)")
     }
 
     private var backgroundArtwork: some View {
@@ -1539,7 +1560,7 @@ private struct VideoListenArtworkLayer: View {
         titleLines: Int
     ) -> some View {
         VStack(alignment: alignment, spacing: 6) {
-            PiliLabel("听视频中", systemImage: "headphones")
+            PiliLabel("\u{542c}\u{89c6}\u{9891}\u{4e2d}", systemImage: "headphones")
                 .piliFont(.sm).fontWeight(.semibold)
                 .foregroundStyle(.white)
 
@@ -1558,7 +1579,7 @@ private struct VideoListenArtworkLayer: View {
 
     private var ownerName: String {
         let name = video.owner?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return name.isEmpty ? "未知 UP 主" : name
+        return name.isEmpty ? "\u{672a}\u{77e5} UP \u{4e3b}" : name
     }
 
     private var artworkURL: URL? {
@@ -1590,8 +1611,8 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
     var body: some View {
         NavigationStack {
             PiliList {
-                NavigationLink { PiliAudioLanguageView(viewModel: detailViewModel) } label: { PiliLabel("原声翻译", systemImage: "waveform") }
-                NavigationLink { PiliSuperResolutionSettingsView() } label: { PiliLabel("超分辨率", systemImage: "sparkles.tv") }
+                NavigationLink { PiliAudioLanguageView(viewModel: detailViewModel) } label: { PiliLabel("\u{539f}\u{58f0}\u{7ffb}\u{8bd1}", systemImage: "waveform") }
+                NavigationLink { PiliSuperResolutionSettingsView() } label: { PiliLabel("\u{8d85}\u{5206}\u{8fa8}\u{7387}", systemImage: "sparkles.tv") }
                 if detailViewModel.isVideoListenModeEnabled,
                    !detailViewModel.videoListenAudioVariants.isEmpty {
                     NavigationLink {
@@ -1601,7 +1622,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            PiliLabel("音质", systemImage: "waveform")
+                            PiliLabel("\u{97f3}\u{8d28}", systemImage: "waveform")
                             Spacer()
                             Text(detailViewModel.videoListenAudioAccessoryTitle)
                                 .foregroundStyle(.secondary)
@@ -1616,7 +1637,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            PiliLabel("清晰度", systemImage: qualityStore.qualityButtonSystemImage)
+                            PiliLabel("\u{6e05}\u{6670}\u{5ea6}", systemImage: qualityStore.qualityButtonSystemImage)
                             Spacer()
                             Text(qualityStore.qualityAccessoryButtonTitle)
                                 .foregroundStyle(.secondary)
@@ -1633,7 +1654,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            PiliLabel("播放列表", systemImage: "list.bullet")
+                            PiliLabel("\u{64ad}\u{653e}\u{5217}\u{8868}", systemImage: "list.bullet")
                             Spacer()
                             Text(detailViewModel.videoListenQueueAccessoryTitle)
                                 .foregroundStyle(.secondary)
@@ -1647,7 +1668,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            PiliLabel("播放顺序", systemImage: piliPlaybackPreferences.order.systemImage)
+                            PiliLabel("\u{64ad}\u{653e}\u{987a}\u{5e8f}", systemImage: piliPlaybackPreferences.order.systemImage)
                             Spacer()
                             Text(piliPlaybackPreferences.order.title)
                                 .foregroundStyle(.secondary)
@@ -1661,7 +1682,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         )
                     } label: {
                         HStack {
-                            PiliLabel("定时关闭", systemImage: "timer")
+                            PiliLabel("\u{5b9a}\u{65f6}\u{5173}\u{95ed}", systemImage: "timer")
                             Spacer()
                             Text(detailViewModel.videoListenSleepTimerAccessoryTitle)
                                 .foregroundStyle(.secondary)
@@ -1673,7 +1694,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                     if let source = detailViewModel.selectedPlayVariant?.videoURL {
                         NavigationLink {
                             PiliMediaCaptureView(source: source, time: viewModel.currentTime, duration: viewModel.duration ?? 0)
-                        } label: { PiliLabel("截图与动图", systemImage: "camera") }
+                        } label: { PiliLabel("\u{622a}\u{56fe}\u{4e0e}\u{52a8}\u{56fe}", systemImage: "camera") }
                     }
                     NavigationLink {
                         SurfaceOnlyDanmakuSettingsPage(
@@ -1681,7 +1702,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                             toggleDanmaku: onToggleDanmaku
                         )
                     } label: {
-                        PiliLabel("弹幕设置", systemImage: "text.bubble")
+                        PiliLabel("\u{5f39}\u{5e55}\u{8bbe}\u{7f6e}", systemImage: "text.bubble")
                     }
                 }
 
@@ -1692,7 +1713,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                     )
                 } label: {
                     HStack {
-                        PiliLabel("倍速", systemImage: "speedometer")
+                        PiliLabel("\u{500d}\u{901f}", systemImage: "speedometer")
                         Spacer()
                         Text(viewModel.playbackRate.title)
                             .foregroundStyle(.secondary)
@@ -1703,7 +1724,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                     Toggle(isOn: videoListenModeBinding) {
                         Label {
                             HStack(spacing: 8) {
-                                Text("听视频")
+                                Text("\u{542c}\u{89c6}\u{9891}")
                                 if detailViewModel.isSwitchingVideoListenMode {
                                     ProgressView()
                                         .controlSize(.small)
@@ -1721,7 +1742,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         get: { libraryStore.pictureInPictureEnabled },
                         set: { libraryStore.setPictureInPictureEnabled($0) }
                     )) {
-                        PiliLabel("画中画播放", systemImage: "pip")
+                        PiliLabel("\u{753b}\u{4e2d}\u{753b}\u{64ad}\u{653e}", systemImage: "pip")
                     }
                 }
 
@@ -1729,27 +1750,27 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                     get: { libraryStore.playerPerformanceOverlayEnabled },
                     set: { libraryStore.setPlayerPerformanceOverlayEnabled($0) }
                 )) {
-                    PiliLabel("播放性能诊断", systemImage: "waveform.path.ecg.rectangle")
+                    PiliLabel("\u{64ad}\u{653e}\u{6027}\u{80fd}\u{8bca}\u{65ad}", systemImage: "waveform.path.ecg.rectangle")
                 }
 
                 Toggle(isOn: Binding(
                     get: { libraryStore.playerControlEdgeScrimEnabled },
                     set: { libraryStore.setPlayerControlEdgeScrimEnabled($0) }
                 )) {
-                    PiliLabel("播放控件边缘遮罩", systemImage: "rectangle.topthird.inset.filled")
+                    PiliLabel("\u{64ad}\u{653e}\u{63a7}\u{4ef6}\u{8fb9}\u{7f18}\u{906e}\u{7f69}", systemImage: "rectangle.topthird.inset.filled")
                 }
 
                 PiliLabel("\(mediaFormatLabel)：\(videoFormatTitle)", systemImage: mediaFormatSystemImage)
                     .foregroundStyle(.secondary)
 
-                PiliLabel("解码：\(decodeTitle)", systemImage: "cpu")
+                PiliLabel("\u{89e3}\u{7801}：\(decodeTitle)", systemImage: "cpu")
                     .foregroundStyle(.secondary)
 
                 Toggle(isOn: Binding(
                     get: { libraryStore.forceHardwareDecodeEnabled },
                     set: { libraryStore.setForceHardwareDecodeEnabled($0) }
                 )) {
-                    PiliLabel("硬解优先", systemImage: "cpu")
+                    PiliLabel("\u{786c}\u{89e3}\u{4f18}\u{5148}", systemImage: "cpu")
                 }
 
                 Picker(selection: Binding(
@@ -1760,7 +1781,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
                         Text(policy.title).tag(policy)
                     }
                 } label: {
-                    PiliLabel("杜比视界渲染", systemImage: "sparkles.tv")
+                    PiliLabel("\u{675c}\u{6bd4}\u{89c6}\u{754c}\u{6e32}\u{67d3}", systemImage: "sparkles.tv")
                 }
                 .pickerStyle(.navigationLink)
             }
@@ -1769,7 +1790,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
             .listStyle(.plain)
             .background(Color.clear)
             .foregroundStyle(.primary)
-            .navigationTitle("播放设置")
+            .navigationTitle("\u{64ad}\u{653e}\u{8bbe}\u{7f6e}")
             .navigationBarTitleDisplayMode(.inline)
         }
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -1795,7 +1816,7 @@ private struct SurfaceOnlyMoreControlsNavigationContent: View {
     }
 
     private var mediaFormatLabel: String {
-        detailViewModel.isVideoListenModeEnabled ? "音频格式" : "视频格式"
+        detailViewModel.isVideoListenModeEnabled ? "\u{97f3}\u{9891}\u{683c}\u{5f0f}" : "\u{89c6}\u{9891}\u{683c}\u{5f0f}"
     }
 
     private var mediaFormatSystemImage: String {
@@ -1808,10 +1829,10 @@ private enum SurfaceOnlyPlaybackFormatText {
     static func decodeTitle(for diagnostics: PlayerEngineDiagnostics) -> String {
         var parts = [diagnostics.decodePath.title]
         if diagnostics.hardwareDecodeRequested {
-            parts.append("硬解")
+            parts.append("\u{786c}\u{89e3}")
         }
         if let isHardwareDecodeCompatible = diagnostics.isHardwareDecodeCompatible {
-            parts.append(isHardwareDecodeCompatible ? "硬解兼容" : "硬解不兼容")
+            parts.append(isHardwareDecodeCompatible ? "\u{786c}\u{89e3}\u{517c}\u{5bb9}" : "\u{786c}\u{89e3}\u{4e0d}\u{517c}\u{5bb9}")
         }
         return parts.joined(separator: " · ")
     }
@@ -1834,7 +1855,7 @@ private enum SurfaceOnlyPlaybackFormatText {
             return parts.joined(separator: " · ")
         }
         let description = diagnostics.compactDescription
-        return description.isEmpty ? "未知" : description
+        return description.isEmpty ? "\u{672a}\u{77e5}" : description
     }
 
     private static func dynamicRangeTitle(for dynamicRange: BiliVideoDynamicRange) -> String? {
@@ -1846,7 +1867,7 @@ private enum SurfaceOnlyPlaybackFormatText {
         case .hlg:
             return "HLG"
         case .dolbyVision:
-            return "杜比视界"
+            return "\u{675c}\u{6bd4}\u{89c6}\u{754c}"
         }
     }
 
@@ -1989,24 +2010,24 @@ private enum SurfaceOnlyLandscapeMoreControlsPage {
     var title: String {
         switch self {
         case .root:
-            return "播放设置"
+            return "\u{64ad}\u{653e}\u{8bbe}\u{7f6e}"
         case .quality:
-            return "清晰度"
+            return "\u{6e05}\u{6670}\u{5ea6}"
         case .audio:
-            return "音质"
+            return "\u{97f3}\u{8d28}"
         case .queue:
-            return "播放列表"
+            return "\u{64ad}\u{653e}\u{5217}\u{8868}"
         case .playbackOrder:
-            return "播放顺序"
+            return "\u{64ad}\u{653e}\u{987a}\u{5e8f}"
         case .sleepTimer:
-            return "定时关闭"
+            return "\u{5b9a}\u{65f6}\u{5173}\u{95ed}"
         case .danmaku:
-            return "弹幕设置"
-        case .capture: return "截图与动图"
-        case .language: return "原声翻译"
-        case .superResolution: return "超分辨率"
+            return "\u{5f39}\u{5e55}\u{8bbe}\u{7f6e}"
+        case .capture: return "\u{622a}\u{56fe}\u{4e0e}\u{52a8}\u{56fe}"
+        case .language: return "\u{539f}\u{58f0}\u{7ffb}\u{8bd1}"
+        case .superResolution: return "\u{8d85}\u{5206}\u{8fa8}\u{7387}"
         case .rate:
-            return "倍速"
+            return "\u{500d}\u{901f}"
         }
     }
 }
@@ -2034,7 +2055,7 @@ private struct SurfaceOnlyLandscapeMoreHeader: View {
                     .buttonStyle(.plain)
                     .foregroundStyle(.primary)
                     .contentShape(Circle())
-                    .accessibilityLabel("返回")
+                    .accessibilityLabel("\u{8fd4}\u{56de}")
                 }
 
                 Spacer()
@@ -2047,7 +2068,7 @@ private struct SurfaceOnlyLandscapeMoreHeader: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
                 .contentShape(Circle())
-                .accessibilityLabel("关闭")
+                .accessibilityLabel("\u{5173}\u{95ed}")
             }
         }
         .frame(height: 48)
@@ -2105,15 +2126,15 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
         ScrollView {
             VStack(spacing: 10) {
                 VStack(spacing: 0) {
-                    SurfaceOnlyLandscapeMenuRow(title: "原声翻译", systemImage: "waveform", accessory: nil, showsChevron: true) { page = .language }
-                    SurfaceOnlyLandscapeMenuRow(title: "超分辨率", systemImage: "sparkles.tv", accessory: nil, showsChevron: true) { page = .superResolution }
+                    SurfaceOnlyLandscapeMenuRow(title: "\u{539f}\u{58f0}\u{7ffb}\u{8bd1}", systemImage: "waveform", accessory: nil, showsChevron: true) { page = .language }
+                    SurfaceOnlyLandscapeMenuRow(title: "\u{8d85}\u{5206}\u{8fa8}\u{7387}", systemImage: "sparkles.tv", accessory: nil, showsChevron: true) { page = .superResolution }
                     if !detailViewModel.isVideoListenModeEnabled {
-                        SurfaceOnlyLandscapeMenuRow(title: "截图与动图", systemImage: "camera", accessory: nil, showsChevron: true) { page = .capture }
+                        SurfaceOnlyLandscapeMenuRow(title: "\u{622a}\u{56fe}\u{4e0e}\u{52a8}\u{56fe}", systemImage: "camera", accessory: nil, showsChevron: true) { page = .capture }
                     }
                     if detailViewModel.isVideoListenModeEnabled,
                        !detailViewModel.videoListenAudioVariants.isEmpty {
                         SurfaceOnlyLandscapeMenuRow(
-                            title: "音质",
+                            title: "\u{97f3}\u{8d28}",
                             systemImage: "waveform",
                             accessory: detailViewModel.videoListenAudioAccessoryTitle,
                             showsChevron: true
@@ -2124,7 +2145,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                         Divider().padding(.leading, 44)
                     } else if qualityStore.hasQualityMenu {
                         SurfaceOnlyLandscapeMenuRow(
-                            title: "清晰度",
+                            title: "\u{6e05}\u{6670}\u{5ea6}",
                             systemImage: qualityStore.qualityButtonSystemImage,
                             accessory: qualityStore.qualityAccessoryButtonTitle,
                             showsChevron: true
@@ -2137,7 +2158,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
 
                     if detailViewModel.isVideoListenModeEnabled {
                         SurfaceOnlyLandscapeMenuRow(
-                            title: "播放列表",
+                            title: "\u{64ad}\u{653e}\u{5217}\u{8868}",
                             systemImage: "list.bullet",
                             accessory: detailViewModel.videoListenQueueAccessoryTitle,
                             showsChevron: true
@@ -2148,7 +2169,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                         Divider().padding(.leading, 44)
 
                         SurfaceOnlyLandscapeMenuRow(
-                            title: "播放顺序",
+                            title: "\u{64ad}\u{653e}\u{987a}\u{5e8f}",
                             systemImage: piliPlaybackPreferences.order.systemImage,
                             accessory: piliPlaybackPreferences.order.title,
                             showsChevron: true
@@ -2159,7 +2180,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                         Divider().padding(.leading, 44)
 
                         SurfaceOnlyLandscapeMenuRow(
-                            title: "定时关闭",
+                            title: "\u{5b9a}\u{65f6}\u{5173}\u{95ed}",
                             systemImage: "timer",
                             accessory: detailViewModel.videoListenSleepTimerAccessoryTitle,
                             showsChevron: true
@@ -2172,7 +2193,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
 
                     if !detailViewModel.isVideoListenModeEnabled {
                         SurfaceOnlyLandscapeMenuRow(
-                            title: "弹幕设置",
+                            title: "\u{5f39}\u{5e55}\u{8bbe}\u{7f6e}",
                             systemImage: "text.bubble",
                             accessory: nil,
                             showsChevron: true
@@ -2184,7 +2205,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                     }
 
                     SurfaceOnlyLandscapeMenuRow(
-                        title: "倍速",
+                        title: "\u{500d}\u{901f}",
                         systemImage: "speedometer",
                         accessory: viewModel.playbackRate.title,
                         showsChevron: true
@@ -2196,7 +2217,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
 
                     if showsVideoListenModeToggle {
                         SurfaceOnlyLandscapeToggleRow(
-                            title: "听视频",
+                            title: "\u{542c}\u{89c6}\u{9891}",
                             systemImage: "headphones",
                             accessory: videoListenModeAccessory,
                             isOn: videoListenModeBinding
@@ -2208,7 +2229,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
 
                     if !detailViewModel.isVideoListenModeEnabled {
                         SurfaceOnlyLandscapeToggleRow(
-                            title: "画中画播放",
+                            title: "\u{753b}\u{4e2d}\u{753b}\u{64ad}\u{653e}",
                             systemImage: "pip",
                             accessory: pictureInPictureAccessory,
                             isOn: Binding(
@@ -2221,7 +2242,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                     }
 
                     SurfaceOnlyLandscapeToggleRow(
-                        title: "播放性能诊断",
+                        title: "\u{64ad}\u{653e}\u{6027}\u{80fd}\u{8bca}\u{65ad}",
                         systemImage: "waveform.path.ecg.rectangle",
                         accessory: performanceOverlayAccessory,
                         isOn: Binding(
@@ -2233,7 +2254,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                     Divider().padding(.leading, 44)
 
                     SurfaceOnlyLandscapeToggleRow(
-                        title: "播放控件边缘遮罩",
+                        title: "\u{64ad}\u{653e}\u{63a7}\u{4ef6}\u{8fb9}\u{7f18}\u{906e}\u{7f69}",
                         systemImage: "rectangle.topthird.inset.filled",
                         accessory: controlEdgeScrimAccessory,
                         isOn: Binding(
@@ -2254,7 +2275,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                     Divider().padding(.leading, 44)
 
                     SurfaceOnlyLandscapeInfoRow(
-                        title: "解码",
+                        title: "\u{89e3}\u{7801}",
                         systemImage: "cpu",
                         value: decodeTitle
                     )
@@ -2313,7 +2334,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
 
                 VStack(spacing: 0) {
                     SurfaceOnlyLandscapeMenuRow(
-                        title: "自动",
+                        title: "\u{81ea}\u{52a8}",
                         subtitle: automaticAudioSubtitle,
                         systemImage: detailViewModel.selectedVideoListenAudioPreferenceKey == nil
                             ? "checkmark"
@@ -2385,15 +2406,15 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                     if detailViewModel.isLoadingVideoListenQueue {
                         ProgressView()
                             .controlSize(.small)
-                        Text("正在载入播放列表")
+                        Text("\u{6b63}\u{5728}\u{8f7d}\u{5165}\u{64ad}\u{653e}\u{5217}\u{8868}")
                             .piliFont(.base)
                             .foregroundStyle(.secondary)
                     } else {
-                        Text(detailViewModel.videoListenQueueLoadFailed ? "播放列表载入失败" : "没有可播放内容")
+                        Text(detailViewModel.videoListenQueueLoadFailed ? "\u{64ad}\u{653e}\u{5217}\u{8868}\u{8f7d}\u{5165}\u{5931}\u{8d25}" : "\u{6ca1}\u{6709}\u{53ef}\u{64ad}\u{653e}\u{5185}\u{5bb9}")
                             .piliFont(.base)
                             .foregroundStyle(.secondary)
                         if detailViewModel.videoListenQueueLoadFailed {
-                            Button("重新载入") {
+                            Button("\u{91cd}\u{65b0}\u{8f7d}\u{5165}") {
                                 Task {
                                     await detailViewModel.prepareVideoListenQueue()
                                 }
@@ -2413,7 +2434,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                             title: entry.title,
                             subtitle: entry.subtitle,
                             systemImage: entry.isCurrent ? "checkmark.circle.fill" : "play.circle",
-                            accessory: entry.isCurrent ? "正在播放" : nil,
+                            accessory: entry.isCurrent ? "\u{6b63}\u{5728}\u{64ad}\u{653e}" : nil,
                             showsChevron: false
                         ) {
                             detailViewModel.selectVideoListenQueueEntry(entry)
@@ -2433,7 +2454,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                         HStack(spacing: 8) {
                             ProgressView()
                                 .controlSize(.small)
-                            Text("正在载入更多视频")
+                            Text("\u{6b63}\u{5728}\u{8f7d}\u{5165}\u{66f4}\u{591a}\u{89c6}\u{9891}")
                                 .piliFont(.base)
                                 .foregroundStyle(.secondary)
                         }
@@ -2442,7 +2463,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
                     } else if detailViewModel.videoListenQueueLoadFailed,
                               detailViewModel.videoListenQueueEntries.count <= 1 {
                         Divider().padding(.leading, 44)
-                        Button("重新载入播放列表") {
+                        Button("\u{91cd}\u{65b0}\u{8f7d}\u{5165}\u{64ad}\u{653e}\u{5217}\u{8868}") {
                             Task {
                                 await detailViewModel.prepareVideoListenQueue()
                             }
@@ -2528,7 +2549,7 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
     }
 
     private var pictureInPictureAccessory: String? {
-        return libraryStore.pictureInPictureEnabled ? "已开启" : "已关闭"
+        return libraryStore.pictureInPictureEnabled ? "\u{5df2}\u{5f00}\u{542f}" : "\u{5df2}\u{5173}\u{95ed}"
     }
 
     private var showsVideoListenModeToggle: Bool {
@@ -2544,22 +2565,22 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
 
     private var videoListenModeAccessory: String? {
         if detailViewModel.isSwitchingVideoListenMode {
-            return "切换中"
+            return "\u{5207}\u{6362}\u{4e2d}"
         }
-        return detailViewModel.isVideoListenModeEnabled ? "已开启" : "已关闭"
+        return detailViewModel.isVideoListenModeEnabled ? "\u{5df2}\u{5f00}\u{542f}" : "\u{5df2}\u{5173}\u{95ed}"
     }
 
     private var automaticAudioSubtitle: String {
         guard let variant = detailViewModel.automaticVideoListenAudioVariant else {
-            return "优先选择兼容性较好的音轨"
+            return "\u{4f18}\u{5148}\u{9009}\u{62e9}\u{517c}\u{5bb9}\u{6027}\u{8f83}\u{597d}\u{7684}\u{97f3}\u{8f68}"
         }
-        return ["当前 \(variant.title)", variant.subtitle]
+        return ["\u{5f53}\u{524d} \(variant.title)", variant.subtitle]
             .filter { !$0.isEmpty }
             .joined(separator: " · ")
     }
 
     private var mediaFormatLabel: String {
-        detailViewModel.isVideoListenModeEnabled ? "音频格式" : "视频格式"
+        detailViewModel.isVideoListenModeEnabled ? "\u{97f3}\u{9891}\u{683c}\u{5f0f}" : "\u{89c6}\u{9891}\u{683c}\u{5f0f}"
     }
 
     private var mediaFormatSystemImage: String {
@@ -2567,11 +2588,11 @@ private struct SurfaceOnlyLandscapeMoreContent: View {
     }
 
     private var performanceOverlayAccessory: String? {
-        return libraryStore.playerPerformanceOverlayEnabled ? "已开启" : "已关闭"
+        return libraryStore.playerPerformanceOverlayEnabled ? "\u{5df2}\u{5f00}\u{542f}" : "\u{5df2}\u{5173}\u{95ed}"
     }
 
     private var controlEdgeScrimAccessory: String? {
-        return libraryStore.playerControlEdgeScrimEnabled ? "已开启" : "已关闭"
+        return libraryStore.playerControlEdgeScrimEnabled ? "\u{5df2}\u{5f00}\u{542f}" : "\u{5df2}\u{5173}\u{95ed}"
     }
 }
 
@@ -2754,7 +2775,7 @@ private struct SurfaceOnlyQualityChoicesPage: View {
         .listStyle(.plain)
         .background(Color.clear)
         .foregroundStyle(.primary)
-        .navigationTitle("清晰度")
+        .navigationTitle("\u{6e05}\u{6670}\u{5ea6}")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.automatic, for: .navigationBar)
     }
@@ -2779,7 +2800,7 @@ private struct SurfaceOnlyAudioChoicesPage: View {
                 closeSheet()
             } label: {
                 audioChoiceLabel(
-                    title: "自动",
+                    title: "\u{81ea}\u{52a8}",
                     subtitle: automaticSubtitle,
                     systemImage: detailViewModel.selectedVideoListenAudioPreferenceKey == nil
                         ? "checkmark"
@@ -2807,7 +2828,7 @@ private struct SurfaceOnlyAudioChoicesPage: View {
         .listStyle(.plain)
         .background(Color.clear)
         .foregroundStyle(.primary)
-        .navigationTitle("音质")
+        .navigationTitle("\u{97f3}\u{8d28}")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.automatic, for: .navigationBar)
     }
@@ -2833,9 +2854,9 @@ private struct SurfaceOnlyAudioChoicesPage: View {
 
     private var automaticSubtitle: String {
         guard let variant = detailViewModel.automaticVideoListenAudioVariant else {
-            return "优先选择兼容性较好的音轨"
+            return "\u{4f18}\u{5148}\u{9009}\u{62e9}\u{517c}\u{5bb9}\u{6027}\u{8f83}\u{597d}\u{7684}\u{97f3}\u{8f68}"
         }
-        return ["当前 \(variant.title)", variant.subtitle]
+        return ["\u{5f53}\u{524d} \(variant.title)", variant.subtitle]
             .filter { !$0.isEmpty }
             .joined(separator: " · ")
     }
@@ -2852,13 +2873,13 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
                     if detailViewModel.isLoadingVideoListenQueue {
                         ProgressView()
                             .controlSize(.small)
-                        Text("正在载入播放列表")
+                        Text("\u{6b63}\u{5728}\u{8f7d}\u{5165}\u{64ad}\u{653e}\u{5217}\u{8868}")
                             .foregroundStyle(.secondary)
                     } else {
-                        Text(detailViewModel.videoListenQueueLoadFailed ? "播放列表载入失败" : "没有可播放内容")
+                        Text(detailViewModel.videoListenQueueLoadFailed ? "\u{64ad}\u{653e}\u{5217}\u{8868}\u{8f7d}\u{5165}\u{5931}\u{8d25}" : "\u{6ca1}\u{6709}\u{53ef}\u{64ad}\u{653e}\u{5185}\u{5bb9}")
                             .foregroundStyle(.secondary)
                         if detailViewModel.videoListenQueueLoadFailed {
-                            Button("重新载入") {
+                            Button("\u{91cd}\u{65b0}\u{8f7d}\u{5165}") {
                                 Task {
                                     await detailViewModel.prepareVideoListenQueue()
                                 }
@@ -2885,7 +2906,7 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
                                 }
                                 Spacer()
                                 if entry.isCurrent {
-                                    Text("正在播放")
+                                    Text("\u{6b63}\u{5728}\u{64ad}\u{653e}")
                                         .piliFont(.sm)
                                         .foregroundStyle(.secondary)
                                 }
@@ -2904,14 +2925,14 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
                         Spacer()
                         ProgressView()
                             .controlSize(.small)
-                        Text("正在载入更多视频")
+                        Text("\u{6b63}\u{5728}\u{8f7d}\u{5165}\u{66f4}\u{591a}\u{89c6}\u{9891}")
                             .piliFont(.base)
                             .foregroundStyle(.secondary)
                         Spacer()
                     }
                 } else if detailViewModel.videoListenQueueLoadFailed,
                           detailViewModel.videoListenQueueEntries.count <= 1 {
-                    Button("重新载入播放列表") {
+                    Button("\u{91cd}\u{65b0}\u{8f7d}\u{5165}\u{64ad}\u{653e}\u{5217}\u{8868}") {
                         Task {
                             await detailViewModel.prepareVideoListenQueue()
                         }
@@ -2932,7 +2953,7 @@ private struct SurfaceOnlyVideoListenQueuePage: View {
         .listStyle(.plain)
         .background(Color.clear)
         .foregroundStyle(.primary)
-        .navigationTitle("播放列表")
+        .navigationTitle("\u{64ad}\u{653e}\u{5217}\u{8868}")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.automatic, for: .navigationBar)
         .task {
@@ -2973,7 +2994,7 @@ private struct SurfaceOnlyVideoListenPlaybackOrderPage: View {
         .listStyle(.plain)
         .background(Color.clear)
         .foregroundStyle(.primary)
-        .navigationTitle("播放顺序")
+        .navigationTitle("\u{64ad}\u{653e}\u{987a}\u{5e8f}")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.automatic, for: .navigationBar)
     }
@@ -3004,7 +3025,7 @@ private struct SurfaceOnlyVideoListenSleepTimerPage: View {
         .listStyle(.plain)
         .background(Color.clear)
         .foregroundStyle(.primary)
-        .navigationTitle("定时关闭")
+        .navigationTitle("\u{5b9a}\u{65f6}\u{5173}\u{95ed}")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.automatic, for: .navigationBar)
     }
@@ -3012,15 +3033,15 @@ private struct SurfaceOnlyVideoListenSleepTimerPage: View {
 
 private struct SurfaceOnlyQualitySwitchingIndicator: View {
     var body: some View {
-        PlayerInlineLoadingIndicator(message: "正在切换清晰度")
-            .accessibilityLabel("正在切换清晰度")
+        PlayerInlineLoadingIndicator(message: "\u{6b63}\u{5728}\u{5207}\u{6362}\u{6e05}\u{6670}\u{5ea6}")
+            .accessibilityLabel("\u{6b63}\u{5728}\u{5207}\u{6362}\u{6e05}\u{6670}\u{5ea6}")
     }
 }
 
 private struct SurfaceOnlyAudioSwitchingIndicator: View {
     var body: some View {
-        PlayerInlineLoadingIndicator(message: "正在切换音质")
-            .accessibilityLabel("正在切换音质")
+        PlayerInlineLoadingIndicator(message: "\u{6b63}\u{5728}\u{5207}\u{6362}\u{97f3}\u{8d28}")
+            .accessibilityLabel("\u{6b63}\u{5728}\u{5207}\u{6362}\u{97f3}\u{8d28}")
     }
 }
 
@@ -3049,7 +3070,7 @@ private struct SurfaceOnlyDanmakuSettingsPage: View {
         .listRowBackground(Color.clear)
         .listStyle(.plain)
         .background(Color.clear)
-        .navigationTitle("弹幕设置")
+        .navigationTitle("\u{5f39}\u{5e55}\u{8bbe}\u{7f6e}")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.automatic, for: .navigationBar)
     }
@@ -3057,9 +3078,9 @@ private struct SurfaceOnlyDanmakuSettingsPage: View {
     private var settingsSummary: String {
         let store = detailViewModel.danmakuSettingsRenderStore
         if store.isDanmakuEnabled {
-            return "当前使用 \(store.danmakuSettings.displayArea.title)，字号 \(Int((store.danmakuSettings.fontScale * 100).rounded()))%，不透明度 \(Int((store.danmakuSettings.opacity * 100).rounded()))%。"
+            return "\u{5f53}\u{524d}\u{4f7f}\u{7528} \(store.danmakuSettings.displayArea.title)，\u{5b57}\u{53f7} \(Int((store.danmakuSettings.fontScale * 100).rounded()))%，\u{4e0d}\u{900f}\u{660e}\u{5ea6} \(Int((store.danmakuSettings.opacity * 100).rounded()))%。"
         }
-        return "弹幕已关闭，播放时不会显示滚动评论。"
+        return "\u{5f39}\u{5e55}\u{5df2}\u{5173}\u{95ed}，\u{64ad}\u{653e}\u{65f6}\u{4e0d}\u{4f1a}\u{663e}\u{793a}\u{6eda}\u{52a8}\u{8bc4}\u{8bba}。"
     }
 
     private var displayAreaBinding: Binding<DanmakuDisplayArea> {
@@ -3121,6 +3142,7 @@ private struct SurfaceOnlyDanmakuSettingsPage: View {
 private struct SurfaceOnlyUIKitMoreControlsButton: UIViewRepresentable {
     let metrics: PlayerNativeControlMetrics
     let systemImageName: String
+    let usesGlass: Bool
     let onPressBegan: () -> Void
     let onPressEnded: () -> Void
     let action: () -> Void
@@ -3144,7 +3166,7 @@ private struct SurfaceOnlyUIKitMoreControlsButton: UIViewRepresentable {
             context.coordinator.pressEndedAction,
             for: [.touchUpInside, .touchUpOutside, .touchCancel]
         )
-        button.accessibilityLabel = "更多播放设置"
+        button.accessibilityLabel = "\u{66f4}\u{591a}\u{64ad}\u{653e}\u{8bbe}\u{7f6e}"
         button.accessibilityIdentifier = "ui.player.more"
         return button
     }
@@ -3157,7 +3179,7 @@ private struct SurfaceOnlyUIKitMoreControlsButton: UIViewRepresentable {
     }
 
     private var configuration: UIButton.Configuration {
-        var configuration = UIButton.Configuration.clearGlass()
+        var configuration = usesGlass ? UIButton.Configuration.clearGlass() : UIButton.Configuration.plain()
         configuration.baseForegroundColor = .white
         configuration.contentInsets = .zero
         return configuration
@@ -3184,13 +3206,11 @@ private struct SurfaceOnlyUIKitMoreControlsButton: UIViewRepresentable {
             ])
         }
 
-        iconView.image = UIImage(
-            systemName: systemImageName,
-            withConfiguration: UIImage.SymbolConfiguration(
-                pointSize: metrics.iconSize + 3,
-                weight: .semibold
-            )
+        let renderer = ImageRenderer(content:
+            PiliIcon(systemName: systemImageName, size: metrics.iconSize).foregroundStyle(.white)
         )
+        renderer.scale = button.traitCollection.displayScale
+        iconView.image = renderer.uiImage
     }
 
     private static let iconViewTag = 1_634_081
@@ -3241,7 +3261,7 @@ private struct VideoDetailFullscreenClockControl: View {
         )
         .biliLiquidGlassForeground(shadowOpacity: 0.20)
         .allowsHitTesting(false)
-        .accessibilityLabel("系统时间")
+        .accessibilityLabel("\u{7cfb}\u{7edf}\u{65f6}\u{95f4}")
     }
 }
 
@@ -3266,7 +3286,7 @@ private struct VideoDetailFullscreenBatteryControl: View {
         .biliLiquidGlassForeground(shadowOpacity: 0.20)
         .allowsHitTesting(false)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("设备电量 \(percentageText)")
+        .accessibilityLabel("\u{8bbe}\u{5907}\u{7535}\u{91cf} \(percentageText)")
         .onAppear {
             UIDevice.current.isBatteryMonitoringEnabled = true
             updateBatteryLevel()
@@ -3352,7 +3372,7 @@ private struct SurfaceOnlyRateChoicesPage: View {
         .listStyle(.plain)
         .background(Color.clear)
         .foregroundStyle(.primary)
-        .navigationTitle("倍速")
+        .navigationTitle("\u{500d}\u{901f}")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.automatic, for: .navigationBar)
     }

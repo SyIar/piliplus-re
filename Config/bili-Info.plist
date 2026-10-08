@@ -11,11 +11,11 @@
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleDisplayName</key>
-	<string>哔哩哔哩</string>
+	<string>&#21716;&#21737;&#21716;&#21737;</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>哔哩哔哩</string>
+	<string>&#21716;&#21737;&#21716;&#21737;</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -25,7 +25,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>用于将动态图片保存到系统照片图库。</string>
+	<string>&#29992;&#20110;&#23558;&#21160;&#24577;&#22270;&#29255;&#20445;&#23384;&#21040;&#31995;&#32479;&#29031;&#29255;&#22270;&#24211;。</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 	<key>UIApplicationSceneManifest</key>
@@ -41,6 +41,8 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
@@ -57,7 +59,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>用于发现同一 Wi-Fi 下的电视，并将选中的视频投屏播放。</string>
+	<string>&#29992;&#20110;&#21457;&#29616;&#21516;&#19968; Wi-Fi &#19979;&#30340;&#30005;&#35270;，&#24182;&#23558;&#36873;&#20013;&#30340;&#35270;&#39057;&#25237;&#23631;&#25773;&#25918;。</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

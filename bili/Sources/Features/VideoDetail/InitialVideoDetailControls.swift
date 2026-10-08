@@ -20,21 +20,24 @@ private struct InitialVideoDetailActionStrip: View {
     var body: some View {
         let layout = VideoDetailActionStripLayout(contentWidth: contentWidth)
 
-        HStack(spacing: layout.columnSpacing) {
-            avatarPlaceholder
-                .frame(width: layout.columnWidth, height: layout.rowHeight)
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                avatarPlaceholder
+                SkeletonBlock(width: 100, height: 16, shape: .capsule)
+                Spacer(minLength: 12)
 
-            followPlaceholder
-                .frame(width: layout.columnWidth, height: layout.rowHeight)
-
-            ForEach(0..<4, id: \.self) { _ in
-                iconPlaceholder
-                    .frame(width: layout.columnWidth, height: layout.rowHeight)
+                followPlaceholder
+                    .frame(width: 84, height: 44)
+            }
+            HStack(spacing: layout.columnSpacing) {
+                ForEach(0..<4, id: \.self) { _ in
+                    iconPlaceholder
+                        .frame(width: layout.columnWidth, height: layout.rowHeight)
+                }
             }
         }
         .frame(
             width: contentWidth,
-            height: layout.rowHeight,
             alignment: .center
         )
         .accessibilityHidden(true)

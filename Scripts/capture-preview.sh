@@ -59,6 +59,11 @@ xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-interactive-
 # Production settings and common page/modal surfaces in both appearances.
 for appearance in light dark; do
   xcrun simctl ui "$device_id" appearance "$appearance"
+  for fixture in layoutSearch layoutVideo layoutMine layoutSettings layoutComments; do
+    xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture "$fixture"
+    sleep 3
+    xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-$fixture-$appearance.png"
+  done
   xcrun simctl launch --terminate-running-process "$device_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings
   sleep 3
   xcrun simctl io "$device_id" screenshot "$project_root/dist/preview-settings-$appearance.png"
@@ -116,6 +121,11 @@ xcrun simctl ui "$ipad_id" appearance light
 xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift
 sleep 5
 xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-home-ipad.png"
+for fixture in layoutSearch layoutVideo layoutMine layoutSettings layoutComments; do
+  xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture "$fixture"
+  sleep 3
+  xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-$fixture-ipad.png"
+done
 xcrun simctl launch --terminate-running-process "$ipad_id" io.github.syiar.PiliPlusSwift --ui-test-fixture glassSettings
 sleep 3
 xcrun simctl io "$ipad_id" screenshot "$project_root/dist/preview-settings-ipad.png"
@@ -139,6 +149,17 @@ root, destination = map(pathlib.Path, sys.argv[1:])
 screenshots = {
     "Recommendation card overflow menu": "preview-video-menu.png",
     "Fullscreen player action panel": "preview-player-menu.png",
+    "Search compact filters": "preview-search-compact.png",
+    "Search filter panel": "preview-search-filters.png",
+    "Search history single header row": "preview-search-history.png",
+    "Search history submission and category tabs": "preview-search-history-results.png",
+    "Video detail grouped actions": "preview-video-actions.png",
+    "Video detail tools panel": "preview-video-tools.png",
+    "Video detail accessible actions": "preview-video-accessibility.png",
+    "Mine dashboard": "preview-mine-dashboard.png",
+    "Settings directory": "preview-settings-directory.png",
+    "Player settings directory": "preview-player-settings.png",
+    "Comment toolbar single surfaces": "preview-comment-toolbar.png",
 }
 def visit(value):
     if isinstance(value, dict):

@@ -51,6 +51,6 @@ struct PlayerNativePlaybackControls: View {
         }
         .frame(maxWidth: .infinity)
         .biliLiquidGlassForeground(shadowOpacity: 0.20)
-        .controlSize(.mini)
+        .controlSize(.regular)
     }
 }

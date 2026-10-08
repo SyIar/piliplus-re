@@ -13,6 +13,8 @@ struct PiliGlassFullscreenActions {
     let next: () -> Void
     let skip: (Double) -> Void
     let interaction: () -> Void
+    var rateChanged: (BiliPlaybackRate) -> Void = { _ in }
+    var capture: (() -> Void)? = nil
     var menuPresentationChanged: (Bool) -> Void = { _ in }
 }
 
@@ -33,6 +35,7 @@ struct PiliGlassFullscreenControls: View {
     let playback: PlayerNativePlaybackControlsActions
     let actions: PiliGlassFullscreenActions
     let interactionAccessory: AnyView
+    var playbackRate: BiliPlaybackRate = .x10
 
     var body: some View {
         GeometryReader { geometry in
@@ -51,14 +54,19 @@ struct PiliGlassFullscreenControls: View {
                             footer
                         }
 
-                        transport
-                            .offset(y: -8)
+                        HStack {
+                            lockControl
+                            Spacer()
+                            if let capture = actions.capture {
+                                PiliGlassPlayerButton(symbol: "camera", title: "\u{622a}\u{56fe}", action: capture)
+                            }
+                        }
                     } else {
                         VStack {
                             Spacer()
                             HStack {
                                 Spacer()
-                                PiliGlassPlayerButton(symbol: "lock.open", title: "解锁播放控件") {
+                                PiliGlassPlayerButton(symbol: "lock.open", title: "\u{89e3}\u{9501}\u{64ad}\u{653e}\u{63a7}\u{4ef6}") {
                                     isLocked = false
                                     actions.interaction()
                                 }
@@ -82,37 +90,49 @@ struct PiliGlassFullscreenControls: View {
         }) {
             NavigationStack {
                 PiliList {
-                    Button("画质与播放设置") { selectMoreAction(actions.settings) }
-                    Button("投屏") { selectMoreAction(actions.cast) }
-                    Button("定时停止与连播") { selectMoreAction { PiliPlaybackToolsView.present() } }
+                    interactionAccessory
+                    Button("\u{540e}\u{9000} 10 \u{79d2}") { selectMoreAction { actions.skip(-10) } }
+                        .disabled(!canSeek)
+                        .accessibilityIdentifier("ui.player.glass.backward")
+                    Button("\u{524d}\u{8fdb} 10 \u{79d2}") { selectMoreAction { actions.skip(10) } }
+                        .disabled(!canSeek)
+                        .accessibilityIdentifier("ui.player.glass.forward")
+                    Button("\u{64ad}\u{653e}\u{5217}\u{8868}", action: { selectMoreAction(actions.queue) })
+                    Button("\u{4e0a}\u{4e00}\u{96c6}", action: { selectMoreAction(actions.previous) }).disabled(!hasPrevious)
+                    Button("\u{4e0b}\u{4e00}\u{96c6}", action: { selectMoreAction(actions.next) }).disabled(!hasNext)
+                    Button("\u{753b}\u{8d28}\u{4e0e}\u{64ad}\u{653e}\u{8bbe}\u{7f6e}") { selectMoreAction(actions.settings) }
+                        .accessibilityIdentifier("ui.player.more.settings")
+                    Button("\u{6295}\u{5c4f}") { selectMoreAction(actions.cast) }
+                        .accessibilityIdentifier("ui.player.more.cast")
+                    Button("\u{5b9a}\u{65f6}\u{505c}\u{6b62}\u{4e0e}\u{8fde}\u{64ad}") { selectMoreAction { PiliPlaybackToolsView.present() } }
+                        .accessibilityIdentifier("ui.player.more.timer")
                     if let shareURL {
-                        ShareLink(item: shareURL) { Text("分享视频") }
+                        ShareLink(item: shareURL) { Text("\u{5206}\u{4eab}\u{89c6}\u{9891}") }
+                            .accessibilityIdentifier("ui.player.more.share")
                     }
                 }
-                .navigationTitle("更多播放操作")
+                .navigationTitle("\u{66f4}\u{591a}\u{64ad}\u{653e}\u{64cd}\u{4f5c}")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("完成") { showsMoreActions = false }
+                        Button("\u{5b8c}\u{6210}") { showsMoreActions = false }
                     }
                 }
             }
-            .piliPresentationDetents([.height(320), .large])
+            .piliPresentationDetents([.medium, .large])
         }
     }
 
     private var header: some View {
-        HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).piliFont(.baseBold).lineLimit(1)
-                Text(author).piliFont(.sm).foregroundStyle(.white.opacity(0.65)).lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
+        HStack(spacing: 12) {
+            PiliGlassPlayerButton(symbol: "chevron.left", title: "\u{9000}\u{51fa}\u{5168}\u{5c4f}", action: actions.close)
+            Text(title).font(.headline).lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 0) {
+                PiliGlassPlayerButton(symbol: "airplayvideo", title: "\u{6295}\u{5c4f}", grouped: true, action: actions.cast)
+                PiliGlassPlayerButton(symbol: isDanmakuEnabled ? "text.bubble.fill" : "text.bubble",
+                                      title: "\u{5f39}\u{5e55}\u{8bbe}\u{7f6e}", grouped: true, action: actions.danmaku)
                 moreMenu
-                PiliGlassPlayerButton(symbol: "xmark", title: "退出全屏", grouped: true, action: actions.close)
-                    .accessibilityIdentifier("ui.player.fullscreen.toggle")
             }
             .piliLiquidGlass(in: Capsule(), overVideo: true, interactive: true)
         }
@@ -128,7 +148,7 @@ struct PiliGlassFullscreenControls: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("更多播放操作")
+        .accessibilityLabel("\u{66f4}\u{591a}\u{64ad}\u{653e}\u{64cd}\u{4f5c}")
         .accessibilityIdentifier("ui.player.glass.more")
     }
 
@@ -138,49 +158,44 @@ struct PiliGlassFullscreenControls: View {
         showsMoreActions = false
     }
 
-    private var transport: some View {
-        HStack(spacing: 28) {
-            PiliGlassPlayerButton(symbol: "backward.end.fill", title: "上一集", grouped: true, action: actions.previous)
-                .disabled(!hasPrevious).opacity(hasPrevious ? 1 : 0)
-                .accessibilityHidden(!hasPrevious)
-            PiliGlassPlayerButton(symbol: "gobackward.10", title: "后退 10 秒", size: 56, grouped: true) { actions.skip(-10) }
-                .disabled(!canSeek).accessibilityIdentifier("ui.player.glass.backward")
-            PiliGlassPlayerButton(symbol: isPlaying ? "pause.fill" : "play.fill", title: isPlaying ? "暂停" : "播放",
-                                  size: 64, prominent: true) {
-                if !isPlaying { PiliSleepTimer.shared.resumeManually() }
-                playback.onTogglePlayback()
-            }
-            .accessibilityIdentifier("ui.player.glass.play")
-            PiliGlassPlayerButton(symbol: "goforward.10", title: "前进 10 秒", size: 56, grouped: true) { actions.skip(10) }
-                .disabled(!canSeek).accessibilityIdentifier("ui.player.glass.forward")
-            PiliGlassPlayerButton(symbol: "forward.end.fill", title: "下一集", grouped: true, action: actions.next)
-                .disabled(!hasNext).opacity(hasNext ? 1 : 0)
-                .accessibilityHidden(!hasNext)
+    private var lockControl: some View {
+        PiliGlassPlayerButton(symbol: "lock", title: "\u{9501}\u{5b9a}\u{64ad}\u{653e}\u{63a7}\u{4ef6}") {
+            isLocked = true
+            actions.interaction()
         }
-        .biliLiquidGlassForeground(shadowOpacity: 0.5)
+        .accessibilityIdentifier("ui.player.glass.lock")
     }
 
     private var footer: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                interactionAccessory
-                PiliGlassPlayerButton(symbol: "list.bullet", title: "播放列表", grouped: true, action: actions.queue)
-                Spacer(minLength: 12)
-                PiliGlassPlayerButton(symbol: isDanmakuEnabled ? "text.bubble.fill" : "text.bubble",
-                                      title: "弹幕设置", grouped: true, action: actions.danmaku)
-                PiliGlassPlayerButton(symbol: "captions.bubble", title: "字幕", grouped: true, action: actions.subtitles)
-                PiliGlassPlayerButton(symbol: "lock", title: "锁定播放控件", grouped: true) {
-                    isLocked = true
-                    actions.interaction()
+            PlayerNativeProgressSlider(
+                clock: clock, canSeek: canSeek, sliderVisualScale: 1, style: .telegram,
+                onScrubStart: playback.onScrubStart, onScrubChanged: playback.onScrubChanged,
+                onScrubEnded: playback.onScrubEnded, onScrubCancelled: playback.onScrubCancelled
+            )
+            .frame(height: 32)
+            HStack(spacing: 8) {
+                PiliGlassPlayerButton(symbol: isPlaying ? "pause.fill" : "play.fill",
+                                      title: isPlaying ? "\u{6682}\u{505c}" : "\u{64ad}\u{653e}", grouped: true) {
+                    if !isPlaying { PiliSleepTimer.shared.resumeManually() }
+                    playback.onTogglePlayback()
                 }
-                .accessibilityIdentifier("ui.player.glass.lock")
+                .accessibilityIdentifier("ui.player.glass.play")
+                PlayerNativeTimeLabel(clock: clock, metrics: .landscape)
+                Spacer(minLength: 8)
+                PiliGlassPlayerButton(symbol: "captions.bubble", title: "\u{5b57}\u{5e55}", grouped: true, action: actions.subtitles)
+                PlayerPlaybackRateMenu(rate: playbackRate, onSelect: actions.rateChanged)
+                PiliGlassPlayerButton(symbol: "gearshape", title: "\u{753b}\u{8d28}\u{4e0e}\u{64ad}\u{653e}\u{8bbe}\u{7f6e}", grouped: true, action: actions.settings)
+                PiliGlassPlayerButton(symbol: "arrow.down.right.and.arrow.up.left", title: "\u{9000}\u{51fa}\u{5168}\u{5c4f}",
+                                      grouped: true, action: actions.close)
+                    .accessibilityIdentifier("ui.player.fullscreen.toggle")
             }
-            .padding(.horizontal, 8)
-            .padding(.top, 4)
-            PiliGlassProgressBar(clock: clock, canSeek: canSeek, actions: playback)
         }
-        .piliLiquidGlass(in: RoundedRectangle(cornerRadius: 16, style: .continuous), overVideo: true)
+        .padding(.horizontal, 12)
+        .padding(.bottom, 4)
+        .piliLiquidGlass(in: RoundedRectangle(cornerRadius: 16), overVideo: true)
     }
+
 }
 
 struct PiliGlassProgressBar: View {
@@ -191,13 +206,13 @@ struct PiliGlassProgressBar: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Text(clock.displayCurrentTime < 1 ? "00:00" : BiliFormatters.duration(Int(clock.displayCurrentTime))).monospacedDigit()
+            Text(clock.displayCurrentTime < 1 ? "00:00" : BiliFormatters.duration(PlaybackNumericValue.integer(clock.displayCurrentTime))).monospacedDigit()
             PlayerNativeProgressSlider(
                 clock: clock, canSeek: canSeek, sliderVisualScale: 1, style: .liquidGlass,
                 onScrubStart: actions.onScrubStart, onScrubChanged: actions.onScrubChanged,
                 onScrubEnded: actions.onScrubEnded, onScrubCancelled: actions.onScrubCancelled
             )
-            Text(BiliFormatters.duration(Int(clock.duration ?? 0))).monospacedDigit()
+            Text(BiliFormatters.duration(PlaybackNumericValue.integer(clock.duration ?? 0))).monospacedDigit()
         }
         .piliFont(.sm)
         .padding(.horizontal, 16)

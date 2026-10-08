@@ -15,50 +15,50 @@ struct PlayerNativeControlMetrics: Equatable {
     let qualityHorizontalPadding: CGFloat
 
     var iconOnlyControlSize: CGFloat {
-        controlHeight * 0.68
+        controlHeight
     }
 
     static let portrait = PlayerNativeControlMetrics(
-        controlHeight: 28,
+        controlHeight: 44,
         progressControlHeight: 22,
         sliderVisualScale: 0.82,
-        iconSize: 12,
-        timeFont: .caption2.monospacedDigit(),
+        iconSize: 22,
+        timeFont: .caption.monospacedDigit(),
         stackSpacing: 5,
         groupSpacing: 5,
         controlSpacing: 4,
         sliderHorizontalPadding: 8,
-        timeLabelWidth: 104,
+        timeLabelWidth: 56,
         qualityButtonMaxWidth: 68,
         qualityHorizontalPadding: 6
     )
 
     static let livePortrait = PlayerNativeControlMetrics(
-        controlHeight: 36,
+        controlHeight: 44,
         progressControlHeight: 26,
         sliderVisualScale: 0.90,
-        iconSize: 15,
+        iconSize: 22,
         timeFont: .caption.monospacedDigit(),
         stackSpacing: 7,
         groupSpacing: 7,
         controlSpacing: 7,
         sliderHorizontalPadding: 10,
-        timeLabelWidth: 104,
+        timeLabelWidth: 56,
         qualityButtonMaxWidth: 68,
         qualityHorizontalPadding: 8
     )
 
     static let landscape = PlayerNativeControlMetrics(
-        controlHeight: 34,
+        controlHeight: 44,
         progressControlHeight: 26,
         sliderVisualScale: 0.92,
-        iconSize: 14,
+        iconSize: 22,
         timeFont: .caption.monospacedDigit(),
         stackSpacing: 7,
         groupSpacing: 7,
         controlSpacing: 6,
         sliderHorizontalPadding: 11,
-        timeLabelWidth: 86,
+        timeLabelWidth: 56,
         qualityButtonMaxWidth: 92,
         qualityHorizontalPadding: 9
     )

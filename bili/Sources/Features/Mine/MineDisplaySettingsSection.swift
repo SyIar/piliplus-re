@@ -7,7 +7,7 @@ struct MineDisplaySettingsSection: View {
     @AppStorage(VideoCoverBadgeContrastBacking.storageKey) private var videoCoverBadgeContrastBackingOpacity = VideoCoverBadgeContrastBacking.defaultOpacity
 
     var body: some View {
-        Section("外观") {
+        Section("\u{5916}\u{89c2}") {
             PiliSettingPicker(selection: Binding(
                 get: { libraryStore.appearanceMode },
                 set: { libraryStore.setAppearanceMode($0) }
@@ -16,7 +16,7 @@ struct MineDisplaySettingsSection: View {
                     Text(mode.title).tag(mode)
                 }
             } label: {
-                MineSettingsLabel("外观", systemImage: "sun.max")
+                MineSettingsLabel("\u{5916}\u{89c2}", systemImage: "sun.max")
             }
             .tint(libraryStore.appTintColor)
             .pickerStyle(.menu)
@@ -29,7 +29,7 @@ struct MineDisplaySettingsSection: View {
                     Text(preference.title).tag(preference)
                 }
             } label: {
-                MineSettingsLabel("应用图标", systemImage: "app")
+                MineSettingsLabel("\u{5e94}\u{7528}\u{56fe}\u{6807}", systemImage: "app")
             }
             .pickerStyle(.menu)
 
@@ -38,19 +38,19 @@ struct MineDisplaySettingsSection: View {
             } label: {
                 if dynamicTypeSize.isAccessibilitySize {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("主色调")
+                        Text("\u{4e3b}\u{8272}\u{8c03}")
                         themeColorValue.frame(maxWidth: .infinity, alignment: .trailing)
                     }
                 } else {
                     HStack(spacing: 16) {
-                        Text("主色调")
+                        Text("\u{4e3b}\u{8272}\u{8c03}")
                         Spacer(minLength: 8)
                         themeColorValue
                     }
                 }
             }
             .accessibilityIdentifier("settings.theme")
-            .accessibilityLabel("主色调")
+            .accessibilityLabel("\u{4e3b}\u{8272}\u{8c03}")
             .accessibilityValue(libraryStore.appTintColorHex)
 
             Toggle(isOn: Binding(
@@ -58,9 +58,9 @@ struct MineDisplaySettingsSection: View {
                 set: { libraryStore.setFollowsSystemFontSize($0) }
             )) {
                 VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("跟随系统字号", systemImage: "textformat.size")
+                    MineSettingsLabel("\u{8ddf}\u{968f}\u{7cfb}\u{7edf}\u{5b57}\u{53f7}", systemImage: "textformat.size")
 
-                    Text("关闭后可手动设置字号。")
+                    Text("\u{5173}\u{95ed}\u{540e}\u{53ef}\u{624b}\u{52a8}\u{8bbe}\u{7f6e}\u{5b57}\u{53f7}。")
                         .appTypography(.settingsSubtitle, fallback: .caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -70,7 +70,7 @@ struct MineDisplaySettingsSection: View {
             if !libraryStore.followsSystemFontSize {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        MineSettingsLabel("手动字号", systemImage: "textformat")
+                        MineSettingsLabel("\u{624b}\u{52a8}\u{5b57}\u{53f7}", systemImage: "textformat")
                         Spacer(minLength: 8)
                         Text(libraryStore.manualFontSize.title)
                             .piliFont(.sm).monospacedDigit()
@@ -82,7 +82,7 @@ struct MineDisplaySettingsSection: View {
                         in: 0...Double(AppManualFontSize.allCases.count - 1),
                         step: 1
                     ) {
-                        Text("手动字号")
+                        Text("\u{624b}\u{52a8}\u{5b57}\u{53f7}")
                     } minimumValueLabel: {
                         Text("A").piliFont(.sm)
                     } maximumValueLabel: {
@@ -94,17 +94,36 @@ struct MineDisplaySettingsSection: View {
             }
         }
 
-        Section("内容与导航") {
+        Section("\u{5185}\u{5bb9}\u{4e0e}\u{5bfc}\u{822a}") {
+            PiliSettingPicker(selection: Binding(
+                get: { libraryStore.homeFeedLayout },
+                set: { libraryStore.setHomeFeedLayout($0) }
+            )) {
+                ForEach(HomeFeedLayout.allCases) { layout in
+                    Text(layout.title).tag(layout)
+                }
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    MineSettingsLabel("\u{9996}\u{9875}\u{5e03}\u{5c40}", systemImage: "rectangle.grid.1x2")
+                    Text("\u{53cc}\u{5217}\u{5e03}\u{5c40}\u{5728} iPad \u{4e0a}\u{968f}\u{7a97}\u{53e3}\u{5bbd}\u{5ea6}\u{8c03}\u{6574}。")
+                        .appTypography(.settingsSubtitle, fallback: .caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .pickerStyle(.menu)
+
+
             Toggle(isOn: Binding(
                 get: { libraryStore.showsVideoCoverDurationBadges },
                 set: { libraryStore.setShowsVideoCoverDurationBadges($0) }
             )) {
-                MineSettingsLabel("封面时长", systemImage: "timer")
+                MineSettingsLabel("\u{5c01}\u{9762}\u{65f6}\u{957f}", systemImage: "timer")
             }
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    MineSettingsLabel("角标底色浓度", systemImage: "circle.lefthalf.filled")
+                    MineSettingsLabel("\u{89d2}\u{6807}\u{5e95}\u{8272}\u{6d53}\u{5ea6}", systemImage: "circle.lefthalf.filled")
                     Spacer(minLength: 8)
                     Text(videoCoverBadgeContrastBackingOpacityTitle)
                         .piliFont(.sm).monospacedDigit()
@@ -130,7 +149,7 @@ struct MineDisplaySettingsSection: View {
                 get: { libraryStore.minimizesTabBarOnScroll },
                 set: { libraryStore.setMinimizesTabBarOnScroll($0) }
             )) {
-                MineSettingsLabel("滚动收起底栏", systemImage: "arrow.down.right.and.arrow.up.left")
+                MineSettingsLabel("\u{6eda}\u{52a8}\u{6536}\u{8d77}\u{5e95}\u{680f}", systemImage: "arrow.down.right.and.arrow.up.left")
             }
 
             PiliSettingPicker(selection: Binding(
@@ -141,12 +160,12 @@ struct MineDisplaySettingsSection: View {
                     Text(glassStyle.title).tag(glassStyle)
                 }
             } label: {
-                MineSettingsLabel("底栏玻璃", systemImage: "circle.lefthalf.filled")
+                MineSettingsLabel("\u{5e95}\u{680f}\u{73bb}\u{7483}", systemImage: "circle.lefthalf.filled")
             }
             .pickerStyle(.menu)
         }
 
-        Section("图片与存储") {
+        Section("\u{56fe}\u{7247}\u{4e0e}\u{5b58}\u{50a8}") {
             PiliSettingPicker(selection: Binding(
                 get: { libraryStore.remoteImageQualityPreference },
                 set: { libraryStore.setRemoteImageQualityPreference($0) }
@@ -156,7 +175,7 @@ struct MineDisplaySettingsSection: View {
                 }
             } label: {
                 VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("图片质量", systemImage: "photo")
+                    MineSettingsLabel("\u{56fe}\u{7247}\u{8d28}\u{91cf}", systemImage: "photo")
 
                     Text(libraryStore.remoteImageQualityPreference.detail)
                         .appTypography(.settingsSubtitle, fallback: .caption)
@@ -169,54 +188,21 @@ struct MineDisplaySettingsSection: View {
             MineImageCacheControl()
         }
 
-        Section("高级与诊断") {
+        Section("\u{5237}\u{65b0}\u{7387}") {
             Toggle(isOn: Binding(
                 get: { libraryStore.force120HzScrollingEnabled },
                 set: { libraryStore.setForce120HzScrollingEnabled($0) }
             )) {
                 VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("120Hz 滑动", systemImage: "speedometer")
+                    MineSettingsLabel("120Hz \u{6ed1}\u{52a8}", systemImage: "speedometer")
 
-                    Text("可能增加耗电。")
+                    Text("\u{53ef}\u{80fd}\u{589e}\u{52a0}\u{8017}\u{7535}。")
                         .appTypography(.settingsSubtitle, fallback: .caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
-            Toggle(isOn: Binding(
-                get: { libraryStore.remoteImageDiagnosticsEnabled },
-                set: { libraryStore.setRemoteImageDiagnosticsEnabled($0) }
-            )) {
-                VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("图片诊断", systemImage: "chart.bar.xaxis")
-
-                    Text("记录加载统计，不含图片、链接或账号信息。")
-                        .appTypography(.settingsSubtitle, fallback: .caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            NavigationLink {
-                RemoteImageDiagnosticsView(libraryStore: libraryStore)
-            } label: {
-                MineSettingsLabel("查看图片诊断", systemImage: "chart.bar.xaxis")
-            }
-
-            Toggle(isOn: Binding(
-                get: { libraryStore.dynamicCommentHitAreaVisualizationExperimentEnabled },
-                set: { libraryStore.setDynamicCommentHitAreaVisualizationExperimentEnabled($0) }
-            )) {
-                VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("显示评论点击区域", systemImage: "hand.tap")
-
-                    Text("标记回复与操作的点击区域。")
-                        .appTypography(.settingsSubtitle, fallback: .caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
         }
     }
 
@@ -252,11 +238,11 @@ struct MineThemeColorSettingsView: View {
             Section {
                 MineThemeColorControl(libraryStore: libraryStore)
             } footer: {
-                Text("用于选中状态与控件高亮。")
+                Text("\u{7528}\u{4e8e}\u{9009}\u{4e2d}\u{72b6}\u{6001}\u{4e0e}\u{63a7}\u{4ef6}\u{9ad8}\u{4eae}。")
             }
         }
         .tint(libraryStore.appTintColor)
-        .navigationTitle("主色调")
+        .navigationTitle("\u{4e3b}\u{8272}\u{8c03}")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -270,7 +256,7 @@ private struct MineThemeColorControl: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Picker("选择方式", selection: $selectionMode) {
+            Picker("\u{9009}\u{62e9}\u{65b9}\u{5f0f}", selection: $selectionMode) {
                 ForEach(ThemeColorSelectionMode.allCases) { mode in
                     Text(mode.title).tag(mode)
                 }
@@ -306,7 +292,7 @@ private struct MineThemeColorControl: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("选择颜色 \(hex)")
+                    .accessibilityLabel("\u{9009}\u{62e9}\u{989c}\u{8272} \(hex)")
                     .accessibilityAddTraits(libraryStore.appTintColorHex == hex ? .isSelected : [])
                 }
             }
@@ -323,11 +309,11 @@ private struct MineThemeColorControl: View {
                     ),
                     supportsOpacity: false
                 ) {
-                        MineSettingsLabel("自选颜色", systemImage: "eyedropper")
+                        MineSettingsLabel("\u{81ea}\u{9009}\u{989c}\u{8272}", systemImage: "eyedropper")
                 }
 
                 HStack(spacing: 10) {
-                    Text("色号")
+                    Text("\u{8272}\u{53f7}")
                     Spacer(minLength: 8)
                     TextField(AppThemeTintColor.defaultHex, text: $tintHexDraft)
                         .piliFont(.base).monospaced()
@@ -341,7 +327,7 @@ private struct MineThemeColorControl: View {
                     Button {
                         commitDraftHex()
                     } label: {
-                        MineSettingsLabel("应用", systemImage: "checkmark.circle")
+                        MineSettingsLabel("\u{5e94}\u{7528}", systemImage: "checkmark.circle")
                     }
                     .disabled(normalizedDraftHex == nil)
                     .buttonStyle(.borderless)
@@ -379,7 +365,7 @@ private struct MineThemeColorControl: View {
     }
 
     private var resetColorButton: some View {
-        Button("恢复默认") {
+        Button("\u{6062}\u{590d}\u{9ed8}\u{8ba4}") {
             libraryStore.resetAppTintColor()
             tintHexDraft = libraryStore.appTintColorHex
             selectionMode = .tone
@@ -429,14 +415,14 @@ private struct MineImageCacheControl: View {
     var body: some View {
         HStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                MineSettingsLabel("图片缓存", systemImage: "photo.on.rectangle")
+                MineSettingsLabel("\u{56fe}\u{7247}\u{7f13}\u{5b58}", systemImage: "photo.on.rectangle")
                 Text(summaryTitle).piliFont(.sm).monospacedDigit().foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             if isWorking { ProgressView().controlSize(.small) }
-            Button("清理", role: .destructive) { Task { await clearImageCache() } }
+            Button("\u{6e05}\u{7406}", role: .destructive) { Task { await clearImageCache() } }
                 .buttonStyle(.borderless).disabled(isWorking)
-                .accessibilityLabel("清理图片缓存")
+                .accessibilityLabel("\u{6e05}\u{7406}\u{56fe}\u{7247}\u{7f13}\u{5b58}")
         }
         .task {
             await reload()
@@ -444,7 +430,7 @@ private struct MineImageCacheControl: View {
     }
 
     private var summaryTitle: String {
-        guard let statistics else { return "读取中" }
+        guard let statistics else { return "\u{8bfb}\u{53d6}\u{4e2d}" }
         return ResourceCacheByteFormatter.bytes(statistics.diskUsage)
     }
 
@@ -471,9 +457,9 @@ private enum ThemeColorSelectionMode: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .tone:
-            "色调"
+            "\u{8272}\u{8c03}"
         case .palette:
-            "色板"
+            "\u{8272}\u{677f}"
         }
     }
 }

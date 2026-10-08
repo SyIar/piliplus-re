@@ -19,13 +19,14 @@ struct UploaderContentView: View {
         owner: VideoOwner,
         viewModel: UploaderViewModel,
         allowsPullToRefresh: Bool = true,
-        showsToolbarRefreshButton: Bool = false
+        showsToolbarRefreshButton: Bool = false,
+        initialSection: UploaderProfileSection? = nil
     ) {
         self.owner = owner
         self.viewModel = viewModel
         self.allowsPullToRefresh = allowsPullToRefresh
         self.showsToolbarRefreshButton = showsToolbarRefreshButton
-        _selectedSection = State(initialValue: Self.initialSection)
+        _selectedSection = State(initialValue: initialSection ?? Self.initialSection)
     }
 
     @ViewBuilder
@@ -47,9 +48,9 @@ struct UploaderContentView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
-                        PiliAccountWebView(api: dependencies.api, url: URL(string: "https://account.bilibili.com/h5/account-h5/gr/report?navhide=1&targetmid=\(owner.mid)")!, title: "举报用户")
+                        PiliAccountWebView(api: dependencies.api, url: URL(string: "https://account.bilibili.com/h5/account-h5/gr/report?navhide=1&targetmid=\(owner.mid)")!, title: "\u{4e3e}\u{62a5}\u{7528}\u{6237}")
                     } label: { PiliIcon(systemName: "exclamationmark.bubble") }
-                        .accessibilityLabel("举报用户")
+                        .accessibilityLabel("\u{4e3e}\u{62a5}\u{7528}\u{6237}")
                 }
             }
             .task {
@@ -93,7 +94,7 @@ struct UploaderContentView: View {
             VStack(alignment: .leading, spacing: 18) {
                 UploaderHeaderView(owner: owner, viewModel: viewModel)
 
-                Picker("内容", selection: $selectedSection) {
+                Picker("\u{5185}\u{5bb9}", selection: $selectedSection) {
                     ForEach(UploaderProfileSection.allCases) { section in
                         Text(section.title).tag(section)
                     }
@@ -192,7 +193,7 @@ struct UploaderContentView: View {
         .disabled(isRefreshingFromToolbar)
         .buttonBorderShape(.circle)
         .biliGlassButtonStyle()
-        .accessibilityLabel("刷新个人空间")
+        .accessibilityLabel("\u{5237}\u{65b0}\u{4e2a}\u{4eba}\u{7a7a}\u{95f4}")
     }
 
     private func refreshFromToolbar() {
@@ -225,7 +226,7 @@ struct UploaderContentView: View {
     }
 }
 
-private enum UploaderProfileSection: String, CaseIterable, Identifiable {
+enum UploaderProfileSection: String, CaseIterable, Identifiable {
     case videos
     case dynamics
     case collections
@@ -248,11 +249,11 @@ private enum UploaderProfileSection: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .videos:
-            return "投稿"
+            return "\u{6295}\u{7a3f}"
         case .dynamics:
-            return "动态"
+            return "\u{52a8}\u{6001}"
         case .collections:
-            return "合集"
+            return "\u{5408}\u{96c6}"
         }
     }
 }

@@ -5,25 +5,28 @@ struct PlayerNativeTimeLabel: View {
     let metrics: PlayerNativeControlMetrics
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            Text(fullTimeText)
+        VStack(alignment: .leading, spacing: 1) {
             Text(currentText)
+            Text(durationText).foregroundStyle(.secondary)
         }
         .font(metrics.timeFont)
         .biliLiquidGlassForeground(shadowOpacity: 0.20)
         .lineLimit(1)
         .minimumScaleFactor(0.82)
-        .accessibilityLabel("播放时间 \(fullTimeText)")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\u{64ad}\u{653e}\u{65f6}\u{95f4}")
+        .accessibilityValue(fullTimeText)
+        .accessibilityIdentifier("player.playback.time")
     }
 
     private var currentText: String {
-        BiliFormatters.duration(Int(clock.displayCurrentTime.rounded()))
+        BiliFormatters.duration(PlaybackNumericValue.integer(clock.displayCurrentTime.rounded()))
     }
 
-    private var fullTimeText: String {
-        guard let duration = clock.duration, duration > 0 else {
-            return "\(currentText) / --:--"
-        }
-        return "\(currentText) / \(BiliFormatters.duration(Int(duration.rounded())))"
+    private var durationText: String {
+        guard let duration = clock.duration, duration > 0 else { return "--:--" }
+        return BiliFormatters.duration(PlaybackNumericValue.integer(duration.rounded()))
     }
+
+    private var fullTimeText: String { "\(currentText) / \(durationText)" }
 }

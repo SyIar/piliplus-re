@@ -56,7 +56,7 @@ final class ActivePlaybackCoordinator {
     @discardableResult
     func pauseActivePlaybackForAppBackground() -> Bool {
         cleanupRegisteredPlayers()
-        return activePlayer?.pauseForAppBackground() ?? false
+        return activePlayer?.handleAppBackground() ?? false
     }
 
     @discardableResult

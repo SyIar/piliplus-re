@@ -12,7 +12,7 @@ final class ActivePlaybackCoordinatorTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "导航恢复测试",
+            title: "Navigation recovery",
             referer: "https://www.bilibili.com"
         )
         let surface = VideoSurfaceContainerView()
@@ -40,7 +40,7 @@ final class ActivePlaybackCoordinatorTests: XCTestCase {
         XCTAssertFalse(coordinator.resumeActivePlaybackAfterCancelledNavigation())
     }
 
-    func testGlobalAppBackgroundPauseStopsRecordedVideoWithoutResumeIntent() {
+    func testGlobalAppBackgroundPreservesRecordedVideoWithoutRecovery() {
         let coordinator = ActivePlaybackCoordinator.shared
         coordinator.stopActivePlayback()
         defer { coordinator.stopActivePlayback() }
@@ -49,7 +49,7 @@ final class ActivePlaybackCoordinatorTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "全局后台暂停测试",
+            title: "Global background playback",
             referer: "https://www.bilibili.com",
             engine: engine
         )
@@ -59,18 +59,21 @@ final class ActivePlaybackCoordinatorTests: XCTestCase {
         player.setPlaybackIntent(true)
         engine.onFirstFrame?(12)
 
-        XCTAssertTrue(coordinator.pauseActivePlaybackForAppBackground())
-        XCTAssertFalse(player.wantsAutoplay)
-        XCTAssertEqual(engine.backgroundPauseCallCount, 1)
+        XCTAssertFalse(coordinator.pauseActivePlaybackForAppBackground())
+        XCTAssertTrue(player.wantsAutoplay)
+        XCTAssertTrue(engine.hasMedia)
+        XCTAssertEqual(engine.backgroundPauseCallCount, 0)
+        XCTAssertEqual(engine.pauseCallCount, 0)
         XCTAssertFalse(player.resumePlaybackAfterAppBackgroundIfNeeded())
-        XCTAssertTrue(player.prepareStoppedPlaybackAfterAppBackgroundIfNeeded())
-        XCTAssertEqual(engine.videoOutputRefreshCallCount, 1)
-        XCTAssertEqual(engine.pausedPlaybackWarmCallCount, 1)
+        XCTAssertFalse(player.prepareStoppedPlaybackAfterAppBackgroundIfNeeded())
+        XCTAssertEqual(engine.videoOutputRefreshCallCount, 0)
+        XCTAssertEqual(engine.pausedPlaybackWarmCallCount, 0)
         XCTAssertEqual(engine.playerItemRecoveryCallCount, 0)
-        XCTAssertFalse(player.wantsAutoplay)
+        XCTAssertEqual(engine.seekCallCount, 0)
+        XCTAssertTrue(player.wantsAutoplay)
     }
 
-    func testAppDelegateBackgroundCallbacksUseIdempotentGlobalPause() {
+    func testAppDelegateBackgroundCallbacksPreservePlayingAndPausedIntent() {
         let coordinator = ActivePlaybackCoordinator.shared
         coordinator.stopActivePlayback()
         defer { coordinator.stopActivePlayback() }
@@ -79,7 +82,7 @@ final class ActivePlaybackCoordinatorTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "应用代理后台暂停测试",
+            title: "App delegate background playback",
             referer: "https://www.bilibili.com",
             engine: engine
         )
@@ -92,7 +95,22 @@ final class ActivePlaybackCoordinatorTests: XCTestCase {
         appDelegate.applicationDidEnterBackground(UIApplication.shared)
         appDelegate.applicationProtectedDataWillBecomeUnavailable(UIApplication.shared)
 
-        XCTAssertEqual(engine.backgroundPauseCallCount, 1)
+        XCTAssertEqual(engine.backgroundPauseCallCount, 0)
+        XCTAssertEqual(engine.pauseCallCount, 0)
+        XCTAssertTrue(player.wantsAutoplay)
+        XCTAssertTrue(engine.hasMedia)
+
+        player.pause()
+        let playCalls = engine.playCallCount
+        appDelegate.applicationDidEnterBackground(UIApplication.shared)
+        appDelegate.applicationProtectedDataWillBecomeUnavailable(UIApplication.shared)
+
         XCTAssertFalse(player.wantsAutoplay)
+        XCTAssertEqual(engine.playCallCount, playCalls)
+        XCTAssertEqual(engine.pauseCallCount, 1)
+        XCTAssertEqual(engine.backgroundPauseCallCount, 0)
+        XCTAssertEqual(engine.seekCallCount, 0)
+        XCTAssertEqual(engine.playerItemRecoveryCallCount, 0)
+        XCTAssertFalse(player.resumePlaybackAfterAppBackgroundIfNeeded())
     }
 }

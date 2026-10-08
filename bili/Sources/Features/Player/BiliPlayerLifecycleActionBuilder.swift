@@ -104,10 +104,8 @@ struct BiliPlayerLifecycleActionBuilder {
             holdAppBackgroundRecoverySnapshotIfPossible()
         } else if phase == .background {
             speedBoostActions.end(reason: .background)
-            // UIKit may send `.inactive` for Control Center and other temporary
-            // overlays. Match the player lifecycle used by PiliPlus: only pause
-            // after the app has actually entered the background.
-            if viewModel.pauseForAppBackground() {
+            // Keep background audio on the existing item; no teardown or seek.
+            if viewModel.handleAppBackground() {
                 // Prefer the frame captured during `.inactive`: on physical devices
                 // the player layer can already be blank by `didEnterBackground`.
                 holdAppBackgroundRecoverySnapshotIfPossible()
@@ -178,7 +176,7 @@ struct BiliPlayerLifecycleActionBuilder {
         } else {
             viewModel.stabilizeSurfaceLayoutAfterGeometryChange()
             visibilityActions.scheduleAutoHide()
-            // 旋转布局结束：等 surface 真正就绪出帧后再淡出快照（轮询 ready，连续稳定再 reveal）。
+            // Reveal only after the rotated surface has produced stable frames.
             releaseRotationSnapshotAfterSurfaceSettle()
         }
     }

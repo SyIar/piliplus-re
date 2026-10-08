@@ -137,7 +137,7 @@ struct PiliAppChrome: ViewModifier {
         content
             .piliFont(.base)
             .foregroundStyle(Color.cc.foreground)
-            .buttonStyle(.glass)
+            .buttonStyle(.automatic)
             .tint(Color.cc.primary)
     }
 }

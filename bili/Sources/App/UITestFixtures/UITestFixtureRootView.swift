@@ -44,6 +44,18 @@ struct UITestFixtureRootView: View {
                 }
             case .dynamicComposer:
                 PiliDynamicComposerFixture()
+            case .layoutSearch:
+                PiliSearchLayoutFixture(api: dependencies.api)
+            case .searchHistory:
+                PiliSearchHistoryFixture(api: dependencies.api)
+            case .layoutMine:
+                PiliMineLayoutFixture(dependencies: dependencies, settings: false)
+            case .layoutSettings:
+                PiliMineLayoutFixture(dependencies: dependencies, settings: true)
+            case .layoutComments:
+                PiliCommentToolbarLayoutFixture()
+            case .layoutVideo:
+                PiliVideoLayoutFixture(dependencies: dependencies)
             }
         }
         .modifier(PiliAppChrome())
@@ -123,17 +135,17 @@ private struct UITestDynamicDetailFixtureView: View {
                     isEnabled: tab == .search
                         && selectedTab == .search
                         && detailPath.wrappedValue.isEmpty,
-                    prompt: "搜索",
-                    title: "搜索"
+                    prompt: "\u{641c}\u{7d22}",
+                    title: "\u{641c}\u{7d22}"
                 ) {}
                 .toolbar {
                     if tab == .home {
                         ToolbarItem(placement: .topBarLeading) {
-                            Button("推荐/热门") {}
+                            Button("\u{63a8}\u{8350}/\u{70ed}\u{95e8}") {}
                                 .accessibilityIdentifier("fixture.home.mode")
                         }
                         ToolbarItem(placement: .topBarTrailing) {
-                            Button("账号消息", systemImage: "bell.fill") {}
+                            Button("\u{8d26}\u{53f7}\u{6d88}\u{606f}", systemImage: "bell.fill") {}
                                 .accessibilityIdentifier("fixture.home.messages")
                         }
                     }
@@ -170,7 +182,7 @@ private struct UITestDynamicDetailFixtureView: View {
     private var searchRootContent: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Button("打开搜索结果详情") {
+                Button("\u{6253}\u{5f00}\u{641c}\u{7d22}\u{7ed3}\u{679c}\u{8be6}\u{60c5}") {
                     isSearchFocused = false
                     DispatchQueue.main.async {
                         activeNavigationPath.wrappedValue.append(
@@ -202,7 +214,7 @@ private struct UITestDynamicDetailFixtureView: View {
     private var dynamicFeed: some View {
         ScrollView {
             VStack(spacing: 0) {
-                Button("打开 UP 个人页") {
+                Button("\u{6253}\u{5f00} UP \u{4e2a}\u{4eba}\u{9875}") {
                     activeNavigationPath.wrappedValue.append(Self.uploaderOwner)
                 }
                 .accessibilityIdentifier("fixture.dynamic.openUploader")
@@ -223,7 +235,7 @@ private struct UITestDynamicDetailFixtureView: View {
     }
 
     private static let items = [imageItem, pureTextItem, forwardItem]
-    private static let uploaderOwner = VideoOwner(mid: 1001, name: "动态测试用户", face: nil)
+    private static let uploaderOwner = VideoOwner(mid: 1001, name: "\u{52a8}\u{6001}\u{6d4b}\u{8bd5}\u{7528}\u{6237}", face: nil)
 
     private var activeNavigationPath: Binding<NavigationPath> {
         navigationPathBinding(for: selectedTab)
@@ -257,13 +269,13 @@ private struct UITestDynamicDetailFixtureView: View {
               "modules": {
                 "module_author": {
                   "mid": 1001,
-                  "name": "动态测试用户",
+                  "name": "\u{52a8}\u{6001}\u{6d4b}\u{8bd5}\u{7528}\u{6237}",
                   "face": "https://example.com/avatar.jpg",
-                  "pub_time": "刚刚"
+                  "pub_time": "\u{521a}\u{521a}"
                 },
                 "module_dynamic": {
                   "desc": {
-                    "text": "图文动态测试内容"
+                    "text": "\u{56fe}\u{6587}\u{52a8}\u{6001}\u{6d4b}\u{8bd5}\u{5185}\u{5bb9}"
                   },
                   "major": {
                     "draw": {
@@ -337,13 +349,13 @@ private struct UITestDynamicDetailFixtureView: View {
               "modules": {
                 "module_author": {
                   "mid": 1002,
-                  "name": "纯文本测试用户",
+                  "name": "\u{7eaf}\u{6587}\u{672c}\u{6d4b}\u{8bd5}\u{7528}\u{6237}",
                   "face": "https://example.com/avatar-2.jpg",
-                  "pub_time": "1分钟前"
+                  "pub_time": "1\u{5206}\u{949f}\u{524d}"
                 },
                 "module_dynamic": {
                   "desc": {
-                    "text": "纯文本动态测试内容"
+                    "text": "\u{7eaf}\u{6587}\u{672c}\u{52a8}\u{6001}\u{6d4b}\u{8bd5}\u{5185}\u{5bb9}"
                   }
                 },
                 "module_stat": {
@@ -371,13 +383,13 @@ private struct UITestDynamicDetailFixtureView: View {
               "modules": {
                 "module_author": {
                   "mid": 1003,
-                  "name": "转发测试用户",
+                  "name": "\u{8f6c}\u{53d1}\u{6d4b}\u{8bd5}\u{7528}\u{6237}",
                   "face": "https://example.com/avatar-3.jpg",
-                  "pub_time": "2分钟前"
+                  "pub_time": "2\u{5206}\u{949f}\u{524d}"
                 },
                 "module_dynamic": {
                   "desc": {
-                    "text": "转发动态测试内容"
+                    "text": "\u{8f6c}\u{53d1}\u{52a8}\u{6001}\u{6d4b}\u{8bd5}\u{5185}\u{5bb9}"
                   }
                 },
                 "module_stat": {
@@ -393,12 +405,12 @@ private struct UITestDynamicDetailFixtureView: View {
                 "modules": {
                   "module_author": {
                     "mid": 1004,
-                    "name": "原动态测试用户",
+                    "name": "\u{539f}\u{52a8}\u{6001}\u{6d4b}\u{8bd5}\u{7528}\u{6237}",
                     "face": "https://example.com/avatar-4.jpg"
                   },
                   "module_dynamic": {
                     "desc": {
-                      "text": "被转发的原动态内容"
+                      "text": "\u{88ab}\u{8f6c}\u{53d1}\u{7684}\u{539f}\u{52a8}\u{6001}\u{5185}\u{5bb9}"
                     }
                   }
                 }
@@ -422,13 +434,13 @@ private struct UITestDynamicDetailFixtureView: View {
               "modules": {
                 "module_author": {
                   "mid": 1004,
-                  "name": "原动态测试用户",
+                  "name": "\u{539f}\u{52a8}\u{6001}\u{6d4b}\u{8bd5}\u{7528}\u{6237}",
                   "face": "https://example.com/avatar-4.jpg",
-                  "pub_time": "3分钟前"
+                  "pub_time": "3\u{5206}\u{949f}\u{524d}"
                 },
                 "module_dynamic": {
                   "desc": {
-                    "text": "被转发的原动态内容"
+                    "text": "\u{88ab}\u{8f6c}\u{53d1}\u{7684}\u{539f}\u{52a8}\u{6001}\u{5185}\u{5bb9}"
                   }
                 },
                 "module_stat": {
@@ -453,11 +465,11 @@ private enum UITestRootTab: Hashable {
 
     var title: String {
         switch self {
-        case .home: "首页"
-        case .dynamic: "动态"
-        case .live: "直播"
-        case .search: "搜索"
-        case .mine: "我的"
+        case .home: "\u{9996}\u{9875}"
+        case .dynamic: "\u{52a8}\u{6001}"
+        case .live: "\u{76f4}\u{64ad}"
+        case .search: "\u{641c}\u{7d22}"
+        case .mine: "\u{6211}\u{7684}"
         }
     }
 
