@@ -54,28 +54,43 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
     }
 
     @MainActor
-    func testSystemNowPlayingPublicationIsDisabled() {
-        XCTAssertFalse(PlayerSystemMediaPresentationPolicy.publishesNowPlayingInfo)
-
-        let playbackStates = [
-            (true, true, false, false, false),
-            (true, false, true, false, false),
-            (true, false, false, false, false),
-            (false, true, true, false, false),
-            (true, true, true, true, false),
-            (true, true, true, false, true),
-        ]
-        for state in playbackStates {
-            XCTAssertFalse(
-                PlayerNowPlayingPublicationPolicy.shouldPublish(
-                    isActive: state.0,
-                    wantsAutoplay: state.1,
-                    isPlaying: state.2,
-                    isTerminated: state.3,
-                    hasPlaybackFailure: state.4
-                )
-            )
+    func testSystemNowPlayingRemainsAvailableWhilePaused() {
+        XCTAssertTrue(PlayerSystemMediaPresentationPolicy.publishesNowPlayingInfo)
+        for mode in [PlayerPlaybackContentMode.video, .audioOnly] {
+            XCTAssertTrue(PlayerNowPlayingPublicationPolicy.shouldPublish(
+                isActive: true, wantsAutoplay: false, isPlaying: false,
+                isTerminated: false, hasPlaybackFailure: false, playbackContentMode: mode))
+            XCTAssertFalse(PlayerNowPlayingPublicationPolicy.shouldPublish(
+                isActive: false, wantsAutoplay: true, isPlaying: true,
+                isTerminated: false, hasPlaybackFailure: false, playbackContentMode: mode))
+            XCTAssertFalse(PlayerNowPlayingPublicationPolicy.shouldPublish(
+                isActive: true, wantsAutoplay: true, isPlaying: true,
+                isTerminated: true, hasPlaybackFailure: false, playbackContentMode: mode))
         }
+    }
+
+    @MainActor
+    func testRecordedVideoSurvivesBackgroundAndLockWithoutRebuilding() {
+        let coordinator = ActivePlaybackCoordinator.shared
+        coordinator.stopActivePlayback()
+        let engine = PlayerLifecycleEngineSpy(isPlaying: true)
+        let player = PlayerStateViewModel(videoURL: nil, audioURL: nil, title: "Background regression",
+                                         referer: "https://www.bilibili.com", engine: engine)
+        coordinator.activate(player)
+        player.setPlaybackIntent(true)
+        defer { player.stop(); coordinator.stopActivePlayback() }
+        for _ in 0..<3 {
+            XCTAssertFalse(coordinator.pauseActivePlaybackForAppBackground())
+            XCTAssertFalse(player.handleAppBackground())
+            XCTAssertTrue(player.wantsAutoplay)
+            XCTAssertFalse(player.prepareStoppedPlaybackAfterAppBackgroundIfNeeded())
+        }
+        XCTAssertEqual(engine.backgroundPauseCallCount, 0)
+        XCTAssertEqual(engine.playerItemRecoveryCallCount, 0)
+        XCTAssertEqual(engine.seekCallCount, 0)
+        player.pause()
+        XCTAssertFalse(player.handleAppBackground())
+        XCTAssertFalse(player.wantsAutoplay, "Background transitions must not undo an explicit pause")
     }
 
     @MainActor
@@ -107,13 +122,13 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "播放标题",
-            authorName: "  投稿作者  ",
+            title: "\u{64ad}\u{653e}\u{6807}\u{9898}",
+            authorName: "  \u{6295}\u{7a3f}\u{4f5c}\u{8005}  ",
             referer: "https://www.bilibili.com"
         )
         defer { player.stop() }
 
-        XCTAssertEqual(player.nowPlayingArtist, "投稿作者")
+        XCTAssertEqual(player.nowPlayingArtist, "\u{6295}\u{7a3f}\u{4f5c}\u{8005}")
     }
 
     @MainActor
@@ -454,7 +469,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         XCTAssertEqual(nativeBody.pointSize, preferred.pointSize, accuracy: 0.001)
 
         let input = DynamicAttributedTextInput.dynamicFeedBody(
-            segments: [.text("正文 [doge]")],
+            segments: [.text("\u{6b63}\u{6587} [doge]")],
             emoteSize: 20,
             maxLines: nil
         )
@@ -688,7 +703,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "系统后台暂停测试",
+            title: "\u{7cfb}\u{7edf}\u{540e}\u{53f0}\u{6682}\u{505c}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             engine: engine
         )
@@ -739,7 +754,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "画中画返回测试",
+            title: "\u{753b}\u{4e2d}\u{753b}\u{8fd4}\u{56de}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             engine: engine
         )
@@ -765,7 +780,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let video = VideoItem(
             bvid: "BV1PiPRestoreTest",
             aid: nil,
-            title: "画中画恢复合并测试",
+            title: "\u{753b}\u{4e2d}\u{753b}\u{6062}\u{590d}\u{5408}\u{5e76}\u{6d4b}\u{8bd5}",
             pic: nil,
             desc: nil,
             duration: nil,
@@ -804,7 +819,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: audioURL,
-            title: "听视频后台播放测试",
+            title: "\u{542c}\u{89c6}\u{9891}\u{540e}\u{53f0}\u{64ad}\u{653e}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             playbackContentMode: .audioOnly,
             engine: engine
@@ -832,7 +847,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: audioURL,
-            title: "听视频前台进度测试",
+            title: "\u{542c}\u{89c6}\u{9891}\u{524d}\u{53f0}\u{8fdb}\u{5ea6}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             resumeTime: 12,
             startupResumePolicy: .immediate,
@@ -865,7 +880,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let oldPlayer = PlayerStateViewModel(
             videoURL: URL(string: "https://example.com/video.m4s"),
             audioURL: URL(string: "https://example.com/video-audio.m4s"),
-            title: "原视频播放器",
+            title: "\u{539f}\u{89c6}\u{9891}\u{64ad}\u{653e}\u{5668}",
             referer: "https://www.bilibili.com",
             engine: oldEngine
         )
@@ -873,7 +888,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let newPlayer = PlayerStateViewModel(
             videoURL: nil,
             audioURL: URL(string: "https://example.com/audio-only.m4s"),
-            title: "听视频播放器",
+            title: "\u{542c}\u{89c6}\u{9891}\u{64ad}\u{653e}\u{5668}",
             referer: "https://www.bilibili.com",
             playbackContentMode: .audioOnly,
             engine: newEngine
@@ -912,7 +927,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "后台预热兜底测试",
+            title: "\u{540e}\u{53f0}\u{9884}\u{70ed}\u{515c}\u{5e95}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             engine: engine
         )
@@ -944,7 +959,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: URL(string: "https://example.com/video.m4s"),
             audioURL: nil,
-            title: "后台继续播放快速兜底测试",
+            title: "\u{540e}\u{53f0}\u{7ee7}\u{7eed}\u{64ad}\u{653e}\u{5feb}\u{901f}\u{515c}\u{5e95}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             engine: engine
         )
@@ -982,7 +997,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "系统后台手动暂停测试",
+            title: "\u{7cfb}\u{7edf}\u{540e}\u{53f0}\u{624b}\u{52a8}\u{6682}\u{505c}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             isLiveStream: true,
             engine: engine
@@ -1012,7 +1027,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "连续锁屏暂停测试",
+            title: "\u{8fde}\u{7eed}\u{9501}\u{5c4f}\u{6682}\u{505c}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             isLiveStream: true,
             engine: engine
@@ -1046,7 +1061,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "后台画面恢复测试",
+            title: "\u{540e}\u{53f0}\u{753b}\u{9762}\u{6062}\u{590d}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             isLiveStream: true,
             engine: engine
@@ -1092,7 +1107,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "后台分阶段恢复测试",
+            title: "\u{540e}\u{53f0}\u{5206}\u{9636}\u{6bb5}\u{6062}\u{590d}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             isLiveStream: true,
             engine: engine
@@ -1130,7 +1145,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "后台软恢复成功测试",
+            title: "\u{540e}\u{53f0}\u{8f6f}\u{6062}\u{590d}\u{6210}\u{529f}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             isLiveStream: true,
             engine: engine
@@ -1172,7 +1187,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "后台 PlayerItem 恢复成功测试",
+            title: "\u{540e}\u{53f0} PlayerItem \u{6062}\u{590d}\u{6210}\u{529f}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             isLiveStream: true,
             engine: engine
@@ -1214,7 +1229,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "后台 PlayerItem 兜底测试",
+            title: "\u{540e}\u{53f0} PlayerItem \u{515c}\u{5e95}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             isLiveStream: true,
             engine: engine
@@ -1266,7 +1281,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "画中画开关测试",
+            title: "\u{753b}\u{4e2d}\u{753b}\u{5f00}\u{5173}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com"
         )
         let surface = VideoSurfaceContainerView()
@@ -1295,7 +1310,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "画中画重复关闭测试",
+            title: "\u{753b}\u{4e2d}\u{753b}\u{91cd}\u{590d}\u{5173}\u{95ed}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com",
             engine: engine
         )
@@ -1334,7 +1349,7 @@ final class PlayerFormalPlaybackConfigurationTests: XCTestCase {
         let player = PlayerStateViewModel(
             videoURL: nil,
             audioURL: nil,
-            title: "原生手势测试",
+            title: "\u{539f}\u{751f}\u{624b}\u{52bf}\u{6d4b}\u{8bd5}",
             referer: "https://www.bilibili.com"
         )
         defer {

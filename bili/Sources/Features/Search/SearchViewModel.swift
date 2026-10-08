@@ -13,13 +13,13 @@ enum SearchSortOrder: String, CaseIterable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .comprehensive:
-            return "综合排序"
+            return "\u{7efc}\u{5408}\u{6392}\u{5e8f}"
         case .mostPlayed:
-            return "最多播放"
+            return "\u{6700}\u{591a}\u{64ad}\u{653e}"
         case .newest:
-            return "最新发布"
+            return "\u{6700}\u{65b0}\u{53d1}\u{5e03}"
         case .mostSaved:
-            return "最多收藏"
+            return "\u{6700}\u{591a}\u{6536}\u{85cf}"
         }
     }
 
@@ -46,24 +46,26 @@ enum SearchScope: String, CaseIterable, Identifiable, Hashable {
     case user
     case live
 
+    static let resultTabs: [SearchScope] = [.video, .bangumi, .movie, .user, .article, .live]
+
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .comprehensive:
-            return "综合内容"
+            return "\u{7efc}\u{5408}\u{5185}\u{5bb9}"
         case .video:
-            return "视频"
+            return "\u{89c6}\u{9891}"
         case .bangumi:
-            return "番剧"
+            return "\u{756a}\u{5267}"
         case .movie:
-            return "影视"
+            return "\u{5f71}\u{89c6}"
         case .article:
-            return "专栏"
+            return "\u{4e13}\u{680f}"
         case .live:
-            return "直播间"
+            return "\u{76f4}\u{64ad}\u{95f4}"
         case .user:
-            return "UP主"
+            return "UP\u{4e3b}"
         }
     }
 
@@ -119,17 +121,17 @@ enum SearchResultItem: Identifiable, Hashable {
     var sectionTitle: String {
         switch self {
         case .video:
-            return "视频"
+            return "\u{89c6}\u{9891}"
         case .live:
-            return "直播间"
+            return "\u{76f4}\u{64ad}\u{95f4}"
         case .user:
-            return "UP主"
+            return "UP\u{4e3b}"
         case .bangumi:
-            return "番剧"
+            return "\u{756a}\u{5267}"
         case .movie:
-            return "影视"
+            return "\u{5f71}\u{89c6}"
         case .article:
-            return "专栏"
+            return "\u{4e13}\u{680f}"
         }
     }
 
@@ -154,7 +156,7 @@ enum SearchResultItem: Identifiable, Hashable {
 @MainActor
 final class SearchViewModel: ObservableObject {
     @Published var query = ""
-    @Published var selectedScope: SearchScope = .comprehensive
+    @Published var selectedScope: SearchScope = .video
     @Published var selectedOrder: SearchSortOrder = .comprehensive
     @Published var selectedDuration: PiliSearchDuration = .any
     @Published private(set) var searchHistory: [String] = []
@@ -198,11 +200,11 @@ final class SearchViewModel: ObservableObject {
     }
 
     var searchPrompt: String {
-        selectedScope == .comprehensive ? (defaultSearch?.display ?? "搜索") : "搜索\(selectedScope.title)"
+        selectedScope == .comprehensive ? (defaultSearch?.display ?? "\u{641c}\u{7d22}") : "\u{641c}\u{7d22}\(selectedScope.title)"
     }
 
     var emptyResultsTitle: String {
-        selectedScope == .comprehensive ? "没有找到相关内容" : "没有找到\(selectedScope.title)"
+        selectedScope == .comprehensive ? "\u{6ca1}\u{6709}\u{627e}\u{5230}\u{76f8}\u{5173}\u{5185}\u{5bb9}" : "\u{6ca1}\u{6709}\u{627e}\u{5230}\(selectedScope.title)"
     }
 
     func loadHotSearch() async {
@@ -231,6 +233,7 @@ final class SearchViewModel: ObservableObject {
 
     func queryChanged() {
         let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard term != lastKeyword || term.isEmpty else { return }
         guard !term.isEmpty else {
             debouncer.cancel()
             invalidateSearchRequests()
@@ -270,12 +273,16 @@ final class SearchViewModel: ObservableObject {
         guard !term.isEmpty else { return }
         debouncer.cancel()
         let generation = beginSearchRequest()
+        // Publish the submitted keyword before synchronizing the native field.
+        // Its delegate may echo the programmatic text change synchronously.
+        lastKeyword = term
         query = term
         historyStore.record(term, enabled: !api.libraryStore.incognitoModeEnabled)
         searchHistory = historyStore.values
         page = 1
         lastKeyword = term
         hasMore = false
+        updateResults([])
         updateSuggestions([])
         state = .loading
         do {
@@ -291,7 +298,7 @@ final class SearchViewModel: ObservableObject {
     }
 
     func searchHotSearch(_ item: HotSearchItem) async {
-        selectedScope = .comprehensive
+        selectedScope = .video
         selectedOrder = .comprehensive
         await search(item.keyword)
     }
@@ -370,28 +377,7 @@ final class SearchViewModel: ObservableObject {
 
     private func fetchResults(keyword: String, page: Int) async throws -> [SearchResultItem] {
         switch selectedScope {
-        case .comprehensive:
-            let videos = try await api.searchVideos(keyword: keyword, page: page, order: selectedOrder.apiValue, duration: selectedDuration.rawValue)
-                .map(SearchResultItem.video)
-            guard page == 1 else { return videos }
-            async let userResults = api.searchUsers(keyword: keyword, page: 1)
-            async let bangumiResults = api.searchBangumi(keyword: keyword, page: 1)
-            async let movieResults = api.searchMovies(keyword: keyword, page: 1)
-            async let articleResults = api.searchArticles(keyword: keyword, page: 1)
-            let users = ((try? await userResults) ?? [])
-                .prefix(3)
-                .map(SearchResultItem.user)
-            let bangumi = ((try? await bangumiResults) ?? [])
-                .prefix(2)
-                .map(SearchResultItem.bangumi)
-            let movies = ((try? await movieResults) ?? [])
-                .prefix(2)
-                .map(SearchResultItem.movie)
-            let articles = ((try? await articleResults) ?? [])
-                .prefix(3)
-                .map(SearchResultItem.article)
-            return users + bangumi + movies + articles + videos
-        case .video:
+        case .comprehensive, .video:
             return try await api.searchVideos(keyword: keyword, page: page, order: selectedOrder.apiValue, duration: selectedDuration.rawValue)
                 .map(SearchResultItem.video)
         case .bangumi:

@@ -21,7 +21,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
         case timedOut
 
         var errorDescription: String? {
-            "AVPlayer 等待媒体就绪超时"
+            "AVPlayer \u{7b49}\u{5f85}\u{5a92}\u{4f53}\u{5c31}\u{7eea}\u{8d85}\u{65f6}"
         }
     }
 
@@ -221,6 +221,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
 #endif
 
     init() {
+        player.audiovisualBackgroundPlaybackPolicy = .continuesIfPossible
         for name in [PiliSuperResolutionPolicy.changed, ProcessInfo.thermalStateDidChangeNotification,
                      NSNotification.Name.NSProcessInfoPowerStateDidChange, UIApplication.didBecomeActiveNotification,
                      UIApplication.willResignActiveNotification] {
@@ -2086,10 +2087,10 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
 
     private func recordAccessLogEntry(for item: AVPlayerItem) {
         guard let source, let event = item.accessLog()?.events.last else { return }
-        let observedKbps = Int((event.observedBitrate / 1_000).rounded())
-        let indicatedKbps = Int((event.indicatedBitrate / 1_000).rounded())
-        let transferMilliseconds = Int((event.transferDuration * 1_000).rounded())
-        let startupMilliseconds = Int((event.startupTime * 1_000).rounded())
+        let observedKbps = PlaybackNumericValue.integer((event.observedBitrate / 1_000).rounded())
+        let indicatedKbps = PlaybackNumericValue.integer((event.indicatedBitrate / 1_000).rounded())
+        let transferMilliseconds = PlaybackNumericValue.integer((event.transferDuration * 1_000).rounded())
+        let startupMilliseconds = PlaybackNumericValue.integer((event.startupTime * 1_000).rounded())
         let server = event.serverAddress ?? "-"
         let stallDelta = max(event.numberOfStalls - lastRecordedAccessLogStallCount, 0)
         lastRecordedAccessLogStallCount = max(lastRecordedAccessLogStallCount, event.numberOfStalls)
@@ -2465,7 +2466,7 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
     ) async {
         guard isCurrentPlayerItem(item), let source else { return }
         let elapsedMilliseconds = Int(PlayerMetricsLog.elapsedMilliseconds(since: startedAt).rounded())
-        let message = "播放长时间无进展"
+        let message = "\u{64ad}\u{653e}\u{957f}\u{65f6}\u{95f4}\u{65e0}\u{8fdb}\u{5c55}"
         lastPlaybackFailureReason = HLSBridgeFailureReason(
             layer: .avPlayerItem,
             category: .terminalStall,
@@ -2731,8 +2732,8 @@ final class AVPlayerHLSBridgeEngine: PlayerRenderingEngine {
     ) async {
         guard isCurrentPlayerItem(item), let source else { return }
         let elapsedMilliseconds = Int(PlayerMetricsLog.elapsedMilliseconds(since: startedAt).rounded())
-        let dynamicRangeTitle = source.dynamicRange == .dolbyVision ? "杜比视界" : "HDR"
-        let message = "\(dynamicRangeTitle) 首帧超时"
+        let dynamicRangeTitle = source.dynamicRange == .dolbyVision ? "\u{675c}\u{6bd4}\u{89c6}\u{754c}" : "HDR"
+        let message = "\(dynamicRangeTitle) \u{9996}\u{5e27}\u{8d85}\u{65f6}"
         lastPlaybackFailureReason = HLSBridgeFailureReason(
             layer: .avPlayerItem,
             category: .decoderFailed,

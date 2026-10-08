@@ -20,7 +20,7 @@ struct SearchFiltersSheet: View {
             PiliForm {
                 Section("\u{5185}\u{5bb9}\u{7c7b}\u{578b}") {
                     Picker("\u{5185}\u{5bb9}\u{7c7b}\u{578b}", selection: $scope) {
-                        ForEach(SearchScope.allCases) { Text($0.title).tag($0) }
+                        ForEach(SearchScope.resultTabs) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.inline)
                     .labelsHidden()
@@ -40,7 +40,7 @@ struct SearchFiltersSheet: View {
                 }
                 Section {
                     Button("\u{6062}\u{590d}\u{9ed8}\u{8ba4}") {
-                        scope = .comprehensive
+                        scope = .video
                         order = .comprehensive
                         duration = .any
                     }

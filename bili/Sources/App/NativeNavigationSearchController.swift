@@ -68,7 +68,9 @@ private struct NativeNavigationSearchBridge: UIViewControllerRepresentable {
         weak var owner: Controller?
 
         func updateSearchResults(for searchController: UISearchController) {
-            owner?.syncText(searchController.searchBar.text)
+            // UIKit calls this while activating and installing the controller,
+            // including before its text reflects a tapped history entry.
+            // Actual typing is delivered through searchBar(_:textDidChange:).
         }
 
         func searchBar(_ searchBar: UISearchBar, textDidChange _: String) {
@@ -109,6 +111,7 @@ private struct NativeNavigationSearchBridge: UIViewControllerRepresentable {
         private var restoredNavigationTitle: String?
         private var restoredNavigationTitleView: UIView?
         private var installedNavigationTitleView: UIView?
+        private var isSynchronizing = false
 
         override func loadView() {
             view = ClearPassthroughView()
@@ -143,6 +146,8 @@ private struct NativeNavigationSearchBridge: UIViewControllerRepresentable {
             onSubmit: @escaping () -> Void,
             delegate: UISearchResultsUpdating & UISearchBarDelegate
         ) {
+            isSynchronizing = true
+            defer { isSynchronizing = false }
             textBinding = text
             isPresentedBinding = isPresented
             isKeyboardVisibleBinding = isKeyboardVisible
@@ -169,7 +174,7 @@ private struct NativeNavigationSearchBridge: UIViewControllerRepresentable {
         }
 
         func syncText(_ value: String?) {
-            guard isEnabled,
+            guard isEnabled, !isSynchronizing,
                   searchController?.isActive == true,
                   let textBinding else { return }
             let value = value ?? ""

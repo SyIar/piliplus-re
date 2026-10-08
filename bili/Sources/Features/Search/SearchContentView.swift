@@ -13,7 +13,7 @@ struct SearchContentView: View {
         )
         .overlay {
             if case .failed(let message) = viewModel.state, viewModel.results.isEmpty {
-                ErrorStateView(title: "搜索失败", message: message) {
+                ErrorStateView(title: "\u{641c}\u{7d22}\u{5931}\u{8d25}", message: message) {
                     Task { await viewModel.search() }
                 }
             }
@@ -79,6 +79,12 @@ struct SearchFilterButton: View {
             .frame(maxWidth: .infinity, minHeight: 44)
             .contentShape(Rectangle())
         }
+        .onChange(of: viewModel.showsDiscovery) { _, discovery in
+            if !discovery {
+                accessoryStore.isSearchFocused = false
+                accessoryStore.isKeyboardVisible = false
+            }
+        }
         .buttonStyle(.plain)
         .accessibilityLabel("\u{641c}\u{7d22}\u{7b5b}\u{9009}")
         .accessibilityValue(selectionDescription)
@@ -89,7 +95,7 @@ struct SearchFilterButton: View {
     }
 
     private var activeFilterCount: Int {
-        (viewModel.selectedScope == .comprehensive ? 0 : 1)
+        (viewModel.selectedScope == .video ? 0 : 1)
             + (viewModel.selectedScope.supportsOrder && viewModel.selectedOrder != .comprehensive ? 1 : 0)
             + (viewModel.selectedScope.supportsOrder && viewModel.selectedDuration != .any ? 1 : 0)
     }

@@ -65,7 +65,7 @@ private struct PlayerNowPlayingMetadataFingerprint: Equatable {
 }
 
 enum PlayerSystemMediaPresentationPolicy {
-    static let publishesNowPlayingInfo = false
+    static let publishesNowPlayingInfo = true
 }
 
 enum PlayerNowPlayingPublicationPolicy {
@@ -85,7 +85,7 @@ enum PlayerNowPlayingPublicationPolicy {
         return !isTerminated
             && !hasPlaybackFailure
             && isActive
-            && (wantsAutoplay || isPlaying)
+            // A paused item must remain available to the lock-screen Play button.
     }
 }
 
@@ -131,6 +131,7 @@ private final class PlayerRemoteControlSession {
     }
 
     func clear() {
+        PlaybackLiveActivity.shared.end()
         currentPlayerID = nil
         resetDetailedMetadataCache()
         let center = MPRemoteCommandCenter.shared()
@@ -148,14 +149,14 @@ private final class PlayerRemoteControlSession {
         let playerID = ObjectIdentifier(player)
         guard currentPlayerID == playerID else { return }
 
-        let duration = player.displayDuration.flatMap { $0 > 0 ? $0 : nil }
+        let duration = PlaybackNumericValue.seconds(player.displayDuration).flatMap { $0 > 0 ? $0 : nil }
         let playbackState = player.nowPlayingPlaybackState
         let fingerprint = PlayerNowPlayingMetadataFingerprint(
             playerID: playerID,
             title: player.title,
             artist: player.nowPlayingArtist,
             artworkURL: player.artworkURL,
-            durationSeconds: duration.map { Int($0.rounded()) },
+            durationSeconds: duration.map { PlaybackNumericValue.integer($0.rounded()) },
             playbackRatePercent: Int((player.playbackRate.rawValue * 100).rounded()),
             playbackState: playbackState,
             isLiveStream: player.isNowPlayingLiveStream
@@ -174,14 +175,15 @@ private final class PlayerRemoteControlSession {
             MPMediaItemPropertyArtist: player.nowPlayingArtist,
             MPNowPlayingInfoPropertyPlaybackRate: effectiveRate,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: max(player.playbackRate.rawValue, 0),
-            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue
+            MPNowPlayingInfoPropertyMediaType: player.isAudioOnlyPlayback
+                ? MPNowPlayingInfoMediaType.audio.rawValue : MPNowPlayingInfoMediaType.video.rawValue
         ]
         if player.isNowPlayingLiveStream {
             info[MPNowPlayingInfoPropertyIsLiveStream] = true
         } else if let duration {
             info[MPMediaItemPropertyPlaybackDuration] = duration
             info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = min(
-                max(player.currentTime, 0),
+                PlaybackNumericValue.seconds(player.currentTime) ?? 0,
                 duration
             )
         }
@@ -341,8 +343,8 @@ final class PlayerPlaybackClock: ObservableObject {
     }
 
     func update(time: TimeInterval? = nil, duration: TimeInterval? = nil, force: Bool = false) {
-        let nextTime = max(time ?? currentTime, 0)
-        let nextDuration = duration
+        let nextTime = PlaybackNumericValue.seconds(time) ?? currentTime
+        let nextDuration = PlaybackNumericValue.seconds(duration)
         let durationChanged: Bool
         if let currentDuration = self.duration, let nextDuration {
             durationChanged = abs(currentDuration - nextDuration) >= 0.5
@@ -365,6 +367,7 @@ final class PlayerPlaybackClock: ObservableObject {
     }
 
     func updateSeekPreview(progress: Double, force: Bool = false) {
+        guard progress.isFinite else { return }
         let clamped = min(max(progress, 0), 1)
         guard force || seekPreviewProgress != clamped else { return }
         seekPreviewProgress = clamped
@@ -712,7 +715,6 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func configureAudioSessionNotificationsIfNeeded() {
-        guard playbackContentMode == .audioOnly else { return }
         NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)
             .receive(on: RunLoop.main)
             .sink { [weak self] notification in
@@ -736,7 +738,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func handleAudioSessionInterruption(_ notification: Notification) {
-        guard playbackContentMode == .audioOnly,
+        guard ActivePlaybackCoordinator.shared.isActive(self), !isTerminated,
               let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
               let type = AVAudioSession.InterruptionType(rawValue: rawType)
         else { return }
@@ -769,7 +771,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func handleAudioRouteChange(_ notification: Notification) {
-        guard playbackContentMode == .audioOnly,
+        guard ActivePlaybackCoordinator.shared.isActive(self), !isTerminated,
               let rawReason = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
               AVAudioSession.RouteChangeReason(rawValue: rawReason) == .oldDeviceUnavailable,
               let previousRoute = notification.userInfo?[AVAudioSessionRouteChangePreviousRouteKey]
@@ -782,7 +784,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func handleAudioMediaServicesReset() {
-        guard playbackContentMode == .audioOnly, !isTerminated else { return }
+        guard ActivePlaybackCoordinator.shared.isActive(self), !isTerminated else { return }
         let shouldResume = wantsAutoplay
             || isPlaying
             || playbackSnapshot().isPlaying
@@ -1538,7 +1540,8 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private var allowsPlaybackInCurrentApplicationState: Bool {
-        playbackContentMode == .audioOnly
+        PlayerSystemMediaPresentationPolicy.publishesNowPlayingInfo
+            || playbackContentMode == .audioOnly
             || UIApplication.shared.applicationState == .active
             || isPictureInPictureActive
     }
@@ -1667,6 +1670,15 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
 
     func cancelTransientSystemOverlayPlaybackPreservation() {
         shouldResumeAfterTransientSystemOverlay = false
+    }
+
+    /// Backgrounding is not a user pause. Keep the same item, clock and audio
+    /// session alive, including when PiP is unavailable or disabled.
+    @discardableResult
+    func handleAppBackground() -> Bool {
+        guard !isTerminated, ActivePlaybackCoordinator.shared.isActive(self) else { return false }
+        syncRemotePlaybackControls(forceNowPlayingTimeUpdate: true)
+        return false
     }
 
     @discardableResult
@@ -2352,7 +2364,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func failPlaybackRecovery(reason: PlaybackRecoveryWatchdogReason) {
-        let message = reason == .firstFrame ? "播放首帧长时间无响应" : "播放长时间无进展"
+        let message = reason == .firstFrame ? "\u{64ad}\u{653e}\u{9996}\u{5e27}\u{957f}\u{65f6}\u{95f4}\u{65e0}\u{54cd}\u{5e94}" : "\u{64ad}\u{653e}\u{957f}\u{65f6}\u{95f4}\u{65e0}\u{8fdb}\u{5c55}"
         let failureReason = HLSBridgeFailureReason(
             layer: .local,
             category: .terminalStall,
@@ -4910,7 +4922,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func updateDuration(_ newDuration: TimeInterval) {
-        guard newDuration > 0 else { return }
+        guard PlaybackNumericValue.seconds(newDuration) != nil, newDuration > 0 else { return }
         if let duration, abs(duration - newDuration) < 0.5 {
             return
         }
@@ -4925,7 +4937,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
     }
 
     private func syncRemotePlaybackControls(forceNowPlayingTimeUpdate: Bool = false) {
-        guard shouldPublishNowPlayingMetadata else {
+        guard shouldPublishNowPlayingMetadata, playbackPhase != .ended else {
             PlayerRemoteControlSession.shared.clearIfCurrent(self)
             return
         }
@@ -4933,6 +4945,7 @@ final class PlayerStateViewModel: NSObject, ObservableObject {
             for: self,
             forceNowPlayingTimeUpdate: forceNowPlayingTimeUpdate
         )
+        PlaybackLiveActivity.shared.update(player: self)
     }
 
     private func handleEnginePlaybackState(_ state: PlayerEnginePlaybackState) {
@@ -6017,7 +6030,7 @@ extension PlayerStateViewModel: AVPictureInPictureControllerDelegate {
             else { return }
             self.isPictureInPictureActive = false
             self.releasePictureInPictureControllerIfDisabled()
-            self.errorMessage = "画中画启动失败：\(error.localizedDescription)"
+            self.errorMessage = "\u{753b}\u{4e2d}\u{753b}\u{542f}\u{52a8}\u{5931}\u{8d25}：\(error.localizedDescription)"
         }
     }
 }
@@ -6094,7 +6107,7 @@ extension PlayerStateViewModel: AVPlayerViewControllerDelegate {
             else { return }
             self.isNativePictureInPictureActive = false
             self.syncPictureInPictureState()
-            self.errorMessage = "画中画启动失败：\(error.localizedDescription)"
+            self.errorMessage = "\u{753b}\u{4e2d}\u{753b}\u{542f}\u{52a8}\u{5931}\u{8d25}：\(error.localizedDescription)"
         }
     }
 }

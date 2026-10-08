@@ -27,6 +27,9 @@ struct SearchListView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 18)
         }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if !viewModel.showsDiscovery { SearchResultTabs(viewModel: viewModel) }
+        }
         .contentMargins(.top, 0, for: .scrollContent)
         .scrollDismissesKeyboard(.immediately)
         .scrollBounceBehavior(.always, axes: .vertical)
@@ -57,14 +60,14 @@ struct SearchListView: View {
                 }.buttonStyle(.plain).accessibilityLabel("\u{9ed8}\u{8ba4}\u{641c}\u{7d22}：\(word.display)")
             }
             if !viewModel.searchHistory.isEmpty {
-                SearchContentSection(title: "\u{641c}\u{7d22}\u{5386}\u{53f2}", systemImage: "clock") {
-                    HStack { Spacer(); Button("\u{6e05}\u{7a7a}", role: .destructive) { confirmsClearHistory = true }.piliFont(.sm) }
+                SearchContentSection(title: "\u{641c}\u{7d22}\u{5386}\u{53f2}", systemImage: "clock", clearAction: { confirmsClearHistory = true }) {
                     LazyVGrid(columns: discoveryColumns, alignment: .leading, spacing: 10) {
                         ForEach(viewModel.searchHistory, id: \.self) { term in
                             Button { Task { await viewModel.search(term) } } label: {
-                                Text(term).piliFont(.base).lineLimit(1).frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
-                                    .padding(.horizontal, 12).ccGlassEffect(.capsule)
+                                Text(term).piliFont(.base).lineLimit(1).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                    .padding(.horizontal, 12).background(.quaternary, in: Capsule()).contentShape(Capsule())
                             }.buttonStyle(.plain)
+                                .accessibilityIdentifier("search.history.\(term)")
                                 .contextMenu { PiliIconButton("\u{5220}\u{9664}\u{8bb0}\u{5f55}", systemImage: "trash", role: .destructive) { viewModel.removeHistory(term) } }
                         }
                     }
@@ -167,19 +170,29 @@ private struct SearchContentSection<Content: View>: View {
     let title: String
     let systemImage: String
     let content: Content
+    let clearAction: (() -> Void)?
 
-    init(title: String, systemImage: String, @ViewBuilder content: () -> Content) {
+    init(title: String, systemImage: String, clearAction: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
         self.title = title
+        self.clearAction = clearAction
         self.systemImage = systemImage
         self.content = content()
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PiliLabel(title, systemImage: systemImage)
-                .piliFont(.baseBold)
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(.primary)
+            HStack {
+                PiliLabel(title, systemImage: systemImage)
+                    .piliFont(.baseBold)
+                    .foregroundStyle(.primary)
+                Spacer(minLength: 12)
+                if let clearAction {
+                    Button("\u{6e05}\u{7a7a}", action: clearAction)
+                        .font(.subheadline)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .accessibilityIdentifier("search.history.clear")
+                }
+            }
 
             content
         }

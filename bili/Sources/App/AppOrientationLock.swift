@@ -98,6 +98,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         PlayerSystemMediaControls.clear()
+        PlaybackLiveActivity.shared.clearOrphanedActivities()
         LaunchAppearance.applyToConnectedWindows()
         return true
     }

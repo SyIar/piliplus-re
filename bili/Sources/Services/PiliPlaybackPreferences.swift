@@ -12,6 +12,9 @@ final class PiliPlaybackPreferences: ObservableObject {
     private init() {
         order = Self.readOrder()
         observer = NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            // Defaults notifications arrive on the writer's thread. Schedule
+            // before entering the MainActor-isolated sink closure, not inside it.
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 Task { @MainActor in
                     let value = Self.readOrder()

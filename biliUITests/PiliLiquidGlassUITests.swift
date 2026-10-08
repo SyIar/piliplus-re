@@ -23,9 +23,9 @@ final class PiliLiquidGlassUITests: XCTestCase {
         open.tap()
         XCTAssertTrue(nested.waitForExistence(timeout: 10))
         app.buttons["glass.replace"].tap()
-        XCTAssertTrue(app.navigationBars["播放设置 2"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(app.navigationBars["\u{64ad}\u{653e}\u{8bbe}\u{7f6e} 2"].waitForExistence(timeout: 10), app.debugDescription)
         app.buttons["glass.busy"].tap()
-        app.navigationBars["播放设置 2"].swipeDown()
+        app.navigationBars["\u{64ad}\u{653e}\u{8bbe}\u{7f6e} 2"].swipeDown()
         XCTAssertTrue(app.buttons["glass.busy"].exists)
         XCTAssertFalse(app.buttons["glass.close"].isEnabled)
         app.buttons["glass.busy"].tap()
@@ -54,7 +54,7 @@ final class PiliLiquidGlassUITests: XCTestCase {
         let remove = app.buttons["glass.delete"]
         XCTAssertTrue(remove.waitForExistence(timeout: 15))
         app.buttons["glass.settings"].tap()
-        let swatches = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "选择颜色 #"))
+        let swatches = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\u{9009}\u{62e9}\u{989c}\u{8272} #"))
         let theme = app.buttons["settings.theme"]
         XCTAssertTrue(theme.waitForExistence(timeout: 10))
         XCTAssertFalse(swatches.firstMatch.exists, "The parent settings page keeps the color editor collapsed")
@@ -66,43 +66,43 @@ final class PiliLiquidGlassUITests: XCTestCase {
             XCTAssertTrue(swatch.isHittable)
             XCTAssertEqual(swatch.frame.midY, rowY, accuracy: 1, "All eight colors must fit one row")
         }
-        app.buttons["选择颜色 #AF52DE"].tap()
+        app.buttons["\#u{9009}\#u{62e9}\#u{989c}\#u{8272} #AF52DE"].tap()
         app.navigationBars.buttons.firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["界面设置"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["\#u{754c}\#u{9762}\#u{8bbe}\#u{7f6e}"].waitForExistence(timeout: 10))
         XCTAssertEqual(theme.value as? String, "#AF52DE", "The parent row must expose the selected color")
         app.navigationBars.buttons.firstMatch.tap()
         remove.tap()
-        XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
-        app.buttons["取消"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["\u{53d6}\u{6d88}"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["\u{53d6}\u{6d88}"].firstMatch.tap()
         XCTAssertTrue(remove.waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 0 次")
+        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "\u{5df2}\u{5220}\u{9664} 0 \u{6b21}")
         remove.tap()
-        XCTAssertTrue(app.buttons["确认删除"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["\u{786e}\u{8ba4}\u{5220}\u{9664}"].waitForExistence(timeout: 10))
         let themedAlert = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         themedAlert.name = "Confirmation follows the selected purple theme"
         themedAlert.lifetime = .keepAlways
         add(themedAlert)
-        app.buttons["确认删除"].tap()
-        let once = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "已删除 1 次"), object: app.staticTexts["glass.deleted"])
+        app.buttons["\u{786e}\u{8ba4}\u{5220}\u{9664}"].tap()
+        let once = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "\u{5df2}\u{5220}\u{9664} 1 \u{6b21}"), object: app.staticTexts["glass.deleted"])
         XCTAssertEqual(XCTWaiter.wait(for: [once], timeout: 10), .completed)
         remove.tap()
-        XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
-        app.buttons["取消"].firstMatch.tap()
-        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 1 次")
+        XCTAssertTrue(app.buttons["\u{53d6}\u{6d88}"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["\u{53d6}\u{6d88}"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "\u{5df2}\u{5220}\u{9664} 1 \u{6b21}")
         remove.tap()
-        XCTAssertTrue(app.buttons["确认删除"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["\u{786e}\u{8ba4}\u{5220}\u{9664}"].waitForExistence(timeout: 10))
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
-        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.buttons["确认删除"])
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.buttons["\u{786e}\u{8ba4}\u{5220}\u{9664}"])
         XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 10), .completed)
         remove.tap()
-        XCTAssertTrue(app.buttons["取消"].firstMatch.waitForExistence(timeout: 10))
-        app.buttons["取消"].firstMatch.tap()
-        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "已删除 1 次")
+        XCTAssertTrue(app.buttons["\u{53d6}\u{6d88}"].firstMatch.waitForExistence(timeout: 10))
+        app.buttons["\u{53d6}\u{6d88}"].firstMatch.tap()
+        XCTAssertEqual(app.staticTexts["glass.deleted"].label, "\u{5df2}\u{5220}\u{9664} 1 \u{6b21}")
         app.buttons["glass.settings"].tap()
         XCTAssertTrue(theme.waitForExistence(timeout: 10))
         theme.tap()
-        XCTAssertTrue(app.buttons["选择颜色 #3264F0"].waitForExistence(timeout: 10))
-        app.buttons["选择颜色 #3264F0"].tap()
+        XCTAssertTrue(app.buttons["\u{9009}\u{62e9}\u{989c}\u{8272} #3264F0"].waitForExistence(timeout: 10))
+        app.buttons["\u{9009}\u{62e9}\u{989c}\u{8272} #3264F0"].tap()
     }
 
     @MainActor
@@ -118,23 +118,23 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertEqual(menu.frame.midY, second.frame.midY, accuracy: 1)
         XCTAssertLessThan(menu.frame.maxX, second.frame.minX)
         menu.tap()
-        XCTAssertTrue(app.buttons["复制 BV 号"].waitForExistence(timeout: 10), app.debugDescription)
-        XCTAssertTrue(app.buttons["不感兴趣"].exists)
+        XCTAssertTrue(app.buttons["\u{590d}\u{5236} BV \u{53f7}"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(app.buttons["\u{4e0d}\u{611f}\u{5174}\u{8da3}"].exists)
         let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         screenshot.name = "Recommendation card overflow menu"; screenshot.lifetime = .keepAlways; add(screenshot)
-        app.buttons["复制 BV 号"].tap()
-        XCTAssertEqual(app.staticTexts["glass.feed.activity"].label, "播放 0 · 预热 0")
+        app.buttons["\u{590d}\u{5236} BV \u{53f7}"].tap()
+        XCTAssertEqual(app.staticTexts["glass.feed.activity"].label, "\u{64ad}\u{653e} 0 · \u{9884}\u{70ed} 0")
         menu.tap()
-        app.buttons["访问 UP 主"].tap()
+        app.buttons["\u{8bbf}\u{95ee} UP \u{4e3b}"].tap()
         XCTAssertTrue(app.staticTexts["glass.feed.owner"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["glass.feed.activity"].label, "播放 0 · 预热 0")
+        XCTAssertEqual(app.staticTexts["glass.feed.activity"].label, "\u{64ad}\u{653e} 0 · \u{9884}\u{70ed} 0")
         menu.tap()
-        app.buttons["不感兴趣"].tap()
-        XCTAssertTrue(app.navigationBars["推荐与视频反馈"].waitForExistence(timeout: 10))
-        app.buttons["完成"].tap()
+        app.buttons["\u{4e0d}\u{611f}\u{5174}\u{8da3}"].tap()
+        XCTAssertTrue(app.navigationBars["\u{63a8}\u{8350}\u{4e0e}\u{89c6}\u{9891}\u{53cd}\u{9988}"].waitForExistence(timeout: 10))
+        app.buttons["\u{5b8c}\u{6210}"].tap()
         XCTAssertTrue(menu.waitForExistence(timeout: 10))
         app.buttons["video.open.BV1fixture001"].tap()
-        XCTAssertTrue(app.staticTexts["glass.feed.activity"].label.hasPrefix("播放 1"))
+        XCTAssertTrue(app.staticTexts["glass.feed.activity"].label.hasPrefix("\u{64ad}\u{653e} 1"))
     }
 
     @MainActor
@@ -145,15 +145,15 @@ final class PiliLiquidGlassUITests: XCTestCase {
         app.launchArguments = ["--ui-test-fixture", "glassAudit", "--glass-reduce-transparency",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
-        let list = app.buttons["多选列表"]
+        let list = app.buttons["\u{591a}\u{9009}\u{5217}\u{8868}"]
         XCTAssertTrue(list.waitForExistence(timeout: 15), app.debugDescription)
         list.tap()
-        app.staticTexts["下载一"].tap()
-        XCTAssertTrue(app.navigationBars["已选择 1 项"].waitForExistence(timeout: 10), app.debugDescription)
+        app.staticTexts["\u{4e0b}\u{8f7d}\u{4e00}"].tap()
+        XCTAssertTrue(app.navigationBars["\u{5df2}\u{9009}\u{62e9} 1 \u{9879}"].waitForExistence(timeout: 10), app.debugDescription)
         app.navigationBars.buttons.firstMatch.tap()
         app.buttons["glass.settings"].tap()
-        XCTAssertTrue(app.navigationBars["界面设置"].waitForExistence(timeout: 10))
-        let iconTitle = app.staticTexts["应用图标"].firstMatch
+        XCTAssertTrue(app.navigationBars["\u{754c}\u{9762}\u{8bbe}\u{7f6e}"].waitForExistence(timeout: 10))
+        let iconTitle = app.staticTexts["\u{5e94}\u{7528}\u{56fe}\u{6807}"].firstMatch
         XCTAssertTrue(iconTitle.waitForExistence(timeout: 10))
         XCTAssertGreaterThan(iconTitle.frame.width, iconTitle.frame.height,
                              "Large text must not force a short setting title into a vertical column")
@@ -168,17 +168,17 @@ final class PiliLiquidGlassUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-fixture", "superChat"]
         app.launch()
-        XCTAssertTrue(app.staticTexts["清晰的画面，也要清晰地呈现每一条留言。"].waitForExistence(timeout: 15))
-        let expired = app.staticTexts["这条留言已经结束展示，仍可在历史中查看。"]
+        XCTAssertTrue(app.staticTexts["\u{6e05}\u{6670}\u{7684}\u{753b}\u{9762}，\u{4e5f}\u{8981}\u{6e05}\u{6670}\u{5730}\u{5448}\u{73b0}\u{6bcf}\u{4e00}\u{6761}\u{7559}\u{8a00}。"].waitForExistence(timeout: 15))
+        let expired = app.staticTexts["\u{8fd9}\u{6761}\u{7559}\u{8a00}\u{5df2}\u{7ecf}\u{7ed3}\u{675f}\u{5c55}\u{793a}，\u{4ecd}\u{53ef}\u{5728}\u{5386}\u{53f2}\u{4e2d}\u{67e5}\u{770b}。"]
         XCTAssertFalse(expired.exists)
-        app.segmentedControls.buttons["全部"].tap()
+        app.segmentedControls.buttons["\u{5168}\u{90e8}"].tap()
         XCTAssertTrue(expired.waitForExistence(timeout: 10))
         let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         screenshot.name = "Live Super Chat cards and history"; screenshot.lifetime = .keepAlways; add(screenshot)
-        app.segmentedControls.buttons["关闭"].tap()
-        XCTAssertTrue(app.staticTexts["醒目留言已关闭"].waitForExistence(timeout: 10))
+        app.segmentedControls.buttons["\u{5173}\u{95ed}"].tap()
+        XCTAssertTrue(app.staticTexts["\u{9192}\u{76ee}\u{7559}\u{8a00}\u{5df2}\u{5173}\u{95ed}"].waitForExistence(timeout: 10))
         XCTAssertFalse(expired.exists)
-        app.segmentedControls.buttons["有效"].tap()
+        app.segmentedControls.buttons["\u{6709}\u{6548}"].tap()
     }
 
     @MainActor
@@ -188,11 +188,11 @@ final class PiliLiquidGlassUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-fixture", "contentExport"]
         app.launch()
-        let save = app.buttons["保存全部到相册"]
+        let save = app.buttons["\u{4fdd}\u{5b58}\u{5168}\u{90e8}\u{5230}\u{76f8}\u{518c}"]
         XCTAssertTrue(save.waitForExistence(timeout: 20), app.debugDescription)
         XCTAssertTrue(save.isEnabled)
-        XCTAssertTrue(app.buttons["分享图片"].exists)
-        XCTAssertFalse(app.buttons["重试"].exists)
+        XCTAssertTrue(app.buttons["\u{5206}\u{4eab}\u{56fe}\u{7247}"].exists)
+        XCTAssertFalse(app.buttons["\u{91cd}\u{8bd5}"].exists)
         let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         screenshot.name = "Complete content image export"; screenshot.lifetime = .keepAlways; add(screenshot)
     }
@@ -204,11 +204,11 @@ final class PiliLiquidGlassUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-fixture", "dynamicComposer"]
         app.launch()
-        let title = app.textFields["标题（可选）"]
+        let title = app.textFields["\u{6807}\u{9898}（\u{53ef}\u{9009}）"]
         XCTAssertTrue(title.waitForExistence(timeout: 15))
         title.tap(); title.typeText("Simulator draft")
-        app.buttons["提及用户"].tap()
-        let user = app.buttons["测试用户"]
+        app.buttons["\u{63d0}\u{53ca}\u{7528}\u{6237}"].tap()
+        let user = app.buttons["\u{6d4b}\u{8bd5}\u{7528}\u{6237}"]
         XCTAssertTrue(user.waitForExistence(timeout: 10), app.debugDescription)
         user.tap()
         let publish = app.buttons["pili.dynamic.publish"]
@@ -233,10 +233,10 @@ final class PiliLiquidGlassUITests: XCTestCase {
         let hotspot = app.buttons["ui.interactive.choice.4"]
         XCTAssertTrue(hotspot.waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertTrue(hotspot.isHittable, app.debugDescription)
-        XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "积分：1")
+        XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "\u{79ef}\u{5206}：1")
         app.buttons["ui.interactive.revisit"].tap()
         XCTAssertTrue(start.waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "积分：0")
+        XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "\u{79ef}\u{5206}：0")
         start.tap()
         XCTAssertTrue(hotspot.waitForExistence(timeout: 10))
         let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
@@ -246,9 +246,9 @@ final class PiliLiquidGlassUITests: XCTestCase {
         hotspot.tap()
         XCTAssertTrue(app.staticTexts["ui.interactive.finished"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.buttons["ui.interactive.revisit"].isEnabled)
-        app.buttons["重新开始"].tap()
+        app.buttons["\u{91cd}\u{65b0}\u{5f00}\u{59cb}"].tap()
         XCTAssertTrue(start.waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "积分：0")
+        XCTAssertEqual(app.staticTexts["ui.interactive.variables"].label, "\u{79ef}\u{5206}：0")
     }
 
     @MainActor
@@ -265,15 +265,15 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [hidden], timeout: 10), .completed)
         app.buttons["ui.comments.tree.fold.2"].tap()
         XCTAssertTrue(child.waitForExistence(timeout: 10))
-        app.buttons["加载下一页"].tap()
+        app.buttons["\u{52a0}\u{8f7d}\u{4e0b}\u{4e00}\u{9875}"].tap()
         XCTAssertTrue(app.staticTexts["ui.tree.reply.6"].waitForExistence(timeout: 10))
-        XCTAssertFalse(app.staticTexts["上级回复尚未加载或已删除"].exists)
-        app.segmentedControls.buttons["平铺"].tap()
+        XCTAssertFalse(app.staticTexts["\u{4e0a}\u{7ea7}\u{56de}\u{590d}\u{5c1a}\u{672a}\u{52a0}\u{8f7d}\u{6216}\u{5df2}\u{5220}\u{9664}"].exists)
+        app.segmentedControls.buttons["\u{5e73}\u{94fa}"].tap()
         app.terminate()
         app.launchArguments = ["--ui-test-fixture", "commentTree"]
         app.launch()
-        XCTAssertTrue(app.segmentedControls.buttons["平铺"].waitForExistence(timeout: 15))
-        XCTAssertTrue(app.segmentedControls.buttons["平铺"].isSelected)
+        XCTAssertTrue(app.segmentedControls.buttons["\u{5e73}\u{94fa}"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.segmentedControls.buttons["\u{5e73}\u{94fa}"].isSelected)
     }
 
     @MainActor
@@ -289,27 +289,35 @@ final class PiliLiquidGlassUITests: XCTestCase {
         let play = app.buttons["ui.player.glass.play"]
         XCTAssertTrue(play.waitForExistence(timeout: 15))
         XCTAssertTrue(app.buttons["ui.player.glass.lock"].isHittable)
+        app.buttons["ui.player.glass.more"].tap()
+        XCTAssertTrue(app.buttons["ui.player.glass.forward"].waitForExistence(timeout: 5))
         app.buttons["ui.player.glass.forward"].tap()
         XCTAssertTrue(app.staticTexts["00:52"].waitForExistence(timeout: 3) || app.staticTexts["0:52"].exists)
         play.tap()
-        XCTAssertEqual(play.label, "暂停")
+        XCTAssertEqual(play.label, "\u{6682}\u{505c}")
         app.buttons["ui.player.glass.more"].tap()
-        XCTAssertTrue(app.navigationBars["更多播放操作"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["画质与播放设置"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["定时停止与连播"].exists)
-        XCTAssertTrue(app.buttons["分享视频"].exists)
+        XCTAssertTrue(app.navigationBars["\u{66f4}\u{591a}\u{64ad}\u{653e}\u{64cd}\u{4f5c}"].waitForExistence(timeout: 5))
+        let settings = app.buttons["\u{753b}\u{8d28}\u{4e0e}\u{64ad}\u{653e}\u{8bbe}\u{7f6e}"]
+        for _ in 0..<4 where !settings.isHittable { app.swipeUp() }
+        XCTAssertTrue(settings.isHittable)
+        let timer = app.buttons["\u{5b9a}\u{65f6}\u{505c}\u{6b62}\u{4e0e}\u{8fde}\u{64ad}"]
+        for _ in 0..<4 where !timer.isHittable { app.swipeUp() }
+        XCTAssertTrue(timer.isHittable)
+        XCTAssertTrue(app.buttons["\u{5206}\u{4eab}\u{89c6}\u{9891}"].exists)
         let actionsPanel = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         actionsPanel.name = "Fullscreen player action panel"
         actionsPanel.lifetime = .keepAlways
         add(actionsPanel)
-        app.buttons["完成"].tap()
+        app.buttons["\u{5b8c}\u{6210}"].tap()
         XCTAssertTrue(play.waitForExistence(timeout: 5))
         app.buttons["ui.player.glass.more"].tap()
-        XCTAssertTrue(app.buttons["投屏"].waitForExistence(timeout: 5))
-        app.buttons["投屏"].tap()
-        XCTAssertTrue(app.buttons["好"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["投屏"].exists)
-        app.buttons["好"].tap()
+        let cast = app.buttons.matching(identifier: "\u{6295}\u{5c4f}").allElementsBoundByIndex.last!
+        for _ in 0..<4 where !cast.isHittable { app.swipeUp() }
+        XCTAssertTrue(cast.isHittable)
+        cast.tap()
+        XCTAssertTrue(app.buttons["\u{597d}"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["\u{6295}\u{5c4f}"].exists)
+        app.buttons["\u{597d}"].tap()
         XCTAssertTrue(app.buttons["ui.player.glass.lock"].waitForExistence(timeout: 5))
         app.buttons["ui.player.glass.lock"].tap()
         let unlock = app.buttons["ui.player.glass.unlock"]

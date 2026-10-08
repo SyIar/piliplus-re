@@ -41,6 +41,38 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         XCTAssertEqual(recorder.requests.count, previousCount, "Unchanged filters must not refetch")
     }
 
+    @MainActor
+    func testHistorySubmissionSurvivesNativeFieldEchoAndOnlyFetchesSelectedTab() async throws {
+        await BiliAPIResponseMemoryCache.shared.clear()
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{"result":[]}}"#)
+        }
+        defer { RequestContractURLProtocol.reset() }
+        let suite = "SearchHistoryEcho.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let model = SearchViewModel(api: try makeAPI(cookieHeader: ""), historyDefaults: defaults)
+        XCTAssertEqual(model.selectedScope, .video)
+        let keyword = "history-\(UUID().uuidString)"
+        await model.search(keyword)
+        model.queryChanged()
+        XCTAssertEqual(model.state, .loaded)
+        XCTAssertFalse(model.showsDiscovery)
+        XCTAssertEqual(model.searchHistory.first, keyword)
+        var searches = recorder.requests.filter { Self.queryValues(for: $0)["search_type"] != nil }
+        XCTAssertEqual(searches.count, 1)
+        XCTAssertEqual(Self.queryValues(for: try XCTUnwrap(searches.last))["search_type"], "video")
+        await model.selectScope(.user)
+        searches = recorder.requests.filter { Self.queryValues(for: $0)["search_type"] != nil }
+        XCTAssertEqual(Self.queryValues(for: try XCTUnwrap(searches.last))["search_type"], "bili_user")
+        XCTAssertEqual(Self.queryValues(for: try XCTUnwrap(searches.last))["keyword"], keyword)
+    }
+
     override func tearDown() {
         RequestContractURLProtocol.reset()
         super.tearDown()
@@ -64,7 +96,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             return Self.response(
                 for: request,
                 body: """
-                    {"code":0,"message":"0","data":{"tag":[{"value":"测试结果","ref":7}]}}
+                    {"code":0,"message":"0","data":{"tag":[{"value":"\u{6d4b}\u{8bd5}\u{7ed3}\u{679c}","ref":7}]}}
                     """
             )
         }
@@ -72,12 +104,12 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
 
         let cookieHeader = "SESSDATA=session-value; DedeUserID=1001; buvid3=buvid-value"
         let api = try makeAPI(cookieHeader: cookieHeader)
-        let term = "A+B & 中/文"
+        let term = "A+B & \u{4e2d}/\u{6587}"
         let suggestions = try await api.fetchSearchSuggest(term: term)
 
         await fulfillment(of: [requestExpectation], timeout: 2)
 
-        XCTAssertEqual(suggestions.map(\.value), ["测试结果"])
+        XCTAssertEqual(suggestions.map(\.value), ["\u{6d4b}\u{8bd5}\u{7ed3}\u{679c}"])
         let request = try XCTUnwrap(recorder.request)
         let url = try XCTUnwrap(request.url)
         let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
@@ -128,7 +160,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             return Self.response(
                 for: request,
                 body: """
-                    {"code":-352,"message":"风控校验失败","data":null}
+                    {"code":-352,"message":"\u{98ce}\u{63a7}\u{6821}\u{9a8c}\u{5931}\u{8d25}","data":null}
                     """
             )
         }
@@ -144,7 +176,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return XCTFail("Unexpected API error: \(error)")
             }
             XCTAssertEqual(code, -352)
-            XCTAssertEqual(message, "风控校验失败")
+            XCTAssertEqual(message, "\u{98ce}\u{63a7}\u{6821}\u{9a8c}\u{5931}\u{8d25}")
         }
 
         await fulfillment(of: [requestExpectation], timeout: 2)
@@ -411,7 +443,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             return Self.response(
                 for: request,
                 body: """
-                    {"code":-404,"message":"评论不存在","data":null}
+                    {"code":-404,"message":"\u{8bc4}\u{8bba}\u{4e0d}\u{5b58}\u{5728}","data":null}
                     """
             )
         }
@@ -426,7 +458,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return XCTFail("Unexpected API error: \(error)")
             }
             XCTAssertEqual(code, -404)
-            XCTAssertEqual(message, "评论不存在")
+            XCTAssertEqual(message, "\u{8bc4}\u{8bba}\u{4e0d}\u{5b58}\u{5728}")
         }
 
         await fulfillment(of: [requestExpectation], timeout: 2)
@@ -557,14 +589,14 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(
                     for: request,
                     body: """
-                        {"code":0,"data":{"list":[{"bvid":"BVfirst","aid":101,"title":"第一条","view_at":1700000000}]}}
+                        {"code":0,"data":{"list":[{"bvid":"BVfirst","aid":101,"title":"\u{7b2c}\u{4e00}\u{6761}","view_at":1700000000}]}}
                         """
                 )
             }
             return Self.response(
                 for: request,
                 body: """
-                    {"code":0,"data":{"list":[{"bvid":"BVsecond","aid":100,"title":"第二条","view_at":1699999000}]}}
+                    {"code":0,"data":{"list":[{"bvid":"BVsecond","aid":100,"title":"\u{7b2c}\u{4e8c}\u{6761}","view_at":1699999000}]}}
                     """
             )
         }
@@ -686,7 +718,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 if folderID == "7" {
                     return Self.response(
                         for: request,
-                        body: "{\"code\":-500,\"message\":\"临时失败\",\"data\":null}"
+                        body: "{\"code\":-500,\"message\":\"\u{4e34}\u{65f6}\u{5931}\u{8d25}\",\"data\":null}"
                     )
                 }
                 return Self.response(
@@ -720,7 +752,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             return Self.response(
                 for: request,
                 body: """
-                    {"code":-404,"message":"收藏夹不存在","data":null}
+                    {"code":-404,"message":"\u{6536}\u{85cf}\u{5939}\u{4e0d}\u{5b58}\u{5728}","data":null}
                     """
             )
         }
@@ -735,7 +767,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return XCTFail("Unexpected API error: \(error)")
             }
             XCTAssertEqual(code, -404)
-            XCTAssertEqual(message, "收藏夹不存在")
+            XCTAssertEqual(message, "\u{6536}\u{85cf}\u{5939}\u{4e0d}\u{5b58}\u{5728}")
         }
 
         await fulfillment(of: [requestExpectation], timeout: 2)
@@ -843,7 +875,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             return Self.response(
                 for: request,
                 body: """
-                    {"code":-352,"message":"风控校验失败","data":null}
+                    {"code":-352,"message":"\u{98ce}\u{63a7}\u{6821}\u{9a8c}\u{5931}\u{8d25}","data":null}
                     """
             )
         }
@@ -858,7 +890,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return XCTFail("Unexpected API error: \(error)")
             }
             XCTAssertEqual(code, -352)
-            XCTAssertEqual(message, "风控校验失败")
+            XCTAssertEqual(message, "\u{98ce}\u{63a7}\u{6821}\u{9a8c}\u{5931}\u{8d25}")
         }
 
         await fulfillment(of: [requestExpectation], timeout: 2)
@@ -1061,12 +1093,12 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         try await api.addDynamicComment(
             oid: " 987654321 ",
             type: 17,
-            message: " 顶级评论 "
+            message: " \u{9876}\u{7ea7}\u{8bc4}\u{8bba} "
         )
         try await api.addDynamicComment(
             oid: "987654321",
             type: 17,
-            message: " 回复内容 ",
+            message: " \u{56de}\u{590d}\u{5185}\u{5bb9} ",
             root: 101,
             parent: 202
         )
@@ -1088,7 +1120,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             [
                 "oid": "987654321",
                 "type": "17",
-                "message": "顶级评论",
+                "message": "\u{9876}\u{7ea7}\u{8bc4}\u{8bba}",
                 "plat": "1",
                 "csrf": "csrf-value",
             ]
@@ -1098,7 +1130,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             [
                 "oid": "987654321",
                 "type": "17",
-                "message": "回复内容",
+                "message": "\u{56de}\u{590d}\u{5185}\u{5bb9}",
                 "plat": "1",
                 "csrf": "csrf-value",
                 "root": "101",
@@ -1160,7 +1192,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             try await api.addDynamicComment(
                 oid: "987654321",
                 type: 17,
-                message: "不会自动重试"
+                message: "\u{4e0d}\u{4f1a}\u{81ea}\u{52a8}\u{91cd}\u{8bd5}"
             )
             XCTFail("Expected the network error to be propagated")
         } catch {
@@ -1199,7 +1231,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return XCTFail("Unexpected API error: \(error)")
             }
             XCTAssertEqual(code, -1)
-            XCTAssertEqual(message, "投币数量无效")
+            XCTAssertEqual(message, "\u{6295}\u{5e01}\u{6570}\u{91cf}\u{65e0}\u{6548}")
         }
         XCTAssertTrue(recorder.requests.isEmpty)
 
@@ -1234,7 +1266,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             if request.url?.path == "/x/v3/fav/folder/created/list-all" {
                 return Self.response(
                     for: request,
-                    body: "{\"code\":0,\"data\":{\"list\":[{\"id\":7,\"title\":\"默认收藏夹\"}]}}"
+                    body: "{\"code\":0,\"data\":{\"list\":[{\"id\":7,\"title\":\"\u{9ed8}\u{8ba4}\u{6536}\u{85cf}\u{5939}\"}]}}"
                 )
             }
             return Self.response(for: request, body: "{\"code\":0,\"data\":{}}")
@@ -1296,7 +1328,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             requestExpectation.fulfill()
             return Self.response(
                 for: request,
-                body: "{\"code\":-400,\"message\":\"关注失败\",\"data\":null}"
+                body: "{\"code\":-400,\"message\":\"\u{5173}\u{6ce8}\u{5931}\u{8d25}\",\"data\":null}"
             )
         }
         defer { RequestContractURLProtocol.reset() }
@@ -1310,7 +1342,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return XCTFail("Unexpected API error: \(error)")
             }
             XCTAssertEqual(code, -400)
-            XCTAssertEqual(message, "关注失败")
+            XCTAssertEqual(message, "\u{5173}\u{6ce8}\u{5931}\u{8d25}")
         }
 
         await fulfillment(of: [requestExpectation], timeout: 2)
@@ -1350,7 +1382,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                     return XCTFail("Unexpected API error: \(error)")
                 }
                 XCTAssertEqual(code, -1)
-                XCTAssertEqual(message, "UP 主 UID 无效")
+                XCTAssertEqual(message, "UP \u{4e3b} UID \u{65e0}\u{6548}")
             }
         }
         XCTAssertTrue(recorder.requests.isEmpty)
@@ -1372,7 +1404,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             case ("app.bilibili.com", "/x/v2/space"):
                 return Self.response(
                     for: request,
-                    body: "{\"code\":0,\"data\":{\"card\":{\"mid\":123,\"name\":\"测试UP\",\"fans\":200}}}"
+                    body: "{\"code\":0,\"data\":{\"card\":{\"mid\":123,\"name\":\"\u{6d4b}\u{8bd5}UP\",\"fans\":200}}}"
                 )
             case ("api.bilibili.com", "/x/web-interface/nav"):
                 return Self.response(
@@ -1413,7 +1445,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let api = try makeAPI(cookieHeader: "SESSDATA=session-value; DedeUserID=1001")
         let profile = try await api.fetchUploaderProfile(mid: 123)
 
-        XCTAssertEqual(profile.card?.name, "测试UP")
+        XCTAssertEqual(profile.card?.name, "\u{6d4b}\u{8bd5}UP")
         XCTAssertEqual(profile.visibleFollowerCount, 400)
         XCTAssertEqual(profile.visibleFollowingCount, 12)
         XCTAssertEqual(profile.visibleLikeCount, 999)
@@ -1432,12 +1464,12 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             case ("api.bilibili.com", "/x/web-interface/card"):
                 return Self.response(
                     for: request,
-                    body: "{\"code\":0,\"data\":{\"card\":{\"mid\":123,\"name\":\"测试UP\"}}}"
+                    body: "{\"code\":0,\"data\":{\"card\":{\"mid\":123,\"name\":\"\u{6d4b}\u{8bd5}UP\"}}}"
                 )
             case ("app.bilibili.com", "/x/v2/space"):
                 return Self.response(
                     for: request,
-                    body: "{\"code\":0,\"data\":{\"card\":{\"mid\":123,\"name\":\"测试UP\"}}}"
+                    body: "{\"code\":0,\"data\":{\"card\":{\"mid\":123,\"name\":\"\u{6d4b}\u{8bd5}UP\"}}}"
                 )
             case ("api.bilibili.com", "/x/relation"):
                 let query = Self.queryValues(for: request)
@@ -1485,7 +1517,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(
                     for: request,
                     body: """
-                        {"code":0,"data":{"list":{"vlist":[{"bvid":"BV1test123","aid":101,"author":"测试UP","mid":321,"title":"测试投稿","length":"01:02"}]},"page":{"count":61}}}
+                        {"code":0,"data":{"list":{"vlist":[{"bvid":"BV1test123","aid":101,"author":"\u{6d4b}\u{8bd5}UP","mid":321,"title":"\u{6d4b}\u{8bd5}\u{6295}\u{7a3f}","length":"01:02"}]},"page":{"count":61}}}
                         """
                 )
             default:
@@ -1537,7 +1569,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(
                     for: request,
                     body: """
-                        {"code":0,"data":{"count":42,"has_next":true,"next":77,"item":[{"bvid":"BV1fallback","param":"456","title":"App 投稿","author":"测试UP"}]}}
+                        {"code":0,"data":{"count":42,"has_next":true,"next":77,"item":[{"bvid":"BV1fallback","param":"456","title":"App \u{6295}\u{7a3f}","author":"\u{6d4b}\u{8bd5}UP"}]}}
                         """
                 )
             default:
@@ -1582,7 +1614,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             return Self.response(
                 for: request,
                 body: """
-                    {"code":0,"data":{"items_lists":{"page":{"page_num":2,"page_size":5,"total":9},"seasons_list":[{"meta":{"season_id":11,"name":"测试合集"}}],"series_list":[{"meta":{"series_id":12,"name":"测试列表"}}]}}}
+                    {"code":0,"data":{"items_lists":{"page":{"page_num":2,"page_size":5,"total":9},"seasons_list":[{"meta":{"season_id":11,"name":"\u{6d4b}\u{8bd5}\u{5408}\u{96c6}"}}],"series_list":[{"meta":{"series_id":12,"name":"\u{6d4b}\u{8bd5}\u{5217}\u{8868}"}}]}}}
                     """
             )
         }
@@ -1592,7 +1624,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let result = try await api.fetchUploaderSeasonSeries(mid: 321, page: 2, pageSize: 5)
 
         XCTAssertEqual(result.page?.total, 9)
-        XCTAssertEqual(result.items.map(\.title), ["测试合集", "测试列表"])
+        XCTAssertEqual(result.items.map(\.title), ["\u{6d4b}\u{8bd5}\u{5408}\u{96c6}", "\u{6d4b}\u{8bd5}\u{5217}\u{8868}"])
         let request = try XCTUnwrap(recorder.request)
         XCTAssertEqual(request.url?.path, "/x/polymer/web-space/seasons_series_list")
         XCTAssertEqual(
@@ -1613,14 +1645,14 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(
                     for: request,
                     body: """
-                        {"code":0,"data":{"archives":[{"aid":101,"bvid":"BV1season","title":"合集投稿"}],"page":{"page_num":2,"page_size":30,"total":61}}}
+                        {"code":0,"data":{"archives":[{"aid":101,"bvid":"BV1season","title":"\u{5408}\u{96c6}\u{6295}\u{7a3f}"}],"page":{"page_num":2,"page_size":30,"total":61}}}
                         """
                 )
             case "/x/series/archives":
                 return Self.response(
                     for: request,
                     body: """
-                        {"code":0,"data":{"archives":[{"aid":102,"bvid":"BV1series","title":"列表投稿"}],"page":{"page_num":2,"page_size":20,"total":40}}}
+                        {"code":0,"data":{"archives":[{"aid":102,"bvid":"BV1series","title":"\u{5217}\u{8868}\u{6295}\u{7a3f}"}],"page":{"page_num":2,"page_size":20,"total":40}}}
                         """
                 )
             default:
@@ -1630,7 +1662,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         defer { RequestContractURLProtocol.reset() }
 
         let api = try makeAPI(cookieHeader: "")
-        let owner = VideoOwner(mid: 321, name: "测试UP", face: nil)
+        let owner = VideoOwner(mid: 321, name: "\u{6d4b}\u{8bd5}UP", face: nil)
         let season = try await api.fetchUploaderSeasonSeriesArchivePage(
             mid: 321,
             owner: owner,
@@ -1695,7 +1727,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         defer { RequestContractURLProtocol.reset() }
 
         let api = try makeAPI(cookieHeader: "")
-        let owner = VideoOwner(mid: 321, name: "测试UP", face: nil)
+        let owner = VideoOwner(mid: 321, name: "\u{6d4b}\u{8bd5}UP", face: nil)
         do {
             _ = try await api.fetchUploaderSeasonSeries(mid: 0)
             XCTFail("Expected invalid uploader UID to fail")
@@ -1704,7 +1736,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return XCTFail("Unexpected API error: \(error)")
             }
             XCTAssertEqual(code, -1)
-            XCTAssertEqual(message, "UP 主 UID 无效")
+            XCTAssertEqual(message, "UP \u{4e3b} UID \u{65e0}\u{6548}")
         }
         do {
             _ = try await api.fetchUploaderSeasonSeriesArchivePage(
@@ -1718,7 +1750,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return XCTFail("Unexpected API error: \(error)")
             }
             XCTAssertEqual(code, -1)
-            XCTAssertEqual(message, "UP 主 UID 无效")
+            XCTAssertEqual(message, "UP \u{4e3b} UID \u{65e0}\u{6548}")
         }
         XCTAssertTrue(recorder.requests.isEmpty)
 
@@ -1753,11 +1785,11 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                     body: #"{"code":0,"data":{"auth_code":"app-key","url":"https://example.com/app-qr"}}"#
                 )
             case "/x/passport-tv-login/qrcode/poll":
-                return Self.response(for: request, body: #"{"code":86090,"message":"已扫码"}"#)
+                return Self.response(for: request, body: #"{"code":86090,"message":"\#u{5df2}\#u{626b}\#u{7801}"}"#)
             case "/x/passport-login/web/qrcode/poll":
                 return Self.response(
                     for: request,
-                    body: #"{"code":0,"data":{"code":86101,"message":"未扫码"}}"#
+                    body: #"{"code":0,"data":{"code":86101,"message":"\#u{672a}\#u{626b}\#u{7801}"}}"#
                 )
             default:
                 throw URLError(.badServerResponse)
@@ -1860,7 +1892,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             _ = responseRelease.wait(timeout: .now() + 2)
             return Self.response(
                 for: request,
-                body: #"{"code":0,"data":{"isLogin":true,"uname":"测试用户","mid":1001}}"#
+                body: #"{"code":0,"data":{"isLogin":true,"uname":"\#u{6d4b}\#u{8bd5}\#u{7528}\#u{6237}","mid":1001}}"#
             )
         }
         defer { RequestContractURLProtocol.reset() }
@@ -2613,7 +2645,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             requestExpectation.fulfill()
             return Self.response(
                 for: request,
-                body: #"{"code":0,"data":{"list":[{"bvid":"BV1popular","aid":1001,"title":"热门视频"}]}}"#
+                body: #"{"code":0,"data":{"list":[{"bvid":"BV1popular","aid":1001,"title":"\#u{70ed}\#u{95e8}\#u{89c6}\#u{9891}"}]}}"#
             )
         }
         defer { RequestContractURLProtocol.reset() }
@@ -2711,7 +2743,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             requestExpectation.fulfill()
             return Self.response(
                 for: request,
-                body: #"{"code":0,"data":[{"bvid":"BV1related","aid":1004,"title":"相关推荐"}]}"#
+                body: #"{"code":0,"data":[{"bvid":"BV1related","aid":1004,"title":"\#u{76f8}\#u{5173}\#u{63a8}\#u{8350}"}]}"#
             )
         }
         defer { RequestContractURLProtocol.reset() }
@@ -2784,7 +2816,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             requestExpectation.fulfill()
             return Self.response(
                 for: request,
-                body: #"<?xml version="1.0"?><i><d p="1.5,1,25,16777215,0,0,0,42">测试弹幕</d></i>"#
+                body: #"<?xml version="1.0"?><i><d p="1.5,1,25,16777215,0,0,0,42">\#u{6d4b}\#u{8bd5}\#u{5f39}\#u{5e55}</d></i>"#
             )
         }
         defer { RequestContractURLProtocol.reset() }
@@ -2799,7 +2831,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
 
         await fulfillment(of: [requestExpectation], timeout: 2)
 
-        XCTAssertEqual(first.map(\.text), ["测试弹幕"])
+        XCTAssertEqual(first.map(\.text), ["\u{6d4b}\u{8bd5}\u{5f39}\u{5e55}"])
         XCTAssertEqual(second, first)
         XCTAssertEqual(recorder.requests.count, 1)
         let request = try XCTUnwrap(recorder.request)
@@ -2843,7 +2875,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         await fulfillment(of: [requestExpectation], timeout: 2)
 
         XCTAssertEqual(items.map(\.id), ["\(cid)-seg1-42"])
-        XCTAssertEqual(items.map(\.text), ["分段弹幕"])
+        XCTAssertEqual(items.map(\.text), ["\u{5206}\u{6bb5}\u{5f39}\u{5e55}"])
         XCTAssertEqual(items.first?.time, 1.5)
         XCTAssertEqual(cachedItems, items)
         XCTAssertEqual(recorder.requests.count, 1)
@@ -2878,7 +2910,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             return Self.response(
                 for: request,
                 body: """
-                    {"code":0,"data":{"list":[{"roomid":31415,"title":"直播测试","uname":"主播","live_status":1}]}}
+                    {"code":0,"data":{"list":[{"roomid":31415,"title":"\u{76f4}\u{64ad}\u{6d4b}\u{8bd5}","uname":"\u{4e3b}\u{64ad}","live_status":1}]}}
                     """
             )
         }
@@ -2921,7 +2953,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             return Self.response(
                 for: request,
                 body: """
-                    {"code":0,"data":{"room_id":24680,"uid":1001,"title":"直播间","live_status":1,"online":12}}
+                    {"code":0,"data":{"room_id":24680,"uid":1001,"title":"\u{76f4}\u{64ad}\u{95f4}","live_status":1,"online":12}}
                     """
             )
         }
@@ -2933,7 +2965,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         await fulfillment(of: [requestExpectation], timeout: 2)
 
         XCTAssertEqual(info.roomID, 24_680)
-        XCTAssertEqual(info.title, "直播间")
+        XCTAssertEqual(info.title, "\u{76f4}\u{64ad}\u{95f4}")
         let request = try XCTUnwrap(recorder.request)
         let url = try XCTUnwrap(request.url)
         XCTAssertEqual(url.host, "api.live.bilibili.com")
@@ -2957,14 +2989,14 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(
                     for: request,
                     body: """
-                        {"code":0,"data":{"playurl_info":{"playurl":{"stream":[],"g_qn_desc":[{"qn":10000,"desc":"原画"}]}}}}
+                        {"code":0,"data":{"playurl_info":{"playurl":{"stream":[],"g_qn_desc":[{"qn":10000,"desc":"\u{539f}\u{753b}"}]}}}}
                         """
                 )
             }
             return Self.response(
                 for: request,
                 body: """
-                    {"code":0,"data":{"playurl_info":{"playurl":{"stream":[{"protocol_name":"http_hls","format":[{"format_name":"fmp4","codec":[{"codec_name":"avc","current_qn":10000,"accept_qn":[10000],"base_url":"/live.m3u8","url_info":[{"host":"https://live.example.com","extra":"?token=android"}]}]}]}],"g_qn_desc":[{"qn":10000,"desc":"原画"}]}}}}
+                    {"code":0,"data":{"playurl_info":{"playurl":{"stream":[{"protocol_name":"http_hls","format":[{"format_name":"fmp4","codec":[{"codec_name":"avc","current_qn":10000,"accept_qn":[10000],"base_url":"/live.m3u8","url_info":[{"host":"https://live.example.com","extra":"?token=android"}]}]}]}],"g_qn_desc":[{"qn":10000,"desc":"\u{539f}\u{753b}"}]}}}}
                     """
             )
         }
@@ -3145,7 +3177,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             return Self.response(
                 for: request,
                 body:
-                    #"{"code":0,"data":{"item":[{"id":123,"bvid":"BV1HomeFeedTest","title":"推荐视频","goto":"av","idx":12}]}}"#
+                    #"{"code":0,"data":{"item":[{"id":123,"bvid":"BV1HomeFeedTest","title":"\#u{63a8}\#u{8350}\#u{89c6}\#u{9891}","goto":"av","idx":12}]}}"#
             )
         }
         defer { RequestContractURLProtocol.reset() }
@@ -3186,7 +3218,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(
                     for: request,
                     body:
-                        #"{"code":0,"data":{"item":[{"id":456,"bvid":"BV1HomeFallback","title":"网页兜底视频","goto":"av"}]}}"#
+                        #"{"code":0,"data":{"item":[{"id":456,"bvid":"BV1HomeFallback","title":"\#u{7f51}\#u{9875}\#u{515c}\#u{5e95}\#u{89c6}\#u{9891}","goto":"av"}]}}"#
                 )
             }
         }
@@ -3716,9 +3748,9 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             case "/x/web-interface/nav":
                 return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
             case "/x/player/wbi/v2":
-                return Self.response(for: request, body: #"{"code":0,"data":{"subtitle":{"subtitles":[{"lan":"zh-CN","lan_doc":"中文","subtitle_url":"//aisubtitle.hdslb.com/test.json","type":0}]},"interaction":{"graph_version":12}}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"subtitle":{"subtitles":[{"lan":"zh-CN","lan_doc":"\#u{4e2d}\#u{6587}","subtitle_url":"//aisubtitle.hdslb.com/test.json","type":0}]},"interaction":{"graph_version":12}}}"#)
             case "/test.json":
-                return Self.response(for: request, body: #"{"body":[{"from":1,"to":3,"content":"字幕"},{"from":5,"to":4,"content":"invalid"}]}"#)
+                return Self.response(for: request, body: #"{"body":[{"from":1,"to":3,"content":"\#u{5b57}\#u{5e55}"},{"from":5,"to":4,"content":"invalid"}]}"#)
             default: return Self.response(for: request, body: #"{"code":-404}"#)
             }
         }
@@ -3743,7 +3775,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
             recorder.record(request)
-            return Self.response(for: request, body: #"{"code":0,"data":{"edge_id":9,"title":"开始","edges":{"questions":[{"choices":[{"id":10,"cid":987,"option":"向左"}]}]}}}"#)
+            return Self.response(for: request, body: #"{"code":0,"data":{"edge_id":9,"title":"\#u{5f00}\#u{59cb}","edges":{"questions":[{"choices":[{"id":10,"cid":987,"option":"\#u{5411}\#u{5de6}"}]}]}}}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=branch-session")
         let edge = try await api.fetchPiliInteractiveEdge(bvid: "BV1test", graphVersion: 321, edgeID: 9)
@@ -3825,14 +3857,14 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=favorite-session; DedeUserID=1001; bili_jct=favorite-csrf")
         let version = api.requestSnapshot(purpose: .interaction).playbackCredentialVersion
-        try await api.savePiliFavoriteFolder(id: nil, title: "收藏 A+B & C", intro: "第一行\n第二行", isPublic: false, cover: "", credentialVersion: version)
+        try await api.savePiliFavoriteFolder(id: nil, title: "\u{6536}\u{85cf} A+B & C", intro: "\u{7b2c}\u{4e00}\u{884c}\n\u{7b2c}\u{4e8c}\u{884c}", isPublic: false, cover: "", credentialVersion: version)
         try await api.mutatePiliFavoriteItems(folderID: 8, aids: [12, 11, 12], action: .move(to: 9), credentialVersion: version)
         try await api.mutatePiliFavoriteItems(folderID: 8, aids: [11], action: .remove, credentialVersion: version)
         try await api.sortPiliFavoriteFolders(ids: [8, 10, 9], credentialVersion: version)
         XCTAssertEqual(recorder.requests.map { $0.url?.path }, ["/x/v3/fav/folder/add", "/x/v3/fav/resource/move", "/x/v3/fav/resource/batch-deal", "/x/v3/fav/folder/sort"])
         let create = formValues(in: recorder.requests[0])
-        XCTAssertEqual(create["title"], "收藏 A+B & C")
-        XCTAssertEqual(create["intro"], "第一行\n第二行")
+        XCTAssertEqual(create["title"], "\u{6536}\u{85cf} A+B & C")
+        XCTAssertEqual(create["intro"], "\u{7b2c}\u{4e00}\u{884c}\n\u{7b2c}\u{4e8c}\u{884c}")
         XCTAssertEqual(create["privacy"], "1")
         let encoded = String(decoding: try XCTUnwrap(requestBodyData(from: recorder.requests[0])), as: UTF8.self)
         XCTAssertTrue(encoded.contains("%2B"), "A literal plus must survive application/x-www-form-urlencoded decoding")
@@ -3861,7 +3893,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let api = try makeAPI(cookieHeader: "SESSDATA=favorite-session; DedeUserID=1001; bili_jct=favorite-csrf")
         let version = api.requestSnapshot(purpose: .interaction).playbackCredentialVersion
         do {
-            try await api.savePiliFavoriteFolder(id: nil, title: "新收藏夹", intro: "", isPublic: false, cover: "", credentialVersion: version)
+            try await api.savePiliFavoriteFolder(id: nil, title: "\u{65b0}\u{6536}\u{85cf}\u{5939}", intro: "", isPublic: false, cover: "", credentialVersion: version)
             XCTFail("Expected network error")
         } catch { XCTAssertEqual(recorder.requests.count, 1) }
     }
@@ -3875,14 +3907,14 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
             }
             let page = Self.queryValues(for: request)["pn"] ?? "1"
-            return Self.response(for: request, body: "{\"code\":0,\"data\":{\"count\":40,\"list\":[{\"bvid\":\"BVpage\(page)\",\"aid\":\(page),\"title\":\"视频\(page)\"}]}}")
+            return Self.response(for: request, body: "{\"code\":0,\"data\":{\"count\":40,\"list\":[{\"bvid\":\"BVpage\(page)\",\"aid\":\(page),\"title\":\"\u{89c6}\u{9891}\(page)\"}]}}")
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=watch-session; DedeUserID=1001; bili_jct=watch-csrf")
         let model = MineViewModel(api: api, sessionStore: api.sessionStore)
-        model.watchLaterFilter = PiliWatchLaterFilter(unfinished: true, ascending: true, keyword: "旧关键词")
+        model.watchLaterFilter = PiliWatchLaterFilter(unfinished: true, ascending: true, keyword: "\u{65e7}\u{5173}\u{952e}\u{8bcd}")
         await model.refreshWatchLater()
         XCTAssertTrue(model.watchLaterHasMore)
-        model.watchLaterFilter.keyword = "尚未提交"
+        model.watchLaterFilter.keyword = "\u{5c1a}\u{672a}\u{63d0}\u{4ea4}"
         await model.loadMoreWatchLater()
         XCTAssertFalse(model.watchLaterHasMore)
         XCTAssertEqual(model.accountWatchLater.map(\.bvid), ["BVpage1", "BVpage2"])
@@ -3891,7 +3923,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         XCTAssertEqual(requests.map { Self.queryValues(for: $0)["pn"] }, ["1", "2"])
         for request in requests {
             let query = Self.queryValues(for: request)
-            XCTAssertEqual(query["key"], "旧关键词")
+            XCTAssertEqual(query["key"], "\u{65e7}\u{5173}\u{952e}\u{8bcd}")
             XCTAssertEqual(query["viewed"], "2")
             XCTAssertEqual(query["asc"], "true")
             XCTAssertEqual(query["need_split"], "true")
@@ -3899,10 +3931,10 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         }
         let queue = try XCTUnwrap(model.watchLaterPlaybackQueue)
         guard case let .watchLaterFiltered(filter) = queue.source else { return XCTFail("Missing filtered queue") }
-        XCTAssertEqual(filter.keyword, "旧关键词")
+        XCTAssertEqual(filter.keyword, "\u{65e7}\u{5173}\u{952e}\u{8bcd}")
         XCTAssertEqual(queue.bvids, ["BVpage1", "BVpage2"])
         await model.refreshWatchLater()
-        XCTAssertEqual(Self.queryValues(for: try XCTUnwrap(recorder.requests.last))["key"], "尚未提交")
+        XCTAssertEqual(Self.queryValues(for: try XCTUnwrap(recorder.requests.last))["key"], "\u{5c1a}\u{672a}\u{63d0}\u{4ea4}")
     }
 
     @MainActor
@@ -3910,7 +3942,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
             recorder.record(request)
-            return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"id":7,"title":"目标"}]}}"#)
+            return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"id":7,"title":"\#u{76ee}\#u{6807}"}]}}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=main-session; DedeUserID=1001; bili_jct=main-csrf", configure: { session, library in
             _ = try session.saveAdditionalAccount([
@@ -3960,7 +3992,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
             recorder.record(request)
-            return Self.response(for: request, body: #"{"code":0,"data":{"tab":[{"type":"all","name":"全部"},{"type":"archive","name":"视频"},{"type":"live","name":"直播"}],"list":[{"kid":71,"title":"视频","history":{"business":"archive","oid":101,"bvid":"BVhistoryA","cid":201},"view_at":1300,"progress":-1,"duration":90},{"kid":72,"title":"直播","history":{"business":"live","oid":102},"view_at":1200},{"kid":73,"title":"专栏","history":{"business":"article","oid":103},"view_at":1100},{"title":"未知类型","history":{"business":"future-type","oid":104},"view_at":1000}]}}"#)
+            return Self.response(for: request, body: #"{"code":0,"data":{"tab":[{"type":"all","name":"\#u{5168}\#u{90e8}"},{"type":"archive","name":"\#u{89c6}\#u{9891}"},{"type":"live","name":"\#u{76f4}\#u{64ad}"}],"list":[{"kid":71,"title":"\#u{89c6}\#u{9891}","history":{"business":"archive","oid":101,"bvid":"BVhistoryA","cid":201},"view_at":1300,"progress":-1,"duration":90},{"kid":72,"title":"\#u{76f4}\#u{64ad}","history":{"business":"live","oid":102},"view_at":1200},{"kid":73,"title":"\#u{4e13}\#u{680f}","history":{"business":"article","oid":103},"view_at":1100},{"title":"\#u{672a}\#u{77e5}\#u{7c7b}\#u{578b}","history":{"business":"future-type","oid":104},"view_at":1000}]}}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=history-session; DedeUserID=1001; bili_jct=history-csrf")
         let version = api.requestSnapshot(purpose: .historyRead).playbackCredentialVersion
@@ -3978,11 +4010,11 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         XCTAssertTrue(first.hasMore)
         let second = try await api.fetchPiliHistoryPage(max: first.cursorMax, viewedAt: first.cursorViewedAt, credentialVersion: version)
         XCTAssertFalse(second.hasMore, "A repeated cursor must not loop forever")
-        _ = try await api.fetchPiliHistoryPage(keyword: "测试", page: 2, credentialVersion: version)
+        _ = try await api.fetchPiliHistoryPage(keyword: "\u{6d4b}\u{8bd5}", page: 2, credentialVersion: version)
         XCTAssertEqual(Self.queryValues(for: recorder.requests[0]), ["type": "all", "ps": "20", "max": "0", "view_at": "0"])
         XCTAssertEqual(Self.queryValues(for: recorder.requests[1])["max"], "104")
         XCTAssertEqual(recorder.requests[2].url?.path, "/x/web-interface/history/search")
-        XCTAssertEqual(Self.queryValues(for: recorder.requests[2]), ["pn": "2", "keyword": "测试", "business": "all"])
+        XCTAssertEqual(Self.queryValues(for: recorder.requests[2]), ["pn": "2", "keyword": "\u{6d4b}\u{8bd5}", "business": "all"])
     }
 
     @MainActor
@@ -4035,17 +4067,17 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         RequestContractURLProtocol.install { request in
             recorder.record(request)
             if request.url?.path == "/x/v2/account/myinfo" {
-                return Self.response(for: request, body: #"{"code":0,"data":{"mid":1001,"name":"原昵称","face":"https://i.example.com/avatar.jpg","sex":0,"sign":"原签名","birthday":"2000-01-01","coins":12}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"mid":1001,"name":"\#u{539f}\#u{6635}\#u{79f0}","face":"https://i.example.com/avatar.jpg","sex":0,"sign":"\#u{539f}\#u{7b7e}\#u{540d}","birthday":"2000-01-01","coins":12}}"#)
             }
             return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=profile-session; DedeUserID=1001; bili_jct=profile-csrf", accessKey: "profile-access")
         let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
         let profile = try await api.fetchPiliOwnProfile(identity: identity)
-        XCTAssertEqual(profile.name, "原昵称")
+        XCTAssertEqual(profile.name, "\u{539f}\u{6635}\u{79f0}")
         XCTAssertEqual(profile.coins, 12)
-        try await api.updatePiliProfile(.uname, value: "昵称A+B", identity: identity)
-        try await api.updatePiliProfile(.sign, value: "新签名", identity: identity)
+        try await api.updatePiliProfile(.uname, value: "\u{6635}\u{79f0}A+B", identity: identity)
+        try await api.updatePiliProfile(.sign, value: "\u{65b0}\u{7b7e}\u{540d}", identity: identity)
         try await api.updatePiliProfile(.sex, value: "2", identity: identity)
         try await api.updatePiliProfile(.birthday, value: "2001-02-03", identity: identity)
         try await api.updatePiliAvatar(jpeg: Data("fixture-image".utf8), identity: identity)
@@ -4059,8 +4091,8 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             XCTAssertNotNil(form["sign"])
             XCTAssertEqual(cookieValues(in: request.value(forHTTPHeaderField: "Cookie"))["SESSDATA"], "profile-session")
         }
-        XCTAssertEqual(formValues(in: recorder.requests[1])["uname"], "昵称A+B")
-        XCTAssertEqual(formValues(in: recorder.requests[2])["user_sign"], "新签名")
+        XCTAssertEqual(formValues(in: recorder.requests[1])["uname"], "\u{6635}\u{79f0}A+B")
+        XCTAssertEqual(formValues(in: recorder.requests[2])["user_sign"], "\u{65b0}\u{7b7e}\u{540d}")
         XCTAssertEqual(formValues(in: recorder.requests[3])["sex"], "2")
         XCTAssertEqual(formValues(in: recorder.requests[4])["birthday"], "2001-02-03")
         let avatar = recorder.requests[5]
@@ -4079,7 +4111,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let api = try makeAPI(cookieHeader: "SESSDATA=profile-session; DedeUserID=1001; bili_jct=profile-csrf")
         let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
         do {
-            try await api.updatePiliProfile(.sign, value: "签名", identity: identity)
+            try await api.updatePiliProfile(.sign, value: "\u{7b7e}\u{540d}", identity: identity)
             XCTFail("Do not send an unsigned app profile mutation")
         } catch { XCTAssertTrue(recorder.requests.isEmpty) }
         do {
@@ -4103,13 +4135,13 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
             case "/x/relation/tag":
                 let page = Self.queryValues(for: request)["pn"]
-                let users = (page == "1" ? Array(1...20) : [21]).map { ["mid": $0, "uname": "用户\($0)"] as [String: Any] }
+                let users = (page == "1" ? Array(1...20) : [21]).map { ["mid": $0, "uname": "\u{7528}\u{6237}\($0)"] as [String: Any] }
                 let data = try JSONSerialization.data(withJSONObject: ["code": 0, "data": users])
                 return Self.response(for: request, data: data)
             case "/x/relation/tags":
-                return Self.response(for: request, body: #"{"code":0,"data":[{"tagid":0,"name":"默认分组","count":3},{"tagid":-10,"name":"特别关注","count":1},{"tagid":7,"name":"自定义","count":21}]}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":[{"tagid":0,"name":"\#u{9ed8}\#u{8ba4}\#u{5206}\#u{7ec4}","count":3},{"tagid":-10,"name":"\#u{7279}\#u{522b}\#u{5173}\#u{6ce8}","count":1},{"tagid":7,"name":"\#u{81ea}\#u{5b9a}\#u{4e49}","count":21}]}"#)
             default:
-                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"mid":50,"uname":"搜索用户","attribute":6}],"total":1}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"mid":50,"uname":"\#u{641c}\#u{7d22}\#u{7528}\#u{6237}","attribute":6}],"total":1}}"#)
             }
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=relation-session; DedeUserID=1001; bili_jct=relation-csrf")
@@ -4118,7 +4150,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         await model.start()
         XCTAssertEqual(model.groups.filter(\.isCustom).map(\.id), [7])
         XCTAssertEqual(model.users.count, 20)
-        model.keyword = "尚未提交"; model.groupID = 8; model.frequent = true
+        model.keyword = "\u{5c1a}\u{672a}\u{63d0}\u{4ea4}"; model.groupID = 8; model.frequent = true
         await model.load()
         XCTAssertEqual(model.users.count, 21)
         XCTAssertFalse(model.hasMore)
@@ -4127,12 +4159,12 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         XCTAssertEqual(Self.queryValues(for: pages[1])["tagid"], "7")
         XCTAssertEqual(Self.queryValues(for: pages[1])["order_type"], "")
         XCTAssertEqual(Self.queryValues(for: pages[1])["pn"], "2")
-        model.keyword = "猫A+B"
+        model.keyword = "\u{732b}A+B"
         await model.load(reset: true)
         XCTAssertEqual(model.users.map(\.id), [50])
         let search = try XCTUnwrap(recorder.requests.last)
         XCTAssertEqual(search.url?.path, "/x/relation/followings/search")
-        XCTAssertEqual(Self.queryValues(for: search)["name"], "猫A+B")
+        XCTAssertEqual(Self.queryValues(for: search)["name"], "\u{732b}A+B")
         XCTAssertNotNil(Self.queryValues(for: search)["w_rid"])
         XCTAssertNil(Self.queryValues(for: search)["tagid"], "Search spans all following, not just the previous group")
         XCTAssertEqual(cookieValues(in: search.value(forHTTPHeaderField: "Cookie"))["SESSDATA"], "relation-session")
@@ -4154,7 +4186,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         XCTAssertEqual(groups, Set([-10, 7]))
         let created = try await api.mutatePiliRelation(.createGroup("A+B"), identity: identity)
         XCTAssertEqual(created, 8)
-        try await api.mutatePiliRelation(.renameGroup(8, "新分组"), identity: identity)
+        try await api.mutatePiliRelation(.renameGroup(8, "\u{65b0}\u{5206}\u{7ec4}"), identity: identity)
         try await api.mutatePiliRelation(.sortGroups([8, 7]), identity: identity)
         try await api.mutatePiliRelation(.setGroups(mid: 20, ids: Array(groups)), identity: identity)
         try await api.mutatePiliRelation(.setGroups(mid: 20, ids: []), identity: identity)
@@ -4163,7 +4195,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let writes = recorder.requests.filter { $0.httpMethod == "POST" }
         XCTAssertEqual(writes.count, 7)
         XCTAssertEqual(formValues(in: writes[0])["tag"], "A+B")
-        XCTAssertEqual(formValues(in: writes[1])["name"], "新分组")
+        XCTAssertEqual(formValues(in: writes[1])["name"], "\u{65b0}\u{5206}\u{7ec4}")
         XCTAssertEqual(formValues(in: writes[2])["tagids"], "8,7", "Preserve user-defined order")
         XCTAssertEqual(formValues(in: writes[3])["tagids"], "-10,7")
         XCTAssertEqual(formValues(in: writes[4])["tagids"], "0", "An empty selection must explicitly choose the default group")
@@ -4185,14 +4217,14 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         RequestContractURLProtocol.install { request in recorder.record(request); throw URLError(.networkConnectionLost) }
         let api = try makeAPI(cookieHeader: "SESSDATA=relation-session; DedeUserID=1001; bili_jct=relation-csrf")
         let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .main))
-        for action in [PiliRelationMutation.deleteGroup(0), .renameGroup(-10, "改名"), .sortGroups([7, -2]), .block(1001)] {
+        for action in [PiliRelationMutation.deleteGroup(0), .renameGroup(-10, "\u{6539}\u{540d}"), .sortGroups([7, -2]), .block(1001)] {
             do { try await api.mutatePiliRelation(action, identity: identity); XCTFail("Reject a protected target") }
             catch { XCTAssertTrue(recorder.requests.isEmpty) }
         }
         do { try await api.mutatePiliRelation(.removeFan(20), identity: identity); XCTFail("Expected transport failure") }
         catch { XCTAssertEqual(recorder.requests.count, 1, "Do not retry a potentially completed relation mutation") }
         try api.sessionStore.logout()
-        do { try await api.mutatePiliRelation(.createGroup("分组"), identity: identity); XCTFail("Reject stale account") }
+        do { try await api.mutatePiliRelation(.createGroup("\u{5206}\u{7ec4}"), identity: identity); XCTFail("Reject stale account") }
         catch { XCTAssertEqual(recorder.requests.count, 1) }
     }
 
@@ -4205,7 +4237,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=note-session; DedeUserID=1001; bili_jct=note-csrf")
         let version = api.requestSnapshot(purpose: .main).playbackCredentialVersion
-        let result = try await api.savePiliNote(aid: 123, noteID: nil, title: "标题", text: "第一行\nA&B", published: false, credentialVersion: version)
+        let result = try await api.savePiliNote(aid: 123, noteID: nil, title: "\u{6807}\u{9898}", text: "\u{7b2c}\u{4e00}\u{884c}\nA&B", published: false, credentialVersion: version)
         XCTAssertEqual(result, "123456789")
         let request = try XCTUnwrap(recorder.request)
         XCTAssertEqual(request.url?.path, "/x/note/add")
@@ -4214,9 +4246,9 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         XCTAssertEqual(body["publish"], "0")
         XCTAssertEqual(body["auto_comment"], "0")
         let operations = try JSONDecoder().decode([[String: String]].self, from: Data(try XCTUnwrap(body["content"]).utf8))
-        XCTAssertEqual(operations.first?["insert"], "第一行\nA&B\n")
+        XCTAssertEqual(operations.first?["insert"], "\u{7b2c}\u{4e00}\u{884c}\nA&B\n")
         do {
-            _ = try await api.savePiliNote(aid: 123, noteID: nil, title: "标题", text: "内容", published: true, credentialVersion: version - 1)
+            _ = try await api.savePiliNote(aid: 123, noteID: nil, title: "\u{6807}\u{9898}", text: "\u{5185}\u{5bb9}", published: true, credentialVersion: version - 1)
             XCTFail("Stale account must be rejected")
         } catch { XCTAssertEqual(recorder.requests.count, 1) }
     }
@@ -4234,7 +4266,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             try session.selectInteractionAccount(mid: 2002)
         })
         let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .interaction))
-        let actions: [PiliCommentMutation] = [.like(true), .dislike(true), .dislike(false), .pin(true), .pin(false), .delete, .report(reason: 0, text: "说明 A+B & 内容")]
+        let actions: [PiliCommentMutation] = [.like(true), .dislike(true), .dislike(false), .pin(true), .pin(false), .delete, .report(reason: 0, text: "\u{8bf4}\u{660e} A+B & \u{5185}\u{5bb9}")]
         for action in actions {
             try await api.mutatePiliComment(action, oid: "987654321012345678", type: 17, rpid: 88, identity: identity, referer: "https://t.bilibili.com/123")
         }
@@ -4248,7 +4280,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             XCTAssertEqual(cookieValues(in: request.value(forHTTPHeaderField: "Cookie"))["SESSDATA"], "interaction-session")
         }
         XCTAssertEqual(formValues(in: recorder.requests[2])["action"], "0")
-        XCTAssertEqual(formValues(in: recorder.requests[6])["content"], "说明 A+B & 内容")
+        XCTAssertEqual(formValues(in: recorder.requests[6])["content"], "\u{8bf4}\u{660e} A+B & \u{5185}\u{5bb9}")
         XCTAssertEqual(formValues(in: recorder.requests[6])["add_blacklist"], "false")
     }
 
@@ -4271,7 +4303,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
 
     @MainActor
     func testFailedCommentReactionLeavesSharedStateUnchanged() async throws {
-        RequestContractURLProtocol.install { request in Self.response(for: request, body: #"{"code":-403,"message":"没有权限"}"#) }
+        RequestContractURLProtocol.install { request in Self.response(for: request, body: #"{"code":-403,"message":"\#u{6ca1}\#u{6709}\#u{6743}\#u{9650}"}"#) }
         let api = try makeAPI(cookieHeader: "SESSDATA=comment-session; DedeUserID=1001; bili_jct=comment-csrf")
         let subject = PiliCommentActionStore.Subject(identity: PiliAccountIdentity(api.requestSnapshot(purpose: .interaction)), oid: "123", type: 1)
         let comment = try JSONDecoder().decode(Comment.self, from: Data(#"{"rpid":7,"like":9,"action":1}"#.utf8))
@@ -4343,7 +4375,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=batch-session; DedeUserID=1001")
         let request = PiliBatchDownloadRequest(source: .favorite(id: 7, keyword: "A+B", order: .favoriteTime),
-            title: "收藏夹", purpose: .interaction, credentialVersion: api.requestSnapshot(purpose: .interaction).playbackCredentialVersion)
+            title: "\u{6536}\u{85cf}\u{5939}", purpose: .interaction, credentialVersion: api.requestSnapshot(purpose: .interaction).playbackCredentialVersion)
         let sink = BatchDownloadTestSink()
         let model = PiliBatchDownloadModel(api: api, request: request, downloads: sink)
         model.mediaKind = .audio
@@ -4370,18 +4402,18 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let version = api.requestSnapshot(purpose: .interaction).playbackCredentialVersion
         let sink = BatchDownloadTestSink()
         let stale = PiliBatchDownloadRequest(source: .favorite(id: 7, keyword: "", order: .favoriteTime),
-                                             title: "收藏", purpose: .interaction, credentialVersion: version + 1)
+                                             title: "\u{6536}\u{85cf}", purpose: .interaction, credentialVersion: version + 1)
         let model = PiliBatchDownloadModel(api: api, request: stale, downloads: sink)
         model.start()
         await model.waitUntilFinished()
-        XCTAssertTrue(model.status.contains("账号已切换"))
+        XCTAssertTrue(model.status.contains("\u{8d26}\u{53f7}\u{5df2}\u{5207}\u{6362}"))
         XCTAssertTrue(recorder.requests.isEmpty)
         let current = PiliBatchDownloadRequest(source: .favorite(id: 7, keyword: "", order: .favoriteTime),
-                                               title: "收藏", purpose: .interaction, credentialVersion: version)
+                                               title: "\u{6536}\u{85cf}", purpose: .interaction, credentialVersion: version)
         let cancelled = PiliBatchDownloadModel(api: api, request: current, downloads: sink)
         cancelled.start(); cancelled.cancel()
         await cancelled.waitUntilFinished()
-        XCTAssertTrue(cancelled.status.contains("已停止"))
+        XCTAssertTrue(cancelled.status.contains("\u{5df2}\u{505c}\u{6b62}"))
         XCTAssertTrue(recorder.requests.isEmpty)
         XCTAssertTrue(sink.audioCIDs.isEmpty)
     }
@@ -4439,7 +4471,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             headers: ["User-Agent": "probe", "Referer": "https://live.bilibili.com/", "Cookie": "secret", "Authorization": "secret"]) { _ in }
         XCTAssertGreaterThan(result.bytes, 0)
         XCTAssertLessThanOrEqual(result.bytes, LiveCDNProbeService.byteLimit)
-        XCTAssertEqual(result.phase, "完成")
+        XCTAssertEqual(result.phase, "\u{5b8c}\u{6210}")
         XCTAssertEqual(recorder.requests.map { $0.url?.lastPathComponent }, ["index.m3u8", "segment1.ts"])
         XCTAssertTrue(recorder.requests.allSatisfy { $0.value(forHTTPHeaderField: "Cookie") == nil && $0.value(forHTTPHeaderField: "Authorization") == nil })
         XCTAssertTrue(recorder.requests.allSatisfy { $0.value(forHTTPHeaderField: "Range") != nil })
@@ -4449,7 +4481,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         await model.waitUntilFinished()
         XCTAssertFalse(model.isRunning)
         XCTAssertEqual(model.completed, 0)
-        XCTAssertTrue(model.message?.contains("已取消") == true)
+        XCTAssertTrue(model.message?.contains("\u{5df2}\u{53d6}\u{6d88}") == true)
     }
 
     @MainActor
@@ -4497,7 +4529,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         }
         let unknown = try await api.piliCheckVisibility(.dynamic("901"), identity: .init(api.requestSnapshot()))
         XCTAssertFalse(unknown.publicRead)
-        XCTAssertTrue(unknown.message.contains("审核延迟"), "An anonymous read failure is not proof of moderation")
+        XCTAssertTrue(unknown.message.contains("\u{5ba1}\u{6838}\u{5ef6}\u{8fdf}"), "An anonymous read failure is not proof of moderation")
     }
 
     @MainActor
@@ -4531,7 +4563,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
             }
             if request.url?.path == "/xlive/web-ucenter/v2/emoticon/GetEmoticons" {
-                return Self.response(for: request, body: #"{"code":0,"data":{"data":[{"pkg_type":3,"emoticons":[{"emoji":"[dog]","emoticon_unique":"official_dog","perm":1}]},{"pkg_type":2,"emoticons":[{"emoji":"加油","emoticon_unique":"room_1_2","perm":0}]}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"data":[{"pkg_type":3,"emoticons":[{"emoji":"[dog]","emoticon_unique":"official_dog","perm":1}]},{"pkg_type":2,"emoticons":[{"emoji":"\#u{52a0}\#u{6cb9}","emoticon_unique":"room_1_2","perm":0}]}]}}"#)
             }
             return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
         }
@@ -4566,7 +4598,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
             recorder.record(request)
-            return Self.response(for: request, body: #"{"code":0,"data":{"final_btn_status":2,"reserve_update":18,"desc_update":"18 人预约"}}"#)
+            return Self.response(for: request, body: #"{"code":0,"data":{"final_btn_status":2,"reserve_update":18,"desc_update":"18 \#u{4eba}\#u{9884}\#u{7ea6}"}}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=reservation; DedeUserID=1001; bili_jct=reservation-csrf")
         let result = try await api.piliToggleDynamicReservation(id: 55, dynamicID: "66", status: 1, total: 17, identity: .init(api.requestSnapshot()))
@@ -4612,7 +4644,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(for: request, body: #"{"code":0,"data":{"name":"actual query","show_name":"display title"}}"#)
             }
             if Self.queryValues(for: request)["search_type"] == "live_room" {
-                return Self.response(for: request, body: #"{"code":0,"data":{"result":[{"roomid":99,"title":"<em>直播</em>间","uname":"主播","uid":42,"user_cover":"//i.example.com/cover.jpg"}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"result":[{"roomid":99,"title":"<em>\#u{76f4}\#u{64ad}</em>\#u{95f4}","uname":"\#u{4e3b}\#u{64ad}","uid":42,"user_cover":"//i.example.com/cover.jpg"}]}}"#)
             }
             return Self.response(for: request, body: #"{"code":0,"data":{"result":[]}}"#)
         }
@@ -4620,7 +4652,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         _ = try await api.searchVideos(keyword: "duration", order: "click", duration: 3)
         let rooms = try await api.piliSearchLiveRooms(keyword: "live", page: 2)
         let word = try await api.piliDefaultSearch()
-        XCTAssertEqual(rooms.first?.roomID, 99); XCTAssertEqual(rooms.first?.title, "直播间")
+        XCTAssertEqual(rooms.first?.roomID, 99); XCTAssertEqual(rooms.first?.title, "\u{76f4}\u{64ad}\u{95f4}")
         XCTAssertEqual(word?.keyword, "actual query"); XCTAssertEqual(word?.display, "display title")
         let video = try XCTUnwrap(recorder.requests.first { Self.queryValues(for: $0)["search_type"] == "video" })
         XCTAssertEqual(Self.queryValues(for: video)["duration"], "3")
@@ -4675,7 +4707,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         try await api.piliSendLive(roomID: 9, message: "reply", emote: false, identity: identity, reply: item.liveMetadata)
         try await api.piliLiveShieldKeyword("sale", remove: false, roomID: 9, identity: identity)
         try await api.piliLiveShieldUser(uid: 42, remove: true, roomID: 9, identity: identity)
-        try await api.piliReportLiveMessage(item, roomID: 9, reason: "垃圾广告", reasonID: 3, identity: identity)
+        try await api.piliReportLiveMessage(item, roomID: 9, reason: "\u{5783}\u{573e}\u{5e7f}\u{544a}", reasonID: 3, identity: identity)
         _ = try await api.piliLiveRanks(roomID: 9, ownerID: 10, type: "weekly_rank", page: 2)
         let followed = try await api.piliFollowedLiveRooms(page: 2, identity: identity)
         XCTAssertTrue(followed.more); XCTAssertEqual(followed.rooms.map(\.roomID), [99])
@@ -4698,11 +4730,11 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             recorder.record(request)
             switch request.url?.path {
             case "/pgc/season/index/condition":
-                return Self.response(for: request, body: #"{"code":0,"data":{"order":[{"field":"3","name":"追番人数"}],"filter":[{"field":"area","name":"地区","values":[{"keyword":"-1","name":"全部"},{"keyword":"2","name":"日本"}]}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"order":[{"field":"3","name":"\#u{8ffd}\#u{756a}\#u{4eba}\#u{6570}"}],"filter":[{"field":"area","name":"\#u{5730}\#u{533a}","values":[{"keyword":"-1","name":"\#u{5168}\#u{90e8}"},{"keyword":"2","name":"\#u{65e5}\#u{672c}"}]}]}}"#)
             case "/pgc/season/index/result":
-                return Self.response(for: request, body: #"{"code":0,"data":{"has_next":1,"list":[{"season_id":42,"title":"番剧","cover":"https://i0.hdslb.com/test.jpg","index_show":"更新至第 4 话"}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"has_next":1,"list":[{"season_id":42,"title":"\#u{756a}\#u{5267}","cover":"https://i0.hdslb.com/test.jpg","index_show":"\#u{66f4}\#u{65b0}\#u{81f3}\#u{7b2c} 4 \#u{8bdd}"}]}}"#)
             case "/pgc/web/timeline":
-                return Self.response(for: request, body: #"{"code":0,"result":[{"date":"10-06","is_today":1,"episodes":[{"episode_id":9,"season_id":42,"title":"番剧","pub_time":"18:00","pub_index":"第 4 话"}]}]}"#)
+                return Self.response(for: request, body: #"{"code":0,"result":[{"date":"10-06","is_today":1,"episodes":[{"episode_id":9,"season_id":42,"title":"\#u{756a}\#u{5267}","pub_time":"18:00","pub_index":"\#u{7b2c} 4 \#u{8bdd}"}]}]}"#)
             default: return Self.response(for: request, body: #"{"code":-404}"#)
             }
         }
@@ -4718,7 +4750,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             XCTAssertTrue(query.contains(.init(name: name, value: value)))
         }
         let timeline = try await api.piliPGCTimeline(type: 1)
-        XCTAssertEqual(timeline.first?.title, "10-06 · 今天")
+        XCTAssertEqual(timeline.first?.title, "10-06 · \u{4eca}\u{5929}")
         XCTAssertEqual(timeline.first?.episodes.first?.id, 9)
     }
 
@@ -4771,7 +4803,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(for: request, body: #"{"code":0,"data":{"privacy":{"disable_following":1,"fav_video":0,"future":9}}}"#)
             }
             if request.url?.path == "/pgc/review/long/list" {
-                return Self.response(for: request, body: #"{"code":0,"data":{"next":"cursor2","count":0,"list":[{"review_id":42,"article_id":50,"score":10,"author":{"mid":9,"uname":"作者"},"content":"长评","stat":{"likes":3}}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"next":"cursor2","count":0,"list":[{"review_id":42,"article_id":50,"score":10,"author":{"mid":9,"uname":"\#u{4f5c}\#u{8005}"},"content":"\#u{957f}\#u{8bc4}","stat":{"likes":3}}]}}"#)
             }
             return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
         }
@@ -4809,17 +4841,17 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png","sub_url":"https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png"}}}"#)
             }
             if request.url?.path == "/x/web-interface/popular/series/list" {
-                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"number":400,"name":"第 400 期"}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"number":400,"name":"\#u{7b2c} 400 \#u{671f}"}]}}"#)
             }
             if request.url?.path == "/pgc/web/rank/list" {
-                return Self.response(for: request, body: #"{"code":0,"result":{"list":[{"season_id":3,"title":"番剧"}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"result":{"list":[{"season_id":3,"title":"\#u{756a}\#u{5267}"}]}}"#)
             }
-            return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"aid":1,"bvid":"BV1test","title":"每周视频"}]}}"#)
+            return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"aid":1,"bvid":"BV1test","title":"\#u{6bcf}\#u{5468}\#u{89c6}\#u{9891}"}]}}"#)
         }
         let api = try makeAPI(cookieHeader: "")
         let issues = try await api.piliWeeklyIssues(); XCTAssertEqual(issues.first?.id, 400)
         let weekly = try await api.piliDiscoveryVideos(weekly: 400)
-        XCTAssertEqual(weekly.videos.first?.title, "每周视频"); XCTAssertFalse(weekly.more)
+        XCTAssertEqual(weekly.videos.first?.title, "\u{6bcf}\u{5468}\u{89c6}\u{9891}"); XCTAssertFalse(weekly.more)
         var query = URLComponents(url: try XCTUnwrap(recorder.request?.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
         XCTAssertTrue(query.contains(.init(name: "number", value: "400")))
         XCTAssertTrue(query.contains { $0.name == "w_rid" })
@@ -4869,7 +4901,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(for: request, body: #"{"code":0,"data":{"totalSize":1,"data":[{"id":123,"title":"AU","cover":"https://i0.hdslb.com/a.jpg"}]}}"#)
             }
             if request.url?.path == "/x/esports/match/info" { return Self.response(for: request, body: #"{"code":0,"data":{"contest":{"home_score":1,"away_score":2}}}"#) }
-            return Self.response(for: request, body: #"{"code":0,"data":{"music_title":"测试音乐"}}"#)
+            return Self.response(for: request, body: #"{"code":0,"data":{"music_title":"\#u{6d4b}\#u{8bd5}\#u{97f3}\#u{4e50}"}}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=s; bili_jct=csrf; DedeUserID=1001")
         let audio = try await api.piliMemberExtras(.audio, mid: 17, page: 1)
@@ -4893,11 +4925,11 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             recorder.record(request)
             switch request.url?.path {
             case "/x/space/bangumi/follow/list":
-                return Self.response(for: request, body: #"{"code":0,"data":{"total":31,"list":[{"season_id":123,"title":"测试番剧"}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"total":31,"list":[{"season_id":123,"title":"\#u{6d4b}\#u{8bd5}\#u{756a}\#u{5267}"}]}}"#)
             case "/x/topic/web/fav/list":
-                return Self.response(for: request, body: #"{"code":0,"data":{"topic_list":{"page_info":{"total":1},"topic_items":[{"id":7,"name":"测试话题"}]}}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"topic_list":{"page_info":{"total":1},"topic_items":[{"id":7,"name":"\#u{6d4b}\#u{8bd5}\#u{8bdd}\#u{9898}"}]}}}"#)
             case "/x/polymer/web-dynamic/v1/opus/feed/fav":
-                return Self.response(for: request, body: #"{"code":0,"data":{"has_more":true,"items":[{"opus_id":"999","content":"收藏图文"}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"has_more":true,"items":[{"opus_id":"999","content":"\#u{6536}\#u{85cf}\#u{56fe}\#u{6587}"}]}}"#)
             default: return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
             }
         }
@@ -4928,7 +4960,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         RequestContractURLProtocol.install { request in
             recorder.record(request)
             switch request.url?.path {
-            case "/x/dm/filter/user": return Self.response(for: request, body: #"{"code":0,"data":{"rule":[{"id":7,"type":0,"filter":"广告"}]}}"#)
+            case "/x/dm/filter/user": return Self.response(for: request, body: #"{"code":0,"data":{"rule":[{"id":7,"type":0,"filter":"\#u{5e7f}\#u{544a}"}]}}"#)
             case "/x/dm/filter/user/add": return Self.response(for: request, body: #"{"code":0,"data":{"id":8,"type":2,"filter":"884863d2"}}"#)
             default: return Self.response(for: request, body: #"{"code":0,"data":{}}"#)
             }
@@ -4944,7 +4976,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let add = try XCTUnwrap(recorder.requests.first { $0.url?.path == "/x/dm/filter/user/add" })
         XCTAssertEqual(formValues(in: add)["filter"], "884863d2")
         XCTAssertEqual(formValues(in: add)["csrf"], "rules-csrf")
-        let item = DanmakuItem(id: "local", time: 1, mode: 1, fontSize: 25, color: 0xffffff, text: "自己的弹幕",
+        let item = DanmakuItem(id: "local", time: 1, mode: 1, fontSize: 25, color: 0xffffff, text: "\u{81ea}\u{5df1}\u{7684}\u{5f39}\u{5e55}",
             serverID: "9007199254740993", cid: 99, senderHash: PiliDanmakuRule.userHash(1001))
         try await api.recallPiliDanmaku(item, identity: identity)
         let recall = try XCTUnwrap(recorder.requests.last { $0.url?.path == "/x/dm/recall" })
@@ -4952,7 +4984,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         XCTAssertEqual(formValues(in: recall)["cid"], "99")
         store.didRecall(item, identity: identity)
         XCTAssertTrue(store.filter([item], identity: identity).isEmpty)
-        let foreign = DanmakuItem(id: "foreign", time: 1, mode: 1, fontSize: 25, color: 0xffffff, text: "其他用户", serverID: "77", cid: 99, senderHash: "884863d2")
+        let foreign = DanmakuItem(id: "foreign", time: 1, mode: 1, fontSize: 25, color: 0xffffff, text: "\u{5176}\u{4ed6}\u{7528}\u{6237}", serverID: "77", cid: 99, senderHash: "884863d2")
         do { try await api.recallPiliDanmaku(foreign, identity: identity); XCTFail("Must reject another sender") } catch {}
         XCTAssertEqual(recorder.requests.filter { $0.url?.path == "/x/dm/recall" }.count, 1)
         let reloaded = PiliDanmakuRulesStore(defaults: defaults); reloaded.synchronize(api: api)
@@ -4960,7 +4992,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         try api.sessionStore.saveLoginCookies(["SESSDATA": "other", "DedeUserID": "2002", "bili_jct": "other-csrf"], credentialKind: .web)
         reloaded.synchronize(api: api)
         XCTAssertTrue(reloaded.rules.isEmpty, "Rules must not leak across accounts")
-        do { try await reloaded.add(text: "旧账号", type: 0, api: api, identity: identity); XCTFail("Stale account") } catch {}
+        do { try await reloaded.add(text: "\u{65e7}\u{8d26}\u{53f7}", type: 0, api: api, identity: identity); XCTFail("Stale account") } catch {}
         XCTAssertEqual(recorder.requests.filter { $0.url?.path == "/x/dm/filter/user/add" }.count, 1)
     }
 
@@ -4969,8 +5001,8 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in
             recorder.record(request)
-            if request.url?.path == "/x/dm/filter/user" { return Self.response(for: request, body: #"{"code":0,"data":{"rule":[{"id":7,"type":0,"filter":"广告"}]}}"#) }
-            return Self.response(for: request, body: #"{"code":-403,"message":"拒绝删除"}"#)
+            if request.url?.path == "/x/dm/filter/user" { return Self.response(for: request, body: #"{"code":0,"data":{"rule":[{"id":7,"type":0,"filter":"\#u{5e7f}\#u{544a}"}]}}"#) }
+            return Self.response(for: request, body: #"{"code":-403,"message":"\#u{62d2}\#u{7edd}\#u{5220}\#u{9664}"}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=rules; DedeUserID=1001; bili_jct=rules-csrf")
         let store = PiliDanmakuRulesStore(defaults: try XCTUnwrap(UserDefaults(suiteName: UUID().uuidString)))
@@ -4985,7 +5017,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         let recorder = RequestContractRecorder()
         RequestContractURLProtocol.install { request in recorder.record(request); return Self.response(for: request, body: #"{"code":0,"data":{}}"#) }
         let api = try makeAPI(cookieHeader: "SESSDATA=feed; DedeUserID=1001; bili_jct=feed-csrf", accessKey: "feed-access")
-        let video = try XCTUnwrap(JSONDecoder().decode(RecommendFeedItem.self, from: Data(#"{"param":"123","title":"测试","card_goto":"av","three_point_v2":[{"type":"feedback","reasons":[{"id":7,"name":"标题问题"}]}]}"#.utf8)).asVideoItem())
+        let video = try XCTUnwrap(JSONDecoder().decode(RecommendFeedItem.self, from: Data(#"{"param":"123","title":"\#u{6d4b}\#u{8bd5}","card_goto":"av","three_point_v2":[{"type":"feedback","reasons":[{"id":7,"name":"\#u{6807}\#u{9898}\#u{95ee}\#u{9898}"}]}]}"#.utf8)).asVideoItem())
         let reason = try XCTUnwrap(video.piliRecommendation?.reasons.first), identity = PiliAccountIdentity(api.requestSnapshot())
         try await api.piliFeedFeedback(video: video, reason: reason, identity: identity)
         try await api.piliFeedFeedback(video: video, reason: reason, identity: identity)
@@ -4998,7 +5030,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             XCTAssertTrue(query.contains(.init(name: key, value: value)))
         }
         XCTAssertFalse(query.contains { $0.name == "reason_id" }); XCTAssertTrue(query.contains { $0.name == "sign" })
-        do { try await api.piliFeedFeedback(video: video, reason: .init(value: 999, name: "伪造", kind: "dislike"), identity: identity); XCTFail("Unknown reason") } catch {}
+        do { try await api.piliFeedFeedback(video: video, reason: .init(value: 999, name: "\u{4f2a}\u{9020}", kind: "dislike"), identity: identity); XCTFail("Unknown reason") } catch {}
         XCTAssertEqual(recorder.requests.filter { $0.url?.path == "/x/feed/dislike" }.count, 2)
     }
 
@@ -5037,12 +5069,12 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
                 return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/7cd084941338484aae1ad9425b84077c.png","sub_url":"https://i.example.com/4932caff0ff746eab6f01bf08b70ac45.png"}}}"#)
             }
             recorder.record(request)
-            return Self.response(for: request, body: #"{"code":0,"data":{"code":-1,"message":"暂无总结"}}"#)
+            return Self.response(for: request, body: #"{"code":0,"data":{"code":-1,"message":"\#u{6682}\#u{65e0}\#u{603b}\#u{7ed3}"}}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=summary; DedeUserID=1001")
-        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","title":"测试","owner":{"mid":42,"name":"UP"}}"#.utf8))
+        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","title":"\#u{6d4b}\#u{8bd5}","owner":{"mid":42,"name":"UP"}}"#.utf8))
         do { _ = try await api.piliAIConclusion(video: video, cid: 99, identity: PiliAccountIdentity(api.requestSnapshot())); XCTFail("Unavailable summary") }
-        catch { XCTAssertTrue(error.localizedDescription.contains("暂无总结")) }
+        catch { XCTAssertTrue(error.localizedDescription.contains("\u{6682}\u{65e0}\u{603b}\u{7ed3}")) }
         let request = try XCTUnwrap(recorder.requests.first { $0.url?.path == "/x/web-interface/view/conclusion/get" })
         let query = URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
         for (key, value) in ["bvid": "BVtest", "cid": "99", "up_mid": "42"] { XCTAssertTrue(query.contains(.init(name: key, value: value))) }
@@ -5055,14 +5087,14 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         RequestContractURLProtocol.install { request in
             recorder.record(request)
             if request.url?.path == "/x/v3/fav/folder/created/list-all" {
-                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"id":7,"title":"默认","fav_state":1},{"id":8,"title":"其他","fav_state":1}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"id":7,"title":"\#u{9ed8}\#u{8ba4}","fav_state":1},{"id":8,"title":"\#u{5176}\#u{4ed6}","fav_state":1}]}}"#)
             }
             if request.url?.path == "/x/v3/fav/resource/deal" { return Self.response(for: request, body: #"{"code":0}"#) }
             return Self.response(for: request, body: #"{"code":-404,"message":"No metadata in fixture"}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=fav; DedeUserID=1001; bili_jct=fav-csrf")
         api.libraryStore.setQuickFavoriteFolder(7, account: 1001)
-        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","aid":123,"title":"测试","cid":99}"#.utf8))
+        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","aid":123,"title":"\#u{6d4b}\#u{8bd5}","cid":99}"#.utf8))
         let model = VideoDetailViewModel(seedVideo: video, api: api, libraryStore: api.libraryStore,
             sessionStore: api.sessionStore, sponsorBlockService: SponsorBlockService())
         let handled = await model.quickFavoriteIfConfigured()
@@ -5094,16 +5126,16 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
         RequestContractURLProtocol.install { request in
             recorder.record(request)
             if request.url?.path == "/x/v3/fav/folder/created/list-all" {
-                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"id":8,"title":"剩余收藏夹","fav_state":0}]}}"#)
+                return Self.response(for: request, body: #"{"code":0,"data":{"list":[{"id":8,"title":"\#u{5269}\#u{4f59}\#u{6536}\#u{85cf}\#u{5939}","fav_state":0}]}}"#)
             }
             return Self.response(for: request, body: #"{"code":-404}"#)
         }
         let api = try makeAPI(cookieHeader: "SESSDATA=fav; DedeUserID=1001; bili_jct=fav-csrf")
         api.libraryStore.setQuickFavoriteFolder(7, account: 1001)
-        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","aid":123,"title":"测试","cid":99}"#.utf8))
+        let video = try JSONDecoder().decode(VideoItem.self, from: Data(#"{"bvid":"BVtest","aid":123,"title":"\#u{6d4b}\#u{8bd5}","cid":99}"#.utf8))
         let model = VideoDetailViewModel(seedVideo: video, api: api, libraryStore: api.libraryStore,
             sessionStore: api.sessionStore, sponsorBlockService: SponsorBlockService())
-        model.favoriteFolders = [try JSONDecoder().decode(FavoriteFolder.self, from: Data(#"{"id":7,"title":"已删除"}"#.utf8))]
+        model.favoriteFolders = [try JSONDecoder().decode(FavoriteFolder.self, from: Data(#"{"id":7,"title":"\#u{5df2}\#u{5220}\#u{9664}"}"#.utf8))]
         let handled = await model.quickFavoriteIfConfigured()
         XCTAssertFalse(handled)
         XCTAssertEqual(api.libraryStore.quickFavoriteFolder(account: 1001), 0)
@@ -5215,7 +5247,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
             + protobufVarintField(3, value: 1)
             + protobufVarintField(4, value: 25)
             + protobufVarintField(5, value: 16_777_215)
-            + protobufLengthDelimitedField(7, payload: Array("分段弹幕".utf8))
+            + protobufLengthDelimitedField(7, payload: Array("\u{5206}\u{6bb5}\u{5f39}\u{5e55}".utf8))
         return Data(protobufLengthDelimitedField(1, payload: element))
     }
 
@@ -5270,7 +5302,7 @@ final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
     }
 
     private nonisolated static func videoItemResponse(bvid: String, aid: Int) -> String {
-        #"{"code":0,"data":{"bvid":"\#(bvid)","aid":\#(aid),"title":"视频详情"}}"#
+        #"{"code":0,"data":{"bvid":"\#(bvid)","aid":\#(aid),"title":"\#u{89c6}\#u{9891}\#u{8be6}\#u{60c5}"}}"#
     }
 
     private func cookieValues(in header: String?) -> [String: String] {
