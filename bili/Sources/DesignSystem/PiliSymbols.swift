@@ -108,6 +108,7 @@ nonisolated enum PiliSymbols {
         "externaldrive.badge.minus": "hardrive",
         "eye": "eye-on",
         "eye.slash": "eye-off",
+        "eye.slash.fill": "eye-off",
         "eyedropper": "eyedropper-default",
         "face.smiling": "face-smile",
         "film": "media-play-square",
