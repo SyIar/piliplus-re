@@ -48,7 +48,7 @@ struct VideoDetailActionStripButtonRow: View {
                     systemImage: "hand.thumbsup.fill",
                     foregroundStyle: model.isLiked ? appTintColor : .primary,
                     isDisabled: model.isMutatingLike,
-                        action: onLike
+                    action: onLike
                 )
                 .accessibilityIdentifier("video.actions.like")
 
@@ -57,7 +57,7 @@ struct VideoDetailActionStripButtonRow: View {
                     systemImage: "bitcoinsign.circle.fill",
                     foregroundStyle: model.isCoined ? appTintColor : .primary,
                     isDisabled: model.isMutatingCoin || model.coinCount >= 2,
-                        action: onCoin
+                    action: onCoin
                 )
                 .accessibilityIdentifier("video.actions.coin")
 
@@ -66,7 +66,7 @@ struct VideoDetailActionStripButtonRow: View {
                     systemImage: "star.fill",
                     foregroundStyle: model.isFavorited ? appTintColor : .primary,
                     isDisabled: model.isMutatingFavorite || !model.canFavorite,
-                        action: onFavorite
+                    action: onFavorite
                 )
                 .highPriorityGesture(LongPressGesture().onEnded { _ in
                     guard !model.isMutatingFavorite, model.canFavorite else { return }

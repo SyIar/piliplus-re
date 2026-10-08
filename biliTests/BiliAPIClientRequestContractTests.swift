@@ -5,6 +5,42 @@ import PiliPlaybackCore
 @testable import bili
 
 final class BiliAPIClientRequestContractTests: H264PlaybackTestCase {
+    @MainActor
+    func testSearchFilterApplyBatchesChangesAndKeepsSubmittedKeyword() async throws {
+        await BiliAPIResponseMemoryCache.shared.clear()
+        let recorder = RequestContractRecorder()
+        RequestContractURLProtocol.install { request in
+            recorder.record(request)
+            if request.url?.path == "/x/web-interface/nav" {
+                return Self.response(for: request, body: #"{"code":0,"data":{"wbi_img":{"img_url":"https://i.example.com/abc.png","sub_url":"https://i.example.com/def.png"}}}"#)
+            }
+            return Self.response(for: request, body: #"{"code":0,"data":{"result":[]}}"#)
+        }
+        defer { RequestContractURLProtocol.reset() }
+        let suite = "SearchFilterApplyTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let model = SearchViewModel(api: try makeAPI(cookieHeader: ""), historyDefaults: defaults)
+
+        // Changing filters before a submission must not create a network request.
+        await model.applyFilters(scope: .video, order: .comprehensive, duration: .any)
+        XCTAssertTrue(recorder.requests.isEmpty)
+        let keyword = "layout-\(UUID().uuidString)"
+        await model.search(keyword)
+        model.query = "unsubmitted edit"
+        await model.applyFilters(scope: .video, order: .newest, duration: .long)
+        XCTAssertEqual(model.state, .loaded)
+        let searches = recorder.requests.filter { Self.queryValues(for: $0)["search_type"] == "video" }
+        XCTAssertEqual(searches.count, 2, "Initial search plus one batched Apply")
+        let request = try XCTUnwrap(searches.last)
+        XCTAssertEqual(Self.queryValues(for: request)["keyword"], keyword)
+        XCTAssertEqual(Self.queryValues(for: request)["order"], "pubdate")
+        XCTAssertEqual(Self.queryValues(for: request)["duration"], "3")
+        let previousCount = recorder.requests.count
+        await model.applyFilters(scope: .video, order: .newest, duration: .long)
+        XCTAssertEqual(recorder.requests.count, previousCount, "Unchanged filters must not refetch")
+    }
+
     override func tearDown() {
         RequestContractURLProtocol.reset()
         super.tearDown()
