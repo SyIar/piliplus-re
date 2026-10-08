@@ -4,6 +4,7 @@ import ChunUI
 struct UploaderView: View {
     @EnvironmentObject private var dependencies: AppDependencies
     let owner: VideoOwner
+    let initialSection: UploaderProfileSection?
     let allowsPullToRefresh: Bool
     let showsToolbarRefreshButton: Bool
 
@@ -12,9 +13,11 @@ struct UploaderView: View {
     init(
         owner: VideoOwner,
         allowsPullToRefresh: Bool = true,
-        showsToolbarRefreshButton: Bool = false
+        showsToolbarRefreshButton: Bool = false,
+        initialSection: UploaderProfileSection? = nil
     ) {
         self.owner = owner
+        self.initialSection = initialSection
         self.allowsPullToRefresh = allowsPullToRefresh
         self.showsToolbarRefreshButton = showsToolbarRefreshButton
     }
@@ -30,7 +33,8 @@ struct UploaderView: View {
                     owner: owner,
                     viewModel: viewModel,
                     allowsPullToRefresh: allowsPullToRefresh,
-                    showsToolbarRefreshButton: showsToolbarRefreshButton
+                    showsToolbarRefreshButton: showsToolbarRefreshButton,
+                    initialSection: initialSection
                 )
             } else {
                 UploaderInitialLoadingView()
@@ -64,7 +68,7 @@ private struct UploaderInitialLoadingView: View {
             .background(Color.cc.background)
         }
         .allowsHitTesting(false)
-        .accessibilityLabel("正在加载 UP 主主页")
+        .accessibilityLabel("\u{6b63}\u{5728}\u{52a0}\u{8f7d} UP \u{4e3b}\u{4e3b}\u{9875}")
     }
 }
 

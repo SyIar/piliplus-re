@@ -61,12 +61,15 @@ struct MineDashboardShortcut: View {
 
 struct MineDashboardFolder: View {
     let folder: FavoriteFolder
+    var api: BiliAPIClient? = nil
+    @State private var loadedMetadata: FavoriteFolder?
+    private var displayFolder: FavoriteFolder { loadedMetadata ?? folder }
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Color.secondary.opacity(0.08)
                 .aspectRatio(16.0 / 9.0, contentMode: .fit)
                 .overlay {
-                    CachedRemoteImage(url: folder.cover.flatMap { URL(string: $0.normalizedBiliURL()) }, targetPixelSize: 720) { image in
+                    CachedRemoteImage(url: displayFolder.cover.flatMap { URL(string: $0.normalizedBiliURL()) }, targetPixelSize: 720) { image in
                         image.resizable().scaledToFill()
                     } placeholder: { PiliIcon(systemName: "folder", size: 28).foregroundStyle(.secondary) }
                 }.clipShape(RoundedRectangle(cornerRadius: 12))
@@ -74,5 +77,14 @@ struct MineDashboardFolder: View {
             Text("\u{5171} \(folder.mediaCount ?? 0) \u{6761}\u{89c6}\u{9891} · \(folder.isPiliPublic ? "\u{516c}\u{5f00}" : "\u{79c1}\u{5bc6}")")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: .infinity, alignment: .topLeading).contentShape(Rectangle())
+        .task(id: folder.id) {
+            guard loadedMetadata == nil, folder.cover?.isEmpty != false, let api else { return }
+            let identity = PiliAccountIdentity(api.requestSnapshot(purpose: .interaction))
+            guard identity.mid > 0 else { return }
+            let metadata = try? await api.fetchPiliFavoriteFolder(id: folder.id)
+            guard !Task.isCancelled, identity.matches(api.requestSnapshot(purpose: .interaction)),
+                  metadata?.id == folder.id else { return }
+            loadedMetadata = metadata
+        }
     }
 }

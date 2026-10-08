@@ -12,6 +12,7 @@ struct MineContentView: View {
     let onSMSLogin: () -> Void
     let onWebLogin: () -> Void
     let onOpenRoute: (MineOverlayRoute) -> Void
+    var loadsCoverMetadata = true
 
     var body: some View {
         ScrollView {
@@ -58,7 +59,7 @@ struct MineContentView: View {
     private var accountStatistics: some View {
         HStack(spacing: 16) {
             NavigationLink {
-                UploaderView(owner: .init(mid: sessionStore.user?.mid ?? 0, name: sessionStore.user?.uname ?? "", face: sessionStore.user?.face))
+                UploaderView(owner: .init(mid: sessionStore.user?.mid ?? 0, name: sessionStore.user?.uname ?? "", face: sessionStore.user?.face), initialSection: .dynamics)
             } label: { MineDashboardStat(title: "\u{52a8}\u{6001}", count: viewModel.statistics?.dynamicCount) }
             Button { showRelations(.following) } label: { MineDashboardStat(title: "\u{5173}\u{6ce8}", count: viewModel.statistics?.following) }
             Button { showRelations(.fans) } label: { MineDashboardStat(title: "\u{7c89}\u{4e1d}", count: viewModel.statistics?.follower) }
@@ -103,7 +104,7 @@ struct MineContentView: View {
                             PiliPresentation.present(.sheet) {
                                 PiliFavoriteItemsView(api: dependencies.api, folder: folder) { Task { await viewModel.refreshFavorites() } }
                             }
-                        } label: { MineDashboardFolder(folder: folder) }.buttonStyle(.plain)
+                        } label: { MineDashboardFolder(folder: folder, api: loadsCoverMetadata ? dependencies.api : nil) }.buttonStyle(.plain)
                     }
                 }
             } else if case .failed(let message) = viewModel.favoriteState {

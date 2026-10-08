@@ -27,7 +27,7 @@ struct PiliMineLayoutFixture: View {
                 else {
                     MineContentView(viewModel: model, accountMessageViewModel: messages,
                         sessionStore: dependencies.sessionStore, libraryStore: dependencies.libraryStore,
-                        onQRCodeLogin: {}, onSMSLogin: {}, onWebLogin: {}, onOpenRoute: { path.append($0) })
+                        onQRCodeLogin: {}, onSMSLogin: {}, onWebLogin: {}, onOpenRoute: { path.append($0) }, loadsCoverMetadata: false)
                         .navigationTitle("\u{6211}\u{7684}").navigationBarTitleDisplayMode(.inline)
                 }
             }

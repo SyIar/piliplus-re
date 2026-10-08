@@ -3,6 +3,7 @@ import PiliPlaybackCore
 import SwiftUI
 
 struct PiliOfflineLibraryView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var store = PiliOfflineStore.shared
     @State private var selection = Set<UUID>()
     @State private var editMode = EditMode.inactive
@@ -10,7 +11,7 @@ struct PiliOfflineLibraryView: View {
     @AppStorage("piliplus.offline.groupCollections") private var groupsCollections = true
 
     private var groups: [(key: String, title: String, items: [OfflineDownloadItem])] {
-        if !groupsCollections { return [("all", "全部下载", store.items)] }
+        if !groupsCollections { return [("all", "\u{5168}\u{90e8}\u{4e0b}\u{8f7d}", store.items)] }
         var order: [String] = [], values: [String: [OfflineDownloadItem]] = [:]
         for item in store.items {
             let key = item.collectionKey
@@ -19,7 +20,7 @@ struct PiliOfflineLibraryView: View {
         }
         return order.map { key in
             let items = values[key] ?? []
-            return (key, items.first?.collectionTitle ?? items.first?.title ?? "合集", items)
+            return (key, items.first?.collectionTitle ?? items.first?.title ?? "\u{5408}\u{96c6}", items)
         }
     }
 
@@ -27,16 +28,16 @@ struct PiliOfflineLibraryView: View {
         PiliSelectionList(selection: $selection) {
             if let error = store.storageError { Text(error).ccText(font: .cc.sm, color: .cc.mutedForeground) }
             Section {
-                Toggle("允许蜂窝网络下载新任务", isOn: $allowsCellular)
-                Toggle("按视频 / 合集分组", isOn: $groupsCollections)
-                Text("已下载 \(ByteCountFormatter.string(fromByteCount: store.items.reduce(0) { $0 + $1.fileSize }, countStyle: .file))")
+                Toggle("\u{5141}\u{8bb8}\u{8702}\u{7a9d}\u{7f51}\u{7edc}\u{4e0b}\u{8f7d}\u{65b0}\u{4efb}\u{52a1}", isOn: $allowsCellular)
+                Toggle("\u{6309}\u{89c6}\u{9891} / \u{5408}\u{96c6}\u{5206}\u{7ec4}", isOn: $groupsCollections)
+                Text("\u{5df2}\u{4e0b}\u{8f7d} \(ByteCountFormatter.string(fromByteCount: store.items.reduce(0) { $0 + $1.fileSize }, countStyle: .file))")
                     .ccText(font: .cc.sm, color: .cc.mutedForeground)
             }
             if store.items.isEmpty {
                 VStack(spacing: 16) {
                     PikaIcon(PikaIcon.Name.save, size: 44)
-                    Text("暂无离线内容").ccText(font: .cc.baseBold, color: .cc.foreground)
-                    Text("在视频播放页选择“离线下载”").ccText(font: .cc.sm, color: .cc.mutedForeground)
+                    Text("\u{6682}\u{65e0}\u{79bb}\u{7ebf}\u{5185}\u{5bb9}").ccText(font: .cc.baseBold, color: .cc.foreground)
+                    Text("\u{5728}\u{89c6}\u{9891}\u{64ad}\u{653e}\u{9875}\u{9009}\u{62e9}“\u{79bb}\u{7ebf}\u{4e0b}\u{8f7d}”").ccText(font: .cc.sm, color: .cc.mutedForeground)
                 }.frame(maxWidth: .infinity).padding(.vertical, 36)
             } else {
                 ForEach(groups, id: \.key) { group in
@@ -64,22 +65,22 @@ struct PiliOfflineLibraryView: View {
             }
         }
         .environment(\.editMode, $editMode)
-        .navigationTitle("离线下载")
+        .navigationTitle("\u{79bb}\u{7ebf}\u{4e0b}\u{8f7d}")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button(editMode == .active ? "完成" : "选择") {
+                Button(editMode == .active ? "\u{5b8c}\u{6210}" : "\u{9009}\u{62e9}") {
                     editMode = editMode == .active ? .inactive : .active
                     if editMode == .inactive { selection.removeAll() }
                 }.disabled(store.items.isEmpty)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { AppHelper.shared.dismissSheet() } label: { PikaIcon(PikaIcon.Name.close) }
-                    .accessibilityLabel("关闭")
+                    .accessibilityLabel("\u{5173}\u{95ed}")
             }
             if editMode == .active {
                 ToolbarItem(placement: .bottomBar) {
-                    CCNeoButton("删除所选 \(selection.count) 项", variant: .danger, disabled: selection.isEmpty) {
+                    CCNeoButton("\u{5220}\u{9664}\u{6240}\u{9009} \(selection.count) \u{9879}", variant: .danger, disabled: selection.isEmpty) {
                         confirmDelete(selection)
                     }
                 }
@@ -96,32 +97,35 @@ struct PiliOfflineLibraryView: View {
 
     @ViewBuilder
     private func controls(_ item: OfflineDownloadItem) -> some View {
-        HStack {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(spacing: 12))
+        layout {
             switch item.state {
             case .queued, .preparing, .downloading, .finalizing:
-                CCNeoButton("暂停", variant: .secondary) { store.pause(item.id) }
+                CCNeoButton("\u{6682}\u{505c}", variant: .secondary) { store.pause(item.id) }
             case .paused, .failed:
-                CCNeoButton("继续", variant: .secondary) { store.resume(item.id) }
+                CCNeoButton("\u{7ee7}\u{7eed}", variant: .secondary) { store.resume(item.id) }
             case .completed:
                 if let url = try? PiliOfflineStorage.playbackURL(item) {
                     ShareLink(item: url) {
-                        Label { Text(item.effectiveMediaKind == .audio ? "导出音频" : "导出视频") } icon: { PikaIcon(PikaIcon.Name.file) }
+                        Label { Text(item.effectiveMediaKind == .audio ? "\u{5bfc}\u{51fa}\u{97f3}\u{9891}" : "\u{5bfc}\u{51fa}\u{89c6}\u{9891}") } icon: { PikaIcon(PikaIcon.Name.file) }
                     }.buttonStyle(.glass)
                 }
                 if (item.effectiveMediaKind == .video && !item.hasDanmaku) || item.hasSubtitles != true {
-                    CCNeoButton(item.effectiveMediaKind == .audio ? "下载字幕" : "下载弹幕与字幕", variant: .ghost) { store.cacheDanmaku(item.id) }
+                    CCNeoButton(item.effectiveMediaKind == .audio ? "\u{4e0b}\u{8f7d}\u{5b57}\u{5e55}" : "\u{4e0b}\u{8f7d}\u{5f39}\u{5e55}\u{4e0e}\u{5b57}\u{5e55}", variant: .ghost) { store.cacheDanmaku(item.id) }
                 }
             }
             Spacer(minLength: 0)
             Button { confirmDelete([item.id]) } label: { PikaIcon(PikaIcon.Name.trash) }
-                .buttonStyle(.borderless).accessibilityLabel("删除下载")
+                .buttonStyle(.borderless).accessibilityLabel("\u{5220}\u{9664}\u{4e0b}\u{8f7d}")
         }
     }
 
     private func confirmDelete(_ ids: Set<UUID>) {
-        PiliAlertSession.present(title: "删除 \(ids.count) 个下载？", message: "媒体文件和对应离线数据将从本机移除。", actions: [
-            PiliAlertButton("取消", role: .cancel),
-            PiliAlertButton("删除", role: .destructive) {
+        PiliAlertSession.present(title: "\u{5220}\u{9664} \(ids.count) \u{4e2a}\u{4e0b}\u{8f7d}？", message: "\u{5a92}\u{4f53}\u{6587}\u{4ef6}\u{548c}\u{5bf9}\u{5e94}\u{79bb}\u{7ebf}\u{6570}\u{636e}\u{5c06}\u{4ece}\u{672c}\u{673a}\u{79fb}\u{9664}。", actions: [
+            PiliAlertButton("\u{53d6}\u{6d88}", role: .cancel),
+            PiliAlertButton("\u{5220}\u{9664}", role: .destructive) {
                 ids.forEach(store.remove)
                 selection.subtract(ids)
             },
@@ -132,13 +136,13 @@ struct PiliOfflineLibraryView: View {
 extension OfflineDownloadState {
     var piliTitle: String {
         switch self {
-        case .queued: "排队中"
-        case .preparing: "获取下载地址"
-        case .downloading: "下载中"
-        case .paused: "已暂停"
-        case .finalizing: "整理媒体文件"
-        case .completed: "已完成"
-        case .failed: "下载失败"
+        case .queued: "\u{6392}\u{961f}\u{4e2d}"
+        case .preparing: "\u{83b7}\u{53d6}\u{4e0b}\u{8f7d}\u{5730}\u{5740}"
+        case .downloading: "\u{4e0b}\u{8f7d}\u{4e2d}"
+        case .paused: "\u{5df2}\u{6682}\u{505c}"
+        case .finalizing: "\u{6574}\u{7406}\u{5a92}\u{4f53}\u{6587}\u{4ef6}"
+        case .completed: "\u{5df2}\u{5b8c}\u{6210}"
+        case .failed: "\u{4e0b}\u{8f7d}\u{5931}\u{8d25}"
         }
     }
 }

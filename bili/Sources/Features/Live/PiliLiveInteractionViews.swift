@@ -3,6 +3,7 @@ import ChunUI
 import UIKit
 
 struct PiliLiveInteractionView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ObservedObject var viewModel: LiveRoomViewModel
     @ObservedObject var store: PiliSuperChatStore
     var compact = false
@@ -11,11 +12,14 @@ struct PiliLiveInteractionView: View {
     @State private var showsChat = false
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                Button { showsChat = true } label: { PiliIcon(systemName: "text.bubble") }.buttonStyle(.glass).accessibilityLabel("直播聊天与屏蔽")
-                Button { showsComposer = true } label: { PiliLabel("发弹幕", systemImage: "bubble.left.and.text.bubble.right") }
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+                : AnyLayout(HStackLayout(spacing: 12))
+            layout {
+                Button { showsChat = true } label: { PiliIcon(systemName: "text.bubble") }.buttonStyle(.glass).accessibilityLabel("\u{76f4}\u{64ad}\u{804a}\u{5929}\u{4e0e}\u{5c4f}\u{853d}")
+                Button { showsComposer = true } label: { PiliLabel("\u{53d1}\u{5f39}\u{5e55}", systemImage: "bubble.left.and.text.bubble.right") }
                     .buttonStyle(.glass).accessibilityIdentifier("live.send.open")
-                Button { showsHistory = true } label: { PiliLabel("醒目留言", systemImage: "bubble.left.and.exclamationmark.bubble.right") }
+                Button { showsHistory = true } label: { PiliLabel("\u{9192}\u{76ee}\u{7559}\u{8a00}", systemImage: "bubble.left.and.exclamationmark.bubble.right") }
                     .buttonStyle(.glass).accessibilityIdentifier("live.superchat.open")
             }
             if !compact {
@@ -50,7 +54,7 @@ struct PiliSuperChatCard: View {
                 Text("¥\(item.price)").piliFont(.baseBold).monospacedDigit()
             }
             Text(item.message).piliFont(.base).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-            Text(item.end > date ? "剩余 \(Int(ceil(item.end.timeIntervalSince(date)))) 秒" : "展示已结束")
+            Text(item.end > date ? "\u{5269}\u{4f59} \(Int(ceil(item.end.timeIntervalSince(date)))) \u{79d2}" : "\u{5c55}\u{793a}\u{5df2}\u{7ed3}\u{675f}")
                 .piliFont(.sm).foregroundStyle(.secondary).monospacedDigit()
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading)
@@ -72,29 +76,29 @@ struct PiliSuperChatHistoryView: View {
     var body: some View {
         NavigationStack {
             PiliList {
-                Picker("展示", selection: $store.mode) { Text("关闭").tag(0); Text("有效").tag(1); Text("全部").tag(2) }
+                Picker("\u{5c55}\u{793a}", selection: $store.mode) { Text("\u{5173}\u{95ed}").tag(0); Text("\u{6709}\u{6548}").tag(1); Text("\u{5168}\u{90e8}").tag(2) }
                     .pickerStyle(.segmented).accessibilityIdentifier("live.superchat.filter")
                 if store.loading { ProgressView() }
-                if let error = store.error { Text(error); Button("重新加载") { store.load(roomID: roomID, api: api, force: true) } }
+                if let error = store.error { Text(error); Button("\u{91cd}\u{65b0}\u{52a0}\u{8f7d}") { store.load(roomID: roomID, api: api, force: true) } }
                 TimelineView(.periodic(from: .now, by: 1)) { time in
                     let values = store.visible(at: time.date)
-                    if values.isEmpty { Text(store.mode == 0 ? "醒目留言已关闭" : "暂无醒目留言").foregroundStyle(.secondary) }
+                    if values.isEmpty { Text(store.mode == 0 ? "\u{9192}\u{76ee}\u{7559}\u{8a00}\u{5df2}\u{5173}\u{95ed}" : "\u{6682}\u{65e0}\u{9192}\u{76ee}\u{7559}\u{8a00}").foregroundStyle(.secondary) }
                     ForEach(values) { item in
                         PiliSuperChatCard(item: item, date: time.date)
                             .contextMenu {
-                                PiliIconButton("复制", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.message }
-                                PiliIconButton("保存", systemImage: "square.and.arrow.down") { export = item }
-                                PiliIconButton("举报", systemImage: "exclamationmark.bubble") { report = item }
+                                PiliIconButton("\u{590d}\u{5236}", systemImage: "doc.on.doc") { UIPasteboard.general.string = item.message }
+                                PiliIconButton("\u{4fdd}\u{5b58}", systemImage: "square.and.arrow.down") { export = item }
+                                PiliIconButton("\u{4e3e}\u{62a5}", systemImage: "exclamationmark.bubble") { report = item }
                             }
                     }
                 }
-                Text("保留本次进入直播间接收到的最近 200 条，历史接口返回范围以平台为准。").piliFont(.sm).foregroundStyle(.secondary)
-            }.navigationTitle("醒目留言").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
+                Text("\u{4fdd}\u{7559}\u{672c}\u{6b21}\u{8fdb}\u{5165}\u{76f4}\u{64ad}\u{95f4}\u{63a5}\u{6536}\u{5230}\u{7684}\u{6700}\u{8fd1} 200 \u{6761}，\u{5386}\u{53f2}\u{63a5}\u{53e3}\u{8fd4}\u{56de}\u{8303}\u{56f4}\u{4ee5}\u{5e73}\u{53f0}\u{4e3a}\u{51c6}。").piliFont(.sm).foregroundStyle(.secondary)
+            }.navigationTitle("\u{9192}\u{76ee}\u{7559}\u{8a00}").navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("\u{5b8c}\u{6210}") { dismiss() } } }
                 .onChange(of: store.mode) { _, _ in onModeChange() }
                 .piliSheet(item: $report) { item in PiliSuperChatReportView(api: api, item: item, roomID: roomID) }
                 .piliSheet(item: $export) { item in
-                    PiliContentImageExportView(document: .init(title: "醒目留言", author: "\(item.name) · ¥\(item.price)", text: item.message,
+                    PiliContentImageExportView(document: .init(title: "\u{9192}\u{76ee}\u{7559}\u{8a00}", author: "\(item.name) · ¥\(item.price)", text: item.message,
                         pictures: [], source: "https://live.bilibili.com/\(roomID)"))
                 }
         }
@@ -114,9 +118,9 @@ private struct PiliSuperChatReportView: View {
         NavigationStack {
             PiliForm {
                 Text(item.message)
-                TextField("举报原因", text: $reason, axis: .vertical).lineLimit(2...5)
+                TextField("\u{4e3e}\u{62a5}\u{539f}\u{56e0}", text: $reason, axis: .vertical).lineLimit(2...5)
                 if let error { Text(error) }
-                Button("提交举报") {
+                Button("\u{63d0}\u{4ea4}\u{4e3e}\u{62a5}") {
                     guard let identity else { return }; busy = true
                     Task {
                         defer { busy = false }
@@ -124,7 +128,7 @@ private struct PiliSuperChatReportView: View {
                         catch { self.error = error.localizedDescription }
                     }
                 }.disabled(busy || reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }.navigationTitle("举报醒目留言").onAppear { if identity == nil { identity = .init(api.requestSnapshot()) } }
+            }.navigationTitle("\u{4e3e}\u{62a5}\u{9192}\u{76ee}\u{7559}\u{8a00}").onAppear { if identity == nil { identity = .init(api.requestSnapshot()) } }
         }
     }
 }
@@ -143,21 +147,21 @@ struct PiliLiveComposer: View {
         NavigationStack {
             PiliForm {
                 if let target = viewModel.liveReplyTarget {
-                    HStack { Text("回复 \(target.senderName ?? "用户")"); Spacer(); Button("取消回复") { viewModel.liveReplyTarget = nil } }
+                    HStack { Text("\u{56de}\u{590d} \(target.senderName ?? "\u{7528}\u{6237}")"); Spacer(); Button("\u{53d6}\u{6d88}\u{56de}\u{590d}") { viewModel.liveReplyTarget = nil } }
                 }
                 Section {
                     if let selected {
-                        PiliLabel("表情：\(selected.text)", systemImage: "face.smiling")
-                        Button("改发文字") { self.selected = nil }
-                    } else { TextField("发一条友善的弹幕", text: $viewModel.liveDanmakuDraft, axis: .vertical).lineLimit(2...5) }
-                    PiliIconButton(busy ? "正在发送" : "发送弹幕", systemImage: "paperplane.fill") { send() }
+                        PiliLabel("\u{8868}\u{60c5}：\(selected.text)", systemImage: "face.smiling")
+                        Button("\u{6539}\u{53d1}\u{6587}\u{5b57}") { self.selected = nil }
+                    } else { TextField("\u{53d1}\u{4e00}\u{6761}\u{53cb}\u{5584}\u{7684}\u{5f39}\u{5e55}", text: $viewModel.liveDanmakuDraft, axis: .vertical).lineLimit(2...5) }
+                    PiliIconButton(busy ? "\u{6b63}\u{5728}\u{53d1}\u{9001}" : "\u{53d1}\u{9001}\u{5f39}\u{5e55}", systemImage: "paperplane.fill") { send() }
                         .disabled(busy || (selected == nil && viewModel.liveDanmakuDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                         .accessibilityIdentifier("live.send.submit")
                 }.disabled(busy)
                 if let error { Text(error).foregroundStyle(.secondary) }
-                Section("直播间表情") {
+                Section("\u{76f4}\u{64ad}\u{95f4}\u{8868}\u{60c5}") {
                     if loading { ProgressView() }
-                    if emotes.isEmpty, !loading { Button("重新加载表情") { loadID = UUID() } }
+                    if emotes.isEmpty, !loading { Button("\u{91cd}\u{65b0}\u{52a0}\u{8f7d}\u{8868}\u{60c5}") { loadID = UUID() } }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 66))]) {
                         ForEach(emotes) { emote in
                             Button {
@@ -176,11 +180,11 @@ struct PiliLiveComposer: View {
                         }
                     }
                 }
-            }.navigationTitle("发送直播弹幕").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() }.disabled(busy) } }
+            }.navigationTitle("\u{53d1}\u{9001}\u{76f4}\u{64ad}\u{5f39}\u{5e55}").navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("\u{53d6}\u{6d88}") { dismiss() }.disabled(busy) } }
                 .task(id: loadID) {
                     if identity == nil { identity = .init(viewModel.api.requestSnapshot()) }
-                    guard let identity, identity.mid > 0 else { error = "请先登录后再发送弹幕"; return }
+                    guard let identity, identity.mid > 0 else { error = "\u{8bf7}\u{5148}\u{767b}\u{5f55}\u{540e}\u{518d}\u{53d1}\u{9001}\u{5f39}\u{5e55}"; return }
                     loading = true; defer { loading = false }
                     do { emotes = try await viewModel.api.piliLiveEmotes(roomID: viewModel.roomID, identity: identity) }
                     catch { if !Task.isCancelled { self.error = error.localizedDescription } }

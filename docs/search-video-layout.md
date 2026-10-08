@@ -36,6 +36,8 @@ adapters. Player ownership, playback and navigation are unchanged.
 Mine presents account information, three account statistics, four shortcuts and
 a favorite-folder cover grid. Settings and secondary account tools have dedicated
 entries. Unknown account values remain unavailable rather than appearing as zero.
+Folder cards fetch missing cover metadata only when they become visible; the
+account's Dynamic entry opens the uploader's dynamic section directly.
 
 The directory follows the [upstream settings code](https://github.com/bggRGjQaUbCoE/PiliPlus/blob/main/lib/pages/setting/view.dart):
 privacy, recommendations, audio/video, player, appearance, other, WebDAV,
@@ -58,6 +60,10 @@ a previous account or superseded refresh.
 | Uploader | Navigation and scrolling sections |
 | Mine/settings | Dashboard, category navigation/search, preserved preference bindings |
 | History/favorites/offline/messages | Shared lists, navigation and management controls |
+
+At accessibility text sizes, dynamic categories use a menu, search discovery
+uses one column, and live/offline action groups stack vertically to avoid narrow
+button labels.
 
 Source review does not replace live-account testing of every remote-data and
 selection state. Representative production components have deterministic fixtures;

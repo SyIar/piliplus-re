@@ -7,6 +7,9 @@ struct PiliSettingsHomeView: View {
     @ObservedObject var libraryStore: LibraryStore
     @State private var confirmsLogout = false
 
+    private var logoutTitle: String {
+        libraryStore.multiAccountExperimentEnabled ? "\u{9000}\u{51fa}\u{6240}\u{6709}\u{8d26}\u{53f7}" : "\u{9000}\u{51fa}\u{767b}\u{5f55}"
+    }
     var body: some View {
         PiliForm {
             Section {
@@ -26,7 +29,7 @@ struct PiliSettingsHomeView: View {
                     MultiAccountExperimentSettingsView(sessionStore: sessionStore, libraryStore: libraryStore, api: viewModel.offlineDownloadAPI)
                 } label: { PiliLabel("\u{8d26}\u{53f7}\u{5207}\u{6362}", systemImage: "person.2") }
                 if sessionStore.isLoggedIn {
-                    Button(role: .destructive) { confirmsLogout = true } label: { Text("\u{9000}\u{51fa}\u{767b}\u{5f55}") }
+                    Button(role: .destructive) { confirmsLogout = true } label: { Text(logoutTitle) }
                 }
             }
             Section {
@@ -39,7 +42,7 @@ struct PiliSettingsHomeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .piliAlert("\u{9000}\u{51fa}\u{767b}\u{5f55}？", isPresented: $confirmsLogout) {
             PiliAlertButton("\u{53d6}\u{6d88}", role: .cancel) {}
-            PiliAlertButton("\u{9000}\u{51fa}\u{767b}\u{5f55}", role: .destructive) { viewModel.logout() }
+            PiliAlertButton(logoutTitle, role: .destructive) { viewModel.logout() }
         } message: { "\u{9000}\u{51fa}\u{540e}\u{53ef}\u{5728}\u{4e2a}\u{4eba}\u{4e2d}\u{5fc3}\u{91cd}\u{65b0}\u{767b}\u{5f55}。" }
     }
 }
