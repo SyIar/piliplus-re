@@ -324,7 +324,11 @@ final class PiliLiquidGlassUITests: XCTestCase {
         app.buttons["ui.player.glass.more"].tap()
         XCTAssertTrue(app.buttons["ui.player.glass.forward"].waitForExistence(timeout: 5))
         app.buttons["ui.player.glass.forward"].tap()
-        XCTAssertTrue(app.staticTexts["00:52"].waitForExistence(timeout: 3) || app.staticTexts["0:52"].exists)
+        let time = app.descendants(matching: .any)["player.playback.time"].firstMatch
+        let seekCompleted = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value CONTAINS %@", "0:52"), object: time
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [seekCompleted], timeout: 5), .completed, app.debugDescription)
         play.tap()
         XCTAssertEqual(play.label, "\u{6682}\u{505c}")
         app.buttons["ui.player.glass.more"].tap()

@@ -22,7 +22,7 @@ extension PiliLiquidGlassUITests {
         app.buttons["search.filters.cancel"].tap()
         XCTAssertTrue(filters.waitForExistence(timeout: 5))
         filters.tap()
-        let video = app.buttons["\u{89c6}\u{9891}"].firstMatch
+        let video = app.buttons["search.filters.scope.video"]
         XCTAssertTrue(video.waitForExistence(timeout: 5), app.debugDescription)
         video.tap()
         app.buttons["search.filters.apply"].tap()

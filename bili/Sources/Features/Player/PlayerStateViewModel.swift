@@ -223,7 +223,7 @@ private final class PlayerRemoteControlSession {
                   self.currentArtworkURL == artworkURL,
                   let image
             else { return }
-            self.currentArtwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            self.currentArtwork = MPMediaItemArtwork(boundsSize: image.size) { @Sendable _ in image }
             self.publishNowPlayingMetadata(for: player, force: true)
         }
     }
@@ -250,55 +250,58 @@ private final class PlayerRemoteControlSession {
         center.skipForwardCommand.preferredIntervals = [15]
         center.skipBackwardCommand.preferredIntervals = [15]
 
-        remoteCommandTargets.append(center.playCommand.addTarget { _ in
+        // MediaPlayer may invoke handlers off the main thread. The outer closures
+        // must be nonisolated before they dispatch player mutations to MainActor.
+        remoteCommandTargets.append(center.playCommand.addTarget { @Sendable _ in
             Task { @MainActor in
                 PiliSleepTimer.shared.resumeManually()
                 ActivePlaybackCoordinator.shared.currentActivePlayer()?.play()
             }
             return .success
         })
-        remoteCommandTargets.append(center.pauseCommand.addTarget { _ in
+        remoteCommandTargets.append(center.pauseCommand.addTarget { @Sendable _ in
             Task { @MainActor in
                 ActivePlaybackCoordinator.shared.currentActivePlayer()?.pause()
             }
             return .success
         })
-        remoteCommandTargets.append(center.togglePlayPauseCommand.addTarget { _ in
+        remoteCommandTargets.append(center.togglePlayPauseCommand.addTarget { @Sendable _ in
             Task { @MainActor in
                 ActivePlaybackCoordinator.shared.currentActivePlayer()?.togglePlayback()
             }
             return .success
         })
-        remoteCommandTargets.append(center.changePlaybackPositionCommand.addTarget { event in
+        remoteCommandTargets.append(center.changePlaybackPositionCommand.addTarget { @Sendable event in
             guard let event = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+            let positionTime = event.positionTime
             Task { @MainActor in
                 guard let player = ActivePlaybackCoordinator.shared.currentActivePlayer(),
                       let duration = player.displayDuration,
                       duration > 0
                 else { return }
-                player.seek(to: min(max(event.positionTime / duration, 0), 1))
+                player.seek(to: min(max(positionTime / duration, 0), 1))
             }
             return .success
         })
-        remoteCommandTargets.append(center.skipForwardCommand.addTarget { _ in
+        remoteCommandTargets.append(center.skipForwardCommand.addTarget { @Sendable _ in
             Task { @MainActor in
                 ActivePlaybackCoordinator.shared.currentActivePlayer()?.seek(by: 15)
             }
             return .success
         })
-        remoteCommandTargets.append(center.skipBackwardCommand.addTarget { _ in
+        remoteCommandTargets.append(center.skipBackwardCommand.addTarget { @Sendable _ in
             Task { @MainActor in
                 ActivePlaybackCoordinator.shared.currentActivePlayer()?.seek(by: -15)
             }
             return .success
         })
-        remoteCommandTargets.append(center.nextTrackCommand.addTarget { _ in
+        remoteCommandTargets.append(center.nextTrackCommand.addTarget { @Sendable _ in
             Task { @MainActor in
                 ActivePlaybackCoordinator.shared.currentActivePlayer()?.requestNextTrack()
             }
             return .success
         })
-        remoteCommandTargets.append(center.previousTrackCommand.addTarget { _ in
+        remoteCommandTargets.append(center.previousTrackCommand.addTarget { @Sendable _ in
             Task { @MainActor in
                 ActivePlaybackCoordinator.shared.currentActivePlayer()?.requestPreviousTrack()
             }

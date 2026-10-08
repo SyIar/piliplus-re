@@ -13,7 +13,10 @@ struct PlayerNativeTimeLabel: View {
         .biliLiquidGlassForeground(shadowOpacity: 0.20)
         .lineLimit(1)
         .minimumScaleFactor(0.82)
-        .accessibilityLabel("\u{64ad}\u{653e}\u{65f6}\u{95f4} \(fullTimeText)")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\u{64ad}\u{653e}\u{65f6}\u{95f4}")
+        .accessibilityValue(fullTimeText)
+        .accessibilityIdentifier("player.playback.time")
     }
 
     private var currentText: String {
