@@ -1,8 +1,8 @@
 import ActivityKit
 import Foundation
 
-nonisolated struct PlaybackActivityAttributes: ActivityAttributes {
-    nonisolated struct ContentState: Codable, Hashable {
+nonisolated struct PlaybackActivityAttributes: ActivityAttributes, Sendable {
+    nonisolated struct ContentState: Codable, Hashable, Sendable {
         var title: String
         var author: String
         var isPlaying: Bool

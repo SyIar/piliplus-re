@@ -5,7 +5,7 @@ import UIKit
 @MainActor
 final class PlaybackLiveActivity {
     static let shared = PlaybackLiveActivity()
-    private var activity: Activity<PlaybackActivityAttributes>?
+    private var activityID: String?
     private var playerID: ObjectIdentifier?
     private var lastState: PlaybackActivityAttributes.ContentState?
     private var updateTask: Task<Void, Never>?
@@ -29,21 +29,21 @@ final class PlaybackLiveActivity {
            lastState.duration == state.duration,
            abs(state.elapsed - lastState.elapsed) < 5,
            state.updatedAt.timeIntervalSince(lastState.updatedAt) < 15 { return }
-        let content = ActivityContent(state: state, staleDate: .now.addingTimeInterval(60))
-        if let activity, activity.activityState == .active || activity.activityState == .stale {
+        if let activityID {
             lastState = state
             let previousUpdate = updateTask
             updateTask = Task {
                 await previousUpdate?.value
                 guard !Task.isCancelled else { return }
-                await activity.update(content)
+                await Self.updateActivity(id: activityID, state: state)
             }
-        } else if activity == nil, player.isPlaying, UIApplication.shared.applicationState == .active {
+        } else if player.isPlaying, UIApplication.shared.applicationState == .active {
             do {
-                activity = try Activity.request(
+                let activity = try Activity.request(
                     attributes: PlaybackActivityAttributes(sessionID: UUID().uuidString),
-                    content: content, pushType: nil
+                    content: ActivityContent(state: state, staleDate: .now.addingTimeInterval(60)), pushType: nil
                 )
+                activityID = activity.id
                 lastState = state
             } catch {
                 // Activity authorization is optional; audio and Now Playing remain available.
@@ -56,20 +56,36 @@ final class PlaybackLiveActivity {
         let previousUpdate = updateTask
         updateTask?.cancel()
         updateTask = nil
-        if let activity {
+        if let activityID {
             Task {
                 await previousUpdate?.value
-                await activity.end(nil, dismissalPolicy: .immediate)
+                await Self.endActivity(id: activityID)
             }
         }
-        activity = nil
+        activityID = nil
         playerID = nil
         lastState = nil
     }
 
     func clearOrphanedActivities() {
-        for activity in Activity<PlaybackActivityAttributes>.activities {
-            Task { await activity.end(nil, dismissalPolicy: .immediate) }
+        let activityIDs = Activity<PlaybackActivityAttributes>.activities.map(\.id)
+        Task {
+            for id in activityIDs { await Self.endActivity(id: id) }
         }
+    }
+
+    // ActivityKit objects are not Sendable. Resolve each handle in the async
+    // operation that owns it; only IDs and immutable value snapshots cross actors.
+    nonisolated private static func updateActivity(
+        id: String, state: PlaybackActivityAttributes.ContentState
+    ) async {
+        guard let activity = Activity<PlaybackActivityAttributes>.activities.first(where: { $0.id == id }),
+              activity.activityState == .active || activity.activityState == .stale else { return }
+        await activity.update(ActivityContent(state: state, staleDate: .now.addingTimeInterval(60)))
+    }
+
+    nonisolated private static func endActivity(id: String) async {
+        guard let activity = Activity<PlaybackActivityAttributes>.activities.first(where: { $0.id == id }) else { return }
+        await activity.end(nil, dismissalPolicy: .immediate)
     }
 }
