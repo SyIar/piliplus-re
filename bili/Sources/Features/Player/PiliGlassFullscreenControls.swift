@@ -101,10 +101,14 @@ struct PiliGlassFullscreenControls: View {
                     Button("\u{4e0a}\u{4e00}\u{96c6}", action: { selectMoreAction(actions.previous) }).disabled(!hasPrevious)
                     Button("\u{4e0b}\u{4e00}\u{96c6}", action: { selectMoreAction(actions.next) }).disabled(!hasNext)
                     Button("\u{753b}\u{8d28}\u{4e0e}\u{64ad}\u{653e}\u{8bbe}\u{7f6e}") { selectMoreAction(actions.settings) }
+                        .accessibilityIdentifier("ui.player.more.settings")
                     Button("\u{6295}\u{5c4f}") { selectMoreAction(actions.cast) }
+                        .accessibilityIdentifier("ui.player.more.cast")
                     Button("\u{5b9a}\u{65f6}\u{505c}\u{6b62}\u{4e0e}\u{8fde}\u{64ad}") { selectMoreAction { PiliPlaybackToolsView.present() } }
+                        .accessibilityIdentifier("ui.player.more.timer")
                     if let shareURL {
                         ShareLink(item: shareURL) { Text("\u{5206}\u{4eab}\u{89c6}\u{9891}") }
+                            .accessibilityIdentifier("ui.player.more.share")
                     }
                 }
                 .navigationTitle("\u{66f4}\u{591a}\u{64ad}\u{653e}\u{64cd}\u{4f5c}")

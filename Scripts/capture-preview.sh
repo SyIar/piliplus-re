@@ -151,6 +151,8 @@ screenshots = {
     "Fullscreen player action panel": "preview-player-menu.png",
     "Search compact filters": "preview-search-compact.png",
     "Search filter panel": "preview-search-filters.png",
+    "Search history single header row": "preview-search-history.png",
+    "Search history submission and category tabs": "preview-search-history-results.png",
     "Video detail grouped actions": "preview-video-actions.png",
     "Video detail tools panel": "preview-video-tools.png",
     "Video detail accessible actions": "preview-video-accessibility.png",

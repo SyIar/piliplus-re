@@ -16,6 +16,7 @@ enum UITestFixtureScenario: String {
     case glassSettings
     case dynamicComposer
     case layoutSearch
+    case searchHistory
     case layoutVideo
     case layoutMine
     case layoutSettings

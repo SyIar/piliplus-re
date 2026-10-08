@@ -2,6 +2,38 @@ import XCTest
 
 final class PiliLiquidGlassUITests: XCTestCase {
     @MainActor
+    func testSearchHistoryTapSubmitsAndKeepsCategoriesSeparate() {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "searchHistory"]
+        app.launch()
+        let history = app.buttons["search.history.History demo"]
+        XCTAssertTrue(history.waitForExistence(timeout: 10))
+        let clear = app.buttons["search.history.clear"]
+        let heading = app.staticTexts["\u{641c}\u{7d22}\u{5386}\u{53f2}"]
+        XCTAssertEqual(clear.frame.midY, heading.frame.midY, accuracy: 2)
+        let historyScreenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        historyScreenshot.name = "Search history single header row"
+        historyScreenshot.lifetime = .keepAlways
+        add(historyScreenshot)
+        app.searchFields.firstMatch.tap()
+        XCTAssertTrue(history.isHittable)
+        history.tap()
+        XCTAssertTrue(app.staticTexts["History demo video"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(app.searchFields.firstMatch.value as? String, "History demo")
+        XCTAssertTrue(app.buttons["search.tab.video"].isSelected)
+        XCTAssertFalse(app.staticTexts["History demo uploader"].exists)
+        app.buttons["search.tab.user"].tap()
+        XCTAssertTrue(app.staticTexts["History demo uploader"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(app.staticTexts["History demo video"].exists)
+        let screenshot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        screenshot.name = "Search history submission and category tabs"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
+    @MainActor
     func testGlassSheetsNestReopenReplaceAndProtectBusyWork() {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
@@ -66,9 +98,9 @@ final class PiliLiquidGlassUITests: XCTestCase {
             XCTAssertTrue(swatch.isHittable)
             XCTAssertEqual(swatch.frame.midY, rowY, accuracy: 1, "All eight colors must fit one row")
         }
-        app.buttons["\#u{9009}\#u{62e9}\#u{989c}\#u{8272} #AF52DE"].tap()
+        app.buttons["\u{9009}\u{62e9}\u{989c}\u{8272} #AF52DE"].tap()
         app.navigationBars.buttons.firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["\#u{754c}\#u{9762}\#u{8bbe}\#u{7f6e}"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["\u{754c}\u{9762}\u{8bbe}\u{7f6e}"].waitForExistence(timeout: 10))
         XCTAssertEqual(theme.value as? String, "#AF52DE", "The parent row must expose the selected color")
         app.navigationBars.buttons.firstMatch.tap()
         remove.tap()
@@ -297,13 +329,13 @@ final class PiliLiquidGlassUITests: XCTestCase {
         XCTAssertEqual(play.label, "\u{6682}\u{505c}")
         app.buttons["ui.player.glass.more"].tap()
         XCTAssertTrue(app.navigationBars["\u{66f4}\u{591a}\u{64ad}\u{653e}\u{64cd}\u{4f5c}"].waitForExistence(timeout: 5))
-        let settings = app.buttons["\u{753b}\u{8d28}\u{4e0e}\u{64ad}\u{653e}\u{8bbe}\u{7f6e}"]
+        let settings = app.buttons["ui.player.more.settings"]
         for _ in 0..<4 where !settings.isHittable { app.swipeUp() }
         XCTAssertTrue(settings.isHittable)
-        let timer = app.buttons["\u{5b9a}\u{65f6}\u{505c}\u{6b62}\u{4e0e}\u{8fde}\u{64ad}"]
+        let timer = app.buttons["ui.player.more.timer"]
         for _ in 0..<4 where !timer.isHittable { app.swipeUp() }
         XCTAssertTrue(timer.isHittable)
-        XCTAssertTrue(app.buttons["\u{5206}\u{4eab}\u{89c6}\u{9891}"].exists)
+        XCTAssertTrue(app.buttons["ui.player.more.share"].exists)
         let actionsPanel = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         actionsPanel.name = "Fullscreen player action panel"
         actionsPanel.lifetime = .keepAlways
@@ -311,7 +343,7 @@ final class PiliLiquidGlassUITests: XCTestCase {
         app.buttons["\u{5b8c}\u{6210}"].tap()
         XCTAssertTrue(play.waitForExistence(timeout: 5))
         app.buttons["ui.player.glass.more"].tap()
-        let cast = app.buttons.matching(identifier: "\u{6295}\u{5c4f}").allElementsBoundByIndex.last!
+        let cast = app.buttons["ui.player.more.cast"]
         for _ in 0..<4 where !cast.isHittable { app.swipeUp() }
         XCTAssertTrue(cast.isHittable)
         cast.tap()

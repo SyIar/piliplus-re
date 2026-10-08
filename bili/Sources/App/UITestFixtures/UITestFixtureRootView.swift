@@ -46,6 +46,8 @@ struct UITestFixtureRootView: View {
                 PiliDynamicComposerFixture()
             case .layoutSearch:
                 PiliSearchLayoutFixture(api: dependencies.api)
+            case .searchHistory:
+                PiliSearchHistoryFixture(api: dependencies.api)
             case .layoutMine:
                 PiliMineLayoutFixture(dependencies: dependencies, settings: false)
             case .layoutSettings:
