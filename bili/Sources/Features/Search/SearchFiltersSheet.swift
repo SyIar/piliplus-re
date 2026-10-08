@@ -52,8 +52,11 @@ struct SearchFiltersSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("\u{53d6}\u{6d88}") { dismiss() }
-                        .accessibilityIdentifier("search.filters.cancel")
+                    Button { dismiss() } label: {
+                        PiliIcon(systemName: "xmark", size: 20)
+                    }
+                    .accessibilityLabel("\u{53d6}\u{6d88}")
+                    .accessibilityIdentifier("search.filters.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("\u{5e94}\u{7528}") {
