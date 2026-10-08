@@ -26,6 +26,12 @@ struct SearchContentView: View {
             accessoryStore.isSearchFocused = false
             accessoryStore.isKeyboardVisible = false
         }
+        .onChange(of: viewModel.showsDiscovery) { _, discovery in
+            if !discovery {
+                accessoryStore.isSearchFocused = false
+                accessoryStore.isKeyboardVisible = false
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .keyboard) {
                 SearchFilterButton(viewModel: viewModel)
@@ -78,12 +84,6 @@ struct SearchFilterButton: View {
             .font(.subheadline)
             .frame(maxWidth: .infinity, minHeight: 44)
             .contentShape(Rectangle())
-        }
-        .onChange(of: viewModel.showsDiscovery) { _, discovery in
-            if !discovery {
-                accessoryStore.isSearchFocused = false
-                accessoryStore.isKeyboardVisible = false
-            }
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\u{641c}\u{7d22}\u{7b5b}\u{9009}")
