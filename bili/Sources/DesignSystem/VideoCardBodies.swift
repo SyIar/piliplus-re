@@ -87,6 +87,7 @@ struct VideoCardBorderedBody<Cover: View>: View {
 }
 
 struct VideoCardBorderedCompactBody: View, Equatable {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.videoCardHasTrailingMenu) private var hasTrailingMenu
     enum LeadingMetadata: Equatable {
         case viewCount
@@ -112,7 +113,10 @@ struct VideoCardBorderedCompactBody: View, Equatable {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+        layout {
             cover
 
             VStack(alignment: .leading, spacing: 8) {
@@ -127,7 +131,7 @@ struct VideoCardBorderedCompactBody: View, Equatable {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .frame(height: max(coverSize.height + 20, 108), alignment: .topLeading)
+        .frame(minHeight: max(coverSize.height + 20, 108), alignment: .topLeading)
         .compactVideoResultSurface(cornerRadius: 18)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)

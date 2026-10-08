@@ -14,7 +14,6 @@ struct VideoDetailActionStripFollowControl: View {
                     VideoDetailActionStripFollowLabel(isFollowing: isFollowing)
                 }
                 .buttonBorderShape(.capsule)
-                .controlSize(.mini)
                 .disabled(!canFollow || isMutating)
                 .opacity((canFollow && !isMutating) ? 1 : 0.58)
                 .accessibilityLabel(isFollowing ? "已关注" : "关注")
@@ -24,7 +23,6 @@ struct VideoDetailActionStripFollowControl: View {
                     VideoDetailActionStripFollowLabel(isFollowing: isFollowing)
                 }
                 .buttonBorderShape(.capsule)
-                .controlSize(.mini)
                 .disabled(!canFollow || isMutating)
                 .opacity((canFollow && !isMutating) ? 1 : 0.58)
                 .accessibilityLabel(isFollowing ? "已关注" : "关注")
@@ -41,8 +39,7 @@ private struct VideoDetailActionStripFollowLabel: View {
         Text(isFollowing ? "已关注" : "关注")
             .piliFont(.sm).fontWeight(.semibold)
             .lineLimit(1)
-            .minimumScaleFactor(0.78)
-            .frame(maxWidth: .infinity)
-            .frame(height: VideoDetailActionStrip.Metrics.followHeight)
+            .padding(.horizontal, 12)
+            .frame(minWidth: 60, minHeight: 44)
     }
 }

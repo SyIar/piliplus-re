@@ -10,14 +10,12 @@ struct VideoDetailActionStripIconButton: View {
     var body: some View {
         Button(action: action) {
             VideoDetailActionStripIconLabel(
+                title: accessibilityTitle,
                 systemImage: systemImage,
                 foregroundStyle: foregroundStyle
             )
         }
-        .buttonBorderShape(.circle)
-        .controlSize(.mini)
-        .biliGlassButtonStyle()
-        .contentShape(Circle())
+        .buttonStyle(.plain)
         .disabled(isDisabled)
         .opacity(isDisabled ? 0.52 : 1)
         .accessibilityLabel(accessibilityTitle)

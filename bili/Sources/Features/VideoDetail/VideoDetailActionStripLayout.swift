@@ -5,5 +5,5 @@ struct VideoDetailActionStripLayout {
 
     var columnSpacing: CGFloat { VideoDetailActionStrip.Metrics.columnSpacing }
     var rowHeight: CGFloat { VideoDetailActionStrip.Metrics.rowHeight }
-    var columnWidth: CGFloat { max((contentWidth - columnSpacing * 5) / 6, 1) }
+    var columnWidth: CGFloat { max((contentWidth - columnSpacing * 3) / 4, 1) }
 }

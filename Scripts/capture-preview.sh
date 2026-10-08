@@ -139,6 +139,11 @@ root, destination = map(pathlib.Path, sys.argv[1:])
 screenshots = {
     "Recommendation card overflow menu": "preview-video-menu.png",
     "Fullscreen player action panel": "preview-player-menu.png",
+    "Search compact filters": "preview-search-compact.png",
+    "Search filter panel": "preview-search-filters.png",
+    "Video detail grouped actions": "preview-video-actions.png",
+    "Video detail tools panel": "preview-video-tools.png",
+    "Video detail accessible actions": "preview-video-accessibility.png",
 }
 def visit(value):
     if isinstance(value, dict):

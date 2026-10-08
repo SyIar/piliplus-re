@@ -2,13 +2,13 @@ import SwiftUI
 
 struct VideoDetailActionStrip: View, Equatable {
     enum Metrics {
-        static let columnSpacing: CGFloat = 7
-        static let rowHeight: CGFloat = 32
-        static let actionLabelSide: CGFloat = 28
-        static let avatarImageSide: CGFloat = 34
+        static let columnSpacing: CGFloat = 8
+        static let rowHeight: CGFloat = 60
+        static let actionLabelSide: CGFloat = 44
+        static let avatarImageSide: CGFloat = 44
         static let avatarSide: CGFloat = avatarImageSide
         static let followHeight: CGFloat = actionLabelSide
-        static let iconSize: CGFloat = 13
+        static let iconSize: CGFloat = 22
         static let avatarPixelSize = 112
     }
 
@@ -27,18 +27,16 @@ struct VideoDetailActionStrip: View, Equatable {
     var body: some View {
         let layout = VideoDetailActionStripLayout(contentWidth: model.contentWidth)
 
-        GlassEffectContainer(spacing: layout.columnSpacing) {
-            VideoDetailActionStripButtonRow(
-                model: model,
-                layout: layout,
-                onFollow: onFollow,
-                onLike: onLike,
-                onCoin: onCoin,
-                onFavorite: onFavorite,
-                onShareTap: onShareTap,
-                onChooseFavorite: onChooseFavorite
-            )
-        }
-        .frame(width: model.contentWidth, height: layout.rowHeight, alignment: .center)
+        VideoDetailActionStripButtonRow(
+            model: model,
+            layout: layout,
+            onFollow: onFollow,
+            onLike: onLike,
+            onCoin: onCoin,
+            onFavorite: onFavorite,
+            onShareTap: onShareTap,
+            onChooseFavorite: onChooseFavorite
+        )
+        .frame(width: model.contentWidth, alignment: .leading)
     }
 }

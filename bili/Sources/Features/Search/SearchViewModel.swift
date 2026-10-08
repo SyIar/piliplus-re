@@ -327,6 +327,17 @@ final class SearchViewModel: ObservableObject {
         await search(lastKeyword)
     }
 
+    func applyFilters(scope: SearchScope, order: SearchSortOrder, duration: PiliSearchDuration) async {
+        guard selectedScope != scope || selectedOrder != order || selectedDuration != duration else { return }
+        let affectsResults = selectedScope != scope
+            || (scope.supportsOrder && (selectedOrder != order || selectedDuration != duration))
+        selectedScope = scope
+        selectedOrder = order
+        selectedDuration = duration
+        guard affectsResults, !lastKeyword.isEmpty else { return }
+        await search(lastKeyword)
+    }
+
     func removeHistory(_ term: String) { historyStore.remove(term); searchHistory = historyStore.values }
     func clearHistory() { historyStore.clear(); searchHistory = [] }
 

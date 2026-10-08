@@ -2,6 +2,8 @@ import SwiftUI
 import ChunUI
 
 struct VideoDetailSummaryCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var showsMoreTools = false
     let viewModel: VideoDetailViewModel
     let contentWidth: CGFloat
     let showsNetworkDiagnosticsButton: Bool
@@ -55,17 +57,50 @@ struct VideoDetailSummaryCard: View {
                 VideoDetailNetworkDiagnosticsButton(action: onShowNetworkDiagnostics)
             }
 
+            quickTools
+            VideoDetailInteractionNotice(store: renderPack.interactionStore)
+            VideoDetailPlayURLNotice(
+                placeholderStore: renderPack.placeholderStore,
+                retry: renderPack.actions.retryPlayURL
+            )
+        }
+        .frame(width: contentWidth, alignment: .leading)
+        .piliSheet(isPresented: $showsMoreTools) { moreTools }
+    }
+
+    private var quickTools: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8),
+                                 count: dynamicTypeSize.isAccessibilitySize ? 2 : 4), spacing: 8) {
             if !viewModel.detail.isPGCEpisode {
                 PiliVideoLibraryActions(viewModel: viewModel, descriptionStore: renderPack.descriptionStore)
             }
-
-            if let seasonID = viewModel.detail.piliUGCSeason?.id {
-                PiliSeasonActionsView(api: viewModel.api, seasonID: seasonID, collectionBVID: viewModel.detail.bvid)
+            quickTool("\u{7ae0}\u{8282}", icon: "list.bullet.rectangle", id: "chapters") {
+                PiliPresentation.present(.sheet) { PiliVideoToolsView(model: viewModel, store: viewModel.piliVideoTools) }
             }
+            if !viewModel.detail.isPGCEpisode, !viewModel.detail.piliIsCourse {
+                quickTool("AI \u{603b}\u{7ed3}", icon: "text.badge.star", id: "ai") {
+                    PiliPresentation.present(.sheet) { PiliAIConclusionView(model: viewModel) }
+                }
+            }
+            quickTool("\u{66f4}\u{591a}", icon: "ellipsis", id: "more") { showsMoreTools = true }
+        }
+    }
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    if !viewModel.detail.piliIsCourse { PiliTripleButton(viewModel: viewModel, store: renderPack.interactionStore) }
+    private var moreTools: some View {
+        NavigationStack {
+            PiliForm {
+                if !viewModel.detail.piliIsCourse || viewModel.detail.piliUGCSeason != nil {
+                    Section("\u{4e92}\u{52a8}\u{4e0e}\u{6536}\u{85cf}") {
+                        if !viewModel.detail.piliIsCourse {
+                            PiliTripleButton(viewModel: viewModel, store: renderPack.interactionStore, grouped: true)
+                                .frame(minHeight: 44)
+                        }
+                        if let seasonID = viewModel.detail.piliUGCSeason?.id {
+                            PiliSeasonActionsView(api: viewModel.api, seasonID: seasonID, collectionBVID: viewModel.detail.bvid)
+                        }
+                    }
+                }
+                Section("\u{89c6}\u{9891}\u{5de5}\u{5177}") {
                     tool("章节与视频信息", icon: "list.bullet.rectangle") {
                         PiliPresentation.present(.sheet) { PiliVideoToolsView(model: viewModel, store: viewModel.piliVideoTools) }
                     }
@@ -129,27 +164,37 @@ struct VideoDetailSummaryCard: View {
                         }
                     }
                 }
-                .padding(.vertical, 6)
             }
-
-            VideoDetailInteractionNotice(store: renderPack.interactionStore)
-            VideoDetailPlayURLNotice(
-                placeholderStore: renderPack.placeholderStore,
-                retry: renderPack.actions.retryPlayURL
-            )
+            .navigationTitle("\u{66f4}\u{591a}\u{64cd}\u{4f5c}")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("\u{5b8c}\u{6210}") { showsMoreTools = false }
+                        .accessibilityIdentifier("video.tools.close")
+                }
+            }
         }
-        .frame(width: contentWidth, alignment: .leading)
+        .piliPresentationDetents([.large])
     }
 
     private func tool(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             PiliLabel(title, systemImage: icon)
-                .piliFont(.sm)
-                .padding(.horizontal, 14).frame(height: 36)
+                .font(.body)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .foregroundStyle(.primary)
-        .piliLiquidGlass(in: Capsule(), interactive: true)
+    }
+
+    private func quickTool(_ title: String, icon: String, id: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VideoDetailActionLabel(title: title, systemImage: icon)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.primary)
+        .accessibilityIdentifier("video.tools.\(id)")
     }
 
     private func showCoinPicker() {

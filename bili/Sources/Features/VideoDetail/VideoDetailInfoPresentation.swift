@@ -30,11 +30,6 @@ struct VideoDetailInfoPresentation {
         descriptionPreview: String?
     ) -> String {
         var parts = [String]()
-        let ownerName = store.owner?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !ownerName.isEmpty {
-            parts.append(ownerName)
-        }
-
         if store.viewCountText != "-" {
             parts.append("\(store.viewCountText)观看")
         }

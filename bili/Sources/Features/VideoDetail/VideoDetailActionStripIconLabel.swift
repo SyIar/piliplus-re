@@ -1,18 +1,12 @@
 import SwiftUI
 
 struct VideoDetailActionStripIconLabel: View {
+    let title: String
     let systemImage: String
     let foregroundStyle: Color
 
     var body: some View {
-        PiliIcon(systemName: systemImage, size: VideoDetailActionStrip.Metrics.iconSize)
-            .font(.system(size: VideoDetailActionStrip.Metrics.iconSize, weight: .semibold))
-            .symbolRenderingMode(.monochrome)
-            .frame(
-                width: VideoDetailActionStrip.Metrics.actionLabelSide,
-                height: VideoDetailActionStrip.Metrics.actionLabelSide
-            )
+        VideoDetailActionLabel(title: title, systemImage: systemImage)
             .foregroundStyle(foregroundStyle)
-            .contentShape(Circle())
     }
 }

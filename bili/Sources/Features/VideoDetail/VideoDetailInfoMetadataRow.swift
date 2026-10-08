@@ -21,7 +21,7 @@ struct VideoDetailInfoMetadataRow: View {
                 Button(action: toggleExpansion) {
                     PiliIcon(systemName: isExpanded ? "chevron.up" : "chevron.down", size: 12)
                         .piliFont(.smBold)
-                        .frame(width: 24, height: 24)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -29,7 +29,7 @@ struct VideoDetailInfoMetadataRow: View {
                 .accessibilityLabel(isExpanded ? "收起视频简介" : "展开视频简介")
             }
         }
-        .frame(height: 24, alignment: .center)
+        .frame(minHeight: 44, alignment: .center)
         .frame(maxWidth: .infinity, alignment: .leading)
         .commentCopyContextMenu(text: descriptionCopyText, title: "复制简介")
     }

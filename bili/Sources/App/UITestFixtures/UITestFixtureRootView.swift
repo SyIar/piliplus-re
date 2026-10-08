@@ -44,6 +44,10 @@ struct UITestFixtureRootView: View {
                 }
             case .dynamicComposer:
                 PiliDynamicComposerFixture()
+            case .layoutSearch:
+                PiliSearchLayoutFixture(api: dependencies.api)
+            case .layoutVideo:
+                PiliVideoLayoutFixture(dependencies: dependencies)
             }
         }
         .modifier(PiliAppChrome())
