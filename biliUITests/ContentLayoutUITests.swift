@@ -22,7 +22,12 @@ extension PiliLiquidGlassUITests {
         app.buttons["search.filters.cancel"].tap()
         XCTAssertTrue(filters.waitForExistence(timeout: 5))
         filters.tap()
-        let video = app.buttons["search.filters.scope.video"]
+        // Inline Picker propagates its identifier to every option. Include the
+        // label to avoid matching the category tab behind the presented sheet.
+        let video = app.buttons.matching(NSPredicate(
+            format: "identifier == %@ AND label == %@",
+            "search.filters.scope", "\u{89c6}\u{9891}"
+        )).firstMatch
         XCTAssertTrue(video.waitForExistence(timeout: 5), app.debugDescription)
         video.tap()
         app.buttons["search.filters.apply"].tap()

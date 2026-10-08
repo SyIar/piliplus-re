@@ -20,11 +20,7 @@ struct SearchFiltersSheet: View {
             PiliForm {
                 Section("\u{5185}\u{5bb9}\u{7c7b}\u{578b}") {
                     Picker("\u{5185}\u{5bb9}\u{7c7b}\u{578b}", selection: $scope) {
-                        ForEach(SearchScope.resultTabs) { option in
-                            Text(option.title)
-                                .tag(option)
-                                .accessibilityIdentifier("search.filters.scope.\(option.rawValue)")
-                        }
+                        ForEach(SearchScope.resultTabs) { Text($0.title).tag($0) }
                     }
                     .pickerStyle(.inline)
                     .labelsHidden()
