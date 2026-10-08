@@ -2,6 +2,7 @@ import SwiftUI
 import ChunUI
 
 enum MineOverlayRoute: Hashable {
+    case settings
     case accountMessages
     case multiAccountSettings
     case history
@@ -15,7 +16,7 @@ enum MineOverlayRoute: Hashable {
 
     var isSettingsRoute: Bool {
         switch self {
-        case .interfaceSettings, .homeAndSearchSettings, .playbackSettings, .contentFilterSettings,
+        case .settings, .interfaceSettings, .homeAndSearchSettings, .playbackSettings, .contentFilterSettings,
              .privacySettings, .multiAccountSettings:
             true
         case .accountMessages, .history, .favorites, .watchLater:

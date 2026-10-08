@@ -13,11 +13,12 @@ struct PiliVideoLibraryActions: View {
             isAdding = true
             Task { await addToWatchLater() }
         } label: {
-            VideoDetailActionLabel(
-                title: wasAdded ? "\u{5df2}\u{6dfb}\u{52a0}" : "\u{7a0d}\u{540e}\u{518d}\u{770b}",
-                systemImage: wasAdded ? "checkmark" : "clock",
-                isBusy: isAdding
-            )
+            HStack(spacing: 12) {
+                if isAdding { ProgressView() }
+                else { PiliIcon(systemName: wasAdded ? "checkmark" : "clock") }
+                Text(wasAdded ? "\u{5df2}\u{6dfb}\u{52a0}" : "\u{7a0d}\u{540e}\u{518d}\u{770b}")
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         }
         .buttonStyle(.plain)
         .foregroundStyle(wasAdded ? Color.cc.primary : .primary)

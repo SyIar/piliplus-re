@@ -2,114 +2,30 @@ import SwiftUI
 import ChunUI
 
 struct MinePlaybackToolsSection: View {
+    @EnvironmentObject private var dependencies: AppDependencies
     @ObservedObject var libraryStore: LibraryStore
 
     var body: some View {
-        Section("播放工具") {
+        Section("\u{64ad}\u{653e}\u{5de5}\u{5177}") {
+            NavigationLink { PiliDanmakuRulesView(api: dependencies.api) } label: { Text("\u{5f39}\u{5e55}\u{5c4f}\u{853d}") }
+            Button("\u{81ea}\u{52a8}\u{8fde}\u{64ad}\u{4e0e}\u{5b9a}\u{65f6}\u{505c}\u{6b62}") { PiliPlaybackToolsView.present() }
             Toggle(
                 isOn: Binding(
                     get: { libraryStore.sponsorBlockEnabled },
                     set: { libraryStore.setSponsorBlockEnabled($0) }
                 )
             ) {
-                MineSettingsLabel("空降助手", systemImage: "forward.end")
+                MineSettingsLabel("\u{7a7a}\u{964d}\u{52a9}\u{624b}", systemImage: "forward.end")
             }
 
-            NavigationLink { PiliSponsorSettingsView() } label: { PiliLabel("空降分类策略", systemImage: "slider.horizontal.3") }
-            NavigationLink {
-                ResourceLoadingExperimentSettingsView(libraryStore: libraryStore)
-            } label: {
-                PlainSettingsNavigationRow(
-                    title: "加载优化",
-                    subtitle: "续播预热与加载诊断",
-                )
-            }
-
-            Toggle(
-                isOn: Binding(
-                    get: { libraryStore.playerPerformanceOverlayEnabled },
-                    set: { libraryStore.setPlayerPerformanceOverlayEnabled($0) }
-                )
-            ) {
-                MineSettingsLabel("播放性能诊断", systemImage: "waveform.path.ecg.rectangle")
-            }
-
-            NavigationLink {
-                PlayerPerformanceLogView()
-            } label: {
-                PlainSettingsNavigationRow(
-                    title: "播放启动日志",
-                    subtitle: "首帧、准备和缓冲",
-                )
-            }
-
-            Toggle(
-                isOn: Binding(
-                    get: { libraryStore.playbackPlayableFallbackDeadlineExperimentEnabled },
-                    set: { libraryStore.setPlaybackPlayableFallbackDeadlineExperimentEnabled($0) }
-                )
-            ) {
-                VStack(alignment: .leading, spacing: 3) {
-                    MineSettingsLabel("快速起播（实验）", systemImage: "timer")
-                    Text("等待高清超过 650 毫秒时，先以可用画质播放。")
-                        .piliFont(.sm)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            ForEach(Array(PlaybackPerformanceTestVideo.fixedSamples.enumerated()), id: \.element.id) { index, video in
-                NavigationLink {
-                    PlaybackPerformanceTestVideoView(testVideo: video)
-                } label: {
-                    VStack(alignment: .leading, spacing: 3) {
-                        MineSettingsLabel("测试视频 \(index + 1)", systemImage: "play.rectangle")
-                        Text(video.title)
-                            .piliFont(.sm)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
-                }
-            }
-
-            Toggle(
-                isOn: Binding(
-                    get: { libraryStore.videoRotationFrameReportOverlayEnabled },
-                    set: { libraryStore.setVideoRotationFrameReportOverlayEnabled($0) }
-                )
-            ) {
-                MineSettingsLabel("旋转帧报告", systemImage: "rotate.right")
-            }
-
-            Toggle(
-                isOn: Binding(
-                    get: { libraryStore.videoDetailNavigationLatencyDiagnosticsEnabled },
-                    set: { isEnabled in
-                        if isEnabled {
-                            PlaybackDetailPerformanceMonitor.shared.clear()
-                        }
-                        libraryStore.setVideoDetailNavigationLatencyDiagnosticsEnabled(isEnabled)
-                    }
-                )
-            ) {
-                MineSettingsLabel("详情打开耗时", systemImage: "stopwatch")
-            }
-
+            NavigationLink { PiliSponsorSettingsView() } label: { PiliLabel("\u{7a7a}\u{964d}\u{5206}\u{7c7b}\u{7b56}\u{7565}", systemImage: "slider.horizontal.3") }
             Toggle(
                 isOn: Binding(
                     get: { libraryStore.playerControlEdgeScrimEnabled },
                     set: { libraryStore.setPlayerControlEdgeScrimEnabled($0) }
                 )
             ) {
-                MineSettingsLabel("播放控件边缘遮罩", systemImage: "rectangle.dashed")
-            }
-
-            Toggle(
-                isOn: Binding(
-                    get: { libraryStore.showsVideoDetailNetworkDiagnosticsButton },
-                    set: { libraryStore.setShowsVideoDetailNetworkDiagnosticsButton($0) }
-                )
-            ) {
-                MineSettingsLabel("视频详情网络诊断", systemImage: "stethoscope")
+                MineSettingsLabel("\u{64ad}\u{653e}\u{63a7}\u{4ef6}\u{8fb9}\u{7f18}\u{906e}\u{7f69}", systemImage: "rectangle.dashed")
             }
 
             Toggle(
@@ -118,7 +34,7 @@ struct MinePlaybackToolsSection: View {
                     set: { libraryStore.setShowsVideoDetailPinnedProgressBar($0) }
                 )
             ) {
-                MineSettingsLabel("窗口底部进度条", systemImage: "line.3.horizontal.decrease")
+                MineSettingsLabel("\u{7a97}\u{53e3}\u{5e95}\u{90e8}\u{8fdb}\u{5ea6}\u{6761}", systemImage: "line.3.horizontal.decrease")
             }
 
             PiliSettingPicker(
@@ -132,7 +48,7 @@ struct MinePlaybackToolsSection: View {
                         .tag(order)
                 }
             } label: {
-                MineSettingsLabel("听视频列表排序", systemImage: libraryStore.videoListenPlaylistSortOrder.systemImage)
+                MineSettingsLabel("\u{542c}\u{89c6}\u{9891}\u{5217}\u{8868}\u{6392}\u{5e8f}", systemImage: libraryStore.videoListenPlaylistSortOrder.systemImage)
             }
             .pickerStyle(.menu)
 
@@ -140,8 +56,8 @@ struct MinePlaybackToolsSection: View {
                 ResourceCacheManagementView()
             } label: {
                 PlainSettingsNavigationRow(
-                    title: "资源缓存",
-                    subtitle: "图片、接口、视频分片缓存",
+                    title: "\u{8d44}\u{6e90}\u{7f13}\u{5b58}",
+                    subtitle: "\u{56fe}\u{7247}、\u{63a5}\u{53e3}、\u{89c6}\u{9891}\u{5206}\u{7247}\u{7f13}\u{5b58}",
                 )
             }
         }

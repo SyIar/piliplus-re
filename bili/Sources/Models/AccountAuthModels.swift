@@ -176,11 +176,29 @@ nonisolated struct NavUserInfo: Decodable {
     let uname: String?
     let mid: Int?
     let wbiImg: WBIImage?
-
+    var money: Double? = nil
+    var levelInfo: NavLevelInfo? = nil
     enum CodingKeys: String, CodingKey {
-        case face, uname, mid
-        case isLogin = "isLogin"
+        case face, uname, mid, money, isLogin
         case wbiImg = "wbi_img"
+        case levelInfo = "level_info"
+    }
+}
+
+nonisolated struct NavLevelInfo: Decodable {
+    let level: Int?
+    let current: Int?
+    let next: Int?
+    enum CodingKeys: String, CodingKey {
+        case level = "current_level", current = "current_exp", next = "next_exp"
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        func number(_ key: CodingKeys) -> Int? {
+            if let value = try? c.decode(Int.self, forKey: key) { return value }
+            return (try? c.decode(String.self, forKey: key)).flatMap(Int.init)
+        }
+        level = number(.level); current = number(.current); next = number(.next)
     }
 }
 

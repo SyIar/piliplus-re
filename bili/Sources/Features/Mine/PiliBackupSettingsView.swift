@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 struct PiliBackupSettingsView: View {
     @ObservedObject var libraryStore: LibraryStore
+    var embedded = false
     @AppStorage("piliplus.webdav.address") private var address = ""
     @AppStorage("piliplus.webdav.username") private var username = ""
     @State private var password = ""
@@ -13,68 +14,9 @@ struct PiliBackupSettingsView: View {
     @State private var exportURL: URL?
     @State private var importsFile = false
     var body: some View {
-        NavigationStack {
-            PiliForm {
-                Section("WebDAV") {
-                    PiliSettingAction(title: "服务器") {
-                        TextField("https://…/dav/", text: $address).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL).multilineTextAlignment(.trailing)
-                    }
-                    PiliSettingAction(title: "用户名") {
-                        TextField("用户名", text: $username).textInputAutocapitalization(.never).autocorrectionDisabled().multilineTextAlignment(.trailing)
-                    }
-                    PiliSettingAction(title: "密码") { SecureField("密码", text: $password).multilineTextAlignment(.trailing) }
-                    CCNeoButton("保存连接", variant: .secondary, disabled: isBusy) {
-                        do { try PiliWebDAVCredentialStore.save(password); message = "密码已存入钥匙串" }
-                        catch { message = error.localizedDescription }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    CCNeoButton("测试连接", variant: .ghost, disabled: isBusy) {
-                        await perform { try await client().testConnection(); message = "连接成功" }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    CCNeoButton("备份设置", variant: .primary, disabled: isBusy) {
-                        await perform { try await client().backup(PiliSettingsBackup.capture()); message = "设置已备份" }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    CCNeoButton("恢复设置", variant: .secondary, disabled: isBusy) {
-                        await perform { let archive = try await client().restore(); confirmRestore(archive) }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    Text("仅备份设置，不含登录凭据、下载和观看进度。文件：PiliPlusSwift/settings.json。")
-                        .ccText(font: .cc.sm, color: .cc.mutedForeground)
-                    if address.lowercased().hasPrefix("http:") {
-                        Text("HTTP 会明文发送账号密码，请优先使用 HTTPS。")
-                            .ccText(font: .cc.sm, color: .cc.mutedForeground)
-                    }
-                }
-                Section("本地备份") {
-                    CCNeoButton("导出设置", variant: .secondary, icon: PikaIcon.Name.file, disabled: isBusy) {
-                        do { exportURL = try PiliSettingsBackup.export(); message = nil }
-                        catch { message = error.localizedDescription }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    if let exportURL { ShareLink("分享备份", item: exportURL).frame(maxWidth: .infinity, alignment: .trailing) }
-                    CCNeoButton("导入设置", variant: .ghost, icon: PikaIcon.Name.filePlus, disabled: isBusy) { importsFile = true }
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                    CCNeoButton("撤销上次恢复", variant: .ghost, disabled: isBusy) {
-                        PiliAlertSession.present(title: "撤销上次设置恢复？", message: "将恢复为上次导入前的设置。", actions: [
-                            PiliAlertButton("取消", role: .cancel),
-                            PiliAlertButton("恢复", role: .destructive) {
-                                do { try PiliSettingsBackup.rollback(libraryStore: libraryStore); message = "已恢复之前的设置" }
-                                catch { message = error.localizedDescription }
-                            },
-                        ])
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-                if isBusy { ProgressView("处理中") }
-                if let message { Text(message).ccText(font: .cc.sm, color: .cc.mutedForeground) }
-            }
-            .navigationTitle("设置备份")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) {
-                Button { AppHelper.shared.dismissSheet() } label: { PikaIcon(PikaIcon.Name.close) }.accessibilityLabel("关闭")
-            } }
+        Group {
+            if embedded { settingsContent }
+            else { NavigationStack { settingsContent } }
         }
         .onAppear { do { password = try PiliWebDAVCredentialStore.read() } catch { message = error.localizedDescription } }
         .fileImporter(isPresented: $importsFile, allowedContentTypes: [.json]) { result in
@@ -89,6 +31,69 @@ struct PiliBackupSettingsView: View {
             } catch { message = error.localizedDescription }
         }
     }
+    private var settingsContent: some View {
+            PiliForm {
+                Section("WebDAV") {
+                    PiliSettingAction(title: "\u{670d}\u{52a1}\u{5668}") {
+                        TextField("https://…/dav/", text: $address).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL).multilineTextAlignment(.trailing)
+                    }
+                    PiliSettingAction(title: "\u{7528}\u{6237}\u{540d}") {
+                        TextField("\u{7528}\u{6237}\u{540d}", text: $username).textInputAutocapitalization(.never).autocorrectionDisabled().multilineTextAlignment(.trailing)
+                    }
+                    PiliSettingAction(title: "\u{5bc6}\u{7801}") { SecureField("\u{5bc6}\u{7801}", text: $password).multilineTextAlignment(.trailing) }
+                    CCNeoButton("\u{4fdd}\u{5b58}\u{8fde}\u{63a5}", variant: .secondary, disabled: isBusy) {
+                        do { try PiliWebDAVCredentialStore.save(password); message = "\u{5bc6}\u{7801}\u{5df2}\u{5b58}\u{5165}\u{94a5}\u{5319}\u{4e32}" }
+                        catch { message = error.localizedDescription }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    CCNeoButton("\u{6d4b}\u{8bd5}\u{8fde}\u{63a5}", variant: .ghost, disabled: isBusy) {
+                        await perform { try await client().testConnection(); message = "\u{8fde}\u{63a5}\u{6210}\u{529f}" }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    CCNeoButton("\u{5907}\u{4efd}\u{8bbe}\u{7f6e}", variant: .primary, disabled: isBusy) {
+                        await perform { try await client().backup(PiliSettingsBackup.capture()); message = "\u{8bbe}\u{7f6e}\u{5df2}\u{5907}\u{4efd}" }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    CCNeoButton("\u{6062}\u{590d}\u{8bbe}\u{7f6e}", variant: .secondary, disabled: isBusy) {
+                        await perform { let archive = try await client().restore(); confirmRestore(archive) }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    Text("\u{4ec5}\u{5907}\u{4efd}\u{8bbe}\u{7f6e}，\u{4e0d}\u{542b}\u{767b}\u{5f55}\u{51ed}\u{636e}、\u{4e0b}\u{8f7d}\u{548c}\u{89c2}\u{770b}\u{8fdb}\u{5ea6}。\u{6587}\u{4ef6}：PiliPlusSwift/settings.json。")
+                        .ccText(font: .cc.sm, color: .cc.mutedForeground)
+                    if address.lowercased().hasPrefix("http:") {
+                        Text("HTTP \u{4f1a}\u{660e}\u{6587}\u{53d1}\u{9001}\u{8d26}\u{53f7}\u{5bc6}\u{7801}，\u{8bf7}\u{4f18}\u{5148}\u{4f7f}\u{7528} HTTPS。")
+                            .ccText(font: .cc.sm, color: .cc.mutedForeground)
+                    }
+                }
+                Section("\u{672c}\u{5730}\u{5907}\u{4efd}") {
+                    CCNeoButton("\u{5bfc}\u{51fa}\u{8bbe}\u{7f6e}", variant: .secondary, icon: PikaIcon.Name.file, disabled: isBusy) {
+                        do { exportURL = try PiliSettingsBackup.export(); message = nil }
+                        catch { message = error.localizedDescription }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    if let exportURL { ShareLink("\u{5206}\u{4eab}\u{5907}\u{4efd}", item: exportURL).frame(maxWidth: .infinity, alignment: .trailing) }
+                    CCNeoButton("\u{5bfc}\u{5165}\u{8bbe}\u{7f6e}", variant: .ghost, icon: PikaIcon.Name.filePlus, disabled: isBusy) { importsFile = true }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    CCNeoButton("\u{64a4}\u{9500}\u{4e0a}\u{6b21}\u{6062}\u{590d}", variant: .ghost, disabled: isBusy) {
+                        PiliAlertSession.present(title: "\u{64a4}\u{9500}\u{4e0a}\u{6b21}\u{8bbe}\u{7f6e}\u{6062}\u{590d}？", message: "\u{5c06}\u{6062}\u{590d}\u{4e3a}\u{4e0a}\u{6b21}\u{5bfc}\u{5165}\u{524d}\u{7684}\u{8bbe}\u{7f6e}。", actions: [
+                            PiliAlertButton("\u{53d6}\u{6d88}", role: .cancel),
+                            PiliAlertButton("\u{6062}\u{590d}", role: .destructive) {
+                                do { try PiliSettingsBackup.rollback(libraryStore: libraryStore); message = "\u{5df2}\u{6062}\u{590d}\u{4e4b}\u{524d}\u{7684}\u{8bbe}\u{7f6e}" }
+                                catch { message = error.localizedDescription }
+                            },
+                        ])
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                if isBusy { ProgressView("\u{5904}\u{7406}\u{4e2d}") }
+                if let message { Text(message).ccText(font: .cc.sm, color: .cc.mutedForeground) }
+            }
+            .navigationTitle("\u{8bbe}\u{7f6e}\u{5907}\u{4efd}")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { if !embedded { ToolbarItem(placement: .topBarTrailing) {
+                Button { AppHelper.shared.dismissSheet() } label: { PikaIcon(PikaIcon.Name.close) }.accessibilityLabel("\u{5173}\u{95ed}")
+            } } }
+    }
     private func client() throws -> PiliWebDAVClient { try PiliWebDAVClient(address: address, username: username, password: password) }
     private func perform(_ operation: () async throws -> Void) async {
         guard !isBusy else { return }
@@ -97,11 +102,11 @@ struct PiliBackupSettingsView: View {
         do { try await operation() } catch { message = error.localizedDescription }
     }
     private func confirmRestore(_ archive: SettingsArchive) {
-        PiliAlertSession.present(title: "恢复 \(archive.values.count) 项设置？",
-                                     message: "备份时间：\(archive.createdAt.formatted())。当前设置会被替换，并在本机保留恢复前的副本。", actions: [
-            PiliAlertButton("取消", role: .cancel),
-            PiliAlertButton("恢复", role: .destructive) {
-                do { try PiliSettingsBackup.apply(archive, libraryStore: libraryStore); message = "设置已恢复" }
+        PiliAlertSession.present(title: "\u{6062}\u{590d} \(archive.values.count) \u{9879}\u{8bbe}\u{7f6e}？",
+                                     message: "\u{5907}\u{4efd}\u{65f6}\u{95f4}：\(archive.createdAt.formatted())。\u{5f53}\u{524d}\u{8bbe}\u{7f6e}\u{4f1a}\u{88ab}\u{66ff}\u{6362}，\u{5e76}\u{5728}\u{672c}\u{673a}\u{4fdd}\u{7559}\u{6062}\u{590d}\u{524d}\u{7684}\u{526f}\u{672c}。", actions: [
+            PiliAlertButton("\u{53d6}\u{6d88}", role: .cancel),
+            PiliAlertButton("\u{6062}\u{590d}", role: .destructive) {
+                do { try PiliSettingsBackup.apply(archive, libraryStore: libraryStore); message = "\u{8bbe}\u{7f6e}\u{5df2}\u{6062}\u{590d}" }
                 catch { message = error.localizedDescription }
             },
         ])

@@ -7,25 +7,7 @@ struct MineHomeSettingsSection: View {
     @ObservedObject var libraryStore: LibraryStore
 
     var body: some View {
-        Section("首页") {
-            PiliSettingPicker(selection: Binding(
-                get: { libraryStore.homeFeedLayout },
-                set: { libraryStore.setHomeFeedLayout($0) }
-            )) {
-                ForEach(HomeFeedLayout.allCases) { layout in
-                    Text(layout.title).tag(layout)
-                }
-            } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("首页布局", systemImage: "rectangle.grid.1x2")
-                    Text("双列布局在 iPad 上随窗口宽度调整。")
-                        .appTypography(.settingsSubtitle, fallback: .caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .pickerStyle(.menu)
-
+        Section("\u{9996}\u{9875}") {
             PiliSettingPicker(selection: Binding(
                 get: { libraryStore.homeRecommendFeedSourcePreference },
                 set: { libraryStore.setHomeRecommendFeedSourcePreference($0) }
@@ -34,7 +16,7 @@ struct MineHomeSettingsSection: View {
                     Text(source.title).tag(source)
                 }
             } label: {
-                MineSettingsLabel("推荐来源", systemImage: "sparkles.tv")
+                MineSettingsLabel("\u{63a8}\u{8350}\u{6765}\u{6e90}", systemImage: "sparkles.tv")
             }
             .pickerStyle(.menu)
 
@@ -42,25 +24,14 @@ struct MineHomeSettingsSection: View {
                 .piliFont(.sm)
                 .foregroundStyle(.secondary)
 
-            NavigationLink {
-                MineHomeRecommendDiagnosticsView()
-            } label: {
-                PlainSettingsNavigationRow(
-                    title: "推荐诊断",
-                    subtitle: MineHomeRecommendDiagnosticsSummary(
-                        snapshot: homeRecommendDiagnosticsStore.snapshot
-                    ).text,
-                )
-            }
-
             Toggle(isOn: Binding(
                 get: { libraryStore.nativePullRefreshEnabled },
                 set: { libraryStore.setNativePullRefreshEnabled($0) }
             )) {
                 VStack(alignment: .leading, spacing: 4) {
-                    MineSettingsLabel("原生下拉刷新", systemImage: "arrow.clockwise.circle")
+                    MineSettingsLabel("\u{539f}\u{751f}\u{4e0b}\u{62c9}\u{5237}\u{65b0}", systemImage: "arrow.clockwise.circle")
 
-                    Text("关闭后可调整刷新距离。")
+                    Text("\u{5173}\u{95ed}\u{540e}\u{53ef}\u{8c03}\u{6574}\u{5237}\u{65b0}\u{8ddd}\u{79bb}。")
                         .appTypography(.settingsSubtitle, fallback: .caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -74,11 +45,11 @@ struct MineHomeSettingsSection: View {
     private var recommendSourceHint: String {
         switch libraryStore.homeRecommendFeedSourcePreference {
         case .web:
-            return "使用网页端推荐。"
+            return "\u{4f7f}\u{7528}\u{7f51}\u{9875}\u{7aef}\u{63a8}\u{8350}。"
         case .app:
-            if libraryStore.guestModeEnabled { return "使用游客推荐，不使用账号偏好。" }
-            if sessionStore.appAccessKey() != nil { return "使用账号的个性化推荐。" }
-            return "短信登录后可获得更准确的个性化推荐。"
+            if libraryStore.guestModeEnabled { return "\u{4f7f}\u{7528}\u{6e38}\u{5ba2}\u{63a8}\u{8350}，\u{4e0d}\u{4f7f}\u{7528}\u{8d26}\u{53f7}\u{504f}\u{597d}。" }
+            if sessionStore.appAccessKey() != nil { return "\u{4f7f}\u{7528}\u{8d26}\u{53f7}\u{7684}\u{4e2a}\u{6027}\u{5316}\u{63a8}\u{8350}。" }
+            return "\u{77ed}\u{4fe1}\u{767b}\u{5f55}\u{540e}\u{53ef}\u{83b7}\u{5f97}\u{66f4}\u{51c6}\u{786e}\u{7684}\u{4e2a}\u{6027}\u{5316}\u{63a8}\u{8350}。"
         }
     }
 }
@@ -89,11 +60,11 @@ private struct MineHomeRefreshDistanceControl: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                MineSettingsLabel("刷新距离", systemImage: "arrow.down.circle")
+                MineSettingsLabel("\u{5237}\u{65b0}\u{8ddd}\u{79bb}", systemImage: "arrow.down.circle")
                 Spacer()
                 Text(
                     libraryStore.nativePullRefreshEnabled
-                        ? "系统默认"
+                        ? "\u{7cfb}\u{7edf}\u{9ed8}\u{8ba4}"
                         : "\(Int(libraryStore.homeRefreshTriggerDistance)) pt"
                 )
                     .piliFont(.base).monospacedDigit()
@@ -113,11 +84,11 @@ private struct MineHomeRefreshDistanceControl: View {
                     in: LibraryStore.homeRefreshDistanceRange,
                     step: 5
                 ) {
-                    Text("刷新距离")
+                    Text("\u{5237}\u{65b0}\u{8ddd}\u{79bb}")
                 } minimumValueLabel: {
-                    Text("近")
+                    Text("\u{8fd1}")
                 } maximumValueLabel: {
-                    Text("远")
+                    Text("\u{8fdc}")
                 }
 
                 HStack {
@@ -125,7 +96,7 @@ private struct MineHomeRefreshDistanceControl: View {
                         .piliFont(.sm)
                         .foregroundStyle(.secondary)
                     Spacer(minLength: 12)
-                    Button("默认") {
+                    Button("\u{9ed8}\u{8ba4}") {
                         libraryStore.setHomeRefreshTriggerDistance(
                             LibraryStore.defaultHomeRefreshTriggerDistance
                         )
@@ -138,8 +109,8 @@ private struct MineHomeRefreshDistanceControl: View {
 
     private var refreshDistanceHint: String {
         if libraryStore.nativePullRefreshEnabled {
-            return "关闭原生刷新后可调整。"
+            return "\u{5173}\u{95ed}\u{539f}\u{751f}\u{5237}\u{65b0}\u{540e}\u{53ef}\u{8c03}\u{6574}。"
         }
-        return "下拉到指定距离后刷新。"
+        return "\u{4e0b}\u{62c9}\u{5230}\u{6307}\u{5b9a}\u{8ddd}\u{79bb}\u{540e}\u{5237}\u{65b0}。"
     }
 }

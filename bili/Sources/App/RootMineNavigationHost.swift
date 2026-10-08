@@ -30,6 +30,10 @@ struct RootMineNavigationDestination: View {
     @ViewBuilder
     private var destinationContent: some View {
         switch route {
+        case .settings:
+            if let viewModel = holder.viewModel {
+                PiliSettingsHomeView(viewModel: viewModel, sessionStore: sessionStore, libraryStore: libraryStore)
+            }
         case .accountMessages:
             if let viewModel = holder.accountMessageViewModel {
                 AccountMessageCenterView(viewModel: viewModel)

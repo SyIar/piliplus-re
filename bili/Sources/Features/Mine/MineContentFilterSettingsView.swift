@@ -1,7 +1,10 @@
 import SwiftUI
 import ChunUI
 
+enum MineContentFilterScope { case all, recommendation, community }
+
 struct MineContentFilterSettingsView: View {
+    var scope: MineContentFilterScope = .all
     @EnvironmentObject private var dependencies: AppDependencies
     @AppStorage("piliplus.filter.blacklistedCreators") private var blocksCreators = true
     @AppStorage("piliplus.display.videoWarnings") private var videoWarnings = true
@@ -11,53 +14,55 @@ struct MineContentFilterSettingsView: View {
 
     var body: some View {
         PiliForm {
+            if scope != .recommendation {
             Section {
-                NavigationLink("弹幕屏蔽") { PiliDanmakuRulesView(api: dependencies.api) }
-                NavigationLink { PiliCommentKeywordSettingsView() } label: { PiliLabel("评论关键词", systemImage: "text.bubble.badge.minus") }
+                NavigationLink { PiliCommentKeywordSettingsView() } label: { PiliLabel("\u{8bc4}\u{8bba}\u{5173}\u{952e}\u{8bcd}", systemImage: "text.bubble.badge.minus") }
                 Toggle(isOn: Binding(
                     get: { libraryStore.blocksAdDynamics },
                     set: { libraryStore.setBlocksAdDynamics($0) }
                 )) {
-                    MineSettingsLabel("屏蔽广告动态", systemImage: "megaphone.badge.minus")
+                    MineSettingsLabel("\u{5c4f}\u{853d}\u{5e7f}\u{544a}\u{52a8}\u{6001}", systemImage: "megaphone.badge.minus")
                 }
 
                 Toggle(isOn: Binding(
                     get: { libraryStore.blocksGoodsDynamics },
                     set: { libraryStore.setBlocksGoodsDynamics($0) }
                 )) {
-                    MineSettingsLabel("屏蔽带货动态", systemImage: "bag.badge.minus")
+                    MineSettingsLabel("\u{5c4f}\u{853d}\u{5e26}\u{8d27}\u{52a8}\u{6001}", systemImage: "bag.badge.minus")
                 }
 
                 Toggle(isOn: Binding(
                     get: { libraryStore.blocksGoodsComments },
                     set: { libraryStore.setBlocksGoodsComments($0) }
                 )) {
-                    MineSettingsLabel("屏蔽带货评论", systemImage: "text.bubble.badge.minus")
+                    MineSettingsLabel("\u{5c4f}\u{853d}\u{5e26}\u{8d27}\u{8bc4}\u{8bba}", systemImage: "text.bubble.badge.minus")
                 }
 
                 NavigationLink {
                     DynamicKeywordFilterSettingsView(libraryStore: libraryStore)
                 } label: {
                     PlainSettingsNavigationRow(
-                        title: "动态关键词",
-                        subtitle: "\(libraryStore.blockedDynamicKeywords.count) 个关键词",
+                        title: "\u{52a8}\u{6001}\u{5173}\u{952e}\u{8bcd}",
+                        subtitle: "\(libraryStore.blockedDynamicKeywords.count) \u{4e2a}\u{5173}\u{952e}\u{8bcd}",
                     )
                 }
 
-                Text("关键词匹配正文、标题和转发内容；广告与带货按内容自动过滤。")
+                Text("\u{5173}\u{952e}\u{8bcd}\u{5339}\u{914d}\u{6b63}\u{6587}、\u{6807}\u{9898}\u{548c}\u{8f6c}\u{53d1}\u{5185}\u{5bb9}；\u{5e7f}\u{544a}\u{4e0e}\u{5e26}\u{8d27}\u{6309}\u{5185}\u{5bb9}\u{81ea}\u{52a8}\u{8fc7}\u{6ee4}。")
                     .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
 
-            Section("内容提示") {
-                Toggle("视频争议提示", isOn: $videoWarnings)
-                Toggle("动态争议提示", isOn: $dynamicWarnings)
+            Section("\u{5185}\u{5bb9}\u{63d0}\u{793a}") {
+                Toggle("\u{89c6}\u{9891}\u{4e89}\u{8bae}\u{63d0}\u{793a}", isOn: $videoWarnings)
+                Toggle("\u{52a8}\u{6001}\u{4e89}\u{8bae}\u{63d0}\u{793a}", isOn: $dynamicWarnings)
             }
-            Section("推荐过滤") {
-                NavigationLink("正则、分区与关注豁免") { PiliAdvancedRecommendFilterView(libraryStore: libraryStore) }
-                Toggle("屏蔽黑名单视频", isOn: $blocksCreators)
-                PiliSettingAction(title: "黑名单 · \(blacklisted.ids.count) 位") {
-                    Button("同步") { Task { await blacklisted.refresh(api: dependencies.api, force: true) } }
+            }
+            if scope != .community {
+            Section("\u{63a8}\u{8350}\u{8fc7}\u{6ee4}") {
+                NavigationLink("\u{6b63}\u{5219}、\u{5206}\u{533a}\u{4e0e}\u{5173}\u{6ce8}\u{8c41}\u{514d}") { PiliAdvancedRecommendFilterView(libraryStore: libraryStore) }
+                Toggle("\u{5c4f}\u{853d}\u{9ed1}\u{540d}\u{5355}\u{89c6}\u{9891}", isOn: $blocksCreators)
+                PiliSettingAction(title: "\u{9ed1}\u{540d}\u{5355} · \(blacklisted.ids.count) \u{4f4d}") {
+                    Button("\u{540c}\u{6b65}") { Task { await blacklisted.refresh(api: dependencies.api, force: true) } }
                 }
                 if let error = blacklisted.error { Text(error).piliFont(.sm).foregroundStyle(.secondary) }
                 PiliSettingPicker(selection: Binding(
@@ -68,7 +73,7 @@ struct MineContentFilterSettingsView: View {
                         Text(recommendDurationTitle(seconds)).tag(seconds)
                     }
                 } label: {
-                    MineSettingsLabel("最短时长", systemImage: "timer")
+                    MineSettingsLabel("\u{6700}\u{77ed}\u{65f6}\u{957f}", systemImage: "timer")
                 }
                 .pickerStyle(.menu)
 
@@ -80,7 +85,7 @@ struct MineContentFilterSettingsView: View {
                         Text(recommendViewTitle(count)).tag(count)
                     }
                 } label: {
-                    MineSettingsLabel("最低播放量", systemImage: "play.circle")
+                    MineSettingsLabel("\u{6700}\u{4f4e}\u{64ad}\u{653e}\u{91cf}", systemImage: "play.circle")
                 }
                 .pickerStyle(.menu)
 
@@ -92,7 +97,7 @@ struct MineContentFilterSettingsView: View {
                         Text(recommendLikeRatioTitle(percent)).tag(percent)
                     }
                 } label: {
-                    MineSettingsLabel("最低点赞率", systemImage: "hand.thumbsup")
+                    MineSettingsLabel("\u{6700}\u{4f4e}\u{70b9}\u{8d5e}\u{7387}", systemImage: "hand.thumbsup")
                 }
                 .pickerStyle(.menu)
 
@@ -100,8 +105,8 @@ struct MineContentFilterSettingsView: View {
                     RecommendKeywordFilterSettingsView(libraryStore: libraryStore)
                 } label: {
                     PlainSettingsNavigationRow(
-                        title: "标题关键词",
-                        subtitle: "\(libraryStore.blockedRecommendKeywords.count) 个关键词",
+                        title: "\u{6807}\u{9898}\u{5173}\u{952e}\u{8bcd}",
+                        subtitle: "\(libraryStore.blockedRecommendKeywords.count) \u{4e2a}\u{5173}\u{952e}\u{8bcd}",
                     )
                 }
 
@@ -109,30 +114,31 @@ struct MineContentFilterSettingsView: View {
                     get: { libraryStore.appliesRecommendFiltersToRelatedVideos },
                     set: { libraryStore.setAppliesRecommendFiltersToRelatedVideos($0) }
                 )) {
-                    MineSettingsLabel("应用到相关推荐", systemImage: "rectangle.stack.badge.minus")
+                    MineSettingsLabel("\u{5e94}\u{7528}\u{5230}\u{76f8}\u{5173}\u{63a8}\u{8350}", systemImage: "rectangle.stack.badge.minus")
                 }
 
-                Text("开启后同时过滤详情页的相关推荐。")
+                Text("\u{5f00}\u{542f}\u{540e}\u{540c}\u{65f6}\u{8fc7}\u{6ee4}\u{8be6}\u{60c5}\u{9875}\u{7684}\u{76f8}\u{5173}\u{63a8}\u{8350}。")
                     .piliFont(.sm)
                     .foregroundStyle(.secondary)
+            }
             }
         }
         .tint(libraryStore.appTintColor)
         .formStyle(.grouped)
         .nativeTopScrollEdgeEffect()
-        .navigationTitle("内容过滤")
+        .navigationTitle(scope == .recommendation ? "\u{63a8}\u{8350}\u{8fc7}\u{6ee4}" : "\u{52a8}\u{6001}\u{4e0e}\u{8bc4}\u{8bba}")
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private func recommendDurationTitle(_ seconds: Int) -> String {
-        seconds == 0 ? "不过滤" : "\(seconds) 秒"
+        seconds == 0 ? "\u{4e0d}\u{8fc7}\u{6ee4}" : "\(seconds) \u{79d2}"
     }
 
     private func recommendViewTitle(_ count: Int) -> String {
-        count == 0 ? "不过滤" : "\(count)"
+        count == 0 ? "\u{4e0d}\u{8fc7}\u{6ee4}" : "\(count)"
     }
 
     private func recommendLikeRatioTitle(_ percent: Int) -> String {
-        percent == 0 ? "不过滤" : "\(percent)%"
+        percent == 0 ? "\u{4e0d}\u{8fc7}\u{6ee4}" : "\(percent)%"
     }
 }

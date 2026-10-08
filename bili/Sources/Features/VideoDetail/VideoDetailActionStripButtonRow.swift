@@ -2,7 +2,6 @@ import SwiftUI
 
 struct VideoDetailActionStripButtonRow: View {
     @Environment(\.appThemeTintColor) private var appTintColor
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let model: VideoDetailActionStripModel
     let layout: VideoDetailActionStripLayout
@@ -12,6 +11,7 @@ struct VideoDetailActionStripButtonRow: View {
     let onFavorite: () -> Void
     let onShareTap: () -> Void
     var onChooseFavorite: (() -> Void)? = nil
+    var onMore: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 12) {
@@ -41,8 +41,7 @@ struct VideoDetailActionStripButtonRow: View {
                 .fixedSize(horizontal: true, vertical: false)
                 .accessibilityIdentifier("video.actions.follow")
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8),
-                                     count: dynamicTypeSize.isAccessibilitySize ? 2 : 4), spacing: 8) {
+            HStack(alignment: .top, spacing: 8) {
                 VideoDetailActionStripIconButton(
                     accessibilityTitle: "\u{70b9}\u{8d5e}",
                     systemImage: "hand.thumbsup.fill",
@@ -74,16 +73,15 @@ struct VideoDetailActionStripButtonRow: View {
                 })
                 .accessibilityIdentifier("video.actions.favorite")
 
-                VideoDetailActionStripShareButton(
-                    shareURL: model.shareURL,
-                    shareSubject: model.shareSubject,
-                    shareMessage: model.shareMessage,
-                    onShareTap: onShareTap
-                )
-                .accessibilityIdentifier("video.actions.share")
+                Button(action: onMore) {
+                    VideoDetailActionLabel(title: "\u{66f4}\u{591a}", systemImage: "ellipsis")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.primary)
+                .accessibilityIdentifier("video.tools.more")
             }
             .padding(.vertical, 6)
-            .piliGlassCard(radius: 16)
+
         }
     }
 }

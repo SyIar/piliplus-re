@@ -2,6 +2,7 @@ import SwiftUI
 import ChunUI
 
 struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
+    var category: MinePlaybackSettingsCategory = .all
     @ObservedObject var libraryStore: LibraryStore
     @State private var av1HardwareDecodeProbe = PlaybackCodecPolicy.av1HardwareDecodeProbe
     @State private var isShowingAV1HardwareDecodeResult = false
@@ -17,31 +18,38 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
 
     var body: some View {
         Section {
+            if category != .audioVideo {
+                videoDetailAutoplayToggle
+                pictureInPictureToggle
+                playbackHistorySyncThresholdPicker
+                defaultPlaybackRatePicker
+            }
+            if category != .player {
             playbackPreferenceSummary
             playbackAutoOptimizationPicker
-            videoDetailAutoplayToggle
-            pictureInPictureToggle
-            playbackHistorySyncThresholdPicker
             preferredVideoQualityPicker
             cellularPreferredVideoQualityPicker
-            PiliSettingPicker("默认音质", selection: Binding(get: { libraryStore.audioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0) })) {
+            PiliSettingPicker("\u{9ed8}\u{8ba4}\u{97f3}\u{8d28}", selection: Binding(get: { libraryStore.audioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0) })) {
                 ForEach(PlaybackAudioQualityPreference.allCases) { Text($0.title).tag($0) }
             }
-            PiliSettingPicker("蜂窝网络音质", selection: Binding(get: { libraryStore.cellularAudioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0, cellular: true) })) {
+            PiliSettingPicker("\u{8702}\u{7a9d}\u{7f51}\u{7edc}\u{97f3}\u{8d28}", selection: Binding(get: { libraryStore.cellularAudioQualityPreference }, set: { libraryStore.setAudioQualityPreference($0, cellular: true) })) {
                 ForEach(PlaybackAudioQualityPreference.allCases) { Text($0.title).tag($0) }
             }
-            Text("最佳音质按可用音轨选择无损、杜比或 AAC；播放失败时回退到兼容音轨。需要对应内容和账号权限，听视频手动选择的音轨优先。").piliFont(.sm).foregroundStyle(.secondary)
+            Text("\u{6700}\u{4f73}\u{97f3}\u{8d28}\u{6309}\u{53ef}\u{7528}\u{97f3}\u{8f68}\u{9009}\u{62e9}\u{65e0}\u{635f}、\u{675c}\u{6bd4}\u{6216} AAC；\u{64ad}\u{653e}\u{5931}\u{8d25}\u{65f6}\u{56de}\u{9000}\u{5230}\u{517c}\u{5bb9}\u{97f3}\u{8f68}。\u{9700}\u{8981}\u{5bf9}\u{5e94}\u{5185}\u{5bb9}\u{548c}\u{8d26}\u{53f7}\u{6743}\u{9650}，\u{542c}\u{89c6}\u{9891}\u{624b}\u{52a8}\u{9009}\u{62e9}\u{7684}\u{97f3}\u{8f68}\u{4f18}\u{5148}。").piliFont(.sm).foregroundStyle(.secondary)
             av1HardwareDecodeProbeButton
             videoCodecPreferenceLink
             forceHardwareDecodeToggle
             dolbyVisionRenderingPolicyPicker
-            defaultPlaybackRatePicker
+            }
         } header: {
-            Text("播放体验")
+            Text("\u{64ad}\u{653e}\u{4f53}\u{9a8c}")
         } footer: {
-            Text("关闭详情自动播放后，进入视频详情页会先停在首帧，需手动点播放。播放满 \(libraryStore.playbackHistorySyncThresholdSeconds) 秒后同步观看记录并用于下次续播；未满不会上报。")
+            if category != .audioVideo {
+            Text("\u{5173}\u{95ed}\u{8be6}\u{60c5}\u{81ea}\u{52a8}\u{64ad}\u{653e}\u{540e}，\u{8fdb}\u{5165}\u{89c6}\u{9891}\u{8be6}\u{60c5}\u{9875}\u{4f1a}\u{5148}\u{505c}\u{5728}\u{9996}\u{5e27}，\u{9700}\u{624b}\u{52a8}\u{70b9}\u{64ad}\u{653e}。\u{64ad}\u{653e}\u{6ee1} \(libraryStore.playbackHistorySyncThresholdSeconds) \u{79d2}\u{540e}\u{540c}\u{6b65}\u{89c2}\u{770b}\u{8bb0}\u{5f55}\u{5e76}\u{7528}\u{4e8e}\u{4e0b}\u{6b21}\u{7eed}\u{64ad}；\u{672a}\u{6ee1}\u{4e0d}\u{4f1a}\u{4e0a}\u{62a5}。")
+            }
         }
 
+        if category != .player {
         Section {
             advancedPlaybackSettingsToggle
             if showsAdvancedPlaybackSettings {
@@ -61,22 +69,23 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 advancedPlaybackSummary
             }
         } header: {
-            Text("高级播放设置")
+            Text("\u{9ad8}\u{7ea7}\u{64ad}\u{653e}\u{8bbe}\u{7f6e}")
         } footer: {
-            Text(showsAdvancedPlaybackSettings ? "高级选项会影响播放线路、取流来源和诊断信息；不确定时保持自动即可。" : "遇到地区网络异常或需要诊断时再打开。")
+            Text(showsAdvancedPlaybackSettings ? "\u{9ad8}\u{7ea7}\u{9009}\u{9879}\u{4f1a}\u{5f71}\u{54cd}\u{64ad}\u{653e}\u{7ebf}\u{8def}、\u{53d6}\u{6d41}\u{6765}\u{6e90}\u{548c}\u{8bca}\u{65ad}\u{4fe1}\u{606f}；\u{4e0d}\u{786e}\u{5b9a}\u{65f6}\u{4fdd}\u{6301}\u{81ea}\u{52a8}\u{5373}\u{53ef}。" : "\u{9047}\u{5230}\u{5730}\u{533a}\u{7f51}\u{7edc}\u{5f02}\u{5e38}\u{6216}\u{9700}\u{8981}\u{8bca}\u{65ad}\u{65f6}\u{518d}\u{6253}\u{5f00}。")
+        }
         }
     }
 
     private var advancedPlaybackSettingsToggle: some View {
         Toggle(isOn: $showsAdvancedPlaybackSettings) {
-            MineSettingsLabel("显示高级选项", systemImage: "slider.horizontal.3")
+            MineSettingsLabel("\u{663e}\u{793a}\u{9ad8}\u{7ea7}\u{9009}\u{9879}", systemImage: "slider.horizontal.3")
         }
         .animation(.easeInOut(duration: 0.2), value: showsAdvancedPlaybackSettings)
     }
 
     private var advancedPlaybackSummary: some View {
         HStack(spacing: 8) {
-            MineSettingsLabel("当前线路", systemImage: "network")
+            MineSettingsLabel("\u{5f53}\u{524d}\u{7ebf}\u{8def}", systemImage: "network")
             Spacer(minLength: 8)
             Text(advancedPlaybackSummaryText)
                 .piliFont(.sm)
@@ -88,14 +97,14 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
 
     private var advancedPlaybackSummaryText: String {
         let cdnTitle = libraryStore.playbackCDNPreference == .automatic
-            ? "智能选择"
+            ? "\u{667a}\u{80fd}\u{9009}\u{62e9}"
             : libraryStore.playbackCDNPreference.title
         let networkTitle = libraryStore.playbackNetworkAddressFamilyPreference == .automatic
-            ? "自动网络"
+            ? "\u{81ea}\u{52a8}\u{7f51}\u{7edc}"
             : libraryStore.playbackNetworkAddressFamilyPreference.title
         let compatibilityTitle = libraryStore.cellularBiliTrafficCompatibilityExperimentEnabled
-            ? "B站域名优先"
-            : "常规线路"
+            ? "B\u{7ad9}\u{57df}\u{540d}\u{4f18}\u{5148}"
+            : "\u{5e38}\u{89c4}\u{7ebf}\u{8def}"
         return "\(cdnTitle) · \(networkTitle) · \(compatibilityTitle)"
     }
 
@@ -108,7 +117,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(mode.title).tag(mode)
             }
         } label: {
-            MineSettingsLabel("智能播放加速", systemImage: "wand.and.stars")
+            MineSettingsLabel("\u{667a}\u{80fd}\u{64ad}\u{653e}\u{52a0}\u{901f}", systemImage: "wand.and.stars")
         }
         .pickerStyle(.menu)
     }
@@ -118,7 +127,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             get: { libraryStore.pictureInPictureEnabled },
             set: { libraryStore.setPictureInPictureEnabled($0) }
         )) {
-            MineSettingsLabel("画中画播放", systemImage: "pip")
+            MineSettingsLabel("\u{753b}\u{4e2d}\u{753b}\u{64ad}\u{653e}", systemImage: "pip")
         }
     }
 
@@ -127,7 +136,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             get: { libraryStore.videoDetailAutoplayEnabled },
             set: { libraryStore.setVideoDetailAutoplayEnabled($0) }
         )) {
-            MineSettingsLabel("进入详情自动播放", systemImage: "play.circle")
+            MineSettingsLabel("\u{8fdb}\u{5165}\u{8be6}\u{60c5}\u{81ea}\u{52a8}\u{64ad}\u{653e}", systemImage: "play.circle")
         }
     }
 
@@ -137,10 +146,10 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             set: { libraryStore.setPlaybackHistorySyncThresholdSeconds($0) }
         )) {
             ForEach(LibraryStore.supportedPlaybackHistorySyncThresholdSeconds, id: \.self) { seconds in
-                Text("\(seconds) 秒").tag(seconds)
+                Text("\(seconds) \u{79d2}").tag(seconds)
             }
         } label: {
-            MineSettingsLabel("历史同步门槛", systemImage: "clock.arrow.circlepath")
+            MineSettingsLabel("\u{5386}\u{53f2}\u{540c}\u{6b65}\u{95e8}\u{69db}", systemImage: "clock.arrow.circlepath")
         }
         .pickerStyle(.menu)
     }
@@ -155,7 +164,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(LibraryStore.videoQualityTitle(quality)).tag(quality)
             }
         } label: {
-            MineSettingsLabel("默认画质", systemImage: "play.rectangle")
+            MineSettingsLabel("\u{9ed8}\u{8ba4}\u{753b}\u{8d28}", systemImage: "play.rectangle")
         }
         .pickerStyle(.menu)
     }
@@ -170,7 +179,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(LibraryStore.videoQualityTitle(quality)).tag(quality)
             }
         } label: {
-            MineSettingsLabel("蜂窝网络画质", systemImage: "antenna.radiowaves.left.and.right")
+            MineSettingsLabel("\u{8702}\u{7a9d}\u{7f51}\u{7edc}\u{753b}\u{8d28}", systemImage: "antenna.radiowaves.left.and.right")
         }
         .pickerStyle(.menu)
     }
@@ -184,7 +193,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
             } label: {
-                MineSettingsLabel("视频编码", systemImage: "film.stack")
+                MineSettingsLabel("\u{89c6}\u{9891}\u{7f16}\u{7801}", systemImage: "film.stack")
             }
         }
     }
@@ -195,14 +204,14 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             isShowingAV1HardwareDecodeResult = true
         } label: {
             HStack(spacing: 8) {
-                MineSettingsLabel("检测 AV1 硬解", systemImage: "cpu")
+                MineSettingsLabel("\u{68c0}\u{6d4b} AV1 \u{786c}\u{89e3}", systemImage: "cpu")
                 Spacer(minLength: 8)
                 Text(av1HardwareDecodeProbe.settingsStatusTitle)
                     .foregroundStyle(.secondary)
             }
         }
-        .piliAlert("AV1 硬解检测", isPresented: $isShowingAV1HardwareDecodeResult) {
-            PiliAlertButton("好", role: .cancel) {}
+        .piliAlert("AV1 \u{786c}\u{89e3}\u{68c0}\u{6d4b}", isPresented: $isShowingAV1HardwareDecodeResult) {
+            PiliAlertButton("\u{597d}", role: .cancel) {}
         } message: { av1HardwareDecodeProbe.detail }
     }
 
@@ -211,7 +220,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             get: { libraryStore.forceHardwareDecodeEnabled },
             set: { libraryStore.setForceHardwareDecodeEnabled($0) }
         )) {
-            MineSettingsLabel("硬解优先", systemImage: "cpu")
+            MineSettingsLabel("\u{786c}\u{89e3}\u{4f18}\u{5148}", systemImage: "cpu")
         }
     }
 
@@ -224,7 +233,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(policy.title).tag(policy)
             }
         } label: {
-            MineSettingsLabel("杜比视界渲染", systemImage: "sparkles.tv")
+            MineSettingsLabel("\u{675c}\u{6bd4}\u{89c6}\u{754c}\u{6e32}\u{67d3}", systemImage: "sparkles.tv")
         }
         .pickerStyle(.menu)
     }
@@ -238,7 +247,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(source.title).tag(source)
             }
         } label: {
-            MineSettingsLabel("播放来源", systemImage: "antenna.radiowaves.left.and.right")
+            MineSettingsLabel("\u{64ad}\u{653e}\u{6765}\u{6e90}", systemImage: "antenna.radiowaves.left.and.right")
         }
         .pickerStyle(.menu)
     }
@@ -249,8 +258,8 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             set: { libraryStore.setCellularBiliTrafficCompatibilityExperimentEnabled($0) }
         )) {
             VStack(alignment: .leading, spacing: 3) {
-                MineSettingsLabel("定向流量兼容（实验）", systemImage: "antenna.radiowaves.left.and.right")
-                Text("蜂窝网络优先使用 B 站线路；失败时仍可能消耗普通流量。")
+                MineSettingsLabel("\u{5b9a}\u{5411}\u{6d41}\u{91cf}\u{517c}\u{5bb9}（\u{5b9e}\u{9a8c}）", systemImage: "antenna.radiowaves.left.and.right")
+                Text("\u{8702}\u{7a9d}\u{7f51}\u{7edc}\u{4f18}\u{5148}\u{4f7f}\u{7528} B \u{7ad9}\u{7ebf}\u{8def}；\u{5931}\u{8d25}\u{65f6}\u{4ecd}\u{53ef}\u{80fd}\u{6d88}\u{8017}\u{666e}\u{901a}\u{6d41}\u{91cf}。")
                     .piliFont(.sm)
                     .foregroundStyle(.secondary)
             }
@@ -266,7 +275,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(preference.title).tag(preference)
             }
         } label: {
-            MineSettingsLabel("CDN 线路", systemImage: "network")
+            MineSettingsLabel("CDN \u{7ebf}\u{8def}", systemImage: "network")
         }
         .pickerStyle(.menu)
     }
@@ -276,7 +285,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             get: { libraryStore.prefersBackupAudioURL },
             set: { libraryStore.setPrefersBackupAudioURL($0) }
         )) {
-            MineSettingsLabel("优先备用音频线路", systemImage: "speaker.wave.2")
+            MineSettingsLabel("\u{4f18}\u{5148}\u{5907}\u{7528}\u{97f3}\u{9891}\u{7ebf}\u{8def}", systemImage: "speaker.wave.2")
         }
     }
 
@@ -293,17 +302,17 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
             .onSubmit(commitPlaybackCustomCDNHost)
 
             if let normalizedCustomCDNHost {
-                LabeledContent("自定义 Host", value: normalizedCustomCDNHost)
+                LabeledContent("\u{81ea}\u{5b9a}\u{4e49} Host", value: normalizedCustomCDNHost)
                     .piliFont(.sm)
                     .foregroundStyle(.secondary)
             } else if !playbackCustomCDNHostDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                MineSettingsLabel("Host 格式无效", systemImage: "exclamationmark.triangle")
+                MineSettingsLabel("Host \u{683c}\u{5f0f}\u{65e0}\u{6548}", systemImage: "exclamationmark.triangle")
                     .piliFont(.sm)
                     .foregroundStyle(Color.cc.warning)
             }
 
             Button(action: commitPlaybackCustomCDNHost) {
-                Text("应用线路").frame(maxWidth: .infinity, alignment: .trailing)
+                Text("\u{5e94}\u{7528}\u{7ebf}\u{8def}").frame(maxWidth: .infinity, alignment: .trailing)
             }
             .disabled(isCustomCDNHostDraftInvalid)
         }
@@ -327,7 +336,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(policy.title).tag(policy)
             }
         } label: {
-            MineSettingsLabel("CDN 自动测速", systemImage: "arrow.triangle.2.circlepath")
+            MineSettingsLabel("CDN \u{81ea}\u{52a8}\u{6d4b}\u{901f}", systemImage: "arrow.triangle.2.circlepath")
         }
         .pickerStyle(.menu)
     }
@@ -344,12 +353,12 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 step: 15
             ) {
                 MineSettingsLabel(
-                    "测速间隔 \(playbackCDNProbeRefreshIntervalTitle)",
+                    "\u{6d4b}\u{901f}\u{95f4}\u{9694} \(playbackCDNProbeRefreshIntervalTitle)",
                     systemImage: "timer"
                 )
             }
         } else {
-            MineSettingsLabel("启动或返回 App 时更新线路参考；实际播放结果优先。", systemImage: "bolt.horizontal")
+            MineSettingsLabel("\u{542f}\u{52a8}\u{6216}\u{8fd4}\u{56de} App \u{65f6}\u{66f4}\u{65b0}\u{7ebf}\u{8def}\u{53c2}\u{8003}；\u{5b9e}\u{9645}\u{64ad}\u{653e}\u{7ed3}\u{679c}\u{4f18}\u{5148}。", systemImage: "bolt.horizontal")
                 .piliFont(.sm)
                 .foregroundStyle(.secondary)
         }
@@ -364,7 +373,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(preference.title).tag(preference)
             }
         } label: {
-            MineSettingsLabel("网络协议", systemImage: "point.3.connected.trianglepath.dotted")
+            MineSettingsLabel("\u{7f51}\u{7edc}\u{534f}\u{8bae}", systemImage: "point.3.connected.trianglepath.dotted")
         }
         .pickerStyle(.menu)
     }
@@ -373,7 +382,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
     private var playbackNetworkAddressFamilyNotice: some View {
         if libraryStore.playbackNetworkAddressFamilyPreference != .automatic,
            libraryStore.playbackCDNProbeSnapshotForCurrentContext == nil {
-            MineSettingsLabel("协议已切换，请重新测速。", systemImage: "arrow.triangle.2.circlepath")
+            MineSettingsLabel("\u{534f}\u{8bae}\u{5df2}\u{5207}\u{6362}，\u{8bf7}\u{91cd}\u{65b0}\u{6d4b}\u{901f}。", systemImage: "arrow.triangle.2.circlepath")
                 .piliFont(.sm)
                 .foregroundStyle(Color.cc.warning)
         }
@@ -381,7 +390,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
 
     private var playbackCDNProbeButton: some View {
         Button(action: probePlaybackCDN) {
-            Text(isProbingPlaybackCDN ? "测速中" : "立即测速").frame(maxWidth: .infinity, alignment: .trailing)
+            Text(isProbingPlaybackCDN ? "\u{6d4b}\u{901f}\u{4e2d}" : "\u{7acb}\u{5373}\u{6d4b}\u{901f}").frame(maxWidth: .infinity, alignment: .trailing)
         }
         .disabled(isProbingPlaybackCDN)
     }
@@ -404,7 +413,7 @@ struct MinePlaybackPreferenceSection<ProbeSummary: View>: View {
                 Text(rate.title).tag(rate.rawValue)
             }
         } label: {
-            MineSettingsLabel("默认倍速", systemImage: "speedometer")
+            MineSettingsLabel("\u{9ed8}\u{8ba4}\u{500d}\u{901f}", systemImage: "speedometer")
         }
         .pickerStyle(.menu)
     }

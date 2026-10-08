@@ -37,7 +37,7 @@ extension PiliLiquidGlassUITests {
         let app = XCUIApplication()
         app.launchArguments = ["--ui-test-fixture", "layoutVideo"]
         app.launch()
-        let actions = ["like", "coin", "favorite", "share"].map { app.buttons["video.actions.\($0)"] }
+        let actions = ["video.actions.like", "video.actions.coin", "video.actions.favorite", "video.tools.more"].map { app.buttons[$0] }
         XCTAssertTrue(actions[0].waitForExistence(timeout: 15))
         for (index, button) in actions.enumerated() {
             XCTAssertGreaterThanOrEqual(button.frame.width, 44)
@@ -46,6 +46,9 @@ extension PiliLiquidGlassUITests {
             XCTAssertEqual(button.frame.width, actions[0].frame.width, accuracy: 1)
             if index > 0 { XCTAssertGreaterThanOrEqual(button.frame.minX, actions[index - 1].frame.maxX) }
         }
+        let follow = app.buttons["video.actions.follow"]
+        XCTAssertGreaterThanOrEqual(follow.frame.height, 44)
+        XCTAssertLessThan(follow.frame.width, 110)
         saveLayoutScreenshot("Video detail grouped actions")
         let more = app.buttons["video.tools.more"]
         XCTAssertTrue(more.isHittable)
@@ -72,7 +75,7 @@ extension PiliLiquidGlassUITests {
         app.scrollViews.firstMatch.swipeUp()
         let favorite = app.buttons["video.actions.favorite"]
         XCTAssertTrue(favorite.exists)
-        XCTAssertGreaterThanOrEqual(favorite.frame.minY, like.frame.maxY)
+        XCTAssertEqual(favorite.frame.minY, like.frame.minY, accuracy: 1)
         XCTAssertGreaterThanOrEqual(favorite.frame.minX, app.frame.minX)
         XCTAssertLessThanOrEqual(favorite.frame.maxX, app.frame.maxX)
         saveLayoutScreenshot("Video detail accessible actions")
@@ -81,6 +84,50 @@ extension PiliLiquidGlassUITests {
         XCTAssertTrue(more.isHittable)
         more.tap()
         XCTAssertTrue(app.buttons["video.tools.close"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testMineShortcutsAndSettingsDirectoryRemainReachable() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "layoutMine"]
+        app.launch()
+        let shortcuts = ["offline", "history", "subscriptions", "watchLater"].map { app.buttons["mine.\($0)"] }
+        XCTAssertTrue(shortcuts[0].waitForExistence(timeout: 15))
+        for shortcut in shortcuts {
+            XCTAssertTrue(shortcut.isHittable)
+            XCTAssertGreaterThanOrEqual(shortcut.frame.height, 44)
+            XCTAssertEqual(shortcut.frame.midY, shortcuts[0].frame.midY, accuracy: 1)
+        }
+        saveLayoutScreenshot("Mine dashboard")
+        app.buttons["mine.settings"].tap()
+        let privacy = app.buttons["settings.open.privacy"]
+        XCTAssertTrue(privacy.waitForExistence(timeout: 5))
+        saveLayoutScreenshot("Settings directory")
+        let audio = app.buttons["settings.open.audioVideo"]
+        let player = app.buttons["settings.open.player"]
+        XCTAssertLessThan(audio.frame.minY, player.frame.minY)
+        player.tap()
+        XCTAssertTrue(app.switches.firstMatch.waitForExistence(timeout: 5))
+        saveLayoutScreenshot("Player settings directory")
+    }
+
+    @MainActor
+    func testCommentToolbarHasSeparateReachableActions() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-test-fixture", "layoutComments"]
+        app.launch()
+        let refresh = app.buttons["video.detail.toolbar-comment-refresh"]
+        let compose = app.buttons["video.detail.toolbar-comment-compose"]
+        XCTAssertTrue(refresh.waitForExistence(timeout: 15))
+        XCTAssertTrue(compose.isHittable)
+        XCTAssertLessThan(refresh.frame.maxX, compose.frame.minX)
+        XCTAssertEqual(refresh.frame.midY, compose.frame.midY, accuracy: 1)
+        XCTAssertGreaterThanOrEqual(refresh.frame.height, 44)
+        saveLayoutScreenshot("Comment toolbar single surfaces")
+        refresh.tap(); compose.tap()
+        XCTAssertEqual(app.staticTexts["fixture.comment.actions"].label, "1 / 1")
     }
 
     @MainActor

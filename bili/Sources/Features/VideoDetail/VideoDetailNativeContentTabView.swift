@@ -529,7 +529,7 @@ private struct VideoDetailScrollingTabPage<Content: View>: View {
 }
 
 private struct VideoDetailToolbarCommentComposerButton: View {
-    static let size: CGFloat = 38
+    static let size: CGFloat = 44
 
     let action: () -> Void
 
@@ -538,8 +538,9 @@ private struct VideoDetailToolbarCommentComposerButton: View {
             PiliIcon(systemName: "square.and.pencil")
                 .frame(width: Self.size, height: Self.size)
         }
+        .buttonStyle(.plain)
         .tint(.primary)
-        .accessibilityLabel("发表评论")
+        .accessibilityLabel("\u{53d1}\u{8868}\u{8bc4}\u{8bba}")
         .accessibilityIdentifier("video.detail.toolbar-comment-compose")
     }
 }
@@ -555,8 +556,9 @@ private struct VideoDetailToolbarCommentRefreshButton: View {
                     height: VideoDetailToolbarCommentComposerButton.size
                 )
         }
+        .buttonStyle(.plain)
         .tint(.primary)
-        .accessibilityLabel("刷新评论")
+        .accessibilityLabel("\u{5237}\u{65b0}\u{8bc4}\u{8bba}")
         .accessibilityIdentifier("video.detail.toolbar-comment-refresh")
     }
 }

@@ -4,11 +4,29 @@ import ChunUI
 struct VideoDetailMoreToolsSheet: View {
     let viewModel: VideoDetailViewModel
     let interactionStore: VideoDetailInteractionRenderStore
+    let descriptionStore: VideoDetailDescriptionRenderStore
+    var onShare: () -> Void = {}
+    var onDiagnostics: (() -> Void)? = nil
     @PiliDismiss private var dismiss
 
     var body: some View {
         NavigationStack {
             PiliForm {
+                Section("\u{5e38}\u{7528}\u{64cd}\u{4f5c}") {
+                    if !viewModel.detail.isPGCEpisode {
+                        PiliVideoLibraryActions(viewModel: viewModel, descriptionStore: descriptionStore)
+                    }
+                    if let url = descriptionStore.shareURL {
+                        PiliShareMenu(url: url, title: descriptionStore.shareSubject, message: descriptionStore.shareMessage) {
+                            PiliLabel("\u{5206}\u{4eab}\u{89c6}\u{9891}", systemImage: "square.and.arrow.up")
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        }
+                        .simultaneousGesture(TapGesture().onEnded { _ in onShare() })
+                    }
+                    if let onDiagnostics {
+                        tool("\u{64ad}\u{653e}\u{8bca}\u{65ad}", icon: "stethoscope", action: onDiagnostics)
+                    }
+                }
                 if !viewModel.detail.piliIsCourse || viewModel.detail.piliUGCSeason != nil {
                     Section("\u{4e92}\u{52a8}\u{4e0e}\u{6536}\u{85cf}") {
                         if !viewModel.detail.piliIsCourse {

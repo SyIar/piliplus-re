@@ -19,6 +19,7 @@ struct VideoDetailActionStrip: View, Equatable {
     let onFavorite: () -> Void
     let onShareTap: () -> Void
     var onChooseFavorite: (() -> Void)? = nil
+    var onMore: () -> Void = {}
 
     static func == (lhs: VideoDetailActionStrip, rhs: VideoDetailActionStrip) -> Bool {
         lhs.model == rhs.model
@@ -35,7 +36,8 @@ struct VideoDetailActionStrip: View, Equatable {
             onCoin: onCoin,
             onFavorite: onFavorite,
             onShareTap: onShareTap,
-            onChooseFavorite: onChooseFavorite
+            onChooseFavorite: onChooseFavorite,
+            onMore: onMore
         )
         .frame(width: model.contentWidth, alignment: .leading)
     }
